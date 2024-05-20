@@ -1,3 +1,8 @@
+"""
+É o menu de perícias do jogo. 
+"""
+
+
 class Pericias:
     def menu_pericias(self):
         import os
@@ -30,8 +35,8 @@ class Pericias:
             elif opcao_menu_pericias.lower() == "e":
                 ...
             elif opcao_menu_pericias.lower() == "v":
-                from menu_principal import Menu
+                from menu_principal import MenuPrincipal
 
-                menu_principal = Menu()
+                menu_principal = MenuPrincipal()
                 menu_principal.menu_principal_ficha()
                 validador_menu_pericias = False
