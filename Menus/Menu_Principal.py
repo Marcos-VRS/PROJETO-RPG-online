@@ -28,7 +28,7 @@ class Menu:
                 "Selecionar:"
             )
             if opcao_menu == "1":
-                from Atributos import Atributos
+                from menu_atributo import Atributos
 
                 menu_atributos = Atributos()
                 menu_atributos.menu_atributos()  # Chamar função que chama o menu de atributos
