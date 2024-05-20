@@ -72,7 +72,7 @@ class Atributos:
 
             elif opcao_menu_atributos == "5":
 
-                from Menu_Principal import Menu
+                from menu_principal import Menu
 
                 menu_principal = Menu()
                 menu_principal.menu_principal_ficha()

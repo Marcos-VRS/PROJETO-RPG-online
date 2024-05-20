@@ -30,7 +30,7 @@ class Pericias:
             elif opcao_menu_pericias.lower() == "e":
                 ...
             elif opcao_menu_pericias.lower() == "v":
-                from Menu_Principal import Menu
+                from menu_principal import Menu
 
                 menu_principal = Menu()
                 menu_principal.menu_principal_ficha()
