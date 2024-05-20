@@ -41,7 +41,7 @@ class Menu:
             elif opcao_menu == "4":
                 ...
             elif opcao_menu == "5":
-                from Pericias import Pericias
+                from menu_pericia import Pericias
 
                 menu_pericias = Pericias()
                 menu_pericias.menu_pericias()
