@@ -1,4 +1,4 @@
-# Incia o programa
+# Inicia o programa
 
 from menu_principal import Menu
 
