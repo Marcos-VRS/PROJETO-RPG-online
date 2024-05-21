@@ -9,11 +9,12 @@ class MenuSetGM:
 
         # MENU QUE SETA OS DADOS DA CAMPANHA
         while verificador_set_gm:
+            os.system("cls")
             # MENSAGEM DE SAUDAÇÃO
             print(
-                "Ok. Vamos definir as informações da campanha.\n"
+                "\nOk. Vamos definir as informações da campanha.\n\n"
                 "Digite [sair] a qualquer momento para retornar a tela inicial\n"
-                "Caso erre ou deseje editar algum dado, no final haverá uma opção.\n\n"
+                "Caso erre ou deseje editar algum dado, no final haverá uma opção.\n"
             )
             # CONDIÇÕES DO WHILE
             verificador_tl_campanha = True
@@ -21,7 +22,7 @@ class MenuSetGM:
             verificador_desv = True
             verificador_pergunta_final = True
             # NOME DA CAMPANHA
-            nome_campanha = input("\nNOME DA CAMPANHA:\n")
+            nome_campanha = input("NOME DA CAMPANHA:\n")
 
             # CASO DESEJE VOLTAR PARA A TELA DE INÍCIO
             if nome_campanha.lower() == "sair":
@@ -98,12 +99,25 @@ class MenuSetGM:
                     os.system("cls")
                     print(
                         f"\n-------CAMPANHA CRIADA COM SUCESSO----------\n\n"
-                        f"\nNOME DA CAMPANHA:{nome_campanha}"
-                        f"\nNÍVEL DE TECNOLOGIA:{tl_campanha}"
+                        f"\nNOME DA CAMPANHA: {nome_campanha}"
+                        f"\nNÍVEL DE TECNOLOGIA: {tl_campanha}"
                         f"\nPONTOS: {pontos_campanha}"
                         f"\nDESVANTAGENS: {desvantagens_campanha}\n\n"
                     )
-                    ...  # Chamar função da próxima tela
+
+                    # CONDIÇÃO PARA SEGUIR PARA A PRÓXIMA TELA
+                    tela_seguinte = input(
+                        "\nDeseja prosseguir?\n\n"
+                        "Caso digite [s] sua campanha será criada.\n"
+                        "Caso ainda deseje alterar algum dando digite [n]\n"
+                    )
+
+                    # CASO DESEJE PROSSEGUIR
+                    if tela_seguinte.lower() == "s":
+                        ...  # função da próxima tela
+
+                    elif tela_seguinte.lower() == "n":
+                        continue
 
                 # CASO DESEJE PREENCHER NOVAMENTE
                 elif pergunta_final.lower() == "n":
@@ -111,9 +125,9 @@ class MenuSetGM:
 
                 # CASO DESEJE VOLTAR PARA A TELA INICIAL
                 elif pergunta_final.lower() == "sair":
-                    from iniciar_programa import inicia_programa
+                    from iniciar_programa import IniciaPrograma
 
-                    voltar_para_inicio = inicia_programa()
+                    voltar_para_inicio = IniciaPrograma()
                     voltar_para_inicio.inicio_do_programa()
                 else:
                     break

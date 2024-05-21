@@ -1,6 +1,6 @@
 # Inicia o programa
 
-from menu_principal import MenuPrincipal
+from menu_personagem import MenuPersonagem
 
-menu = MenuPrincipal()
+menu = MenuPersonagem()
 menu.menu_principal_ficha()

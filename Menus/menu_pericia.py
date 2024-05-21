@@ -35,8 +35,8 @@ class Pericias:
             elif opcao_menu_pericias.lower() == "e":
                 ...
             elif opcao_menu_pericias.lower() == "v":
-                from menu_principal import MenuPrincipal
+                from menu_personagem import MenuPersonagem
 
-                menu_principal = MenuPrincipal()
+                menu_principal = MenuPersonagem()
                 menu_principal.menu_principal_ficha()
                 validador_menu_pericias = False

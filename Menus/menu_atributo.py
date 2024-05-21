@@ -95,9 +95,9 @@ class Atributos:
             # OPÇÃO DE VOLTAR PARA O MENU PRINCIPAL
             elif opcao_menu_atributos == "5":
 
-                from menu_principal import MenuPrincipal
+                from menu_personagem import MenuPersonagem
 
-                menu_principal = MenuPrincipal()
+                menu_principal = MenuPersonagem()
                 menu_principal.menu_principal_ficha()
 
             else:

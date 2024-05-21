@@ -1,9 +1,9 @@
 """
-É o menu principal do jogo. Server para chamar as funções menu 
+É o menu principal de criação de personagens. Server para chamar as funções menu 
 """
 
 
-class MenuPrincipal:
+class MenuPersonagem:
 
     def menu_principal_ficha(self):
 
@@ -18,6 +18,8 @@ class MenuPrincipal:
         while validador_menu:
             os.system("cls")
             opcao_menu = input(
+                "\nAgora vamos criar um personagem. Preencha as informações"
+                " dele utilizando os menus abaixo"
                 "\n\nMENU PRINCIPAL\nDigite uma das  opções a seguir:\n\n"
                 "[1] ATRIBUTOS\n"
                 "[2] SUBATRIBUTOS\n"
@@ -28,7 +30,7 @@ class MenuPrincipal:
                 "[7] PRINTAR A FICHA\n"
                 "[8] SALVAR FICHA\n"
                 "[9] CARREGAR UMA FICHA EXISTENTE\n"
-                "[0] SAIR\n\n"
+                "[SAIR] PARA VOLTAR PARA TELA INICIAL\n\n"
                 "Selecionar:"
             )
 
@@ -74,15 +76,11 @@ class MenuPrincipal:
                 ...
 
             # 0 - SAIR
-            elif opcao_menu == "0":
-                pergunta_sair = input(
-                    "\n\nTem certeza que deseja sair?\n Digite [s] para sair."
-                )
-                if pergunta_sair.lower() == "s":
-                    print("\n\nSAINDO DO PROGRAMA\n\n")
-                    validador_menu = False
-                else:
-                    continue
+            elif opcao_menu.lower() == "sair":
+                from iniciar_programa import IniciaPrograma
+
+                voltar_tela_inicio = IniciaPrograma()
+                voltar_tela_inicio.inicio_do_programa()
 
             # DIGITAR UMA OPÇÃO INVÁLIDA
             else:
