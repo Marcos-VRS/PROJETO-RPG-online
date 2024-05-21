@@ -99,7 +99,6 @@ class Atributos:
 
                 menu_principal = MenuPrincipal()
                 menu_principal.menu_principal_ficha()
-                validador_menu_atributo = False
 
             else:
                 continue
