@@ -363,13 +363,13 @@ class Menu:
         # IMPORTS
         import os
         from menu import Menu
+        from banco_de_dados import BancoDeDadosPersonagem
         import openpyxl
-        from openpyxl import load_workbook
 
         # VARIÁVEIS
         menu = Menu()
+        banco_de_dados = BancoDeDadosPersonagem()
         condicao_menu_carregar_personagem = True
-        ficha = load_workbook("Fichas dos personagens.xlsx")
         while condicao_menu_carregar_personagem:
 
             os.system("cls")
@@ -382,9 +382,12 @@ class Menu:
                 "[5] voltar\n\n"
                 "Selecionar:"
             )
+
             if escolha == "1":
-                ficha.create_sheet("Personagem 1")
+
+                banco_de_dados.criar_novo_personagem()
                 menu.menu_principal_criacao_personagem()
+
             elif escolha == "2":
                 ...
             elif escolha == "3":
