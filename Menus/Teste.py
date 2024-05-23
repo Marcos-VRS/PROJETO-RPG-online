@@ -1,6 +1,5 @@
-# Inicia o programa
+from menu import Menu
 
-from menu_personagem import MenuPersonagem
+teste = Menu()
 
-menu = MenuPersonagem()
-menu.menu_principal_ficha()
+teste.menu_inicio_programa()
