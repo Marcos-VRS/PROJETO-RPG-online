@@ -6,10 +6,12 @@ class Menu:
         import math
         import openpyxl
         from menu import Menu
+        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         tabela_atributos = openpyxl.Workbook()
         menu = Menu()
+        mensagem_sistema = MensagensSistema()
         st = 10
         dx = 10
         iq = 10
@@ -93,7 +95,17 @@ class Menu:
 
             # OPÇÃO DE VOLTAR PARA O MENU PRINCIPAL
             elif opcao_menu_atributos == "5":
-                menu.menu_principal_criacao_personagem()
+                opcao_sair = input(
+                    "\n\nDeseja realmente voltar para o MENU PRINCIPAL?\n"
+                    "[s]im para voltar\n"
+                    "[n]ão para ficar\n\n"
+                    "Selecionar: "
+                )
+                mensagem_sistema.deseja_voltar(
+                    opcao_sair,
+                    menu.menu_principal_criacao_personagem,
+                    menu.menu_atributos_criacao_personagem,
+                )
 
             else:
                 continue
@@ -170,7 +182,6 @@ class Menu:
             # 1 - ATRIBUTOS
             if opcao_menu == "1":
                 menu.menu_atributos_criacao_personagem()
-
             # 2 - SUBATRIBUTOS
             elif opcao_menu == "2":
                 ...  # Chamar função equivalente
@@ -238,16 +249,77 @@ class Menu:
             else:
                 continue
 
-    def menu_set_gm(self):
+    def menu_set_gm(self): ...
+
+    def menu_set_player(self):
+
+        # IMPORTS
+        import os
+        from banco_de_dados import BancoDeDadosPersonagem
+        from mensagens_sistema import MensagensSistema
+
+        # VARIÁVEIS
+        menu = Menu()
+        banco_de_dados = BancoDeDadosPersonagem()
+        mensagem_sistema = MensagensSistema()
+        condicao_menu_carregar_personagem = True
+        while condicao_menu_carregar_personagem:
+
+            os.system("cls")
+            escolha = input(
+                "O QUE DESEJA FAZER?\n\n"
+                "[1] Criar um novo personagem\n"
+                "[2] Carregar um personagem salvo\n"
+                "[3] Editar personagem existente\n"
+                "[4] Ver informações da campanha\n"
+                "[5] voltar\n\n"
+                "Selecionar:"
+            )
+
+            if escolha == "1":
+                os.system("cls")
+                nome_personagem = input("Digite o nome do personagem:\n")
+                nome_player = input("Digite o seu nome:\n")
+
+                while True:
+                    prosseguir = input(
+                        "\n\nVocê deseja criar o novo personagem:\n"
+                        f"NOME: {nome_personagem}\n"
+                        f"JOGADOR: {nome_player}\n\n"
+                        "[s]im\n"
+                        "[n]ão\n"
+                        "Selecionar: "
+                    )
+                    mensagem_sistema.deseja_prosseguir(
+                        prosseguir,
+                        menu.menu_principal_criacao_personagem,
+                        menu.menu_set_player,
+                    )
+
+            elif escolha == "2":
+                ...
+            elif escolha == "3":
+                ...
+            elif escolha == "4":
+                ...
+            elif escolha == "5":
+                menu.menu_inicio_programa()
+            else:
+                ...
+
+    def criar_nova_campanha(self):
         # IMPORTS
         import os
         from menu import Menu
+        from banco_de_dados import BancoDeDadosCampanha
 
         # VARIÁVEIS
         verificador_set_gm = True
         menu = Menu()
+        banco_de_dados = BancoDeDadosCampanha()
 
         # MENU QUE SETA OS DADOS DA CAMPANHA
+
         while verificador_set_gm:
             os.system("cls")
             # MENSAGEM DE SAUDAÇÃO
@@ -335,13 +407,18 @@ class Menu:
                     # CONDIÇÃO PARA SEGUIR PARA A PRÓXIMA TELA
                     tela_seguinte = input(
                         "\nDeseja prosseguir?\n\n"
-                        "Caso digite [s] sua campanha será criada.\n"
+                        "Caso digite [s] sua campanha será salva.\n"
                         "Caso ainda deseje alterar algum dando digite [n]\n"
                     )
 
                     # CASO DESEJE PROSSEGUIR
                     if tela_seguinte.lower() == "s":
-                        ...  # função da próxima tela
+                        banco_de_dados.criar_nova_campanha(
+                            nome_campanha,
+                            tl_campanha,
+                            pontos_campanha,
+                            desvantagens_campanha,
+                        )
 
                     elif tela_seguinte.lower() == "n":
                         continue
@@ -357,44 +434,3 @@ class Menu:
                     break
 
             os.system("cls")
-
-    def menu_set_player(self):
-
-        # IMPORTS
-        import os
-        from menu import Menu
-        from banco_de_dados import BancoDeDadosPersonagem
-        import openpyxl
-
-        # VARIÁVEIS
-        menu = Menu()
-        banco_de_dados = BancoDeDadosPersonagem()
-        condicao_menu_carregar_personagem = True
-        while condicao_menu_carregar_personagem:
-
-            os.system("cls")
-            escolha = input(
-                "O QUE DESEJA FAZER?\n\n"
-                "[1] Criar um novo personagem\n"
-                "[2] Carregar um personagem salvo\n"
-                "[3] Editar personagem existente\n"
-                "[4] Ver informações da campanha\n"
-                "[5] voltar\n\n"
-                "Selecionar:"
-            )
-
-            if escolha == "1":
-
-                banco_de_dados.criar_novo_personagem()
-                menu.menu_principal_criacao_personagem()
-
-            elif escolha == "2":
-                ...
-            elif escolha == "3":
-                ...
-            elif escolha == "4":
-                ...
-            elif escolha == "5":
-                menu.menu_inicio_programa()
-            else:
-                ...

@@ -193,3 +193,47 @@ class BancoDeDadosPersonagem:
         banco_de_dados_fichas = load_workbook("Fichas dos personagens.xlsx")
 
     def deletar_personagem_temporario(self): ...
+
+
+class BancoDeDadosCampanha:
+    def criar_nova_campanha(self, nome, tl, pontos, desvantagens):
+        # IMPORTS
+        import os
+        import openpyxl
+        from openpyxl import load_workbook, Workbook
+
+        # VARIÁVEIS
+        nome_do_arquivo = "Campanhas.xlsx"
+        nome_da_pagina = f"{nome} - {pontos}"
+
+        # VERIFICANDO SE O ARQUIVO JÁ EXISTE
+        if os.path.exists(nome_do_arquivo):
+            banco_de_dados_fichas = load_workbook(nome_do_arquivo)
+        else:  # CRIA E SALVA INICIALMENTE SE NÃO EXISTIR
+            banco_de_dados_fichas = Workbook()
+            banco_de_dados_fichas.save(nome_do_arquivo)
+
+        # CRIA UMA NOVA PAGINA
+        banco_de_dados_fichas.create_sheet(nome_da_pagina)
+
+        # SELECIONA A NOVA PÁGINA
+        pagina = banco_de_dados_fichas[nome_da_pagina]
+
+        # ESTRUTURA DOS DADOS
+        campanha = [
+            ["NOME: ", nome],
+            ["TL: ", tl],
+            ["PONTOS: ", pontos],
+            ["DESVANTAGENS: ", desvantagens],
+        ]
+
+        # INSERE O TEMPLATE NA PÁGINA
+        for linha_index, linha_data in enumerate(campanha, start=1):
+            for coluna_index, valor_celula in enumerate(linha_data, start=1):
+                pagina.cell(row=linha_index, column=coluna_index, value=valor_celula)
+
+        # SALVA O ARQUIVO
+        banco_de_dados_fichas.save(nome_do_arquivo)
+
+    def carregar_campanha(self): ...
+    def deletar_camapanha(self): ...

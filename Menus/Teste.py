@@ -1,9 +1,5 @@
-# from menu import Menu
+from mensagens_sistema import MensagensSistema
+from menu import Menu
 
-# teste = Menu()
-
-# teste.menu_inicio_programa()
-from banco_de_dados import BancoDeDadosPersonagem
-
-teste = BancoDeDadosPersonagem()
-teste.criar_novo_personagem()
+menu = Menu()
+menu.menu_inicio_programa()

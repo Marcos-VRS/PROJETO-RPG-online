@@ -1,10 +1,18 @@
 class MensagensSistema:
-    def deseja_voltar():
-        escolha = input(
-            "Tem certeza que deseja voltar?\n" "[s] Para SAIR.\n" "[n] Para NÃO SAIR"
-        ).lower()
-        if escolha == "s":
-            return
+    def deseja_voltar(self, x, y, z):
+        opcao = x
+        if opcao.lower() == "s":
+            return y()
+        elif opcao.lower() == "n":
+            return z()
+        else:
+            return None
 
-    def deseja_sair(): ...
-    def mensagem_resposta_invalida(): ...
+    def deseja_prosseguir(self, x, y, z):
+        opcao = x
+        if opcao.lower() == "s":
+            return y()
+        elif opcao.lower() == "n":
+            return z()
+        else:
+            return None
