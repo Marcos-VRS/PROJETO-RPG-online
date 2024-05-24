@@ -1,6 +1,6 @@
 class BancoDeDadosPersonagem:
 
-    def criar_novo_personagem(self):
+    def criar_novo_personagem(self, x):
 
         # IMPORTS
         import os
@@ -9,7 +9,7 @@ class BancoDeDadosPersonagem:
 
         # VARIÁVEIS
         nome_do_arquivo = "Fichas dos personagens.xlsx"
-        nome_da_pagina = "Temporário"
+        nome_da_pagina = x
 
         # VERIFICANDO SE O ARQUIVO JÁ EXISTE
         if os.path.exists(nome_do_arquivo):
@@ -87,10 +87,42 @@ class BancoDeDadosPersonagem:
         # IMPORTS
         import os
         import openpyxl
-        from openpyxl import load_workbook
+        from openpyxl import load_workbook, Workbook
+        from mensagens_sistema import MensagensSistema
+        from menu import Menu
 
         # VARIÁVEIS
-        banco_de_dados_fichas = load_workbook("Fichas dos personagens.xlsx")
+        nome_do_arquivo = "Fichas dos personagens.xlsx"
+        banco_de_dados_fichas = load_workbook(nome_do_arquivo)
+        nomes_das_paginas = banco_de_dados_fichas.sheetnames
+        mensagem_sistema = MensagensSistema()
+        menu = Menu()
+        banco_de_dados = BancoDeDadosPersonagem()
+
+        # Menu
+        while True:
+            lista_de_personagens = [
+                f"{indice}. {nome}" for indice, nome in enumerate(nomes_das_paginas)
+            ]
+
+            print("\n\nPERSONAGENS SALVOS:\n\n", *lista_de_personagens[1:], sep="\n")
+            selecao_personagem = input(
+                "\n\n***SELECIONE UM PERSONAGEM***\n"
+                "Para voltar digite [sair]\n\n"
+                "Selecionar: "
+            )
+            if selecao_personagem.lower() == "sair":
+                opcao_sair = input(
+                    "\n\nDeseja realmente voltar para a TELA INICIAL?\n"
+                    "[s]im para voltar\n"
+                    "[n]ão para ficar\n\n"
+                    "Selecionar: "
+                )
+                mensagem_sistema.deseja_voltar(
+                    opcao_sair, menu.menu_set_player, banco_de_dados.carregar_personagem
+                )
+            else:
+                continue
 
     def salvar_personagem(self):
 
@@ -192,7 +224,7 @@ class BancoDeDadosPersonagem:
         # VARIÁVEIS
         banco_de_dados_fichas = load_workbook("Fichas dos personagens.xlsx")
 
-    def deletar_personagem_temporario(self): ...
+    def auto_save_personagem(self): ...
 
 
 class BancoDeDadosCampanha:

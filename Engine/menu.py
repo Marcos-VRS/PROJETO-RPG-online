@@ -260,13 +260,14 @@ class Menu:
 
         # IMPORTS
         import os
-        from banco_de_dados import BancoDeDadosPersonagem
         from mensagens_sistema import MensagensSistema
+        from banco_de_dados import BancoDeDadosPersonagem
 
         # VARIÁVEIS
         menu = Menu()
-        banco_de_dados = BancoDeDadosPersonagem()
         mensagem_sistema = MensagensSistema()
+        banco_de_dados = BancoDeDadosPersonagem()
+
         condicao_menu_carregar_personagem = True
 
         # MENU
@@ -297,6 +298,8 @@ class Menu:
                         "[n]ão\n"
                         "Selecionar: "
                     )
+                    nome_arquivo = nome_personagem + " - " + nome_player
+                    banco_de_dados.criar_novo_personagem(nome_arquivo)
                     mensagem_sistema.deseja_prosseguir(
                         prosseguir,
                         menu.menu_principal_criacao_personagem,
@@ -304,7 +307,7 @@ class Menu:
                     )
 
             elif escolha == "2":
-                ...
+                banco_de_dados.carregar_personagem()
             elif escolha == "3":
                 ...
             elif escolha == "4":
