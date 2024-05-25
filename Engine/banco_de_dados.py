@@ -110,7 +110,7 @@ class BancoDeDadosPersonagem:
         # VARIÁVEIS
         banco_de_dados_fichas = load_workbook("Fichas dos personagens.xlsx")
 
-    def editar_personagem(self):
+    def editar_personagem(self, personagem):
 
         # IMPORTS
         import os
@@ -199,8 +199,6 @@ class BancoDeDadosPersonagem:
 
         # VARIÁVEIS
         banco_de_dados_fichas = load_workbook("Fichas dos personagens.xlsx")
-
-    def auto_save_personagem(self): ...
 
 
 class BancoDeDadosCampanha:

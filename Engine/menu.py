@@ -1,8 +1,16 @@
+# IMPORTS
+import os
+import math
+import openpyxl
+from openpyxl import load_workbook
+from mensagens_sistema import MensagensSistema
+from calculos import Calculos
+from banco_de_dados import BancoDeDadosCampanha
+from banco_de_dados import BancoDeDadosPersonagem
+
+
 class Menu:
     def menu_inicio_programa(self):
-
-        # IMPORTS
-        import os
 
         # VARIÁVEIS
         condicao_menu_inicio = True
@@ -27,9 +35,6 @@ class Menu:
                 continue
 
     def menu_set_gm(self):
-        # IMPORTS
-        import os
-        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         mensagem_sistema = MensagensSistema()
@@ -73,10 +78,6 @@ class Menu:
                 continue
 
     def criar_nova_campanha(self):
-        # IMPORTS
-        import os
-        from banco_de_dados import BancoDeDadosCampanha
-        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         verificador_set_gm = True
@@ -251,10 +252,6 @@ class Menu:
             os.system("cls")
 
     def menu_carregar_campanha(self):
-        # IMPORTS
-        import os
-        from banco_de_dados import BancoDeDadosCampanha
-        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         banco_de_dados = BancoDeDadosCampanha()
@@ -287,11 +284,6 @@ class Menu:
                 continue
 
     def menu_set_player(self):
-
-        # IMPORTS
-        import os
-        from mensagens_sistema import MensagensSistema
-        from banco_de_dados import BancoDeDadosPersonagem
 
         # VARIÁVEIS
         mensagem_sistema = MensagensSistema()
@@ -339,10 +331,6 @@ class Menu:
                 continue
 
     def menu_criar_personagem(self):
-        # IMPORTS
-        import os
-        from banco_de_dados import BancoDeDadosPersonagem
-        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         banco_de_dados = BancoDeDadosPersonagem()
@@ -361,20 +349,15 @@ class Menu:
                 "[n]ão\n"
                 "Selecionar: "
             )
-            nome_arquivo = nome_personagem + " - " + nome_player
-            banco_de_dados.criar_novo_personagem(nome_arquivo)
-            mensagem_sistema.deseja_prosseguir(
+            nome_da_pagina = nome_personagem + " - " + nome_player
+            banco_de_dados.criar_novo_personagem(nome_da_pagina)
+            mensagem_sistema.deseja_prosseguir_parametro(
                 prosseguir,
-                self.menu_principal_criacao_personagem,
-                self.menu_set_player,
+                self.menu_carregar_personagem(),
+                self.menu_set_player(),
             )
 
     def menu_carregar_personagem(self):
-
-        # IMPORTS
-        import os
-        from banco_de_dados import BancoDeDadosPersonagem
-        from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         banco_de_dados = BancoDeDadosPersonagem()
@@ -408,16 +391,12 @@ class Menu:
                 )
             else:
                 if 0 < int(selecao_personagem) < len(lista_nomes_personagens):
-                    ...
+                    nome_personagem = lista_nomes_personagens[int(selecao_personagem)]
+                    self.menu_editar_ficha(nome_personagem)
                 else:
                     continue
 
-    def menu_principal_criacao_personagem(self):
-
-        # IMPORTS
-        import os
-
-        from mensagens_sistema import MensagensSistema
+    def menu_editar_ficha(self, personagem):
 
         # VARIÁVEIS
         validador_menu = True
@@ -427,8 +406,7 @@ class Menu:
         while validador_menu:
             os.system("cls")
             opcao_menu = input(
-                "\nAgora vamos criar um personagem. Preencha as informações"
-                " dele utilizando os menus abaixo"
+                f"\nPERSONAGEM: {personagem}"
                 "\n\nMENU PRINCIPAL\nDigite uma das  opções a seguir:\n\n"
                 "[1] ATRIBUTOS\n"
                 "[2] SUBATRIBUTOS\n"
@@ -445,7 +423,7 @@ class Menu:
 
             # 1 - ATRIBUTOS
             if opcao_menu == "1":
-                self.menu_atributos_criacao_personagem()
+                self.menu_atributos_criacao_personagem(personagem)
             # 2 - SUBATRIBUTOS
             elif opcao_menu == "2":
                 ...  # Chamar função equivalente
@@ -460,7 +438,7 @@ class Menu:
 
             # 5 - PERÍCIAS
             elif opcao_menu == "5":
-                self.menu_pericias_criacao_personagem()
+                self.menu_pericias_criacao_personagem(personagem)
 
             # 6 - INFORMAÇÕES EXTRAS
             elif opcao_menu == "6":
@@ -484,35 +462,33 @@ class Menu:
                     "[n]ão para ficar\n\n"
                     "Selecionar: "
                 )
-                mensagem_sistema.deseja_voltar(
+                mensagem_sistema.deseja_voltar_parametro(
                     opcao_sair,
-                    self.menu_set_player,
-                    self.menu_principal_criacao_personagem,
+                    self.menu_set_player(),
+                    self.menu_editar_ficha(personagem),
                 )
 
             # DIGITAR UMA OPÇÃO INVÁLIDA
             else:
-                self.menu_principal_criacao_personagem()
+                self.menu_editar_ficha()
 
-    def menu_atributos_criacao_personagem(self):
-        # IMPORTS
-        import os
-        import math
-        import openpyxl
-        from mensagens_sistema import MensagensSistema
+    def menu_atributos_criacao_personagem(self, personagem):
 
         # VARIÁVEIS
-        tabela_atributos = openpyxl.Workbook()
+        workbook = load_workbook("Fichas dos personagens.xlsx")
         mensagem_sistema = MensagensSistema()
-        st = 10
-        dx = 10
-        iq = 10
-        ht = 10
-        xp_gasto_st = 0
-        xp_gasto_dx = 0
-        xp_gasto_iq = 0
-        xp_gasto_ht = 0
-        incremento_st = 0
+        nome_personagem = mensagem_sistema.formatar_nome_para_save(personagem)
+        planilha = workbook[nome_personagem]
+        calcular = Calculos()
+
+        st = int(planilha["B7"].value)
+        dx = int(planilha["B8"].value)
+        iq = int(planilha["B9"].value)
+        ht = int(planilha["B10"].value)
+        xp_atual_st = int(planilha["C7"].value)
+        xp_atual_dx = int(planilha["C8"].value)
+        xp_atual_iq = int(planilha["C9"].value)
+        xp_atual_ht = int(planilha["C10"].value)
         pergunta_sair_atributos = ""
         opcao_menu_atributos = ""
         validador_menu_atributo = True
@@ -525,11 +501,11 @@ class Menu:
             print(
                 "--" * 15,
                 "\n\n"
-                "FICHA ATUAL:\n"
-                f"\nST:{st:.0f} (+{xp_gasto_st}) \n"
-                f"DX:{dx:.0f} (+{xp_gasto_dx}) \n"
-                f"IQ:{iq:.0f} (+{xp_gasto_iq}) \n"
-                f"HT:{ht:.0f} (+{xp_gasto_ht}) \n\n",
+                f"FICHA ATUAL: {nome_personagem}\n"
+                f"\nST:{st:.0f} (+{xp_atual_st}) \n"
+                f"DX:{dx:.0f} (+{xp_atual_dx}) \n"
+                f"IQ:{iq:.0f} (+{xp_atual_iq}) \n"
+                f"HT:{ht:.0f} (+{xp_atual_ht}) \n\n",
             )
 
             # MENU DE ATRIBUTOS
@@ -547,21 +523,31 @@ class Menu:
 
             # ST
             if opcao_menu_atributos == "1":
-                incremento_st = input("Quantos pontos deseja gastar em ST: ")
+                xp_gasto_st = input("Quantos pontos deseja gastar em ST: ")
 
-                if incremento_st.isdigit() or incremento_st.lstrip("-").isdigit():
-                    xp_gasto_st += int(incremento_st)
-                    st += int(incremento_st) / 10
+                if xp_gasto_st.isdigit() or xp_gasto_st.lstrip("-").isdigit():
+
+                    xp_atual_novo_st = calcular.calcular_xp_st_ht(
+                        xp_gasto_st, xp_atual_st
+                    )
+                    st_novo = calcular.calcular_st_ht(xp_atual_st)
+                    planilha["B7"].value = st_novo
+                    planilha["C7"].value = xp_atual_novo_st
+                    workbook.save("Fichas dos personagens.xlsx")
+
                 else:
                     continue
 
             # DX
             elif opcao_menu_atributos == "2":
-                incremento_dx = input("Quantos pontos deseja gastar em DX: ")
+                xp_gasto_dx = input("Quantos pontos deseja gastar em DX: ")
 
-                if incremento_dx.isdigit() or incremento_dx.lstrip("-").isdigit():
-                    xp_gasto_dx += int(incremento_dx)
-                    dx += int(incremento_dx) / 20
+                if xp_gasto_dx.isdigit() or xp_gasto_dx.lstrip("-").isdigit():
+                    xp_atual_dx = calcular.calcular_xp_dx_iq(xp_gasto_dx, xp_atual_dx)
+                    dx = calcular.calcular_dx_iq(xp_atual_dx)
+                    planilha["B8"].value = dx
+                    planilha["C8"].value = xp_atual_dx
+                    workbook.save("Fichas dos personagens.xlsx")
                 else:
                     continue
 
@@ -570,7 +556,7 @@ class Menu:
                 incremento_iq = input("Quantos pontos deseja gastar em IQ: ")
 
                 if incremento_iq.isdigit() or incremento_iq.lstrip("-").isdigit():
-                    xp_gasto_iq += int(incremento_iq)
+                    xp_atual_iq += int(incremento_iq)
                     iq += int(incremento_iq) / 20
                 else:
                     continue
@@ -580,7 +566,7 @@ class Menu:
                 incremento_ht = input("Quantos pontos deseja gastar em HT: ")
 
                 if incremento_ht.isdigit() or incremento_ht.lstrip("-").isdigit():
-                    xp_gasto_ht += int(incremento_ht)
+                    xp_atual_ht += int(incremento_ht)
                     ht += int(incremento_ht) / 10
                 else:
                     continue
@@ -593,20 +579,16 @@ class Menu:
                     "[n]ão para ficar\n\n"
                     "Selecionar: "
                 )
-                mensagem_sistema.deseja_voltar(
+                mensagem_sistema.deseja_voltar_parametro(
                     opcao_sair,
-                    self.menu_principal_criacao_personagem,
-                    self.menu_atributos_criacao_personagem,
+                    self.menu_editar_ficha(personagem),
+                    self.menu_atributos_criacao_personagem(personagem),
                 )
 
             else:
                 continue
 
-    def menu_pericias_criacao_personagem(self):
-
-        # IMPORTS
-        import os
-        from mensagens_sistema import MensagensSistema
+    def menu_pericias_criacao_personagem(self, personagem):
 
         # VARIÁVEIS
         validador_menu_pericias = True
@@ -644,8 +626,8 @@ class Menu:
                     "[n]ão para ficar\n\n"
                     "Selecionar: "
                 )
-                mensagem_sistema.deseja_voltar(
+                mensagem_sistema.deseja_voltar_parametro(
                     opcao_sair,
-                    self.menu_principal_criacao_personagem,
-                    self.menu_pericias_criacao_personagem,
+                    self.menu_editar_ficha(personagem),
+                    self.menu_pericias_criacao_personagem(personagem),
                 )
