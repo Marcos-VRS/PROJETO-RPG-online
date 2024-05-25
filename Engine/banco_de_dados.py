@@ -32,17 +32,17 @@ class BancoDeDadosPersonagem:
             ["XP guardado: ", ""],
             ["", "", ""],
             ["", "", ""],
-            ["ST: ", "valorst", "xpst"],
-            ["DX: ", "valordx", "xpdx"],
-            ["IQ: ", "valoriq", "xpiq"],
-            ["HT: ", "valorht", "xpht"],
+            ["ST: ", "10", "0"],
+            ["DX: ", "10", "0"],
+            ["IQ: ", "10", "0"],
+            ["HT: ", "10", "0"],
             ["", "", ""],
             ["", "", ""],
-            ["HP: ", "valorhp"],
-            ["FP: ", "valorfp"],
+            ["HP: ", "10"],
+            ["FP: ", "10"],
             ["", "", ""],
-            ["Swing: ", "valorsw", "d6"],
-            ["Thrusting: ", "valorthr", "d6"],
+            ["Swing: ", "1", "d6", "0"],
+            ["Thrusting: ", "1", "d6", "-2"],
             ["Basic Lift(lbs/kg)", "valor", "lbs", "/", "valor", "kg"],
             ["Encumbrance: ", "valorencumbrance"],
             ["RD: ", "vamorrd"],
@@ -87,42 +87,18 @@ class BancoDeDadosPersonagem:
         # IMPORTS
         import os
         import openpyxl
-        from openpyxl import load_workbook, Workbook
-        from mensagens_sistema import MensagensSistema
-        from menu import Menu
+        from openpyxl import load_workbook
 
         # VARIÁVEIS
         nome_do_arquivo = "Fichas dos personagens.xlsx"
         banco_de_dados_fichas = load_workbook(nome_do_arquivo)
         nomes_das_paginas = banco_de_dados_fichas.sheetnames
-        mensagem_sistema = MensagensSistema()
-        menu = Menu()
-        banco_de_dados = BancoDeDadosPersonagem()
 
         # Menu
-        while True:
-            lista_de_personagens = [
-                f"{indice}. {nome}" for indice, nome in enumerate(nomes_das_paginas)
-            ]
-
-            print("\n\nPERSONAGENS SALVOS:\n\n", *lista_de_personagens[1:], sep="\n")
-            selecao_personagem = input(
-                "\n\n***SELECIONE UM PERSONAGEM***\n"
-                "Para voltar digite [sair]\n\n"
-                "Selecionar: "
-            )
-            if selecao_personagem.lower() == "sair":
-                opcao_sair = input(
-                    "\n\nDeseja realmente voltar para a TELA INICIAL?\n"
-                    "[s]im para voltar\n"
-                    "[n]ão para ficar\n\n"
-                    "Selecionar: "
-                )
-                mensagem_sistema.deseja_voltar(
-                    opcao_sair, menu.menu_set_player, banco_de_dados.carregar_personagem
-                )
-            else:
-                continue
+        lista_de_personagens = [
+            f"{indice}. {nome}" for indice, nome in enumerate(nomes_das_paginas)
+        ]
+        return lista_de_personagens
 
     def salvar_personagem(self):
 
@@ -267,5 +243,24 @@ class BancoDeDadosCampanha:
         # SALVA O ARQUIVO
         banco_de_dados_fichas.save(nome_do_arquivo)
 
-    def carregar_campanha(self): ...
+    def carregar_campanha(self):
+        # IMPORTS
+        import os
+        import openpyxl
+        from openpyxl import load_workbook
+        from mensagens_sistema import MensagensSistema
+        from menu import Menu
+
+        # VARIÁVEIS
+        nome_do_arquivo = "Campanhas.xlsx"
+        banco_de_dados_fichas = load_workbook(nome_do_arquivo)
+        nomes_das_paginas = banco_de_dados_fichas.sheetnames
+        menu = Menu()
+
+        # PEGA A LISTA DE CAMPANHAS SALVAS
+        lista_de_campanhas = [
+            f"{indice}. {nome}" for indice, nome in enumerate(nomes_das_paginas)
+        ]
+        return lista_de_campanhas
+
     def deletar_camapanha(self): ...

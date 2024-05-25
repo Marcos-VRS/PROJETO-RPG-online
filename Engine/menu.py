@@ -1,14 +1,11 @@
 class Menu:
-
     def menu_inicio_programa(self):
 
         # IMPORTS
         import os
-        from menu import Menu
 
         # VARIÁVEIS
         condicao_menu_inicio = True
-        menu = Menu()
 
         # MENU DA TELA DE INÍCIO
         while condicao_menu_inicio:
@@ -21,30 +18,28 @@ class Menu:
 
             # CASO SEJA O GM
             if inicio == "0":
-                menu.menu_set_gm()
+                self.menu_set_gm()
 
             # CASO SEJA UM JOGADOR (TROCAR DEPOIS PARA O MENU_SET_PLAYER)
             if inicio == "1":
-                menu.menu_set_player()
+                self.menu_set_player()
             else:
                 continue
 
     def menu_set_gm(self):
         # IMPORTS
         import os
-        from banco_de_dados import BancoDeDadosCampanha
         from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
-        menu = Menu()
-        banco_de_dados = BancoDeDadosCampanha()
         mensagem_sistema = MensagensSistema()
         condicao_menu_gm = True
 
         # MENU
         while condicao_menu_gm:
-
+            condicao_menu_gm = True
             os.system("cls")
+
             escolha = input(
                 "O QUE DESEJA FAZER ?\n\n"
                 "[1] Criar uma nova campanha\n"
@@ -55,9 +50,10 @@ class Menu:
             )
 
             if escolha == "1":
-                menu.criar_nova_campanha()
+                self.criar_nova_campanha()
+
             elif escolha == "2":
-                ...
+                self.menu_carregar_campanha()
             elif escolha == "3":
                 ...
             elif escolha == "4":
@@ -69,8 +65,8 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_inicio_programa,
-                    menu.menu_set_gm,
+                    self.menu_inicio_programa,
+                    self.menu_set_gm,
                 )
 
             else:
@@ -79,13 +75,11 @@ class Menu:
     def criar_nova_campanha(self):
         # IMPORTS
         import os
-        from menu import Menu
         from banco_de_dados import BancoDeDadosCampanha
         from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         verificador_set_gm = True
-        menu = Menu()
         banco_de_dados = BancoDeDadosCampanha()
         mensagem_sistema = MensagensSistema()
 
@@ -117,8 +111,8 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_set_gm,
-                    menu.criar_nova_campanha,
+                    self.menu_set_gm,
+                    self.criar_nova_campanha,
                 )
 
             # ---------------------------------------------------#
@@ -138,8 +132,8 @@ class Menu:
                     )
                     mensagem_sistema.deseja_voltar(
                         opcao_sair,
-                        menu.menu_set_gm,
-                        menu.criar_nova_campanha,
+                        self.menu_set_gm,
+                        self.criar_nova_campanha,
                     )
 
                 # TESTA SE O VALOR DE TL_CAMPANHA É UM NÚMERO
@@ -163,8 +157,8 @@ class Menu:
                     )
                     mensagem_sistema.deseja_voltar(
                         opcao_sair,
-                        menu.menu_set_gm,
-                        menu.criar_nova_campanha,
+                        self.menu_set_gm,
+                        self.criar_nova_campanha,
                     )
 
                 # TESTA SE O VALOR DE PONTO_CAMAPANHA É UM NÚMERO
@@ -187,8 +181,8 @@ class Menu:
                     )
                     mensagem_sistema.deseja_voltar(
                         opcao_sair,
-                        menu.menu_set_gm,
-                        menu.criar_nova_campanha,
+                        self.menu_set_gm,
+                        self.criar_nova_campanha,
                     )
 
                 # TESTA SE O VALOR DE PONTO_CAMAPNHA É UM NÚMERO
@@ -248,13 +242,49 @@ class Menu:
                     )
                     mensagem_sistema.deseja_voltar(
                         opcao_sair,
-                        menu.menu_set_gm,
-                        menu.criar_nova_campanha,
+                        self.menu_set_gm,
+                        self.criar_nova_campanha,
                     )
                 else:
                     continue
 
             os.system("cls")
+
+    def menu_carregar_campanha(self):
+        # IMPORTS
+        import os
+        from banco_de_dados import BancoDeDadosCampanha
+        from mensagens_sistema import MensagensSistema
+
+        # VARIÁVEIS
+        banco_de_dados = BancoDeDadosCampanha()
+        mensagem_sistema = MensagensSistema()
+        while True:
+            os.system("cls")
+            print(
+                "CAMPANHAS SALVAS:\n\n",
+                *banco_de_dados.carregar_campanha()[1:],
+                sep="\n",
+            )
+            selecao_campanha = input(
+                "\n\n***SELECIONE UMA CAMPANHA***\n"
+                "Para voltar digite [sair]\n\n"
+                "Selecionar: "
+            )
+            if selecao_campanha.lower() == "sair":
+                opcao_sair = input(
+                    "\n\nDeseja realmente voltar para a TELA INICIAL?\n"
+                    "[s]im para voltar\n"
+                    "[n]ão para ficar\n\n"
+                    "Selecionar: "
+                )
+                mensagem_sistema.deseja_voltar(
+                    opcao_sair,
+                    self.menu_set_gm,
+                    banco_de_dados.carregar_campanha,
+                )
+            else:
+                continue
 
     def menu_set_player(self):
 
@@ -264,7 +294,6 @@ class Menu:
         from banco_de_dados import BancoDeDadosPersonagem
 
         # VARIÁVEIS
-        menu = Menu()
         mensagem_sistema = MensagensSistema()
         banco_de_dados = BancoDeDadosPersonagem()
 
@@ -285,29 +314,11 @@ class Menu:
             )
 
             if escolha == "1":
-                os.system("cls")
-                nome_personagem = input("Digite o nome do personagem:\n")
-                nome_player = input("Digite o seu nome:\n")
-
-                while True:
-                    prosseguir = input(
-                        "\n\nVocê deseja criar o novo personagem:\n"
-                        f"NOME: {nome_personagem}\n"
-                        f"JOGADOR: {nome_player}\n\n"
-                        "[s]im\n"
-                        "[n]ão\n"
-                        "Selecionar: "
-                    )
-                    nome_arquivo = nome_personagem + " - " + nome_player
-                    banco_de_dados.criar_novo_personagem(nome_arquivo)
-                    mensagem_sistema.deseja_prosseguir(
-                        prosseguir,
-                        menu.menu_principal_criacao_personagem,
-                        menu.menu_set_player,
-                    )
-
+                self.menu_criar_personagem()
+            # CARREGAR PERSONAGEM
             elif escolha == "2":
-                banco_de_dados.carregar_personagem()
+                self.menu_carregar_personagem()
+
             elif escolha == "3":
                 ...
             elif escolha == "4":
@@ -321,24 +332,95 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_inicio_programa,
-                    menu.menu_set_player,
+                    self.menu_inicio_programa,
+                    self.menu_set_player,
                 )
             else:
                 continue
+
+    def menu_criar_personagem(self):
+        # IMPORTS
+        import os
+        from banco_de_dados import BancoDeDadosPersonagem
+        from mensagens_sistema import MensagensSistema
+
+        # VARIÁVEIS
+        banco_de_dados = BancoDeDadosPersonagem()
+        mensagem_sistema = MensagensSistema()
+        os.system("cls")
+        nome_personagem = input("Digite o nome do personagem:\n")
+        nome_player = input("Digite o seu nome:\n")
+
+        # MENU
+        while True:
+            prosseguir = input(
+                "\n\nVocê deseja criar o novo personagem:\n"
+                f"NOME: {nome_personagem}\n"
+                f"JOGADOR: {nome_player}\n\n"
+                "[s]im\n"
+                "[n]ão\n"
+                "Selecionar: "
+            )
+            nome_arquivo = nome_personagem + " - " + nome_player
+            banco_de_dados.criar_novo_personagem(nome_arquivo)
+            mensagem_sistema.deseja_prosseguir(
+                prosseguir,
+                self.menu_principal_criacao_personagem,
+                self.menu_set_player,
+            )
+
+    def menu_carregar_personagem(self):
+
+        # IMPORTS
+        import os
+        from banco_de_dados import BancoDeDadosPersonagem
+        from mensagens_sistema import MensagensSistema
+
+        # VARIÁVEIS
+        banco_de_dados = BancoDeDadosPersonagem()
+        mensagem_sistema = MensagensSistema()
+
+        # MENU CARREGAR PERSONAGENS
+        while True:
+            os.system("cls")
+            lista_nomes_personagens = banco_de_dados.carregar_personagem()
+            print(
+                "\n\nPERSONAGENS SALVOS:\n\n",
+                *lista_nomes_personagens[1:],
+                sep="\n",
+            )
+            selecao_personagem = input(
+                "\n\n***SELECIONE UM PERSONAGEM***\n\n"
+                "Para voltar digite [sair]\n\n"
+                "Selecionar: "
+            )
+            if selecao_personagem.lower() == "sair":
+                opcao_sair = input(
+                    "\n\nDeseja realmente voltar para a TELA INICIAL?\n"
+                    "[s]im para voltar\n"
+                    "[n]ão para ficar\n\n"
+                    "Selecionar: "
+                )
+                mensagem_sistema.deseja_voltar(
+                    opcao_sair,
+                    self.menu_set_player,
+                    banco_de_dados.carregar_personagem,
+                )
+            else:
+                if 0 < int(selecao_personagem) < len(lista_nomes_personagens):
+                    ...
+                else:
+                    continue
 
     def menu_principal_criacao_personagem(self):
 
         # IMPORTS
         import os
 
-        from menu import Menu
         from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         validador_menu = True
-        pergunta_sair = ""
-        menu = Menu()
         mensagem_sistema = MensagensSistema()
 
         # MOSTRA O MENU DE OPÇÕES DO MENU PRINCIPAL
@@ -363,7 +445,7 @@ class Menu:
 
             # 1 - ATRIBUTOS
             if opcao_menu == "1":
-                menu.menu_atributos_criacao_personagem()
+                self.menu_atributos_criacao_personagem()
             # 2 - SUBATRIBUTOS
             elif opcao_menu == "2":
                 ...  # Chamar função equivalente
@@ -378,7 +460,7 @@ class Menu:
 
             # 5 - PERÍCIAS
             elif opcao_menu == "5":
-                menu.menu_pericias_criacao_personagem()
+                self.menu_pericias_criacao_personagem()
 
             # 6 - INFORMAÇÕES EXTRAS
             elif opcao_menu == "6":
@@ -404,25 +486,23 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_set_player,
-                    menu.menu_principal_criacao_personagem,
+                    self.menu_set_player,
+                    self.menu_principal_criacao_personagem,
                 )
 
             # DIGITAR UMA OPÇÃO INVÁLIDA
             else:
-                menu.menu_principal_criacao_personagem()
+                self.menu_principal_criacao_personagem()
 
     def menu_atributos_criacao_personagem(self):
         # IMPORTS
         import os
         import math
         import openpyxl
-        from menu import Menu
         from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
         tabela_atributos = openpyxl.Workbook()
-        menu = Menu()
         mensagem_sistema = MensagensSistema()
         st = 10
         dx = 10
@@ -515,8 +595,8 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_principal_criacao_personagem,
-                    menu.menu_atributos_criacao_personagem,
+                    self.menu_principal_criacao_personagem,
+                    self.menu_atributos_criacao_personagem,
                 )
 
             else:
@@ -526,11 +606,9 @@ class Menu:
 
         # IMPORTS
         import os
-        from menu import Menu
         from mensagens_sistema import MensagensSistema
 
         # VARIÁVEIS
-        menu = Menu()
         validador_menu_pericias = True
         mensagem_sistema = MensagensSistema()
         pergunta_sair_pericias = ""
@@ -568,6 +646,6 @@ class Menu:
                 )
                 mensagem_sistema.deseja_voltar(
                     opcao_sair,
-                    menu.menu_principal_criacao_personagem,
-                    menu.menu_pericias_criacao_personagem,
+                    self.menu_principal_criacao_personagem,
+                    self.menu_pericias_criacao_personagem,
                 )
