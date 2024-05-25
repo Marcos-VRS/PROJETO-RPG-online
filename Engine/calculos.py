@@ -15,12 +15,6 @@ class Calculos:
         dx_iq = math.floor(xp / 20)
         return dx_iq
 
-    def calcular_xp_st_ht(self, xpgasto, xpatual):
-        xp_gasto_st_ht = xpatual
-        xp_gasto_st_ht += int(xpgasto)
-        return xp_gasto_st_ht
 
-    def calcular_xp_dx_iq(self, xpgasto, xpatual):
-        xp_gasto_dx_iq = xpatual
-        xp_gasto_dx_iq += int(xpgasto)
-        return xp_gasto_dx_iq
+# calcular = Calculos()
+# print(calcular.calcular_st_ht("20"))

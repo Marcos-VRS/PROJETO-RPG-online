@@ -7,4 +7,4 @@ menu = Menu()
 banco_de_dados_personagem = BancoDeDadosPersonagem()
 banco_de_dados_campanha = BancoDeDadosCampanha()
 
-menu.menu_set_player()
+menu.menu_inicio_programa()

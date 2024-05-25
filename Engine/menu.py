@@ -481,20 +481,20 @@ class Menu:
         planilha = workbook[nome_personagem]
         calcular = Calculos()
 
-        st = int(planilha["B7"].value)
-        dx = int(planilha["B8"].value)
-        iq = int(planilha["B9"].value)
-        ht = int(planilha["B10"].value)
-        xp_atual_st = int(planilha["C7"].value)
-        xp_atual_dx = int(planilha["C8"].value)
-        xp_atual_iq = int(planilha["C9"].value)
-        xp_atual_ht = int(planilha["C10"].value)
         pergunta_sair_atributos = ""
         opcao_menu_atributos = ""
         validador_menu_atributo = True
 
         # MOSTRA OS ATRIBUTOS ATUAIS E O MENU PARA ALTERA-LOS
         while validador_menu_atributo:
+            st = int(planilha["B7"].value)
+            dx = int(planilha["B8"].value)
+            iq = int(planilha["B9"].value)
+            ht = int(planilha["B10"].value)
+            xp_atual_st = int(planilha["C7"].value)
+            xp_atual_dx = int(planilha["C8"].value)
+            xp_atual_iq = int(planilha["C9"].value)
+            xp_atual_ht = int(planilha["C10"].value)
             os.system("cls")
 
             # ATRIBUTOS ATUAIS
@@ -527,12 +527,10 @@ class Menu:
 
                 if xp_gasto_st.isdigit() or xp_gasto_st.lstrip("-").isdigit():
 
-                    xp_atual_novo_st = calcular.calcular_xp_st_ht(
-                        xp_gasto_st, xp_atual_st
-                    )
-                    st_novo = calcular.calcular_st_ht(xp_atual_st)
+                    xp_atual_st += int(xp_gasto_st)
+                    st_novo = 10 + (math.floor(xp_atual_st / 10))
                     planilha["B7"].value = st_novo
-                    planilha["C7"].value = xp_atual_novo_st
+                    planilha["C7"].value = xp_atual_st
                     workbook.save("Fichas dos personagens.xlsx")
 
                 else:
@@ -543,9 +541,9 @@ class Menu:
                 xp_gasto_dx = input("Quantos pontos deseja gastar em DX: ")
 
                 if xp_gasto_dx.isdigit() or xp_gasto_dx.lstrip("-").isdigit():
-                    xp_atual_dx = calcular.calcular_xp_dx_iq(xp_gasto_dx, xp_atual_dx)
-                    dx = calcular.calcular_dx_iq(xp_atual_dx)
-                    planilha["B8"].value = dx
+                    xp_atual_dx += int(xp_gasto_dx)
+                    dx_novo = 10 + (math.floor(xp_atual_dx / 20))
+                    planilha["B8"].value = dx_novo
                     planilha["C8"].value = xp_atual_dx
                     workbook.save("Fichas dos personagens.xlsx")
                 else:
@@ -553,21 +551,27 @@ class Menu:
 
             # IQ
             elif opcao_menu_atributos == "3":
-                incremento_iq = input("Quantos pontos deseja gastar em IQ: ")
+                xp_gasto_iq = input("Quantos pontos deseja gastar em IQ: ")
 
-                if incremento_iq.isdigit() or incremento_iq.lstrip("-").isdigit():
-                    xp_atual_iq += int(incremento_iq)
-                    iq += int(incremento_iq) / 20
+                if xp_gasto_iq.isdigit() or xp_gasto_iq.lstrip("-").isdigit():
+                    xp_atual_iq += int(xp_gasto_iq)
+                    iq_novo = 10 + (math.floor(xp_atual_iq / 20))
+                    planilha["B9"].value = iq_novo
+                    planilha["C9"].value = xp_atual_iq
+                    workbook.save("Fichas dos personagens.xlsx")
                 else:
                     continue
 
             # HT
             elif opcao_menu_atributos == "4":
-                incremento_ht = input("Quantos pontos deseja gastar em HT: ")
+                xp_gasto_ht = input("Quantos pontos deseja gastar em HT: ")
 
-                if incremento_ht.isdigit() or incremento_ht.lstrip("-").isdigit():
-                    xp_atual_ht += int(incremento_ht)
-                    ht += int(incremento_ht) / 10
+                if xp_gasto_ht.isdigit() or xp_gasto_ht.lstrip("-").isdigit():
+                    xp_atual_ht += int(xp_gasto_ht)
+                    ht_novo = 10 + (math.floor(xp_atual_ht / 10))
+                    planilha["B10"].value = ht_novo
+                    planilha["C10"].value = xp_atual_ht
+                    workbook.save("Fichas dos personagens.xlsx")
                 else:
                     continue
 
