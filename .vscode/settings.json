@@ -1,0 +1,52 @@
+{
+    "workbench.startupEditor": "none",
+    "editor.fontSize": 20,
+    "explorer.compactFolders": false,
+    "code-runner.runInTerminal": true,
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.executorMap": {
+        "python": "cls ; python -u"
+    },
+    "code-runner.ignoreSelection": true,
+    "workbench.colorTheme": "OM Theme (Default Dracula Italic)",
+    "workbench.iconTheme": "material-icon-theme",
+    "python.defaultInterpreterPath": "python",
+    "editor.renderWhitespace": "all",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "editor.formatOnSave": true,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": [
+                "-NoExit",
+                "-Command",
+                "& {if (Test-Path -Path 'venv/Scripts/Activate.ps1') { . 'venv/Scripts/Activate.ps1' } else { Write-Host 'No virtual environment found, using global Python.' }}"
+            ]
+        }
+    },
+    "python.terminal.activateEnvironment": true,
+    "terminal.integrated.cwd": "${fileDirname}",
+    "liveServer.settings.AdvanceCustomBrowserCmdLine": "",
+    "liveServer.settings.host": "127.0.0.7",
+    "liveServer.settings.fullReload": true,
+    "liveServer.settings.CustomBrowser": "chrome",
+    "liveServer.settings.donotShowInfoMsg": true,
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Extension",
+                "type": "extensionHost",
+                "request": "launch",
+                "runtimeExecutable": "${execPath}",
+                "args": [
+                    "--extensionDevelopmentPath=${workspaceFolder}"
+                ]
+            }
+        ]
+    }
+}

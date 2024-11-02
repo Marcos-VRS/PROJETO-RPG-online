@@ -5,6 +5,7 @@ from django.contrib import messages
 
 # view de login
 def login(request):
+    print("Essa é a login")
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
@@ -20,5 +21,7 @@ def login(request):
 
 # View de logout
 def logout_view(request):
+    print("Essa é a logout")
+
     logout(request)
     return redirect("login")  # Redirecionar para a página de login após logout
