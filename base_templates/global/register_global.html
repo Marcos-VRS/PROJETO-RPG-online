@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Register</title>
-    <link rel="stylesheet" href="{% static 'global/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}"> <!-- Adicione o caminho para seu CSS, se houver -->
 </head>
-<body>
-    <div class="register-container">
+<body class= "login-body">
+    <div class="login-container">
         <h2>Registrar</h2>
         <form method="POST">
             {% csrf_token %}
