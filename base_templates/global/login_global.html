@@ -1,14 +1,47 @@
+{% load static %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tela de login</title>
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}"> <!-- Adicione o caminho para seu CSS, se houver -->
 </head>
 
-<body>
+<body class= "login-body">
+    <div class="login-container">
+        <h2>Login</h2>
 
+        <!-- Mensagens de erro e sucesso -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Formulário de login -->
+        <form method="post" action="{% url 'gurps:login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Usuário:</label>
+                {{ form.username }} <!-- Campo de nome de usuário -->
+            </div>
+            <div class="form-group">
+                <label for="id_password">Senha:</label>
+                {{ form.password }} <!-- Campo de senha -->
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+
+        <!-- Link para criar uma nova conta -->
+        <p>Não tem uma conta? <a href="{% url 'gurps:register' %}">Cadastre-se</a></p>
+    </div>
 </body>
 
 </html>

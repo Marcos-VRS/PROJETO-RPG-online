@@ -3,6 +3,8 @@ from django.contrib import messages, auth
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from django.contrib.auth.hashers import make_password
+from ..forms import RegisterUserForm  # Importe o formulário
 
 
 def login_view(request):
@@ -22,10 +24,31 @@ def login_view(request):
 
         messages.error(request, "Login inválido")
 
-    return render(request, "gurps:login", {"form": form})
+    return render(request, "gurps/login.html", {"form": form})
 
 
 @login_required(login_url="gurps:login")
 def logout_view(request):
     auth.logout(request)
     return redirect("gurps:login")
+
+
+def register_view(request):
+    print("\n aqui está o REGISTER \n")
+    if request.method == "POST":
+        print("passou pelo IF")
+        form = RegisterUserForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.password = make_password(
+                form.cleaned_data["password"]
+            )  # Hashear a senha
+            user.save()
+            messages.success(request, "User registered successfully!")
+            return redirect("gurps:login")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = RegisterUserForm()
+
+    return render(request, "gurps/register.html", {"form": form})
