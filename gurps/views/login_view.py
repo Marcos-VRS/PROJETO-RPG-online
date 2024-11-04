@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from ..forms import RegisterUserForm  # Importe o formulário
+from django.urls import reverse
 
 
 def login_view(request):
@@ -45,10 +46,12 @@ def register_view(request):
             )  # Hashear a senha
             user.save()
             messages.success(request, "User registered successfully!")
+
             return redirect("gurps:login")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
+        print("aqui está o else externo")
         form = RegisterUserForm()
 
     return render(request, "gurps/register.html", {"form": form})
