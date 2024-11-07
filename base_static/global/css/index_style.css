@@ -1,0 +1,86 @@
+:root {
+    --primary-color: #230023;
+    --white-color: #ffffffe8;
+    --light-gray-color: #eeeeee3d;
+    --faded-black-color: rgba(0, 0, 0, 0.534);
+    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
+    --white-gray-color: #e2dee2;
+    --orange: rgba(126, 58, 3, 0.986);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    background-image: url("/static/global/img/paper-texture.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: Arial, sans-serif;
+}
+
+/* Remover a bolinha e qualquer estilo de lista */
+ul,
+ol {
+    list-style-type: none;
+    /* Remove a bolinha (ou marcador) da lista */
+    padding-left: 0;
+    /* Remove o padding à esquerda (se houver) */
+}
+
+/* Remover a cor azul e o sublinhado dos links */
+a {
+    color: inherit;
+    /* Herda a cor do elemento pai, ou seja, sem cor azul */
+    text-decoration: none;
+    /* Remove o sublinhado */
+}
+
+.menu-container {
+    background: var(--faded-black-color);
+    width: 33vh;
+    height: 100vh;
+    font-size: 2rem;
+    padding: 0 2rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    color: #e2dee2;
+}
+
+.nome-usuario {
+    text-align: center;
+    font-size: 2rem;
+    padding: 2rem;
+}
+
+.li-menu {
+    border: #ffffff solid;
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    border-radius: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease, color 0.3s ease, border 0.3s ease;
+
+}
+
+.li-menu:hover {
+    transform: scale(1.2);
+    color: #ff3131;
+    border: #ff3131 solid;
+}

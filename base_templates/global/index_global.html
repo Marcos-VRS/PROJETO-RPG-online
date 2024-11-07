@@ -5,15 +5,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/index_style.css' %}">
+
     <title>PAGINA INICIAL
 
     </title>
 </head>
 
 <body>
-    <div class="">{{username}}</div>
 
-    <p><a href="{% url 'gurps:logout' %}">Logout</a></p>
+
+
+
+    <div class="ultimos-jogos"></div>
+
+    <div class="menu-index">
+        <div class="menu-container">
+            <div class="nome-usuario">---{{username}}---</div>
+
+            <ul>
+                <li class="li-menu"><a href="#nova-campanha">Nova Campanha</a></li>
+                <li class="li-menu"><a href="#carregar-campanha">Carregar Campanha</a></li>
+                <li class="li-menu"><a href="#opcoes">Opções</a></li>
+                <li class="li-menu"><a href="{% url 'gurps:logout' %}">Sair</a></li>
+            </ul>
+        </div>
+    </div>
+
 
 
 
