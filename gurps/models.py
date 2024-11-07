@@ -29,6 +29,10 @@ class RegisterUser(AbstractUser):
 
 class Campanha(models.Model):
     nome = models.CharField(max_length=100)
+    xp_inicial = ...
+    xp_acumulado = ...
+    tl = ...
+
     descricao = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -62,6 +66,8 @@ class FichaPersonagem(models.Model):
     peso = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )  # Ex.: peso em kg
+    tl = models.PositiveIntegerField(null=True, blank=True)
+
     total_de_pontos = models.IntegerField(default=0)
     pontos_de_experiencia_guardados = models.IntegerField(default=0)
 
