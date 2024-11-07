@@ -84,3 +84,17 @@ a {
     color: #ff3131;
     border: #ff3131 solid;
 }
+
+/* Garantir que o <a> ocupe todo o espaço dentro do <li> */
+.li-menu a {
+    display: block;
+    /* Faz o <a> ocupar o espaço completo */
+    width: 100%;
+    /* Ocupa 100% da largura */
+    height: 100%;
+    /* Ocupa 100% da altura do <li> */
+    text-decoration: none;
+    /* Remove o sublinhado do link */
+    color: inherit;
+    /* Herda a cor do <li>, para não ter a cor azul padrão */
+}
