@@ -14,11 +14,23 @@ def index(request):
 
 
 @login_required(login_url="gurps:login")
-def nova_campanha(): ...
+def nova_campanha(request):
+    return render(request, "global/partials/_nova_campanha_index.html")
 
 
 @login_required(login_url="gurps:login")
-def carregar_campanha(): ...
+def carregar_campanha(request):
+    return render(request, "global/partials/_carregar_campanha_index.html")
+
+
+@login_required(login_url="gurps:login")
+def fichas(request):
+    return render(request, "global/partials/_fichas_index.html")
+
+
+@login_required(login_url="gurps:login")
+def opcoes(request):
+    return render(request, "global/partials/_opcoes_index.html")
 
 
 @login_required(login_url="gurps:login")

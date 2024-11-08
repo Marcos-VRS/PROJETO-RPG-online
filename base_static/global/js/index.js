@@ -1,18 +1,22 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', () => {
     // Seleciona todos os links do menu
-    const menuLinks = document.querySelectorAll(".menu-container ul li a");
-    const mainContent = document.querySelector(".main-content");
+    document.querySelectorAll('.li-menu a').forEach(link => {
+        link.addEventListener('click', function (event) {
+            event.preventDefault(); // Evita o carregamento normal
 
-    // Função para carregar o conteúdo de cada página
-    function loadPage(url) {
-        fetch(url)
-            .then(response => response.text())
-            .then(data => {
-                mainContent.innerHTML = data;
+            const url = this.href; // Obtém a URL do link clicado
+
+            // Faz a requisição AJAX para carregar o conteúdo
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest' // Identifica como requisição AJAX
+                }
             })
-            .catch(error => {
-                mainContent.innerHTML = "<p>Erro ao carregar a página.</p>";
-                console.error("Erro ao carregar o conteúdo:", error);
-            });
-    }
-})
+                .then(response => response.text()) // Converte para texto
+                .then(html => {
+                    document.querySelector('.main-content').innerHTML = html; // Insere na div
+                })
+                .catch(error => console.warn("Erro ao carregar conteúdo:", error));
+        });
+    });
+});
