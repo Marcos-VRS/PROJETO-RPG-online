@@ -33,17 +33,13 @@ body {
 ul,
 ol {
     list-style-type: none;
-    /* Remove a bolinha (ou marcador) da lista */
     padding-left: 0;
-    /* Remove o padding à esquerda (se houver) */
 }
 
 /* Remover a cor azul e o sublinhado dos links */
 a {
     color: inherit;
-    /* Herda a cor do elemento pai, ou seja, sem cor azul */
     text-decoration: none;
-    /* Remove o sublinhado */
 }
 
 .menu-container {
@@ -69,32 +65,33 @@ a {
 }
 
 .li-menu {
-    border: #ffffff solid;
     padding: 0.5rem;
     font-size: 1.5rem;
     border-radius: 1rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
-    transition: transform 0.3s ease, color 0.3s ease, border 0.3s ease;
-
+    border: solid 2px transparent;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.3s ease, border-color 0.3s ease;
+    transform-origin: center;
+    /* Define o centro como origem da transformação */
 }
 
 .li-menu:hover {
-    transform: scale(1.2);
+    transform: scale(1.1);
+    /* Aplica uma escala suave no hover */
     color: #ff3131;
-    border: #ff3131 solid;
+    border-color: #ff3131;
+    z-index: 1;
+    /* Garante que o item em hover fique acima dos outros */
 }
 
 /* Garantir que o <a> ocupe todo o espaço dentro do <li> */
 .li-menu a {
     display: block;
-    /* Faz o <a> ocupar o espaço completo */
     width: 100%;
-    /* Ocupa 100% da largura */
     height: 100%;
-    /* Ocupa 100% da altura do <li> */
     text-decoration: none;
-    /* Remove o sublinhado do link */
     color: inherit;
-    /* Herda a cor do <li>, para não ter a cor azul padrão */
 }
