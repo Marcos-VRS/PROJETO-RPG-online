@@ -15,21 +15,30 @@ def index(request):
 
 @login_required(login_url="gurps:login")
 def nova_campanha(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM NOVA CAMPANHA\n")
+
     return render(request, "global/partials/_nova_campanha_index.html")
 
 
 @login_required(login_url="gurps:login")
 def carregar_campanha(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM CARREGAR CAMPANHA\n")
     return render(request, "global/partials/_carregar_campanha_index.html")
 
 
 @login_required(login_url="gurps:login")
 def fichas(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM FICHAS\n")
     return render(request, "global/partials/_fichas_index.html")
 
 
 @login_required(login_url="gurps:login")
 def opcoes(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM OPÇÕES\n")
     return render(request, "global/partials/_opcoes_index.html")
 
 
@@ -39,6 +48,8 @@ def carregar_ficha_view(): ...
 
 @login_required(login_url="gurps:login")
 def criar_ficha_view(request, campanha_id):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM CRIAR FICHA\n")
     campanha = Campanha.objects.get(id=campanha_id)
 
     if request.method == "POST":

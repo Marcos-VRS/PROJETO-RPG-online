@@ -61,7 +61,11 @@ a {
 .nome-usuario {
     text-align: center;
     font-size: 2rem;
-    padding: 2rem;
+    padding: 0.5rem;
+    border: #e2dee2 solid;
+    border-radius: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 .li-menu {

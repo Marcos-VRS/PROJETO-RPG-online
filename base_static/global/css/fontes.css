@@ -1,0 +1,52 @@
+/* Caesar dressing ( parece com viking) */
+@import url('https://fonts.googleapis.com/css2?family=Caesar+Dressing&display=swap');
+
+.caesar-dressing-regular {
+    font-family: "Caesar Dressing", system-ui;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 2rem;
+
+}
+
+/* Alex Brush(cursiva escrita clara) */
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caesar+Dressing&display=swap');
+
+.alex-brush-regular {
+    font-family: "Alex Brush", cursive;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1.5rem;
+
+}
+
+
+/* Fredericka the great( fonte para menus) */
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caesar+Dressing&family=Fredericka+the+Great&display=swap');
+
+.fredericka-the-great-regular {
+    font-family: "Fredericka the Great", serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1.6rem;
+}
+
+
+/* Medieval Sharp (possível menu) */
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caesar+Dressing&family=Fredericka+the+Great&family=MedievalSharp&display=swap');
+
+.medievalsharp-regular {
+    font-family: "MedievalSharp", cursive;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1.5rem;
+}
+
+/* Macondo (Misterioso) */
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caesar+Dressing&family=Fredericka+the+Great&family=Macondo&family=MedievalSharp&display=swap');
+
+.macondo-regular {
+    font-family: "Macondo", cursive;
+    font-weight: 400;
+    font-style: normal;
+}
