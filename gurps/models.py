@@ -51,7 +51,6 @@ class FichaPersonagem(models.Model):
     nome_jogador = models.ForeignKey(
         settings.AUTH_USER_MODEL,  # Refere-se ao modelo de usuário personalizado
         on_delete=models.CASCADE,
-        editable=False,  # Impede edição direta do campo
         null=True,
         blank=True,
     )
@@ -59,7 +58,6 @@ class FichaPersonagem(models.Model):
     campanha = models.ForeignKey(
         Campanha,
         on_delete=models.CASCADE,
-        editable=False,  # O backend definirá a campanha automaticamente
         null=True,
         blank=True,
     )

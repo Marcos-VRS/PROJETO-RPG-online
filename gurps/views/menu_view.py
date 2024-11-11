@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from gurps.models import FichaPersonagem, Campanha
 from django.contrib.auth.decorators import login_required
-from gurps.forms import FichaPersonagemForm
+from gurps.forms import FichaPersonagemForm, CampanhaForm
+from django.contrib import messages
 
 
 # View da pagina inicial
@@ -40,6 +41,24 @@ def opcoes(request):
     username = request.user.username
     print(f"\n  O USUÁRIO [{username}] CLICOU EM OPÇÕES\n")
     return render(request, "global/partials/_opcoes_index.html")
+
+
+@login_required(login_url="gurps:login")
+def criar_campanha(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM GAME MASTER\n")
+
+    if request.method == "POST":
+        form = CampanhaForm(request.POST)
+        if form.is_valid():
+            campanha = form.save(commit=False)
+            campanha.save()
+            messages.success(request, "Campanha criada com sucesso!")
+            return redirect("gurps:index")  # Altere para a URL desejada após a criação
+    else:
+        form = CampanhaForm()
+
+    return render(request, "global/criar_campanha.html", {"form": form})
 
 
 @login_required(login_url="gurps:login")

@@ -16,6 +16,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     # Nova Campanha
     path("Nova_Campanha/", views.nova_campanha, name="nova_campanha_index"),
+    path("Nova_campanha/Criar_Campanha/", views.criar_campanha, name="criar_campanha"),
     # Carregar Campanha
     path("Carregar_Campanha/", views.carregar_campanha, name="carregar_campanha_index"),
     # Fichas
