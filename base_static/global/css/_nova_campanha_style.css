@@ -1,28 +1,25 @@
-:root {
-    --primary-color: #230023;
-    --white-color: #ffffffe8;
-    --light-gray-color: #eeeeee3d;
-    --faded-black-color: rgba(0, 0, 0, 0.534);
-    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
-    --white-gray-color: #e2dee2;
-    --orange: rgba(126, 58, 3, 0.986);
-}
-
-* {
-    margin: 0;
-    padding: 0;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
+.game-master-player-container {
     display: flex;
+    gap: 150px;
+    /* Espaço entre os botões */
+    margin-left: 33vh;
     justify-content: center;
     align-items: center;
-    height: 90vh;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+
+}
+
+.menu-button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    color: var(--white-color);
+    background-color: var(--primary-color);
+    border: 2px solid var(--orange);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.menu-button:hover {
+    background-color: var(--orange);
+    transform: scale(1.05);
 }
