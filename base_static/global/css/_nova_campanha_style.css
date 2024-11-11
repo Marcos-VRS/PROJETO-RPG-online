@@ -1,0 +1,28 @@
+:root {
+    --primary-color: #230023;
+    --white-color: #ffffffe8;
+    --light-gray-color: #eeeeee3d;
+    --faded-black-color: rgba(0, 0, 0, 0.534);
+    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
+    --white-gray-color: #e2dee2;
+    --orange: rgba(126, 58, 3, 0.986);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
