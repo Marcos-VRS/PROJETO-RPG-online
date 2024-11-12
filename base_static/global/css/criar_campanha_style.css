@@ -1,0 +1,131 @@
+:root {
+    --primary-color: #230023;
+    --white-color: #ffffffe8;
+    --light-gray-color: #eeeeee3d;
+    --faded-black-color: rgba(0, 0, 0, 0.534);
+    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
+    --white-gray-color: #e2dee2;
+    --orange: rgba(126, 58, 3, 0.986);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    background-image: url("/static/global/img/paper-texture.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding: 20px;
+}
+
+.titulo {
+    background-color: #230023;
+    color: var(--white-color);
+    text-align: center;
+    padding: 2rem;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    border: var(--white-color) solid;
+    border-radius: 2rem;
+}
+
+form {
+    background-color: var(--primary-color);
+    padding: 20px;
+    border: var(--white-color) solid;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px var(--faded-black-color);
+    width: 60%;
+    margin: auto;
+}
+
+form p {
+    margin-bottom: 15px;
+    color: var(--white-gray-color);
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid var(--faded-thin-black-color);
+    border-radius: 4px;
+    background-color: var(--light-gray-color);
+    color: var(--white-color);
+    font-size: 1em;
+}
+
+textarea {
+    height: 30rem;
+    max-width: 60.8rem;
+    max-height: 30rem;
+
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--orange);
+    color: var(--white-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 1em;
+}
+
+button[type="submit"]:hover {
+    background-color: #a74902;
+}
+
+button[type="submit"]:active {
+    background-color: #944101;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    .titulo {
+        font-size: 1.3em;
+    }
+
+    form {
+        padding: 15px;
+        max-width: 90%;
+    }
+
+    button[type="submit"] {
+        font-size: 0.9em;
+    }
+}
+
+/* Responsividade para telas muito pequenas (como smartphones) */
+@media (max-width: 480px) {
+    .titulo {
+        font-size: 1.2em;
+    }
+
+    form {
+        padding: 10px;
+        max-width: 100%;
+    }
+
+    button[type="submit"] {
+        font-size: 0.85em;
+        padding: 8px;
+    }
+}

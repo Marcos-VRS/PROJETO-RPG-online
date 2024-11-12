@@ -1,14 +1,18 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'global/css/criar_campanha_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>CRIAR CAMPANHA</title>
 </head>
 
 <body>
-    <form method="POST">
+    <div style="font-size: 3rem;" class="titulo fredericka-the-great-regular">Criar campanha</div>
+    <form class="medievalsharp-regular" method="POST">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Salvar</button>

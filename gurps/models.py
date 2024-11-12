@@ -36,7 +36,7 @@ class Campanha(models.Model):
     tl = models.IntegerField(default=0)
     fichas_players = models.JSONField(blank=True, null=True)
 
-    descricao = models.TextField(blank=True, null=True)
+    descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
     regras = models.TextField(blank=True, null=True)
 
     def __str__(self):
