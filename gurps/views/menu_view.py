@@ -50,10 +50,14 @@ def criar_campanha(request):
 
     if request.method == "POST":
         form = CampanhaForm(request.POST)
+        nome_campanha = request.POST.get("nome")
         if form.is_valid():
             campanha = form.save(commit=False)
             campanha.save()
             messages.success(request, "Campanha criada com sucesso!")
+            print(
+                f"\n  O USUÁRIO [{username}] CRIOU UMA NOVA CAMPANHA COM O NOME [{nome_campanha}]\n"
+            )
             return redirect("gurps:index")  # Altere para a URL desejada após a criação
     else:
         form = CampanhaForm()
