@@ -85,9 +85,14 @@ def carregar_campanha_index(request):
     return render(request, "global/partials/_carregar_campanha_index.html")
 
 
+@login_required(login_url="gurps:login")
 def carregar_campanha(request, id):
+    username = request.user.username
     campanha = get_object_or_404(Campanha, id=id)  # Busca a campanha pelo ID
-    return render(request, "global/campanha_detalhes.html", {"campanha": campanha})
+    print(
+        f"\n  O USUÁRIO [{username}] ESCOLHE A CAMPANHA [{campanha.nome}] do GM [{campanha.dono}]\n"
+    )
+    return render(request, "global/tela_jogo.html", {"campanha": campanha})
 
 
 @login_required(login_url="gurps:login")
