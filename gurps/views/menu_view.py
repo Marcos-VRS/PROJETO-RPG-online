@@ -53,6 +53,8 @@ def criar_campanha(request):
         nome_campanha = request.POST.get("nome")
         if form.is_valid():
             campanha = form.save(commit=False)
+            if "imagem" in request.FILES:
+                campanha.imagem = request.FILES["imagem"]  # Atribui o arquivo de imagem
             campanha.save()
             messages.success(request, "Campanha criada com sucesso!")
             print(

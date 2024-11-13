@@ -109,7 +109,7 @@ button[type="submit"]:active {
 
 .imagem-miniatura {
     display: none;
-    width: 150px;
+    width: 600px;
     height: auto;
     margin-top: 10px;
 }

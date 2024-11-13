@@ -46,6 +46,7 @@ class CampanhaAdmin(admin.ModelAdmin):
                     "fichas_players",
                     "descricao",
                     "regras",
+                    "imagem",
                 )
             },
         ),
