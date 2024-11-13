@@ -1,12 +1,15 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Register</title>
-    <link rel="stylesheet" href="{% static 'global/css/login_style.css' %}"> <!-- Adicione o caminho para seu CSS, se houver -->
+    <link rel="stylesheet" href="{% static 'global/css/login_style.css' %}">
+    <!-- Adicione o caminho para seu CSS, se houver -->
 </head>
-<body class= "login-body">
+
+<body class="login-body">
     <div class="login-container">
         <h2>Registrar</h2>
         <form method="POST">
@@ -17,4 +20,5 @@
         <p>Já possui uma conta ? <a href="{% url 'gurps:login' %}">Login</a>.</p>
     </div>
 </body>
+
 </html>

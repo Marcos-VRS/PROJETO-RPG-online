@@ -1,0 +1,72 @@
+:root {
+    --primary-color: #230023;
+    --white-color: #ffffffe8;
+    --light-gray-color: #eeeeee3d;
+    --faded-black-color: rgba(0, 0, 0, 0.534);
+    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
+    --white-gray-color: #e2dee2;
+    --orange: rgba(126, 58, 3, 0.986);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-image: url("/static/global/img/paper-texture.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.titulo-pagina {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    border: var(--white-color) solid;
+    padding: 2rem;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border-radius: 1rem;
+    margin: 2rem;
+
+}
+
+.ul-lista {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.imagem-miniatura {
+    display: flex;
+    width: 300px;
+    max-width: 300px;
+    height: auto;
+    border: var(--white-color) Solid;
+    margin-top: 10px;
+}
+
+.item-lista {
+    display: flex;
+    background: var(--primary-color);
+    text-align: center;
+    color: var(--white-color);
+    justify-content: center;
+    flex-direction: column;
+    border: #e2dee2 solid;
+    border-radius: 1rem;
+    padding: 3rem;
+    height: auto;
+    width: auto;
+    margin: 2rem;
+}

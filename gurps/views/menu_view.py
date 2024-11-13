@@ -14,33 +14,13 @@ def index(request):
     return render(request, "gurps/index.html", {"username": username})
 
 
+# Views da parte de Nova Campanha
 @login_required(login_url="gurps:login")
 def nova_campanha(request):
     username = request.user.username
     print(f"\n  O USUÁRIO [{username}] CLICOU EM NOVA CAMPANHA\n")
 
     return render(request, "global/partials/_nova_campanha_index.html")
-
-
-@login_required(login_url="gurps:login")
-def carregar_campanha(request):
-    username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM CARREGAR CAMPANHA\n")
-    return render(request, "global/partials/_carregar_campanha_index.html")
-
-
-@login_required(login_url="gurps:login")
-def fichas(request):
-    username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM FICHAS\n")
-    return render(request, "global/partials/_fichas_index.html")
-
-
-@login_required(login_url="gurps:login")
-def opcoes(request):
-    username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM OPÇÕES\n")
-    return render(request, "global/partials/_opcoes_index.html")
 
 
 @login_required(login_url="gurps:login")
@@ -69,8 +49,11 @@ def criar_campanha(request):
     return render(request, "global/criar_campanha.html", {"form": form})
 
 
-@login_required(login_url="gurps:login")
-def carregar_ficha_view(): ...
+def lista_campanhas(request):
+    campanhas = Campanha.objects.all()  # Recupera todas as campanhas
+    return render(
+        request, "global/lista_campanhas_nova_campanha.html", {"campanhas": campanhas}
+    )
 
 
 @login_required(login_url="gurps:login")
@@ -93,3 +76,28 @@ def criar_ficha_view(request, campanha_id):
     return render(
         request, "caminho/para/criar_ficha.html", {"form": form, "campanha": campanha}
     )
+
+
+@login_required(login_url="gurps:login")
+def carregar_campanha(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM CARREGAR CAMPANHA\n")
+    return render(request, "global/partials/_carregar_campanha_index.html")
+
+
+@login_required(login_url="gurps:login")
+def fichas(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM FICHAS\n")
+    return render(request, "global/partials/_fichas_index.html")
+
+
+@login_required(login_url="gurps:login")
+def opcoes(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM OPÇÕES\n")
+    return render(request, "global/partials/_opcoes_index.html")
+
+
+@login_required(login_url="gurps:login")
+def carregar_ficha_view(): ...

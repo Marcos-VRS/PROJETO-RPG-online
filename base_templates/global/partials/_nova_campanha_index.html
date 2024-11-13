@@ -1,7 +1,7 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 <body>
     <div class="game-master-player-container medievalsharp-regular">
         <a href="{% url "gurps:criar_campanha" %}"><button class="menu-button ">GAME MASTER</button></a>
-        <a><button class="menu-button">PLAYER</button></a>
+        <a href="{% url "gurps:lista_campanhas" %}"><button class="menu-button">PLAYER</button></a>
     </div>
 </body>
 
