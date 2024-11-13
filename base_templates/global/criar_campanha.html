@@ -11,8 +11,8 @@
 </head>
 
 <body>
-    <div style="font-size: 3rem;" class="titulo fredericka-the-great-regular">Criar campanha</div>
-    <form method="post" enctype="multipart/form-data">
+    <div style="font-size: 3rem;" class="titulo medievalsharp-regular ">Criar campanha</div>
+    <form class="medievalsharp-regular " method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
 
@@ -26,7 +26,7 @@
             <img class="imagem-miniatura" id="miniatura_imagem" src="#" alt="Pré-visualização da imagem">
         </div>
 
-        <button type="submit">Criar Campanha</button>
+        <button class="medievalsharp-regular " type="submit">Criar Campanha</button>
     </form>
     <script src="{% static 'global/js/criar_campanha.js' %}"></script>
 

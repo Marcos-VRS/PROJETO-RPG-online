@@ -49,6 +49,7 @@ form {
     box-shadow: 0px 4px 8px var(--faded-black-color);
     width: 60%;
     margin: auto;
+    font-size: 2rem;
 }
 
 form p {
@@ -67,7 +68,7 @@ select {
     border-radius: 4px;
     background-color: var(--light-gray-color);
     color: var(--white-color);
-    font-size: 1em;
+    font-size: 1rem;
 }
 
 textarea {
@@ -111,37 +112,4 @@ button[type="submit"]:active {
     width: 150px;
     height: auto;
     margin-top: 10px;
-}
-
-/* Responsividade para telas menores */
-@media (max-width: 768px) {
-    .titulo {
-        font-size: 1.3em;
-    }
-
-    form {
-        padding: 15px;
-        max-width: 90%;
-    }
-
-    button[type="submit"] {
-        font-size: 0.9em;
-    }
-}
-
-/* Responsividade para telas muito pequenas (como smartphones) */
-@media (max-width: 480px) {
-    .titulo {
-        font-size: 1.2em;
-    }
-
-    form {
-        padding: 10px;
-        max-width: 100%;
-    }
-
-    button[type="submit"] {
-        font-size: 0.85em;
-        padding: 8px;
-    }
 }
