@@ -26,7 +26,11 @@ urlpatterns = [
         views.carregar_campanha_index,
         name="carregar_campanha_index",
     ),
-    path("campanha/<int:id>/", views.carregar_campanha, name="carregar_campanha"),
+    path(
+        "Campanha/<int:id>/Criar_Ficha/",
+        views.criar_ficha_campanha,
+        name="criar_ficha_campanha",
+    ),
     # Fichas
     path("Fichas/", views.fichas, name="fichas_index"),
     # Opções

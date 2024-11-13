@@ -32,7 +32,7 @@ body {
     display: flex;
     justify-content: center;
     text-align: center;
-    border: var(--white-color) solid;
+    border: var(--white-color) solid 0.4rem;
     padding: 2rem;
     background-color: var(--primary-color);
     color: var(--white-color);
@@ -63,10 +63,19 @@ body {
     color: var(--white-color);
     justify-content: center;
     flex-direction: column;
-    border: #e2dee2 solid;
+    border: #e2dee2 solid 0.3rem;
     border-radius: 1rem;
     padding: 3rem;
     height: auto;
     width: auto;
     margin: 2rem;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    /* Suaviza a transição */
+}
+
+.item-lista:hover {
+    transform: scale(1.1);
+    /* Cresce o elemento em 1.1 vezes */
+    border-color: red;
+    /* Altera a borda para vermelho */
 }

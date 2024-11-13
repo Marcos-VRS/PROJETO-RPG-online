@@ -86,13 +86,15 @@ def carregar_campanha_index(request):
 
 
 @login_required(login_url="gurps:login")
-def carregar_campanha(request, id):
+def criar_ficha_campanha(request, id):
     username = request.user.username
     campanha = get_object_or_404(Campanha, id=id)  # Busca a campanha pelo ID
     print(
         f"\n  O USUÁRIO [{username}] ESCOLHE A CAMPANHA [{campanha.nome}] do GM [{campanha.dono}]\n"
     )
-    return render(request, "global/tela_jogo.html", {"campanha": campanha})
+    return render(
+        request, "global/criar_ficha.html", {"campanha": campanha, "username": username}
+    )
 
 
 @login_required(login_url="gurps:login")
