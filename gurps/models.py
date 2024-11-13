@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
@@ -30,6 +31,14 @@ class RegisterUser(AbstractUser):
 
 class Campanha(models.Model):
     nome = models.CharField(max_length=100)
+    dono = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="campanhas",
+        blank=True,
+        null=True,
+    )
+
     xp_inicial = models.IntegerField(default=0)
     pontos_de_desvantagens = models.IntegerField(default=0)
     xp_acumulado = models.IntegerField(default=0)

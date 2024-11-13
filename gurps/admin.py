@@ -26,6 +26,7 @@ class RegisterUserAdmin(admin.ModelAdmin):
 @admin.register(Campanha)
 class CampanhaAdmin(admin.ModelAdmin):
     list_display = (
+        "dono",
         "nome",
         "xp_inicial",
         "xp_acumulado",
@@ -38,6 +39,7 @@ class CampanhaAdmin(admin.ModelAdmin):
             None,
             {
                 "fields": (
+                    "dono",
                     "nome",
                     "xp_inicial",
                     "pontos_de_desvantagens",
