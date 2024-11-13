@@ -49,7 +49,7 @@ def criar_campanha(request):
     print(f"\n  O USUÁRIO [{username}] CLICOU EM GAME MASTER\n")
 
     if request.method == "POST":
-        form = CampanhaForm(request.POST)
+        form = CampanhaForm(request.POST, request.FILES)
         nome_campanha = request.POST.get("nome")
         if form.is_valid():
             campanha = form.save(commit=False)

@@ -97,6 +97,22 @@ button[type="submit"]:active {
     background-color: #944101;
 }
 
+.txt-miniatura-imagem {
+    color: var(--white-color);
+
+}
+
+.input-imagem-miniatura {
+    color: var(--white-color)
+}
+
+.imagem-miniatura {
+    display: none;
+    width: 150px;
+    height: auto;
+    margin-top: 10px;
+}
+
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
     .titulo {
