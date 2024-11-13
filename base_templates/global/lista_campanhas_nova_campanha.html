@@ -15,9 +15,11 @@
     <ul class="ul-lista">
         {% for campanha in campanhas %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <h2>{{ campanha.nome }}</h2>
-            <h2>GM:{{campanha.dono}}</h2>
-            <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />
+            <a href="{% url 'gurps:carregar_campanha' campanha.id %}">
+                <h2>{{ campanha.nome }}</h2>
+                <h2>GM: {{ campanha.dono }}</h2>
+                <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />
+            </a>
         </li>
         {% endfor %}
     </ul>

@@ -21,7 +21,12 @@ urlpatterns = [
         "Nova_campanha/lista_campanhas/", views.lista_campanhas, name="lista_campanhas"
     ),
     # Carregar Campanha
-    path("Carregar_Campanha/", views.carregar_campanha, name="carregar_campanha_index"),
+    path(
+        "Carregar_Campanha/",
+        views.carregar_campanha_index,
+        name="carregar_campanha_index",
+    ),
+    path("campanha/<int:id>/", views.carregar_campanha, name="carregar_campanha"),
     # Fichas
     path("Fichas/", views.fichas, name="fichas_index"),
     # Opções

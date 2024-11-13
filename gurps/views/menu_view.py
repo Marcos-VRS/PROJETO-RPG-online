@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from gurps.models import FichaPersonagem, Campanha
 from django.contrib.auth.decorators import login_required
 from gurps.forms import FichaPersonagemForm, CampanhaForm
@@ -79,10 +79,15 @@ def criar_ficha_view(request, campanha_id):
 
 
 @login_required(login_url="gurps:login")
-def carregar_campanha(request):
+def carregar_campanha_index(request):
     username = request.user.username
     print(f"\n  O USUÁRIO [{username}] CLICOU EM CARREGAR CAMPANHA\n")
     return render(request, "global/partials/_carregar_campanha_index.html")
+
+
+def carregar_campanha(request, id):
+    campanha = get_object_or_404(Campanha, id=id)  # Busca a campanha pelo ID
+    return render(request, "global/campanha_detalhes.html", {"campanha": campanha})
 
 
 @login_required(login_url="gurps:login")
