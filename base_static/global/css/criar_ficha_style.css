@@ -1,0 +1,45 @@
+:root {
+    --primary-color: #230023;
+    --white-color: #ffffffe8;
+    --light-gray-color: #eeeeee3d;
+    --faded-black-color: rgba(0, 0, 0, 0.534);
+    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
+    --white-gray-color: #e2dee2;
+    --orange: rgba(126, 58, 3, 0.986);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-image: url("/static/global/img/paper-texture.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.ficha-info {
+    border: var(--white-color) solid;
+}
+
+.ficha-atributos {
+    border: var(--white-color) solid;
+}
+
+.ficha-subatributos {
+    border: var(--white-color) solid;
+}
+
+.ficha-rd {
+    border: var(--white-color) solid;
+}

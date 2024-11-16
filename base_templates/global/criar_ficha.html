@@ -1,19 +1,242 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/criar_ficha_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
     <title>Criar Ficha</title>
 </head>
 
 <body>
-    <p>PLAYER: {{username}}</p>
-    <p>CAMPANHA: {{campanha.nome}}</p>
-    <p>GM: {{campanha.dono}}</p>
+    <h1>Criar Ficha</h1>
+    <p>PLAYER: {{ username }}</p>
+    <p>CAMPANHA: {{ campanha.nome }}</p>
+    <p>GM: {{ campanha.dono }}</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
 
 
+
+
+        <!-- Campo Nome do Personagem -->
+        <div class="ficha-info">
+            <div class="form-field">
+                <label for="id_nome_personagem">Nome do Personagem</label>
+                <input type="text" name="nome_personagem" id="id_nome_personagem"
+                    value="{{ form.nome_personagem.value }}" placeholder="Nome do personagem" />
+            </div>
+
+            <!-- Campo Idade -->
+            <div class="form-field">
+                <label for="id_idade">Idade</label>
+                <input type="number" name="idade" id="id_idade" value="{{ form.idade.value }}" min="0" />
+            </div>
+
+            <!-- Campo Aparência -->
+            <div class="form-field">
+                <label for="id_aparencia">Aparência</label>
+                <textarea name="aparencia" id="id_aparencia" rows="5"
+                    placeholder="Descreva a aparência do personagem">{{ form.aparencia.value }}</textarea>
+            </div>
+        </div>
+
+
+
+
+
+
+        <!-- Campos de Atributos (ST, DX, IQ, HT e seus XP) -->
+        <div class="ficha-atributos">
+            <h2>Atributos</h2>
+
+            <div class="form-field">
+                <label for="id_st">ST:</label>
+                <input type="number" name="st" id="id_st" readonly />
+            </div>
+            <div class="form-field">
+                <label for="id_xp_st">XP ST:</label>
+                <input type="text" name="xp_st" id="id_xp_st" />
+            </div>
+
+            <div class="form-field">
+                <label for="id_dx">DX:</label>
+                <input type="number" name="dx" id="id_dx" readonly />
+            </div>
+            <div class="form-field">
+                <label for="id_xp_dx">XP DX:</label>
+                <input type="text" name="xp_dx" id="id_xp_dx" value="{{ form.xp_dx.value }}" min="0" />
+            </div>
+
+            <div class="form-field">
+                <label for="id_iq">IQ:</label>
+                <input type="number" name="iq" id="id_iq" readonly />
+            </div>
+            <div class="form-field">
+                <label for="id_xp_iq">XP IQ:</label>
+                <input type="text" name="xp_iq" id="id_xp_iq" />
+            </div>
+
+            <div class="form-field">
+                <label for="id_ht">HT:</label>
+                <input type="number" name="ht" id="id_ht" readonly />
+            </div>
+            <div class="form-field">
+                <label for="id_xp_ht">XP HT:</label>
+                <input type="text" name="xp_ht" id="id_xp_ht" />
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+        <div class="ficha-subatributos">
+            <h2>Subatributos</h2>
+            <div class="form-field">
+                <label for="subatributo_hp">HP:</label>
+                <input type="number" name="subatributos[hp]" id="subatributo_hp">
+            </div>
+
+            <div class="form-field">
+                <label for="subatributo_fp">FP:</label>
+                <input type="number" name="subatributos[fp]" id="subatributo_fp">
+            </div>
+
+            <div class="form-field">
+                <label for="subatributo_basic_lift">Basic Lift:</label>
+                <input type="text" name="subatributos[basic_lift]" id="subatributo_basic_lift">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_swing">Swing:</label>
+                <input type="text" name="subatributos[swing]" id="subatributo_swing">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_thrust">Thrust:</label>
+                <input type="text" name="subatributos[thrust]" id="subatributo_thrust">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_swing_weapon">Swing Weapon:</label>
+                <input type="text" name="subatributos[swing_weapon]" id="subatributo_swing_weapon">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_thrust_weapon">Thrust Weapon:</label>
+                <input type="text" name="subatributos[thrust_weapon]" id="subatributo_thrust_weapon">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_move">Move:</label>
+                <input type="text" name="subatributos[move]" id="subatributo_move">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_speed">Speed:</label>
+                <input type="number" name="subatributos[speed]" id="subatributo_speed">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_dodge">Dodge:</label>
+                <input type="number" name="subatributos[dodge]" id="subatributo_dodge">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_parry_unarmed">Parry Unarmed:</label>
+                <input type="number" name="subatributos[parry_unarmed]" id="subatributo_parry_unarmed">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_parry_weapon">Parry Weapon:</label>
+                <input type="number" name="subatributos[parry_weapon]" id="subatributo_parry_weapon">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_stress">Stress:</label>
+                <input type="number" name="subatributos[stress]" id="subatributo_stress">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_will">Will:</label>
+                <input type="number" name="subatributos[will]" id="subatributo_will">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_perception">Perception:</label>
+                <input type="number" name="subatributos[perception]" id="subatributo_perception">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_money">Money:</label>
+                <input type="text" name="subatributos[money]" id="subatributo_money">
+            </div>
+        </div>
+
+
+
+        <div class="ficha-rd">
+            <h2>Armor</h2>
+
+            <div class="form-field">
+                <label for="subatributo_head_rd">Head RD:</label>
+                <input type="number" name="subatributos[head_rd]" id="subatributo_head_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_torso_rd">Torso RD:</label>
+                <input type="number" name="subatributos[torso_rd]" id="subatributo_torso_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_groin_rd">Groin RD:</label>
+                <input type="number" name="subatributos[groin_rd]" id="subatributo_groin_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_arm_rd">Arm RD:</label>
+                <input type="number" name="subatributos[arm_rd]" id="subatributo_arm_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_leg_rd">Leg RD:</label>
+                <input type="number" name="subatributos[leg_rd]" id="subatributo_leg_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_hand_rd">Hand RD:</label>
+                <input type="number" name="subatributos[hand_rd]" id="subatributo_hand_rd">
+            </div>
+            <div class="form-field">
+                <label for="subatributo_feet_rd">Feet RD:</label>
+                <input type="number" name="subatributos[feet_rd]" id="subatributo_feet_rd">
+            </div>
+        </div>
+
+
+
+
+        <!-- Campo Vantagens -->
+        <div class="form-field">
+            <label for="id_advantages">Vantagens</label>
+            <textarea name="advantages" id="id_advantages" rows="5"
+                placeholder="Vantagens em formato JSON">{{ form.advantages.value }}</textarea>
+        </div>
+
+        <!-- Campo Desvantagens -->
+        <div class="form-field">
+            <label for="id_disadvantages">Desvantagens</label>
+            <textarea name="disadvantages" id="id_disadvantages" rows="5"
+                placeholder="Desvantagens em formato JSON">{{ form.disadvantages.value }}</textarea>
+        </div>
+
+        <!-- Campo Perícias -->
+        <div class="form-field">
+            <label for="id_skills">Perícias</label>
+            <textarea name="skills" id="id_skills" rows="5"
+                placeholder="Perícias em formato JSON">{{ form.skills.value }}</textarea>
+        </div>
+
+        <!-- Campo Equipamentos -->
+        <div class="form-field">
+            <label for="id_equipments">Equipamentos</label>
+            <textarea name="equipments" id="id_equipments" rows="5"
+                placeholder="Equipamentos em formato JSON">{{ form.equipments.value }}</textarea>
+        </div>
+
+        <!-- Botão de Enviar -->
+        <button type="submit">Salvar Ficha</button>
+    </form>
+    <script src="{% static 'global/js/criar_ficha.js' %}"></script>
 </body>
 
 </html>

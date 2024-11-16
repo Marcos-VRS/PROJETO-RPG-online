@@ -59,22 +59,23 @@ def lista_campanhas(request):
 @login_required(login_url="gurps:login")
 def criar_ficha_view(request, campanha_id):
     username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM CRIAR FICHA\n")
-    campanha = Campanha.objects.get(id=campanha_id)
+    campanha = get_object_or_404(Campanha, id=campanha_id)
 
     if request.method == "POST":
-        form = FichaPersonagemForm(request.POST)
+        form = FichaPersonagemForm(request.POST, user=request.user)
         if form.is_valid():
             ficha = form.save(commit=False)
-            ficha.nome_jogador = request.user
-            ficha.campanha = campanha
+            ficha.nome_jogador = request.user  # Define o jogador automaticamente
+            ficha.campanha = campanha  # Define a campanha automaticamente
             ficha.save()
-            return redirect("some_view_to_redirect_after_creation")
+            return redirect("gurps:index")
     else:
-        form = FichaPersonagemForm()
+        form = FichaPersonagemForm(user=request.user)
 
     return render(
-        request, "caminho/para/criar_ficha.html", {"form": form, "campanha": campanha}
+        request,
+        "global/criar_ficha.html",
+        {"form": form, "username": username, "campanha": campanha},
     )
 
 
@@ -90,7 +91,7 @@ def criar_ficha_campanha(request, id):
     username = request.user.username
     campanha = get_object_or_404(Campanha, id=id)  # Busca a campanha pelo ID
     print(
-        f"\n  O USUÁRIO [{username}] ESCOLHE A CAMPANHA [{campanha.nome}] do GM [{campanha.dono}]\n"
+        f"\n  O USUÁRIO [{username}] ESCOLHEU A CAMPANHA [{campanha.nome}] do GM [{campanha.dono}]\n"
     )
     return render(
         request, "global/criar_ficha.html", {"campanha": campanha, "username": username}
