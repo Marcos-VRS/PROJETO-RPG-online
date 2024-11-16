@@ -68,7 +68,7 @@
             </div>
             <div class="form-field">
                 <label for="id_xp_dx">XP DX:</label>
-                <input type="text" name="xp_dx" id="id_xp_dx" value="{{ form.xp_dx.value }}" min="0" />
+                <input type="text" name="xp_dx" id="id_xp_dx" />
             </div>
 
             <div class="form-field">
@@ -84,7 +84,7 @@
                 <label for="id_ht">HT:</label>
                 <input type="number" name="ht" id="id_ht" readonly />
             </div>
-            <div class="form-field">
+            <div class="form-field atributo-horizontal">
                 <label for="id_xp_ht">XP HT:</label>
                 <input type="text" name="xp_ht" id="id_xp_ht" />
             </div>
@@ -204,27 +204,81 @@
 
 
 
-
         <!-- Campo Vantagens -->
-        <div class="form-field">
-            <label for="id_advantages">Vantagens</label>
-            <textarea name="advantages" id="id_advantages" rows="5"
-                placeholder="Vantagens em formato JSON">{{ form.advantages.value }}</textarea>
+        <div class="ficha-vantagens">
+            <h2>Vantagens</h2>
+
+            <div id="vantagens-container">
+                <!-- Linha para uma vantagem -->
+                <div class="form-field vantagem-linha">
+                    <input type="text" name="vantagens_nome[]" class="vantagem-nome" placeholder="Nome da vantagem" />
+                    <input type="number" name="vantagens_valor[]" class="vantagem-valor"
+                        placeholder="Valor da vantagem" />
+                </div>
+            </div>
+
+            <!-- Botão para adicionar mais vantagens -->
+            <button type="button" id="adicionar-vantagem">Adicionar Vantagem</button>
         </div>
 
+
         <!-- Campo Desvantagens -->
-        <div class="form-field">
-            <label for="id_disadvantages">Desvantagens</label>
-            <textarea name="disadvantages" id="id_disadvantages" rows="5"
-                placeholder="Desvantagens em formato JSON">{{ form.disadvantages.value }}</textarea>
+        <div class="ficha-desvantagens">
+            <h2>Desvantagens</h2>
+
+            <div id="desvantagens-container">
+                <!-- Linha para uma desvantagem -->
+                <div class="form-field desvantagem-linha">
+                    <input type="text" name="desvantagens_nome[]" class="desvantagem-nome"
+                        placeholder="Nome da desvantagem" />
+                    <input type="number" name="desvantagens_valor[]" class="desvantagem-valor"
+                        placeholder="Valor da desvantagem" />
+                </div>
+            </div>
+
+            <!-- Botão para adicionar mais desvantagens -->
+            <button type="button" id="adicionar-desvantagem">Adicionar Desvantagem</button>
         </div>
 
         <!-- Campo Perícias -->
-        <div class="form-field">
-            <label for="id_skills">Perícias</label>
-            <textarea name="skills" id="id_skills" rows="5"
-                placeholder="Perícias em formato JSON">{{ form.skills.value }}</textarea>
+        <div class="ficha-pericias">
+            <h2>Perícias</h2>
+
+            <div id="pericias-container">
+                <!-- Linha para uma perícia -->
+                <div class="form-field pericia-linha">
+                    <input type="text" name="pericias_nome[]" class="pericia-nome" placeholder="Nome da perícia" />
+
+                    <!-- Primeiro select para Atributo Base -->
+                    <select name="pericias_atributo_base[]" class="pericia-atributo-base">
+                        <option value="">Atributo Base</option>
+                        <option value="ST">ST</option>
+                        <option value="DX">DX</option>
+                        <option value="IQ">IQ</option>
+                        <option value="HT">HT</option>
+                        <option value="Will">Will</option>
+                        <option value="Per">Per</option>
+                    </select>
+
+                    <!-- Segundo select para Dificuldade -->
+                    <select name="pericias_dificuldade[]" class="pericia-dificuldade">
+                        <option value="">Dificuldade</option>
+                        <option value="Fácil">Fácil</option>
+                        <option value="Média">Média</option>
+                        <option value="Difícil">Difícil</option>
+                        <option value="Muito Difícil">Muito Difícil</option>
+                    </select>
+
+                    <input type="number" name="pericias_custo[]" class="pericia-custo" placeholder="Custo" />
+                    <input type="number" name="pericias_nh[]" class="pericia-nh" placeholder="NH" readonly />
+                </div>
+            </div>
+
+            <!-- Botão para adicionar mais perícias -->
+            <button type="button" id="adicionar-pericia">Adicionar Perícia</button>
         </div>
+
+
 
         <!-- Campo Equipamentos -->
         <div class="form-field">
@@ -236,7 +290,10 @@
         <!-- Botão de Enviar -->
         <button type="submit">Salvar Ficha</button>
     </form>
-    <script src="{% static 'global/js/criar_ficha.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_desvantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_pericias.js' %}"></script>
 </body>
 
 </html>

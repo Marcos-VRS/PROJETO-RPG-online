@@ -36,6 +36,18 @@ body {
     border: var(--white-color) solid;
 }
 
+.ficha-vantagens {
+    border: var(--white-color) solid;
+}
+
+.ficha-desvantagens {
+    border: var(--white-color) solid;
+}
+
+.ficha-pericias {
+    border: var(--white-color) solid;
+}
+
 .ficha-subatributos {
     border: var(--white-color) solid;
 }
