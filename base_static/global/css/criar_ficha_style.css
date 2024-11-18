@@ -55,3 +55,27 @@ body {
 .ficha-rd {
     border: var(--white-color) solid;
 }
+
+.ficha-melee {
+    border: var(--white-color) solid;
+}
+
+.ficha-range {
+    border: var(--white-color) solid;
+}
+
+.ficha-armor {
+    border: var(--white-color) solid;
+}
+
+.campo-curto {
+    width: 100px;
+    /* Define o tamanho dos campos */
+
+}
+
+.campo-curto-atributo {
+    width: 30px;
+    /* Define o tamanho dos campos */
+
+}

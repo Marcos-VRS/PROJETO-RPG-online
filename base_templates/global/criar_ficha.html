@@ -55,38 +55,38 @@
 
             <div class="form-field">
                 <label for="id_st">ST:</label>
-                <input type="number" name="st" id="id_st" readonly />
+                <input class="campo-curto-atributo" type="number" name="st" id="id_st" readonly />
             </div>
             <div class="form-field">
                 <label for="id_xp_st">XP ST:</label>
-                <input type="text" name="xp_st" id="id_xp_st" />
+                <input class="campo-curto-atributo" type="text" name="xp_st" id="id_xp_st" />
             </div>
 
             <div class="form-field">
                 <label for="id_dx">DX:</label>
-                <input type="number" name="dx" id="id_dx" readonly />
+                <input class="campo-curto-atributo" type="number" name="dx" id="id_dx" readonly />
             </div>
             <div class="form-field">
                 <label for="id_xp_dx">XP DX:</label>
-                <input type="text" name="xp_dx" id="id_xp_dx" />
+                <input class="campo-curto-atributo" type="text" name="xp_dx" id="id_xp_dx" />
             </div>
 
             <div class="form-field">
                 <label for="id_iq">IQ:</label>
-                <input type="number" name="iq" id="id_iq" readonly />
+                <input class="campo-curto-atributo" type="number" name="iq" id="id_iq" readonly />
             </div>
             <div class="form-field">
                 <label for="id_xp_iq">XP IQ:</label>
-                <input type="text" name="xp_iq" id="id_xp_iq" />
+                <input class="campo-curto-atributo" type="text" name="xp_iq" id="id_xp_iq" />
             </div>
 
             <div class="form-field">
                 <label for="id_ht">HT:</label>
-                <input type="number" name="ht" id="id_ht" readonly />
+                <input class="campo-curto-atributo" type="number" name="ht" id="id_ht" readonly />
             </div>
             <div class="form-field atributo-horizontal">
                 <label for="id_xp_ht">XP HT:</label>
-                <input type="text" name="xp_ht" id="id_xp_ht" />
+                <input class="campo-curto-atributo" type="text" name="xp_ht" id="id_xp_ht" />
             </div>
         </div>
 
@@ -281,19 +281,86 @@
 
 
         <!-- Campo Equipamentos -->
-        <div class="form-field">
-            <label for="id_equipments">Equipamentos</label>
-            <textarea name="equipments" id="id_equipments" rows="5"
-                placeholder="Equipamentos em formato JSON">{{ form.equipments.value }}</textarea>
-        </div>
+        <div class="ficha-equipamentos">
+            <h2>Equipamentos</h2>
 
-        <!-- Botão de Enviar -->
-        <button type="submit">Salvar Ficha</button>
+            <!-- Campo Equipamentos Melee -->
+            <div class="ficha-melee">
+                <h3>Melee</h3>
+                <div id="equipamentos-melee-container">
+                    <!-- Linha para um equipamento Melee -->
+                    <div class="form-field equipamento-linha">
+                        <input class="campo-curto" type="text" name="equipamentos_melee_nome[]"
+                            placeholder="Nome do equipamento Melee" />
+                        <input class="campo-curto" type="text" name="equipamentos_melee_damage[]"
+                            placeholder="Damage" />
+                        <input class="campo-curto" type="text" name="equipamentos_melee_reach[]" placeholder="Reach" />
+                        <input class="campo-curto" type="text" name="equipamentos_melee_parry[]" placeholder="Parry" />
+                        <input class="campo-curto" type="number" name="equipamentos_melee_cost[]" placeholder="Cost" />
+                        <input class="campo-curto" type="number" name="equipamentos_melee_weight[]"
+                            placeholder="Weight" />
+                        <p><textarea name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea></p>
+                    </div>
+                </div>
+                <button type="button" id="adicionar-equipamento-melee">Adicionar Melee</button>
+            </div>
+
+
+            <!-- Campo Equipamentos Ranged -->
+            <div class="ficha-range">
+                <h3>Ranged</h3>
+                <div id="equipamentos-ranged-container">
+                    <!-- Linha para um equipamento Ranged -->
+                    <div class="form-field equipamento-linha">
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_nome[]"
+                            placeholder="Nome da arma Ranged" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_damage[]"
+                            placeholder="Damage" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_acc[]" placeholder="Acc" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_range[]" placeholder="Range" />
+                        <input class="campo-curto" type="number" name="equipamentos_ranged_weight[]"
+                            placeholder="Weight" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_rof[]" placeholder="Rof" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_shots[]" placeholder="Shots" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_bulk[]" placeholder="Bulk" />
+                        <input class="campo-curto" type="text" name="equipamentos_ranged_rcl[]" placeholder="RCL" />
+                        <input class="campo-curto" type="number" name="equipamentos_ranged_cost[]" placeholder="Cost" />
+                    </div>
+                </div>
+                <button type="button" id="adicionar-equipamento-ranged">Adicionar Ranged</button>
+            </div>
+
+
+            <!-- Campo Equipamentos Armor -->
+            <div class="ficha-armor">
+                <h3>Armor</h3>
+                <div id="equipamentos-armor-container">
+                    <!-- Linha para uma armadura -->
+                    <div class="form-field equipamento-linha">
+                        <input class="campo-curto" type="text" name="equipamentos_armor_nome[]"
+                            placeholder="Nome da armadura" />
+                        <input class="campo-curto" type="text" name="equipamentos_armor_location[]"
+                            placeholder="Location" />
+                        <input class="campo-curto" type="number" name="equipamentos_armor_rd[]" placeholder="RD" />
+                        <input class="campo-curto" type="number" name="equipamentos_armor_cost[]" placeholder="Cost" />
+                        <input class="campo-curto" type="number" name="equipamentos_armor_weight[]"
+                            placeholder="Weight" />
+                    </div>
+                </div>
+                <button type="button" id="adicionar-equipamento-armor">Adicionar Armor</button>
+            </div>
+
+
+            <!-- Botão de Enviar -->
+            <button type="submit">Salvar Ficha</button>
     </form>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_desvantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_pericias.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_melee.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_range.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_armor.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
 </body>
 
