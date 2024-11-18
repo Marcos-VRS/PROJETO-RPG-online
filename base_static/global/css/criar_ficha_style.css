@@ -56,6 +56,10 @@ body {
     border: var(--white-color) solid;
 }
 
+.ficha-equipamentos {
+    border: var(--white-color) solid;
+}
+
 .ficha-melee {
     border: var(--white-color) solid;
 }

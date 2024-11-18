@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', function () {
             input.name = campo.name;
             input.placeholder = campo.placeholder;
             input.classList.add('campo-curto'); // Adiciona a classe para os inputs menores
+            input.style.marginRight = '4px'; // Espaçamento entre os inputs
+
             novaLinha.appendChild(input);
         });
 
