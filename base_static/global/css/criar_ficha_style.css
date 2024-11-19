@@ -6,6 +6,7 @@
     --faded-thin-black-color: rgba(0, 0, 0, 0.233);
     --white-gray-color: #e2dee2;
     --orange: rgba(126, 58, 3, 0.986);
+
 }
 
 * {
@@ -28,48 +29,22 @@ body {
     background-attachment: fixed;
 }
 
-.ficha-info {
-    border: var(--white-color) solid;
+
+
+.form-field {
+    display: flex;
+    align-items: flex-start;
+    /* Alinha os inputs no topo, caso tenham alturas diferentes */
 }
 
-.ficha-atributos {
+.ficha-box {
     border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    padding: 1rem;
 }
 
-.ficha-vantagens {
-    border: var(--white-color) solid;
-}
-
-.ficha-desvantagens {
-    border: var(--white-color) solid;
-}
-
-.ficha-pericias {
-    border: var(--white-color) solid;
-}
-
-.ficha-subatributos {
-    border: var(--white-color) solid;
-}
-
-.ficha-rd {
-    border: var(--white-color) solid;
-}
-
-.ficha-equipamentos {
-    border: var(--white-color) solid;
-}
-
-.ficha-melee {
-    border: var(--white-color) solid;
-}
-
-.ficha-range {
-    border: var(--white-color) solid;
-}
-
-.ficha-armor {
-    border: var(--white-color) solid;
+.box-atributo {
+    display: grid;
 }
 
 .campo-curto {
@@ -79,7 +54,49 @@ body {
 }
 
 .campo-curto-atributo {
-    width: 30px;
+    width: 4rem;
+    height: 4rem;
     /* Define o tamanho dos campos */
+
+}
+
+.input-box-atributo {
+    margin-right: 1rem;
+}
+
+.txt-miniatura-imagem {
+    color: var(--white-color);
+
+}
+
+.input-imagem-miniatura {
+    color: var(--white-color)
+}
+
+.imagem-miniatura {
+    display: none;
+    width: 200px;
+    height: auto;
+    margin-top: 10px;
+}
+
+.coluna-atributo {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.caixa-atributo {
+    width: 5rem;
+    height: 5rem;
+}
+
+.caixa-atributo-label {
+    width: 5rem;
+}
+
+.label-atributo {
+    width: 5rem;
+    text-align: center;
 
 }
