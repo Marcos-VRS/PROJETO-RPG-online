@@ -45,6 +45,23 @@ body {
 
 .box-atributo {
     display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: auto;
+}
+
+.grid-vantagem-desvantagem {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+}
+
+.box-subatributo {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
 }
 
 .campo-curto {
@@ -60,8 +77,41 @@ body {
 
 }
 
+.campo-curto-subatributo {
+    width: 6rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+
+}
+
+.campo-curto-vantagem {
+    width: 20rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+
+}
+
+.campo-curto-valor-vantagem {
+    width: 5rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+
+}
+
 .input-box-atributo {
     margin-right: 1rem;
+    text-align: center;
+    align-items: center;
+    border-radius: 0.2rem;
 }
 
 .txt-miniatura-imagem {
@@ -99,4 +149,30 @@ body {
     width: 5rem;
     text-align: center;
 
+}
+
+.vantagem-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* Espaçamento entre os inputs */
+    position: relative;
+}
+
+.btn-adicionar-modificador {
+    background-color: red;
+    color: white;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modificadores-container {
+    margin-top: 10px;
 }

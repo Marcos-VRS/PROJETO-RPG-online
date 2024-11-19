@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
     const btnAdicionarVantagem = document.getElementById('adicionar-vantagem');
     const containerVantagens = document.getElementById('vantagens-container');
@@ -9,8 +8,9 @@ document.addEventListener('DOMContentLoaded', function () {
         novaVantagem.classList.add('form-field', 'vantagem-linha');
 
         novaVantagem.innerHTML = `
-            <input type="text" name="vantagens_nome[]" class="vantagem-nome" placeholder="Nome da vantagem" />
-            <input type="number" name="vantagens_valor[]" class="vantagem-valor" placeholder="Valor da vantagem" />
+            <input type="text" name="vantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da vantagem" />
+            <input type="number" name="vantagens_valor[]" class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor da vantagem" />
+            <button type="button" class="btn-adicionar-modificador">+</button>
         `;
 
         containerVantagens.appendChild(novaVantagem);
