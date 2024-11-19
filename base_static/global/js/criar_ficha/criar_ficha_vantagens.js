@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function () {
         novaVantagem.innerHTML = `
             <input type="text" name="vantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da vantagem" />
             <input type="number" name="vantagens_valor[]" class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor da vantagem" />
-            <button type="button" class="btn-adicionar-modificador">+</button>
         `;
 
         containerVantagens.appendChild(novaVantagem);
