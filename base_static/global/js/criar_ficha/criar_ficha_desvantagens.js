@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         novaDesvantagem.innerHTML = `
             <input type="text" name="desvantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da desvantagem" />
-            <input type="number" name="desvantagens_valor[]"  class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor da desvantagem" />
+            <input type="text" name="desvantagens_valor[]"  class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor" />
         `;
 
         containerDesvantagens.appendChild(novaDesvantagem);

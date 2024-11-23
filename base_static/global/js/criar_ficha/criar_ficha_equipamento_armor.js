@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Campos do equipamento Armor
         const campos = [
-            { type: 'text', name: 'equipamentos_armor_nome[]', placeholder: 'Nome da armadura' },
-            { type: 'text', name: 'equipamentos_armor_location[]', placeholder: 'Location' },
-            { type: 'number', name: 'equipamentos_armor_rd[]', placeholder: 'RD' },
-            { type: 'number', name: 'equipamentos_armor_cost[]', placeholder: 'Cost' },
-            { type: 'number', name: 'equipamentos_armor_weight[]', placeholder: 'Weight' }
+            { type: 'text', name: 'equipamentos_armor_nome[]', placeholder: 'Nome da armadura', extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_armor_location[]', placeholder: 'Location', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'number', name: 'equipamentos_armor_rd[]', placeholder: 'RD', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'number', name: 'equipamentos_armor_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'number', name: 'equipamentos_armor_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
         ];
 
         // Criando inputs para os campos
@@ -20,8 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
             input.type = campo.type;
             input.name = campo.name;
             input.placeholder = campo.placeholder;
-            input.classList.add('campo-curto'); // Adiciona a classe para os inputs menores
-            input.style.marginRight = '4px'; // Espaçamento entre os inputs
+            input.classList.add('campo-curto'); // Adiciona a classe padrão para os inputs menores
+
+
+            // Adiciona classes extras, se houver
+            if (campo.extraClasses) {
+                campo.extraClasses.forEach(classe => input.classList.add(classe));
+            }
 
             novaLinha.appendChild(input);
         });

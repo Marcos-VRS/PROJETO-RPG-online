@@ -6,6 +6,8 @@
     --faded-thin-black-color: rgba(0, 0, 0, 0.233);
     --white-gray-color: #e2dee2;
     --orange: rgba(126, 58, 3, 0.986);
+    --orange-thin: rgba(126, 58, 3, 0.5);
+
 
 }
 
@@ -27,9 +29,14 @@ body {
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
+    color: #ffffff;
 }
 
-
+.info-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+}
 
 .form-field {
     display: flex;
@@ -40,7 +47,28 @@ body {
 .ficha-box {
     border: var(--white-color) solid;
     border-radius: 0.5rem;
+    background-color: var(--orange-thin);
     padding: 1rem;
+    margin: 1rem;
+
+}
+
+.ficha-box-legacy {
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: #a74902;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+}
+
+.grid-bg {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+
 }
 
 .box-atributo {
@@ -54,6 +82,13 @@ body {
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+}
+
+.grid-imagem-background {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 200px 1fr;
     grid-template-rows: auto;
 }
 
@@ -87,6 +122,14 @@ body {
 
 }
 
+.campo-background {
+    border-radius: 0.2rem;
+    text-align: left;
+    /* Alinha o texto à esquerda (normalmente é o padrão) */
+    vertical-align: top;
+    /* Garante que o texto fique alinhado ao topo do campo */
+}
+
 .campo-curto-vantagem {
     width: 20rem;
     height: 2rem;
@@ -94,6 +137,7 @@ body {
     /* Define o tamanho dos campos */
     text-align: center;
     align-items: center;
+    margin: 0;
 
 }
 
@@ -104,6 +148,7 @@ body {
     /* Define o tamanho dos campos */
     text-align: center;
     align-items: center;
+    margin: 0;
 
 }
 
@@ -111,23 +156,47 @@ body {
     margin-right: 1rem;
     text-align: center;
     align-items: center;
+    padding: 0.2rem;
     border-radius: 0.2rem;
 }
 
-.txt-miniatura-imagem {
-    color: var(--white-color);
-
-}
-
-.input-imagem-miniatura {
-    color: var(--white-color)
+.text-background {
+    display: flex;
+    width: 100%;
+    /* Ocupa toda a largura do contêiner pai */
+    height: 100%;
+    /* Ajusta a altura para preencher o contêiner */
+    box-sizing: border-box;
+    /* Inclui o padding e a borda no cálculo da largura */
+    overflow-y: auto;
+    /* Adiciona barra de rolagem vertical, se necessário */
+    white-space: pre-wrap;
+    /* Permite que o texto quebre quando atingir o limite */
+    word-wrap: break-word;
+    /* Quebra palavras longas quando necessário */
+    padding: 8px;
+    /* Garantir que o texto não encoste nas bordas */
+    resize: vertical;
+    /* Permite que o usuário redimensione a altura */
+    min-height: 100px;
+    /* Define uma altura mínima para o campo */
+    line-height: 1.5;
+    /* Ajusta a altura das linhas para um espaçamento confortável */
+    vertical-align: top;
+    /* Garante que o conteúdo comece no topo */
 }
 
 .imagem-miniatura {
     display: none;
-    width: 200px;
+    width: 100px;
+    max-width: 300px;
     height: auto;
     margin-top: 10px;
+    justify-content: center;
+    /* Centraliza horizontalmente */
+    align-items: center;
+    /* Centraliza verticalmente */
+
 }
 
 .coluna-atributo {
@@ -154,7 +223,6 @@ body {
 .vantagem-linha {
     display: flex;
     align-items: center;
-    gap: 10px;
     /* Espaçamento entre os inputs */
     position: relative;
 }
@@ -175,4 +243,70 @@ body {
 
 .modificadores-container {
     margin-top: 10px;
+}
+
+.campo-curto-equip {
+    width: 4rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+}
+
+.campo-curto-nome {
+    width: 15rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+}
+
+.campo-curto-dif {
+    width: 8rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+}
+
+.btn-adicionar-campo {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--orange);
+    color: var(--white-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 1em;
+}
+
+.btn-adicionar-campo-foto {
+    width: 98%;
+    padding: 10px;
+    background-color: var(--orange);
+    color: var(--white-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.btn-adicionar-campo-foto:hover {
+    background-color: #a74902;
+}
+
+.btn-adicionar-campo-foto:active {
+    background-color: #944101;
+}
+
+.btn-adicionar-campo:hover {
+    background-color: #a74902;
+}
+
+.btn-adicionar-campo:active {
+    background-color: #944101;
 }

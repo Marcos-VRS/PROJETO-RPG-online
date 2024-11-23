@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function () {
         novaPericia.classList.add('form-field', 'pericia-linha');
 
         novaPericia.innerHTML = `
-            <input type="text" name="pericias_nome[]" class="pericia-nome" placeholder="Nome da perícia" />
-            <select name="pericias_atributo_base[]" class="pericia-atributo-base">
+            <input type="text" name="pericias_nome[]" class="pericia-nome campo-curto-nome medievalsharp-mini" placeholder="Nome da perícia" />
+            <select name="pericias_atributo_base[]" class="pericia-atributo-base campo-curto-equip medievalsharp-mini">
                 <option value="">Atributo Base</option>
                 <option value="ST">ST</option>
                 <option value="DX">DX</option>
@@ -90,15 +90,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Will">Will</option>
                 <option value="Per">Per</option>
             </select>
-            <select name="pericias_dificuldade[]" class="pericia-dificuldade">
+            <select name="pericias_dificuldade[]" class="pericia-dificuldade campo-curto-dif medievalsharp-mini">
                 <option value="">Dificuldade</option>
                 <option value="Fácil">Fácil</option>
                 <option value="Média">Média</option>
                 <option value="Difícil">Difícil</option>
                 <option value="Muito Difícil">Muito Difícil</option>
             </select>
-            <input type="number" name="pericias_custo[]" class="pericia-custo" placeholder="Custo" />
-            <input type="number" name="pericias_nh[]" class="pericia-nh" placeholder="NH" readonly />
+            <input type="number" name="pericias_custo[]" class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
+            <input type="number" name="pericias_nh[]" class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly />
         `;
         containerPericias.appendChild(novaPericia);
     }

@@ -7,16 +7,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Campos do equipamento Ranged
         const campos = [
-            { type: 'text', name: 'equipamentos_ranged_nome[]', placeholder: 'Nome da arma Ranged' },
-            { type: 'text', name: 'equipamentos_ranged_damage[]', placeholder: 'Damage' },
-            { type: 'text', name: 'equipamentos_ranged_acc[]', placeholder: 'Acc' },
-            { type: 'text', name: 'equipamentos_ranged_range[]', placeholder: 'Range' },
-            { type: 'number', name: 'equipamentos_ranged_weight[]', placeholder: 'Weight' },
-            { type: 'text', name: 'equipamentos_ranged_rof[]', placeholder: 'Rof' },
-            { type: 'text', name: 'equipamentos_ranged_shots[]', placeholder: 'Shots' },
-            { type: 'text', name: 'equipamentos_ranged_bulk[]', placeholder: 'Bulk' },
-            { type: 'text', name: 'equipamentos_ranged_rcl[]', placeholder: 'RCL' },
-            { type: 'number', name: 'equipamentos_ranged_cost[]', placeholder: 'Cost' }
+            { type: 'text', name: 'equipamentos_ranged_nome[]', placeholder: 'Nome da arma Ranged', extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_damage[]', placeholder: 'Damage', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_acc[]', placeholder: 'Acc', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_range[]', placeholder: 'Range', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'number', name: 'equipamentos_ranged_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_rof[]', placeholder: 'Rof', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_shots[]', placeholder: 'Shots', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_bulk[]', placeholder: 'Bulk', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_rcl[]', placeholder: 'RCL', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'number', name: 'equipamentos_ranged_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
         ];
 
         // Criando inputs para os campos
@@ -26,8 +26,12 @@ document.addEventListener('DOMContentLoaded', function () {
             input.name = campo.name;
             input.placeholder = campo.placeholder;
             input.classList.add('campo-curto'); // Adiciona a classe para os inputs menores
-            input.style.marginRight = '4px'; // Espaçamento entre os inputs
             novaLinha.appendChild(input);
+
+            // Adiciona classes extras, se houver
+            if (campo.extraClasses) {
+                campo.extraClasses.forEach(classe => input.classList.add(classe));
+            }
         });
 
         // Adicionando a nova linha ao container
