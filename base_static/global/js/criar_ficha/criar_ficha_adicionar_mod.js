@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Estado para "adicionar": cria o campo "Mod"
                 const modLinha = document.createElement("div");
                 modLinha.classList.add("form-field", "mod-container"); // Classe para estilizar
-                modLinha.style.marginTop = "1rem"; // Espaçamento entre as linhas
 
                 // Cria o label do campo "Mod"
                 const labelMod = document.createElement("label");
@@ -24,9 +23,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 const textareaMod = document.createElement("textarea");
                 textareaMod.name = "mod[]"; // Para agrupar como array no formulário
                 textareaMod.placeholder = "Adicione modificações";
-                textareaMod.style.width = "100%"; // Ajusta para ocupar toda a largura disponível
+                textareaMod.style.width = "43.5%"; // Ajusta para ocupar toda a largura disponível
                 textareaMod.style.resize = "vertical"; // Permite redimensionar verticalmente
                 textareaMod.style.height = "3rem"; // Define uma altura inicial
+                textareaMod.style.borderRadius = "0.2rem";
+                textareaMod.style.marginBottom = "2rem";
+                textareaMod.className = "medievalsharp-mini";
 
                 // Adiciona o label e o textarea na nova linha
                 modLinha.appendChild(labelMod);
@@ -38,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Alterna o botão para estado "remover"
                 botao.classList.add("remover");
                 botao.style.backgroundColor = "red";
-                botao.textContent = "×"; // Altera o símbolo do botão
             } else {
                 // Estado para "remover": remove o campo "Mod"
                 const modLinha = linhaAtual.nextSibling;

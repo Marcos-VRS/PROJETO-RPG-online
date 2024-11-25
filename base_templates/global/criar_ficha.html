@@ -32,7 +32,7 @@
             <div class="info-col">
                 <div class="form-field">
                     <label for="id_nome_personagem">Nome:</label>
-                    <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="nome_personagem"
+                    <input class="campo-curto-nome-ficha medievalsharp-regular" type="text" name="nome_personagem"
                         id="id_nome_personagem" value="{{ form.nome_personagem.value }}"
                         placeholder="Nome do personagem" />
                 </div>
@@ -333,11 +333,11 @@
                 <div id="vantagens-container">
                     <!-- Linha para uma vantagem -->
                     <div id="container" class="form-field vantagem-linha">
-                        <input style="margin-bottom: 1rem;" class="campo-curto-vantagem medievalsharp-regular"
-                            type="text" name="vantagens_nome[]" placeholder="Nome da vantagem" />
-                        <input style="margin-bottom: 1rem;" class="campo-curto-valor-vantagem medievalsharp-regular"
-                            type="text" name="vantagens_valor[]" placeholder="Valor" />
-                        <span id="botao1" class="botao-adicionar"></span>
+                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]"
+                            placeholder="Nome da vantagem" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                            name="vantagens_valor[]" placeholder="Valor" />
+                        <span id="botao1" class="botao-adicionar "></span>
                     </div>
                 </div>
 
