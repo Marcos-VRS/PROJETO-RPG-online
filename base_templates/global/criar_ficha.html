@@ -40,70 +40,43 @@
 
 
 
-                <!-- Campo Aparência -->
+                <!-- Campo PONTOS DA CAMPANHA -->
                 <div class="form-field">
-                    <label for="id_aparencia">P. Vant:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <label for="id_aparencia">PONTOS DA CAMPANHA: </label>
+                    <label class="pontos-campanha"> {{campanha.xp_inicial}}</label>
                 </div>
 
 
 
 
+                <!-- Campo TOTAL DE PONTOS-->
+                <div class="form-field">
+                    <label for="id_aparencia">TOTAL DE PONTOS:</label>
+                    <label class="pontos-campanha"> </label>
+                </div>
+
                 <!-- Campo Aparência -->
                 <div class="form-field">
-                    <label for="id_aparencia">PONTOS DA CAMPANHA</label>
+                    <label for="id_aparencia">Aparência:</label>
                     <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
                         placeholder="Aparência"></input>
                 </div>
 
 
-
-
-
-
-
-
-
-
-
-
-                <!-- Campo Aparência -->
+                <!-- Campo TOTAL DE VANTAGENS -->
                 <div class="form-field">
-                    <label for="id_aparencia">Aparência</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <label for="id_aparencia">TOTAL DE VANTAGENS:</label>
+                    <label class="pontos-campanha"> </label>
                 </div>
 
 
 
-
-
-                <!-- Campo Aparência -->
+                <!-- Campo TOTAL DE DESVANTAGENS -->
                 <div class="form-field">
-                    <label for="id_aparencia">P. Desvan:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <label for="id_aparencia">TOTAL DE DESVANTAGENS:</label>
+                    <label class="pontos-campanha"> </label>
                 </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-                <!-- Campo Aparência -->
-                <div class="form-field">
-                    <label for="id_aparencia">P. Percícias:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
-                </div>
 
                 <!-- Campo Idade -->
                 <div class="form-field">
@@ -112,25 +85,27 @@
                         placeholder="Idade" id="id_idade" value="{{ form.idade.value }}" min="0" />
                 </div>
 
-
-
-
-                <!-- Campo Aparência -->
+                <!-- Campo PONTOS DE PERÍCIAS -->
                 <div class="form-field">
-                    <label for="id_aparencia">P. Atrib:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <label for="id_aparencia">PONTOS DE PERÍCIAS:</label>
+                    <label class="pontos-campanha"> </label>
                 </div>
 
 
 
 
-                <!-- Campo Aparência -->
+
+
+                <!-- Campo PONTOS DE -->
                 <div class="form-field">
-                    <label for="id_aparencia">P. Total:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <label for="id_aparencia">PONTOS DE ATRIBUTO:</label>
+                    <label class="pontos-campanha"> </label>
                 </div>
+
+
+
+
+
 
             </div>
 
@@ -461,33 +436,33 @@
                 <h3>Melee</h3>
                 <div class="form-field">
 
-                    <label class="medievalsharp-mini campo-curto-nome" for="nome_melee">Nome</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="dmg_melee">Damage</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="reach_melee">Reach</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="parry_melee">Parry</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="cost_melee">Cost</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="weight_melee">Weight</label>
-                    <label class="campo-curto-equip medievalsharp-mini" for="details_melee">Details</label>
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_melee">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_melee">Damage</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="reach_melee">Reach</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="parry_melee">Parry</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_melee">Cost</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_melee">Weight</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="details_melee">Details</label>
 
                 </div>
                 <div id="equipamentos-melee-container">
                     <!-- Linha para um equipamento Melee -->
                     <div class="form-field equipamento-linha">
 
-                        <input class="campo-curto-nome medievalsharp-mini" type="text" name="equipamentos_melee_nome[]"
-                            placeholder="Nome do equipamento Melee" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" type="text"
+                            name="equipamentos_melee_nome[]" placeholder="Nome do equipamento Melee" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" type="text"
                             name="equipamentos_melee_damage[]" placeholder="Damage" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" type="text"
                             name="equipamentos_melee_reach[]" placeholder="Reach" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" type="text"
                             name="equipamentos_melee_parry[]" placeholder="Parry" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="number"
+                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" type="number"
                             name="equipamentos_melee_cost[]" placeholder="Cost" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="number"
+                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" type="number"
                             name="equipamentos_melee_weight[]" placeholder="Weight" />
-                        <p><textarea class="campo-curto-equip medievalsharp-mini" name="equipamentos_melee_details[]"
-                                placeholder="Details" rows="2"></textarea></p>
+                        <p><textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
+                                name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea></p>
                     </div>
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-melee">Adicionar
@@ -498,28 +473,42 @@
             <!-- Campo Equipamentos Ranged -->
             <div class="ficha-box ">
                 <h3>Ranged</h3>
+                <div class="form-field">
+
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_ranged">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_ranged">Damage</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="acc">Acc</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="range">Range</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_ranged">Weight</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="rof">RoF</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="shots">Shots</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="bulk">Bulk</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="rcl">RCL</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
+
+                </div>
                 <div id="equipamentos-ranged-container">
                     <!-- Linha para um equipamento Ranged -->
                     <div class="form-field equipamento-linha">
-                        <input class="campo-curto-nome medievalsharp-mini" type="text" name="equipamentos_ranged_nome[]"
-                            placeholder="Nome da arma Ranged" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" type="text"
+                            name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" type="text"
                             name="equipamentos_ranged_damage[]" placeholder="Damage" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_ranged_acc[]"
-                            placeholder="Acc" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="acc" type="text"
+                            name="equipamentos_ranged_acc[]" placeholder="Acc" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="range"
                             name="equipamentos_ranged_range[]" placeholder="Range" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="number"
+                        <input class="campo-curto-equip medievalsharp-mini" type="number" id="weight_ranged"
                             name="equipamentos_ranged_weight[]" placeholder="Weight" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_ranged_rof[]"
-                            placeholder="Rof" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rof"
+                            name="equipamentos_ranged_rof[]" placeholder="Rof" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="shots"
                             name="equipamentos_ranged_shots[]" placeholder="Shots" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="bulk"
                             name="equipamentos_ranged_bulk[]" placeholder="Bulk" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_ranged_rcl[]"
-                            placeholder="RCL" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="number"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rcl"
+                            name="equipamentos_ranged_rcl[]" placeholder="RCL" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="number" id="cost_ranged"
                             name="equipamentos_ranged_cost[]" placeholder="Cost" />
                     </div>
                 </div>
@@ -531,6 +520,15 @@
             <!-- Campo Equipamentos Armor -->
             <div class="ficha-box ">
                 <h3>Armor</h3>
+                <div class="form-field">
+
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_ranged">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_ranged">Damage</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="acc">Acc</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="range">Range</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
+
+                </div>
                 <div id="equipamentos-armor-container">
                     <!-- Linha para uma armadura -->
                     <div class="form-field equipamento-linha">
@@ -552,7 +550,7 @@
 
 
             <!-- Botão de Enviar -->
-            <button class="btn-adicionar-campo" type="submit">Salvar Ficha</button>
+            <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
     </form>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>

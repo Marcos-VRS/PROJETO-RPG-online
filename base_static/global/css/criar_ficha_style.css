@@ -63,6 +63,17 @@ body {
     grid-template-rows: auto;
 }
 
+.pontos-campanha {
+    background-color: var(--orange);
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    padding: 0.2rem;
+    width: 6rem;
+    text-align: center;
+    margin: 0.2rem;
+
+}
+
 .grid-bg {
     display: flex;
     flex-direction: column;
@@ -254,9 +265,26 @@ body {
     align-items: center;
 }
 
+.campo-curto-equip-label {
+    width: 67.2px;
+    height: 35.2px;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+}
+
 .campo-curto-nome {
     width: 15rem;
     height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+}
+
+.campo-curto-nome-label {
+    width: 243.2px;
+    height: 35.2px;
     border-radius: 0.2rem;
     /* Define o tamanho dos campos */
     text-align: center;
@@ -284,6 +312,18 @@ body {
     font-size: 1em;
 }
 
+.btn-adicionar-campo-salvar {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 1em;
+}
+
 .btn-adicionar-campo-foto {
     width: 98%;
     padding: 10px;
@@ -303,9 +343,15 @@ body {
     background-color: #944101;
 }
 
+
 .btn-adicionar-campo:hover {
     background-color: #a74902;
 }
+
+.btn-adicionar-campo-salvar:hover {
+    background-color: #a74902;
+}
+
 
 .btn-adicionar-campo:active {
     background-color: #944101;
