@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #230023;
+    --primary-color: #440044;
     --white-color: #ffffffe8;
     --light-gray-color: #eeeeee3d;
     --faded-black-color: rgba(0, 0, 0, 0.534);
@@ -40,7 +40,15 @@ body {
 
 .form-field {
     display: flex;
+    align-items: center;
+    justify-items: center;
+    /* Alinha os inputs no topo, caso tenham alturas diferentes */
+}
+
+.form-field-mod {
+    display: flex;
     align-items: flex-start;
+    justify-items: center;
     /* Alinha os inputs no topo, caso tenham alturas diferentes */
 }
 
@@ -65,6 +73,17 @@ body {
 
 .pontos-campanha {
     background-color: var(--orange);
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    padding: 0.2rem;
+    width: 6rem;
+    text-align: center;
+    margin: 0.2rem;
+
+}
+
+.pontos-total {
+    background-color: var(--primary-color);
     border: var(--white-color) solid;
     border-radius: 0.5rem;
     padding: 0.2rem;
@@ -172,7 +191,6 @@ body {
     text-align: center;
     align-items: center;
     margin: 0;
-    margin-bottom: 1rem;
 
 }
 

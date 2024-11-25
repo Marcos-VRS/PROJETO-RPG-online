@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!botao.classList.contains("remover")) {
                 // Estado para "adicionar": cria o campo "Mod"
                 const modLinha = document.createElement("div");
-                modLinha.classList.add("form-field", "mod-container"); // Classe para estilizar
+                modLinha.classList.add("form-field-mod", "mod-container"); // Classe para estilizar
 
                 // Cria o label do campo "Mod"
                 const labelMod = document.createElement("label");

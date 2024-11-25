@@ -41,9 +41,9 @@
 
 
                 <!-- Campo PONTOS DA CAMPANHA -->
-                <div class="form-field">
-                    <label for="id_aparencia">PONTOS DA CAMPANHA: </label>
-                    <label class="pontos-campanha-total"> {{campanha.xp_inicial}}</label>
+                <div class="form-field linha-alinhada">
+                    <label for="pontos_da_campanha">PONTOS DA CAMPANHA: </label>
+                    <label id="pontos_da_campanha" class="pontos-campanha-total"> {{campanha.xp_inicial}}</label>
                 </div>
 
 
@@ -51,8 +51,8 @@
 
                 <!-- Campo TOTAL DE PONTOS-->
                 <div class="form-field">
-                    <label for="id_aparencia">TOTAL DE PONTOS:</label>
-                    <label class="pontos-campanha"> </label>
+                    <label for="total_de_pontos">TOTAL DE PONTOS:</label>
+                    <label id="total_de_pontos" class="pontos-total"> </label>
                 </div>
 
                 <!-- Campo Aparência -->
@@ -65,16 +65,16 @@
 
                 <!-- Campo TOTAL DE VANTAGENS -->
                 <div class="form-field">
-                    <label for="id_aparencia">TOTAL DE VANTAGENS:</label>
-                    <label class="pontos-campanha"> </label>
+                    <label for="total_de_vantagens">TOTAL DE VANTAGENS:</label>
+                    <label id="total_de_vantagens" class="pontos-campanha"> </label>
                 </div>
 
 
 
                 <!-- Campo TOTAL DE DESVANTAGENS -->
                 <div class="form-field">
-                    <label for="id_aparencia">TOTAL DE DESVANTAGENS:</label>
-                    <label class="pontos-campanha"> </label>
+                    <label for="total_de_desvantagens">TOTAL DE DESVANTAGENS:</label>
+                    <label id="total_de_desvantagens" class="pontos-campanha"> </label>
                 </div>
 
 
@@ -87,25 +87,16 @@
 
                 <!-- Campo PONTOS DE PERÍCIAS -->
                 <div class="form-field">
-                    <label for="id_aparencia">PONTOS DE PERÍCIAS:</label>
-                    <label class="pontos-campanha"> </label>
+                    <label for="pontos_de_pericias">PONTOS DE PERÍCIAS:</label>
+                    <label id="pontos_de_pericias" class="pontos-campanha"> </label>
                 </div>
-
-
-
-
 
 
                 <!-- Campo PONTOS DE -->
                 <div class="form-field">
-                    <label for="id_aparencia">PONTOS DE ATRIBUTO:</label>
-                    <label class="pontos-campanha"> </label>
+                    <label for="pontos_de_atributo">PONTOS DE ATRIBUTO:</label>
+                    <label id="pontos_de_atributo" class="pontos-campanha"> </label>
                 </div>
-
-
-
-
-
 
             </div>
 
@@ -553,13 +544,18 @@
     </form>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_vantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_mod.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_desvantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_desvantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_pericias.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_pericias.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_melee.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_range.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_armor.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_total_de_pontos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
 </body>
 
