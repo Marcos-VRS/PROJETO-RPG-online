@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', function () {
         novaVantagem.classList.add('form-field', 'vantagem-linha');
 
         novaVantagem.innerHTML = `
-            <input type="text" name="vantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da vantagem" />
-            <input type="text" name="vantagens_valor[]" class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor" />
+            <input type="text" name="vantagens_nome[]" style="margin-bottom: 1rem;" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da vantagem" />
+            <input type="text" name="vantagens_valor[]" style="margin-bottom: 1rem;" class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor" />
+            <span class="botao-adicionar"></span>
+
         `;
 
         containerVantagens.appendChild(novaVantagem);

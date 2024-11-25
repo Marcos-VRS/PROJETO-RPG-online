@@ -368,3 +368,50 @@ body {
 .btn-adicionar-campo:active {
     background-color: #944101;
 }
+
+.botao-adicionar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    /* Tamanho do círculo */
+    height: 45px;
+    background-color: green;
+    /* Cor do círculo */
+    border-radius: 50%;
+    /* Torna o elemento circular */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    /* Sombra para um efeito suave */
+    cursor: pointer;
+    position: relative;
+    /* Necessário para o alinhamento do "+" */
+    color: #f9e5c2;
+    /* Cor do "+" */
+    font-size: 30px;
+    /* Tamanho do "+" */
+    font-weight: bold;
+    margin-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+.botao-adicionar::before,
+.botao-adicionar::after {
+    content: '';
+    position: absolute;
+    background-color: #f9e5c2;
+    /* Cor das barras do "+" */
+}
+
+.botao-adicionar::before {
+    width: 4px;
+    /* Largura da barra vertical */
+    height: 30px;
+    /* Altura da barra vertical */
+}
+
+.botao-adicionar::after {
+    width: 30px;
+    /* Largura da barra horizontal */
+    height: 4px;
+    /* Altura da barra horizontal */
+}

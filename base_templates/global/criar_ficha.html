@@ -332,12 +332,12 @@
 
                 <div id="vantagens-container">
                     <!-- Linha para uma vantagem -->
-                    <div class="form-field vantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]"
-                            placeholder="Nome da vantagem" />
-                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
-                            name="vantagens_valor[]" placeholder="Valor" />
-
+                    <div id="container" class="form-field vantagem-linha">
+                        <input style="margin-bottom: 1rem;" class="campo-curto-vantagem medievalsharp-regular"
+                            type="text" name="vantagens_nome[]" placeholder="Nome da vantagem" />
+                        <input style="margin-bottom: 1rem;" class="campo-curto-valor-vantagem medievalsharp-regular"
+                            type="text" name="vantagens_valor[]" placeholder="Valor" />
+                        <span id="botao1" class="botao-adicionar"></span>
                     </div>
                 </div>
 
@@ -554,7 +554,7 @@
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
-    <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens_mod.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_mod.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_desvantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_pericias.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_melee.js' %}"></script>
