@@ -74,6 +74,17 @@ body {
 
 }
 
+.pontos-campanha-total {
+    background-color: var(--primary-color);
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    padding: 0.2rem;
+    width: 6rem;
+    text-align: center;
+    margin: 0.2rem;
+
+}
+
 .grid-bg {
     display: flex;
     flex-direction: column;
@@ -172,29 +183,30 @@ body {
 }
 
 .text-background {
-    display: flex;
+    display: block;
+    /* Troca flex para comportamento natural do textarea */
     width: 100%;
     /* Ocupa toda a largura do contêiner pai */
     height: 100%;
-    /* Ajusta a altura para preencher o contêiner */
+    /* Ajusta a altura automaticamente */
     box-sizing: border-box;
-    /* Inclui o padding e a borda no cálculo da largura */
+    /* Inclui bordas e paddings no cálculo do tamanho */
     overflow-y: auto;
-    /* Adiciona barra de rolagem vertical, se necessário */
+    /* Adiciona barra de rolagem apenas verticalmente */
     white-space: pre-wrap;
-    /* Permite que o texto quebre quando atingir o limite */
+    /* Permite que o texto quebre quando necessário */
     word-wrap: break-word;
-    /* Quebra palavras longas quando necessário */
+    /* Garante que palavras longas quebrem */
     padding: 8px;
-    /* Garantir que o texto não encoste nas bordas */
+    /* Espaçamento interno */
     resize: vertical;
-    /* Permite que o usuário redimensione a altura */
+    /* Permite redimensionar a altura */
     min-height: 100px;
-    /* Define uma altura mínima para o campo */
+    /* Altura mínima */
     line-height: 1.5;
-    /* Ajusta a altura das linhas para um espaçamento confortável */
-    vertical-align: top;
-    /* Garante que o conteúdo comece no topo */
+    /* Espaçamento confortável entre linhas */
+    text-align: left;
+    /* Garante alinhamento à esquerda */
 }
 
 .imagem-miniatura {
