@@ -59,6 +59,87 @@ body {
     padding: 1rem;
     margin: 1rem;
 
+
+}
+
+.ficha-box-melee {
+    display: flex;
+    width: 1000px;
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1rem;
+    flex-direction: row;
+    align-items: left;
+    flex-wrap: wrap;
+
+}
+
+.ficha-box-manobra {
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+
+
+}
+
+.ficha-box-manobra-ataque {
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1.6rem;
+    width: 244.8px;
+
+
+}
+
+.ficha-box-vant {
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+
+
+}
+
+.ficha-box-section {
+    display: block;
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1rem;
+    width: 1150px;
+    margin: 10px auto;
+
+
+}
+
+.label-nome-manobra {
+    display: flex;
+    width: 240px;
+    justify-content: center;
+}
+
+
+.label-nome-detalhes {
+    display: flex;
+    text-align: top;
+}
+
+.titulo-area-manobra {
+    margin-top: 2rem;
+}
+
+.col-manobra {
+    display: flex;
+    flex-direction: column;
 }
 
 .ficha-box-legacy {
@@ -121,7 +202,6 @@ body {
 
 .grid-vantagem-desvantagem {
     display: grid;
-    gap: 2rem;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: auto;
 }
@@ -172,6 +252,18 @@ body {
 }
 
 .campo-curto-vantagem {
+    width: 25rem;
+    height: 2rem;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: center;
+    align-items: center;
+    margin: 0;
+    margin-bottom: 1rem;
+
+}
+
+.campo-curto-desvantagem {
     width: 25rem;
     height: 2rem;
     border-radius: 0.2rem;
@@ -290,6 +382,23 @@ body {
     position: relative;
 }
 
+.desvantagem-linha {
+    display: flex;
+    align-items: center;
+    /* Espaçamento entre os inputs */
+    position: relative;
+
+}
+
+.desvantagem-linha-cor {
+    display: flex;
+    align-items: center;
+    /* Espaçamento entre os inputs */
+    position: relative;
+    height: 61px;
+
+}
+
 .btn-adicionar-modificador {
     background-color: red;
     color: white;
@@ -314,6 +423,15 @@ body {
     border-radius: 0.2rem;
     /* Define o tamanho dos campos */
     text-align: center;
+    align-items: center;
+}
+
+.campo-curto-detalhes-manobra {
+    width: 240px;
+    height: 240px;
+    border-radius: 0.2rem;
+    /* Define o tamanho dos campos */
+    text-align: left;
     align-items: center;
 }
 
@@ -365,16 +483,25 @@ body {
 }
 
 .btn-adicionar-campo-salvar {
+    display: block;
+    /* Necessário para o margin auto funcionar */
+    margin: 1px auto;
+    /* Centraliza horizontalmente */
     width: 100%;
+    /* Começa com 50% da largura da tela */
+    max-width: 1150px;
+    /* Define um limite máximo para o crescimento */
     padding: 10px;
     background-color: var(--primary-color);
     color: var(--white-color);
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 20px;
     font-size: 1em;
+    text-align: center;
+    /* Centraliza o texto dentro do botão */
 }
+
 
 .btn-adicionar-campo-foto {
     width: 98%;
