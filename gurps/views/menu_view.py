@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from gurps.models import FichaPersonagem, Campanha
+from gurps.models import CharacterSheet, Campanha
 from django.contrib.auth.decorators import login_required
-from gurps.forms import FichaPersonagemForm, CampanhaForm
+from gurps.forms import CharacterSheetForm, CampanhaForm
 from django.contrib import messages
+from django.http import JsonResponse
 
 
 # View da pagina inicial
@@ -57,25 +58,50 @@ def lista_campanhas(request):
 
 
 @login_required(login_url="gurps:login")
-def criar_ficha_view(request, campanha_id):
+def save_character_sheet(request):
     username = request.user.username
-    campanha = get_object_or_404(Campanha, id=campanha_id)
-
     if request.method == "POST":
-        form = FichaPersonagemForm(request.POST, user=request.user)
+        form = CharacterSheetForm(
+            request.POST, request.FILES
+        )  # Inclui arquivos para o campo `photo`
+
         if form.is_valid():
-            ficha = form.save(commit=False)
-            ficha.nome_jogador = request.user  # Define o jogador automaticamente
-            ficha.campanha = campanha  # Define a campanha automaticamente
-            ficha.save()
-            return redirect("gurps:index")
+            # Salva os dados no banco de dados
+            character_sheet = form.save()
+            print(f"O usuário {username} Salvou a ficha ")
+            # Resposta de sucesso
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Ficha salva com sucesso!",
+                    "character_id": character_sheet.id,
+                },
+                status=200,
+            )
+        else:
+            # Resposta de erro com detalhes
+            print(f"\nAqui está o erro\n ")
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Erro ao salvar a ficha.",
+                    "errors": form.errors,
+                },
+                status=400,
+            )
     else:
-        form = FichaPersonagemForm(user=request.user)
+        print("\naqui é o else\n")
+
+        # Renderiza o formulário para criar/editar uma ficha
+        form = CharacterSheetForm()
 
     return render(
         request,
         "global/criar_ficha.html",
-        {"form": form, "username": username, "campanha": campanha},
+        {
+            "form": form,
+            "username": username,
+        },
     )
 
 

@@ -1,5 +1,5 @@
 from django import forms
-from .models import RegisterUser, FichaPersonagem, Campanha
+from .models import RegisterUser, CharacterSheet, Campanha
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 
@@ -56,98 +56,66 @@ class CampanhaForm(forms.ModelForm):
         }
 
 
-class FichaPersonagemForm(forms.ModelForm):
+class CharacterSheetForm(forms.ModelForm):
     class Meta:
-        model = FichaPersonagem
+        model = CharacterSheet
         fields = [
-            "nome_jogador",
-            "campanha",
             "nome_personagem",
-            "idade",
-            "aparencia",
-            "altura",
-            "peso",
-            "tl",
-            "total_de_pontos",
-            "pontos_de_experiencia_guardados",
-            "pontos_de_vantagens",
-            "pontos_de_desvantagens",
-            "pontos_de_pericias",
-            "pontos_de_atributos",
+            "aparencia_idade",
+            "points_summary",
             "attributes",
-            "subattributes",
+            "sub_attributes",
             "advantages",
             "disadvantages",
             "skills",
-            "equipments",
+            "money",
+            "background",
+            "photo",
+            "equipment_melee",
+            "equipment_ranged",
+            "equipment_armor",
+            "maneuvers_melee",
+            "maneuvers_ranged",
+            "maneuvers_defense",
         ]
         widgets = {
-            # Torna os campos 'nome_jogador' e 'campanha' somente leitura
-            "nome_jogador": forms.TextInput(attrs={"readonly": "readonly"}),
-            "campanha": forms.TextInput(attrs={"readonly": "readonly"}),
-            # Outros widgets para os campos editáveis
-            "nome_personagem": forms.TextInput(
-                attrs={"placeholder": "Nome do personagem"}
+            "aparencia_idade": forms.Textarea(
+                attrs={"placeholder": 'JSON format: {"appearance": "", "age": ""}'}
             ),
-            "idade": forms.NumberInput(attrs={"min": 0}),
-            "altura": forms.NumberInput(attrs={"step": 0.01}),
-            "peso": forms.NumberInput(attrs={"step": 0.01}),
-            "tl": forms.NumberInput(attrs={"min": 0}),
-            "total_de_pontos": forms.NumberInput(attrs={"min": 0}),
-            "pontos_de_experiencia_guardados": forms.NumberInput(attrs={"min": 0}),
-            "pontos_de_vantagens": forms.NumberInput(attrs={"min": 0}),
-            "pontos_de_desvantagens": forms.NumberInput(attrs={"min": 0}),
-            "pontos_de_pericias": forms.NumberInput(attrs={"min": 0}),
-            "pontos_de_atributos": forms.NumberInput(attrs={"min": 0}),
+            "points_summary": forms.Textarea(
+                attrs={"placeholder": "JSON format for points summary"}
+            ),
             "attributes": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Atributos em formato JSON"}
+                attrs={"placeholder": "JSON format for attributes"}
             ),
-            "subattributes": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Subatributos em formato JSON"}
+            "sub_attributes": forms.Textarea(
+                attrs={"placeholder": "JSON format for sub-attributes"}
             ),
             "advantages": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Vantagens em formato JSON"}
+                attrs={"placeholder": "JSON list format for advantages"}
             ),
             "disadvantages": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Desvantagens em formato JSON"}
+                attrs={"placeholder": "JSON list format for disadvantages"}
             ),
             "skills": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Perícias em formato JSON"}
+                attrs={"placeholder": "JSON list format for skills"}
             ),
-            "equipments": forms.Textarea(
-                attrs={"rows": 5, "placeholder": "Equipamentos em formato JSON"}
+            "equipment_melee": forms.Textarea(
+                attrs={"placeholder": "JSON list format for melee equipment"}
+            ),
+            "equipment_ranged": forms.Textarea(
+                attrs={"placeholder": "JSON list format for ranged equipment"}
+            ),
+            "equipment_armor": forms.Textarea(
+                attrs={"placeholder": "JSON list format for armor equipment"}
+            ),
+            "maneuvers_melee": forms.Textarea(
+                attrs={"placeholder": "JSON list format for melee maneuvers"}
+            ),
+            "maneuvers_ranged": forms.Textarea(
+                attrs={"placeholder": "JSON list format for ranged maneuvers"}
+            ),
+            "maneuvers_defense": forms.Textarea(
+                attrs={"placeholder": "JSON list format for defense maneuvers"}
             ),
         }
-
-    def __init__(self, *args, **kwargs):
-        user = kwargs.get("user")  # Supondo que você passe o usuário no kwargs
-        super().__init__(*args, **kwargs)
-        if user:
-            self.fields["nome_jogador"].initial = (
-                user.username
-            )  # Definindo o valor automaticamente
-
-    # Validações adicionais
-    def clean_nome_personagem(self):
-        nome_personagem = self.cleaned_data.get("nome_personagem")
-        if not nome_personagem:
-            raise forms.ValidationError("Nome do personagem não pode ser vazio")
-        return nome_personagem
-
-    def clean_idade(self):
-        idade = self.cleaned_data.get("idade")
-        if idade is not None and idade < 0:
-            raise forms.ValidationError("Idade não pode ser negativa")
-        return idade
-
-    def clean_altura(self):
-        altura = self.cleaned_data.get("altura")
-        if altura is not None and altura <= 0:
-            raise forms.ValidationError("Altura deve ser um valor positivo")
-        return altura
-
-    def clean_peso(self):
-        peso = self.cleaned_data.get("peso")
-        if peso is not None and peso <= 0:
-            raise forms.ValidationError("Peso deve ser um valor positivo")
-        return peso

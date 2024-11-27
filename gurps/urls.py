@@ -33,6 +33,9 @@ urlpatterns = [
     ),
     # Fichas
     path("Fichas/", views.fichas, name="fichas_index"),
+    path(
+        "save-character-sheet/", views.save_character_sheet, name="save_character_sheet"
+    ),
     # Opções
     path("Opções/", views.opcoes, name="opcoes_index"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

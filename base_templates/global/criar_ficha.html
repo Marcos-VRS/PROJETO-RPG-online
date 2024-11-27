@@ -18,8 +18,9 @@
         <label for="">GM: {{ campanha.dono }}</label>
     </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form action="{% url 'gurps:save_character_sheet' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        {{form.as_p}}
 
 
 
@@ -519,7 +520,7 @@
                     <label class="campo-curto-nome-label medievalsharp-mini" for="nome_ranged">Nome</label>
                     <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_ranged">Damage</label>
                     <label class="campo-curto-equip-label  medievalsharp-mini" for="acc">Acc</label>
-                    <label class="campo-curto-equip-label  medievalsharp-mini" for="range">Range</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_armor">Weight</label>
                     <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
 
                 </div>
@@ -533,9 +534,9 @@
                         <input class="campo-curto-equip medievalsharp-mini" type="number" name="equipamentos_armor_rd[]"
                             placeholder="RD" />
                         <input class="campo-curto-equip medievalsharp-mini" type="number"
-                            name="equipamentos_armor_cost[]" placeholder="Cost" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="number"
                             name="equipamentos_armor_weight[]" placeholder="Weight" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="number"
+                            name="equipamentos_armor_weight[]" placeholder="Cost" />
                     </div>
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-armor">Adicionar
@@ -687,10 +688,7 @@
 
                                     </div>
                                     <div>
-                                        <label for="manobra_damage_defesa_id" class="medievalsharp-mini">Dano:</label>
-                                        <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                            id="manobra_damage_defesa_id" name="damage_manobra_defesa[]"
-                                            placeholder="Damage" type="text">
+
                                         <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
 
                                         <input class="campo-curto-equip medievalsharp-mini" id="manobra_nh_defesa_id"
@@ -723,6 +721,7 @@
             <!-- Botão de Enviar -->
             <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
     </form>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_info_json.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_atributos.js' %}"></script>
