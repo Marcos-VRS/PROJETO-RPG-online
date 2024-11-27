@@ -63,7 +63,7 @@ class CampanhaAdmin(admin.ModelAdmin):
 
 # Customizando a exibição do modelo no Admin
 class CharacterSheetAdmin(admin.ModelAdmin):
-    form = CharacterSheetForm
+    form = CharacterSheetForm  # Usando um form personalizado, se necessário
     list_display = (
         "nome_personagem",
         "money",
@@ -79,6 +79,7 @@ class CharacterSheetAdmin(admin.ModelAdmin):
             None,
             {
                 "fields": (
+                    "info_campanha",
                     "nome_personagem",
                     "aparencia_idade",
                     "background",
@@ -89,11 +90,7 @@ class CharacterSheetAdmin(admin.ModelAdmin):
         ),
         (
             "Pontos",
-            {
-                "fields": (
-                    "points_summary",
-                )  # Exibe 'points_summary' no formulário de edição
-            },
+            {"fields": ("pontos_soma",)},  # Exibe 'pontos_soma' no formulário de edição
         ),
         (
             "Atributos",

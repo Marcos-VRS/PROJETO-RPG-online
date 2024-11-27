@@ -13,9 +13,23 @@
 <body class="ficha-box  medievalsharp-regular">
     <h1 class="ficha-box-legacy">Criar Ficha</h1>
     <div class="ficha-box-legacy">
-        <label for="">PLAYER: {{ username }}</label>
-        <label for="">CAMPANHA: {{ campanha.nome }}</label>
-        <label for="">GM: {{ campanha.dono }}</label>
+        <div>
+
+            <label for="">PLAYER:</label>
+            <label id="player_name_id" name="player_name" for="">{{ username }}</label>
+        </div>
+
+        <div>
+            <label for="">CAMPANHA:</label>
+
+            <label id="nome_campanha_id" name="nome_campanha" for="">{{ campanha.nome }}</label>
+        </div>
+
+        <div>
+            <label for="">GM:</label>
+
+            <label id="nome_gm_id" name="nome_gm" for="">{{ campanha.dono }}</label>
+        </div>
     </div>
 
     <form action="{% url 'gurps:save_character_sheet' %}" method="post" enctype="multipart/form-data">
@@ -34,24 +48,23 @@
                 <div class="form-field">
                     <label for="id_nome_personagem">Nome:</label>
                     <input class="campo-curto-nome-ficha medievalsharp-regular" type="text" name="nome_personagem"
-                        id="id_nome_personagem" value="{{ form.nome_personagem.value }}"
-                        placeholder="Nome do personagem" />
+                        id="id_nome_personagem" placeholder="Nome do personagem" />
                 </div>
 
 
 
 
                 <!-- Campo PONTOS DA CAMPANHA -->
-                <div class="form-field linha-alinhada">
+                <div class="form-field-pontos linha-alinhada">
                     <label for="pontos_da_campanha">PONTOS DA CAMPANHA: </label>
-                    <label id="pontos_da_campanha" class="pontos-campanha-total"> {{campanha.xp_inicial}}</label>
+                    <label id="pontos_da_campanha" class="pontos-total"> {{campanha.xp_inicial}}</label>
                 </div>
 
 
 
 
                 <!-- Campo TOTAL DE PONTOS-->
-                <div class="form-field">
+                <div class="form-field-pontos">
                     <label for="total_de_pontos">TOTAL DE PONTOS:</label>
                     <label id="total_de_pontos" class="pontos-total"> </label>
                 </div>
@@ -65,16 +78,16 @@
 
 
                 <!-- Campo TOTAL DE VANTAGENS -->
-                <div class="form-field">
-                    <label for="total_de_vantagens">TOTAL DE VANTAGENS:</label>
+                <div class="form-field-pontos">
+                    <label for="total_de_vantagens">TOTAL VANTAGENS:</label>
                     <label id="total_de_vantagens" class="pontos-campanha"> </label>
                 </div>
 
 
 
                 <!-- Campo TOTAL DE DESVANTAGENS -->
-                <div class="form-field">
-                    <label for="total_de_desvantagens">TOTAL DE DESVANTAGENS:</label>
+                <div class="form-field-pontos">
+                    <label for="total_de_desvantagens">TOTAL DESVANTAGENS:</label>
                     <label id="total_de_desvantagens" class="pontos-campanha"> </label>
                 </div>
 
@@ -87,15 +100,15 @@
                 </div>
 
                 <!-- Campo PONTOS DE PERÍCIAS -->
-                <div class="form-field">
-                    <label for="pontos_de_pericias">PONTOS DE PERÍCIAS:</label>
+                <div class="form-field-pontos">
+                    <label for="pontos_de_pericias">TOTAL PERÍCIAS:</label>
                     <label id="pontos_de_pericias" class="pontos-campanha"> </label>
                 </div>
 
 
                 <!-- Campo PONTOS DE -->
-                <div class="form-field">
-                    <label for="pontos_de_atributo">PONTOS DE ATRIBUTO:</label>
+                <div class="form-field-pontos">
+                    <label for="pontos_de_atributo">TOTAL ATRIBUTOS:</label>
                     <label id="pontos_de_atributo" class="pontos-campanha"> </label>
                 </div>
 
@@ -114,7 +127,8 @@
 
                 <div class="grid-bg">
                     <label>Background:</label>
-                    <textarea type="text" class="text-background medievalsharp-mini campo-background"></textarea>
+                    <textarea name="background" id="id_background" type="text"
+                        class="text-background medievalsharp-mini campo-background"></textarea>
                 </div>
             </div>
         </div>
@@ -722,6 +736,8 @@
             <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
     </form>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_info_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_pontos_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_campanha_info_json.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_atributos.js' %}"></script>

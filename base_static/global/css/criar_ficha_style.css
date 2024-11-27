@@ -45,6 +45,15 @@ body {
     /* Alinha os inputs no topo, caso tenham alturas diferentes */
 }
 
+.form-field-pontos {
+    display: flex;
+    align-items: center;
+    justify-items: flex-end;
+    justify-self: end;
+    /* Alinha os inputs no topo, caso tenham alturas diferentes */
+}
+
+
 .form-field-mod {
     display: flex;
     align-items: flex-start;
@@ -220,7 +229,7 @@ body {
     padding: 0.2rem;
     width: 6rem;
     text-align: center;
-    margin: 0.2rem;
+    justify-content: flexend;
 
 }
 

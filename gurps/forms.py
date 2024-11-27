@@ -60,9 +60,10 @@ class CharacterSheetForm(forms.ModelForm):
     class Meta:
         model = CharacterSheet
         fields = [
+            "info_campanha",
             "nome_personagem",
             "aparencia_idade",
-            "points_summary",
+            "pontos_soma",
             "attributes",
             "sub_attributes",
             "advantages",
@@ -82,7 +83,7 @@ class CharacterSheetForm(forms.ModelForm):
             "aparencia_idade": forms.Textarea(
                 attrs={"placeholder": 'JSON format: {"appearance": "", "age": ""}'}
             ),
-            "points_summary": forms.Textarea(
+            "pontos_soma": forms.Textarea(
                 attrs={"placeholder": "JSON format for points summary"}
             ),
             "attributes": forms.Textarea(

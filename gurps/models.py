@@ -53,12 +53,15 @@ class Campanha(models.Model):
 
 
 class CharacterSheet(models.Model):
+
     # Informações básicas
+    info_campanha = models.JSONField(blank=True, null=True)  # JSON opcional
+
     nome_personagem = models.CharField(max_length=255, blank=True, null=True)
     aparencia_idade = models.JSONField(blank=True, null=True)  # JSON opcional
 
     # Pontos
-    points_summary = models.JSONField(blank=True, null=True)
+    pontos_soma = models.JSONField(blank=True, null=True)
 
     # Atributos
     attributes = models.JSONField(blank=True, null=True)
