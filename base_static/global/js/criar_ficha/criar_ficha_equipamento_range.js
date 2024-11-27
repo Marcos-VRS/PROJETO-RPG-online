@@ -34,6 +34,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Adicionando o campo textarea para "Details"
+        const textarea = document.createElement('textarea');
+        textarea.classList.add('campo-curto-equip', 'medievalsharp-mini');
+        textarea.id = 'details_melee';
+        textarea.name = 'equipamentos_melee_details[]';
+        textarea.placeholder = 'Details';
+        textarea.rows = 2;
+        novaLinha.appendChild(textarea);
+
         // Adicionando a nova linha ao container
         container.appendChild(novaLinha);
     }

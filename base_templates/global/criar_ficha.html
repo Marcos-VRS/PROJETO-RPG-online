@@ -451,8 +451,8 @@
                             name="equipamentos_melee_cost[]" placeholder="Cost" />
                         <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" type="number"
                             name="equipamentos_melee_weight[]" placeholder="Weight" />
-                        <p><textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
-                                name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea></p>
+                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
+                            name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea>
                     </div>
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-melee">Adicionar
@@ -475,6 +475,8 @@
                     <label class="campo-curto-equip-label  medievalsharp-mini" for="bulk">Bulk</label>
                     <label class="campo-curto-equip-label  medievalsharp-mini" for="rcl">RCL</label>
                     <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="details_ranged">Details</label>
+
 
                 </div>
                 <div id="equipamentos-ranged-container">
@@ -500,6 +502,8 @@
                             name="equipamentos_ranged_rcl[]" placeholder="RCL" />
                         <input class="campo-curto-equip medievalsharp-mini" type="number" id="cost_ranged"
                             name="equipamentos_ranged_cost[]" placeholder="Cost" />
+                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_range"
+                            name="equipamentos_ranged_details[]" placeholder="Details" rows="2"></textarea>
                     </div>
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-ranged">Adicionar
@@ -551,6 +555,8 @@
                 <h2>ATAQUE</h2>
                 <div>
                     <h4 class="titulo-area-manobra">Melee</h4>
+                    <span id="botao2" class="botao-adicionar "></span>
+
                     <div class="ficha-box-melee">
 
 
@@ -588,6 +594,9 @@
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                                         name="detalhes_manobra_melee[]" id="manobra_melee_detalhe_id"></textarea>
 
+                                    <div class="posicao-botao-remover">
+                                        <span id="botao3" class="botao-remover "></span>
+                                    </div>
 
                                 </div>
                             </div>
@@ -598,10 +607,12 @@
 
 
                     <h4 class="titulo-area-manobra">Ranged</h4>
-                    <div class="ficha-box-melee">
+                    <span id="botao4" class="botao-adicionar "></span>
+
+                    <div class="ficha-box-ranged">
 
 
-                        <div class="ficha-box-manobra-ataque">
+                        <div id="div_ataque_ranged_id" class="ficha-box-manobra-ataque">
                             <div>
 
 
@@ -633,6 +644,10 @@
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                                         name="detalhes_manobra_Ranged[]" id="manobra_Ranged_detalhe_id"></textarea>
+                                    <div class="posicao-botao-remover">
+                                        <span id="botao5" class="botao-remover "></span>
+                                    </div>
+
                                 </div>
 
 
@@ -650,13 +665,63 @@
                 </div>
             </div>
             <div class="form-field ficha-box">
-                <h3>Defesa</h3>
+                <div class="form-field ficha-box-manobra">
+                    <h2>DEFESA</h2>
+                    <div>
+                        <span id="botao6" class="botao-adicionar "></span>
+
+                        <div class="ficha-box-defesa">
+
+
+                            <div class="ficha-box-manobra-defesa">
+                                <div>
+
+
+
+                                    <div class="col-manobra">
+                                        <label for="nome_manobra_defesa_id"
+                                            class="label-nome-manobra medievalsharp-mini">Nome da
+                                            manobra</label>
+                                        <input class="campo-curto-nome medievalsharp-mini" id="nome_manobra_defesa_id"
+                                            name="nome_manobra_defesa[]" placeholder="Nome da manobra" type="text" />
+
+                                    </div>
+                                    <div>
+                                        <label for="manobra_damage_defesa_id" class="medievalsharp-mini">Dano:</label>
+                                        <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
+                                            id="manobra_damage_defesa_id" name="damage_manobra_defesa[]"
+                                            placeholder="Damage" type="text">
+                                        <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
+
+                                        <input class="campo-curto-equip medievalsharp-mini" id="manobra_nh_defesa_id"
+                                            name="nh_manobra_defesa[]" placeholder="NH" type="text">
+                                    </div>
+
+
+                                    <div>
+                                        <label for="manobra_defesa_detalhe_id"
+                                            class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
+
+
+                                        <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
+                                            placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
+                                            name="detalhes_manobra_defesa[]" id="manobra_defesa_detalhe_id"></textarea>
+
+                                        <div class="posicao-botao-remover">
+                                            <span id="botao7" class="botao-remover "></span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
 
-        <!-- Botão de Enviar -->
-        <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
+            <!-- Botão de Enviar -->
+            <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
     </form>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
@@ -672,6 +737,9 @@
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_range.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_armor.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_total_de_pontos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_melee.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_defesa.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_ranged.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
 </body>
 

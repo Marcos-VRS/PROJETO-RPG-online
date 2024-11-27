@@ -76,6 +76,34 @@ body {
 
 }
 
+.ficha-box-ranged {
+    display: flex;
+    width: 1000px;
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1rem;
+    flex-direction: row;
+    align-items: left;
+    flex-wrap: wrap;
+
+}
+
+.ficha-box-defesa {
+    display: flex;
+    width: 1000px;
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1rem;
+    flex-direction: row;
+    align-items: left;
+    flex-wrap: wrap;
+
+}
+
 .ficha-box-manobra {
     border: var(--white-color) solid;
     border-radius: 0.5rem;
@@ -89,6 +117,17 @@ body {
 }
 
 .ficha-box-manobra-ataque {
+    border: var(--white-color) solid;
+    border-radius: 0.5rem;
+    background-color: var(--orange-thin);
+    padding: 1rem;
+    margin: 1.6rem;
+    width: 244.8px;
+
+
+}
+
+.ficha-box-manobra-defesa {
     border: var(--white-color) solid;
     border-radius: 0.5rem;
     background-color: var(--orange-thin);
@@ -581,4 +620,58 @@ body {
     /* Largura da barra horizontal */
     height: 4px;
     /* Altura da barra horizontal */
+}
+
+
+.botao-remover {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    /* Tamanho do círculo */
+    height: 45px;
+    background-color: red;
+    /* Cor do círculo */
+    border-radius: 50%;
+    /* Torna o elemento circular */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    /* Sombra para um efeito suave */
+    cursor: pointer;
+    position: relative;
+    /* Necessário para o alinhamento do "+" */
+    color: #f9e5c2;
+    /* Cor do "+" */
+    font-size: 30px;
+    /* Tamanho do "+" */
+    font-weight: bold;
+    margin-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+.botao-remover::before,
+.botao-remover::after {
+    content: '';
+    position: absolute;
+    background-color: #f9e5c2;
+    /* Cor das barras do "+" */
+}
+
+.botao-remover::before {
+    width: 4px;
+    /* Largura da barra vertical */
+    height: 30px;
+    /* Altura da barra vertical */
+}
+
+.botao-remover::after {
+    width: 30px;
+    /* Largura da barra horizontal */
+    height: 4px;
+    /* Altura da barra horizontal */
+}
+
+.posicao-botao-remover {
+    display: flex;
+    width: 240px;
+    justify-content: center;
 }
