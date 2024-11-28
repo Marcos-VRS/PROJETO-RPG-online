@@ -96,7 +96,7 @@ class CharacterSheetAdmin(admin.ModelAdmin):
             "Atributos",
             {
                 "fields": (
-                    "attributes",
+                    "atributos",
                     "sub_attributes",
                 )  # Exibe 'attributes' e 'sub_attributes' no formulário de edição
             },

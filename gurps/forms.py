@@ -64,7 +64,7 @@ class CharacterSheetForm(forms.ModelForm):
             "nome_personagem",
             "aparencia_idade",
             "pontos_soma",
-            "attributes",
+            "atributos",
             "sub_attributes",
             "advantages",
             "disadvantages",
@@ -86,8 +86,8 @@ class CharacterSheetForm(forms.ModelForm):
             "pontos_soma": forms.Textarea(
                 attrs={"placeholder": "JSON format for points summary"}
             ),
-            "attributes": forms.Textarea(
-                attrs={"placeholder": "JSON format for attributes"}
+            "atributos": forms.Textarea(
+                attrs={"placeholder": "JSON format for atributos"}
             ),
             "sub_attributes": forms.Textarea(
                 attrs={"placeholder": "JSON format for sub-attributes"}

@@ -64,7 +64,7 @@ class CharacterSheet(models.Model):
     pontos_soma = models.JSONField(blank=True, null=True)
 
     # Atributos
-    attributes = models.JSONField(blank=True, null=True)
+    atributos = models.JSONField(blank=True, null=True)
     sub_attributes = models.JSONField(blank=True, null=True)
 
     # Vantagens e desvantagens
