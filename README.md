@@ -87,6 +87,7 @@ O projeto oferece:
 Contribuições são bem-vindas! Para contribuir:
 1. Faça um fork do repositório.
 2. Crie uma branch com sua funcionalidade ou correção:
+   ```bash
    git checkout -b minha-contribuicao  
 3. Envie um Pull Request para revisão.
 
