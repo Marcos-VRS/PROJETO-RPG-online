@@ -57,14 +57,21 @@ O projeto oferece:
    git clone https://github.com/Marcos-VRS/PROJETO-RPG-online.git
    cd PROJETO-RPG-online
 2. Crie e ative um ambiente virtual:
+   ```bash
    python -m venv venv  
    source venv/bin/activate  # Linux/Mac  
    venv\Scripts\activate     # Windows
 3. Instale as dependências:
+   ```bash
    pip install -r requirements.txt
-4.Execute as migrações:
-  python manage.py migrate
-5.Inicie o servidor:
+
+4. Execute as migrações:
+   ```bash
+   python manage.py migrate
+
+
+5. Inicie o servidor:
+   ```bash
    python manage.py runserver  
 
 ---
