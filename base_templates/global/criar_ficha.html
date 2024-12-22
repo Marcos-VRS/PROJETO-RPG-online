@@ -118,7 +118,7 @@
             <!-- Campo de upload de imagem -->
             <label class="txt-miniatura-imagem medievalsharp-mini " for="id_imagem">Foto:</label>
             <input class="input-imagem-miniatura medievalsharp-mini btn-adicionar-campo-foto " type="file"
-                id="id_imagem" name="photo" accept="image/*" onchange="previewImagem(event)">
+                id="id_imagem" name="photo " accept="image/*" onchange="previewImagem(event)">
 
             <!-- Miniatura da imagem -->
             <div class="grid-imagem-background">
@@ -432,7 +432,7 @@
             <h2>Equipamentos</h2>
             <div class="form-field">
                 <label class="medievalsharp-regular" for="subatributo_money">Money: $</label>
-                <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[money]"
+                <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="money"
                     id="subatributo_money">
             </div>
 
@@ -742,6 +742,7 @@
     <script src="{% static 'global/js/criar_ficha/criar_ficha_campanha_info_json.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_subatributos_json.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_atributos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_vantagens.js' %}"></script>
