@@ -50,6 +50,7 @@ def criar_campanha(request):
     return render(request, "global/criar_campanha.html", {"form": form})
 
 
+@login_required(login_url="gurps:login")
 def lista_campanhas(request):
     campanhas = Campanha.objects.all()  # Recupera todas as campanhas
     return render(
