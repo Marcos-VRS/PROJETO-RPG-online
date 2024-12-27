@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Adiciona o conteúdo da nova manobra
         novaManobra.innerHTML = `
-            <div>
+            <div class="manobra-ataque-ranged-id">
                 <div class="col-manobra">
                     <label for="nome_manobra_Ranged_id" class="label-nome-manobra medievalsharp-mini">Nome da
                         manobra</label>

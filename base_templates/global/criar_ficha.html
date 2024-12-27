@@ -627,7 +627,7 @@
 
 
                         <div id="div_ataque_ranged_id" class="ficha-box-manobra-ataque">
-                            <div>
+                            <div class="manobra-ataque-ranged-id">
 
 
 
@@ -635,19 +635,18 @@
                                     <label for="nome_manobra_Ranged_id"
                                         class="label-nome-manobra medievalsharp-mini">Nome da
                                         manobra</label>
-                                    <input class="campo-curto-nome medievalsharp-mini" id="nome_manobra_ranged_id"
-                                        name="nome_manobra_Ranged[]" placeholder="Nome da manobra" type="text" />
+                                    <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_Ranged[]"
+                                        placeholder="Nome da manobra" type="text" />
 
                                 </div>
                                 <div>
                                     <label for="manobra_damage_Ranged_id" class="medievalsharp-mini">Dano:</label>
                                     <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                        id="manobra_damage_Ranged_id" name="damage_manobra_Ranged[]"
-                                        placeholder="Damage" type="text">
+                                        name="damage_manobra_Ranged[]" placeholder="Damage" type="text">
                                     <label for="manobra_nh_Ranged_id" class="medievalsharp-mini">NH:</label>
 
-                                    <input class="campo-curto-equip medievalsharp-mini" id="manobra_nh_Ranged_id"
-                                        name="nh_manobra_Ranged[]" placeholder="NH" type="text">
+                                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_Ranged[]"
+                                        placeholder="NH" type="text">
                                 </div>
 
 
@@ -657,7 +656,7 @@
 
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                        name="detalhes_manobra_Ranged[]" id="manobra_Ranged_detalhe_id"></textarea>
+                                        name="detalhes_manobra_Ranged[]"></textarea>
                                     <div class="posicao-botao-remover">
                                         <span id="botao5" class="botao-remover "></span>
                                     </div>
@@ -762,8 +761,9 @@
     <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_total_de_pontos.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_melee.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_melee_json.js' %}"></script>
-    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_defesa.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_ranged.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_ranged_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_defesa.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
 </body>
 
