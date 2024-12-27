@@ -9,20 +9,20 @@ document.addEventListener("DOMContentLoaded", function () {
         novaManobra.classList.add("ficha-box-manobra-ataque");
 
         novaManobra.innerHTML = `
-            <div>
+            <div class="manobra-ataque-melee-id">
                 <div class="col-manobra">
-                    <label for="nome_manobra_melee_id" class="label-nome-manobra medievalsharp-mini">Nome da
+                    <label class="label-nome-manobra medievalsharp-mini">Nome da
                         manobra</label>
                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_melee[]" placeholder="Nome da manobra" type="text" />
                 </div>
                 <div>
-                    <label for="manobra_damage_melee_id" class="medievalsharp-mini">Dano:</label>
+                    <label class="medievalsharp-mini">Dano:</label>
                     <input class="campo-curto-equip medievalsharp-mini" name="damage_manobra_melee[]" placeholder="Damage" type="text">
-                    <label for="manobra_nh_melee_id" class="medievalsharp-mini">NH:</label>
+                    <label class="medievalsharp-mini">NH:</label>
                     <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_melee[]" placeholder="NH" type="text">
                 </div>
                 <div>
-                    <label for="manobra_melee_detalhe_id" class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
+                    <label class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                         name="detalhes_manobra_melee[]"></textarea>
