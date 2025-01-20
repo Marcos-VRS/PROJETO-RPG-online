@@ -12,20 +12,9 @@
         <ul id='chat_messages'>
             {% for mensagem in mensagens_chat reversed %}
                 <li>
-                    <!-- Verificando se o autor da mensagem é o usuário logado -->
-                    {% if mensagem.autor.id == user.id %}
-                        <div class="">
-                            <span>{{ mensagem.autor.profile.name }}</span>
-                            <span class="text-gray-400">{{ mensagem.autor.username }}</span>
-                        </div>
-                        <div>
-                            <span>{{ mensagem.corpo }}</span>
-                        </div>
-                    {% else %}
-                        <div>
-                            <span>{{ mensagem.autor.username }}: {{ mensagem.corpo }}</span>
-                        </div>
-                    {% endif %}
+                    <div>
+                        <span>{{ mensagem.autor.username }}: {{ mensagem.corpo }}</span>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
