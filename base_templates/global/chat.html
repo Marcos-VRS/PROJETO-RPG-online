@@ -24,7 +24,7 @@
     <div>
         <form id="chat_message_form" method='POST'>
             {% csrf_token %}
-            <input type="text" name="message" placeholder="Adicionar mensagem..." maxlength="150">
+            {{form}}
             <button type="submit">Enviar</button>
         </form>
     </div>

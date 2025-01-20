@@ -1,5 +1,6 @@
+from django.forms import ModelForm
 from django import forms
-from .models import RegisterUser, CharacterSheet, Campanha
+from .models import *
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 
@@ -119,4 +120,19 @@ class CharacterSheetForm(forms.ModelForm):
             "maneuvers_defense": forms.Textarea(
                 attrs={"placeholder": "JSON list format for defense maneuvers"}
             ),
+        }
+
+
+class ChatmessageCreateForm(ModelForm):
+    class Meta:
+        model = Mensagens_Grupo
+        fields = ["corpo"]
+        widgets = {
+            "corpo": forms.TextInput(
+                attrs={
+                    "placeholder": "adicionar menssagem...",
+                    "maxlength": "300",
+                    "autofocus": True,
+                }
+            )
         }
