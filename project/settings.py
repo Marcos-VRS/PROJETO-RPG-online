@@ -38,7 +38,30 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "gurps",
+    "django.contrib.sites",  # Necessário para Allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",  # Para autenticação social
+    "allauth.socialaccount.providers.google",
+    "django_htmx",
 ]
+
+# Configuração dos backends de autenticação
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # Backend de autenticação padrão do Django
+    "allauth.account.auth_backends.AuthenticationBackend",  # Backend do django-allauth
+]
+
+# Configurações de conta
+ACCOUNT_EMAIL_REQUIRED = True  # Tornar o e-mail obrigatório para o cadastro
+ACCOUNT_USERNAME_REQUIRED = False  # Desabilitar a exigência de nome de usuário
+ACCOUNT_AUTHENTICATION_METHOD = (
+    "email"  # Usar o e-mail para autenticação (em vez do nome de usuário)
+)
+ACCOUNT_EMAIL_VERIFICATION = (
+    "optional"  # Pode ser 'mandatory' para exigir verificação de e-mail
+)
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -48,6 +71,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",  # Adicione esta linha
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -67,6 +91,14 @@ TEMPLATES = [
         },
     },
 ]
+
+# Configurações de redirecionamento após login/logout
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Site ID
+SITE_ID = 1
+
 
 WSGI_APPLICATION = "project.wsgi.application"
 

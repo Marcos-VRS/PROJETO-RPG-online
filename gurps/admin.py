@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import RegisterUser, Campanha
-from .models import CharacterSheet
+from .models import *
 from .forms import CharacterSheetForm
 from django import forms
 from django_json_widget.widgets import (
@@ -135,4 +134,13 @@ class CharacterSheetAdmin(admin.ModelAdmin):
 
 
 # Registrando o modelo no Admin
-admin.site.register(CharacterSheet, CharacterSheetAdmin)
+admin.site.register(
+    CharacterSheet,
+    CharacterSheetAdmin,
+)
+admin.site.register(
+    Grupo_Chat,
+)
+admin.site.register(
+    Mensagens_Grupo,
+)

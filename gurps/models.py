@@ -93,3 +93,25 @@ class CharacterSheet(models.Model):
 
     def __str__(self):
         return self.nome_personagem or "Ficha Sem Nome"
+
+
+class Grupo_Chat(models.Model):
+    group_name = models.CharField(max_length=128, unique=True)
+
+    def __str__(self):
+        return self.group_name
+
+
+class Mensagens_Grupo(models.Model):
+    grupo = models.ForeignKey(
+        Grupo_Chat, related_name="mensagens_chat", on_delete=models.CASCADE
+    )
+    autor = models.ForeignKey(RegisterUser, on_delete=models.CASCADE)
+    corpo = models.CharField(max_length=900)
+    created = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.autor.username} : {self.corpo}"
+
+    class Meta:
+        ordering = ["-created"]

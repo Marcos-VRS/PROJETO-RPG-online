@@ -21,4 +21,5 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("gurps.urls")),  # inclui URLs do app "gurps"
+    path("accounts/", include("allauth.urls")),  # Inclui as URLs do allauth
 ]
