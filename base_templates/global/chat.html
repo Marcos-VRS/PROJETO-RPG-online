@@ -4,31 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHAT</title>
+    <title>Chat - {{ campanha.nome }}</title>
 </head>
 
 <body>
-    <div id='chat_container'>
-        <ul id='chat_messages'>
-            {% for mensagem in mensagens_chat reversed %}
-                <li>
-                    <div>
-                        <span>{{ mensagem.autor.username }}: {{ mensagem.corpo }}</span>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+    <h1>Chat da Campanha: {{ campanha.nome }}</h1>
+    <ul>
+        {% for message in messages %}
+        <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em></li>
+        {% endfor %}
+    </ul>
 
-    <!-- Formulário de envio de mensagens -->
-    <div>
-        <form id="chat_message_form" method='POST'>
-            {% csrf_token %}
-            {{form}}
-            <button type="submit">Enviar</button>
-        </form>
-    </div>
-
+    <!-- Formulário para enviar uma nova mensagem -->
+    <form method="POST" action="">
+        {% csrf_token %}
+        <textarea name="content" placeholder="Digite sua mensagem"></textarea>
+        <button type="submit">Enviar</button>
+    </form>
 </body>
 
 </html>

@@ -38,5 +38,6 @@ urlpatterns = [
     ),
     # Opções
     path("Opções/", views.opcoes, name="opcoes_index"),
-    path("chat/", views.chat_view, name="chat_view"),
+    # Chat
+    path("chat/<int:campanha_id>/", views.chat_view, name="chat"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

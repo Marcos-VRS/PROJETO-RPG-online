@@ -121,18 +121,3 @@ class CharacterSheetForm(forms.ModelForm):
                 attrs={"placeholder": "JSON list format for defense maneuvers"}
             ),
         }
-
-
-class ChatmessageCreateForm(ModelForm):
-    class Meta:
-        model = Mensagens_Grupo
-        fields = ["corpo"]
-        widgets = {
-            "corpo": forms.TextInput(
-                attrs={
-                    "placeholder": "adicionar menssagem...",
-                    "maxlength": "300",
-                    "autofocus": True,
-                }
-            )
-        }

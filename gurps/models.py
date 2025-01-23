@@ -95,23 +95,18 @@ class CharacterSheet(models.Model):
         return self.nome_personagem or "Ficha Sem Nome"
 
 
-class Grupo_Chat(models.Model):
-    group_name = models.CharField(max_length=128, unique=True)
-
-    def __str__(self):
-        return self.group_name
-
-
-class Mensagens_Grupo(models.Model):
-    grupo = models.ForeignKey(
-        Grupo_Chat, related_name="mensagens_chat", on_delete=models.CASCADE
+class Message(models.Model):
+    user = models.ForeignKey(RegisterUser, on_delete=models.CASCADE)
+    campanha = models.ForeignKey(
+        Campanha,
+        on_delete=models.CASCADE,
+        related_name="mensagens",  # Permite acessar mensagens relacionadas à campanha
+        blank=True,
+        null=True,
     )
-    autor = models.ForeignKey(RegisterUser, on_delete=models.CASCADE)
-    corpo = models.CharField(max_length=900)
-    created = models.DateTimeField(auto_now=True)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.autor.username} : {self.corpo}"
-
-    class Meta:
-        ordering = ["-created"]
+        campanha_nome = self.campanha.nome if self.campanha else "Sem Campanha"
+        return f"[{campanha_nome}] {self.user.username}: {self.content}"

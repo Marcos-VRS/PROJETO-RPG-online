@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",  # Para autenticação social
     "allauth.socialaccount.providers.google",
     "django_htmx",
+    "channels",
 ]
 
 # Configuração dos backends de autenticação
@@ -102,7 +103,13 @@ SITE_ID = 1
 
 WSGI_APPLICATION = "project.wsgi.application"
 
+ASGI_APPLICATION = "meuprojeto.asgi.application"
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 

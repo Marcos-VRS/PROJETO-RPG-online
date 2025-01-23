@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import *
+from .models import *  # Importa todos os modelos do arquivo models.py
 from .forms import CharacterSheetForm
-from django import forms
 from django_json_widget.widgets import (
     JSONEditorWidget,
 )  # Para campos JSON mais amigáveis
 
 
+# Registrando o modelo RegisterUser com customização
 @admin.register(RegisterUser)
 class RegisterUserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "created_date", "is_staff")
@@ -28,6 +28,7 @@ class RegisterUserAdmin(admin.ModelAdmin):
     )
 
 
+# Registrando o modelo Campanha com customização
 @admin.register(Campanha)
 class CampanhaAdmin(admin.ModelAdmin):
     list_display = (
@@ -60,7 +61,7 @@ class CampanhaAdmin(admin.ModelAdmin):
     )
 
 
-# Customizando a exibição do modelo no Admin
+# Registrando o modelo CharacterSheet com customização
 class CharacterSheetAdmin(admin.ModelAdmin):
     form = CharacterSheetForm  # Usando um form personalizado, se necessário
     list_display = (
@@ -97,7 +98,7 @@ class CharacterSheetAdmin(admin.ModelAdmin):
                 "fields": (
                     "atributos",
                     "sub_attributes",
-                )  # Exibe 'attributes' e 'sub_attributes' no formulário de edição
+                )  # Exibe 'atributos' e 'sub_attributes' no formulário de edição
             },
         ),
         (
@@ -133,14 +134,10 @@ class CharacterSheetAdmin(admin.ModelAdmin):
     )
 
 
-# Registrando o modelo no Admin
-admin.site.register(
-    CharacterSheet,
-    CharacterSheetAdmin,
-)
-admin.site.register(
-    Grupo_Chat,
-)
-admin.site.register(
-    Mensagens_Grupo,
-)
+# Registrando os modelos restantes automaticamente
+models_to_register = [Message]  # Adicione outros modelos que não possuem customização
+for model in models_to_register:
+    admin.site.register(model)
+
+# Registrando o modelo CharacterSheet com a customização específica
+admin.site.register(CharacterSheet, CharacterSheetAdmin)

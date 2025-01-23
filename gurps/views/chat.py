@@ -1,35 +1,29 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from gurps.models import Grupo_Chat
-from gurps.forms import *
+from django.shortcuts import render, get_object_or_404, redirect
+from gurps.models import Campanha, Message
 
 
-@login_required(login_url="gurps:login")
-def chat_view(request):
-    grupo_chat = get_object_or_404(Grupo_Chat, group_name="chat-publico")
-    mensagens_chat = grupo_chat.mensagens_chat.all()[:30]
+def chat_view(request, campanha_id):
+    # Obter a campanha específica
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    # Filtrar as mensagens associadas à campanha
+    messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
 
     if request.method == "POST":
-        form = ChatmessageCreateForm(request.POST)
-        if form.is_valid():
-            message = form.save(commit=False)
-            message.grupo = grupo_chat  # Atribua o grupo à mensagem
-            message.autor = request.user  # Atribua o autor à mensagem
-            message.save()
-            return redirect(
-                "gurps:chat_view"
-            )  # Redireciona para a mesma página após salvar a mensagem
-        else:
-            # Lidar com o caso em que o formulário não é válido
-            print(form.errors)  # Mostra erros no console de desenvolvimento
-            return render(
-                request,
-                "global/chat.html",
-                {"mensagens_chat": mensagens_chat, "form": form},
+        # Verificar se o formulário foi enviado
+        content = request.POST.get("content")  # Obter o conteúdo da mensagem
+        if content:  # Certificar-se de que não está vazio
+            Message.objects.create(
+                user=request.user,  # Usuário logado
+                campanha=campanha,  # Campanha atual
+                content=content,
             )
+            return redirect(
+                "gurps:chat", campanha_id=campanha_id
+            )  # Recarregar a página
 
-    # Se o método não for POST, só renderize as mensagens existentes
-    form = ChatmessageCreateForm()
-    return render(
-        request, "global/chat.html", {"mensagens_chat": mensagens_chat, "form": form}
-    )
+    context = {
+        "campanha": campanha,
+        "messages": messages,  # Passar as mensagens associadas
+    }
+
+    return render(request, "global/chat.html", context)
