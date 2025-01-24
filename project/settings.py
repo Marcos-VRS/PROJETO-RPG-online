@@ -93,23 +93,21 @@ TEMPLATES = [
     },
 ]
 
-# Configurações de redirecionamento após login/logout
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
 
-# Site ID
-SITE_ID = 1
+# WSGI_APPLICATION = "project.wsgi.application"
 
-
-WSGI_APPLICATION = "project.wsgi.application"
-
-ASGI_APPLICATION = "meuprojeto.asgi.application"
+ASGI_APPLICATION = "project.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
     },
 }
+
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
