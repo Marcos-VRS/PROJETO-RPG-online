@@ -1,0 +1,56 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - {{ campanha.nome }}</title>
+</head>
+
+<body>
+    <h1>Chat da Campanha: {{ campanha.nome }}</h1>
+
+    <!-- Lista de mensagens -->
+    <ul id="messages">
+        {% for message in messages %}
+        <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em></li>
+        {% endfor %}
+    </ul>
+
+    <!-- Formulário para enviar uma nova mensagem -->
+    <form method="POST" action="">
+        {% csrf_token %}
+        <textarea id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <!-- JavaScript para WebSocket -->
+    <script>
+        const roomName = "{{ campanha.id }}";  // Certifique-se de que esta variável está sendo renderizada corretamente
+        const username = "{{ user.username }}";  // Nome do usuário
+
+        // Verifica se a página está sendo acessada via HTTP ou HTTPS
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const chatSocket = new WebSocket(
+            '${wsProtocol}${window.location.host}/ws/chat/${roomName}/'
+        );
+
+        // Quando uma nova mensagem for recebida
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            const messages = document.getElementById('messages');
+            messages.innerHTML += <li><strong>${data.username}:</strong> ${data.message}</li>;
+            // Rolagem para o final da lista
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        chatSocket.onclose = function (e) {
+            console.error('WebSocket fechado inesperadamente.');
+        };
+
+    </script>
+</body>
+
+</html>
