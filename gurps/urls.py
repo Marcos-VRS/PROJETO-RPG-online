@@ -3,7 +3,6 @@ from gurps import views
 from django.conf import settings
 from django.conf.urls.static import static
 
-
 app_name = "gurps"
 
 urlpatterns = [
@@ -41,5 +40,11 @@ urlpatterns = [
     # Chat
     path("chat/<int:campanha_id>/", views.chat_view, name="chat"),
     # Mapas
-    path("Mapas/<int:campanha_id>", views.show_mapas, name="mapas"),
+    path(
+        "mapas/<int:campanha_id>/<int:campanha_assets_id>/",
+        views.show_mapas,
+        name="show_mapas",
+    ),
+    # Save Message
+    path("save_message/", views.save_message, name="save_message"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

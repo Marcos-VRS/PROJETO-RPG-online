@@ -1,14 +1,47 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="ptbr">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{campanha.nome}}</title>
+    <title>Mapas - {{ campanha.nome }}</title>
+    <link rel="stylesheet" href="{% static 'global/css/mapas.css' %}">
 </head>
 
 <body>
+    <div class="image-container">
+        {% if pagina_inicial.image %}
+        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"
+            id="map-image">
+        {% endif %}
+    </div>
 
+    <div class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
+        <h1>Chat da Campanha: {{ campanha.nome }}</h1>
+
+        <!-- Lista de mensagens -->
+        <ul id="messages">
+            {% for message in messages %}
+            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Formulário para enviar uma nova mensagem -->
+        <form method="POST" action="">
+            {% csrf_token %}
+            <textarea id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
+            <button type="submit" onclick="sendMessage()">Enviar</button>
+        </form>
+    </div>
+
+    <div class="menu-container"></div>
+    <div class="personagem-container"></div>
+    <div class="ferramentas-container"></div>
+
+    <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
+    <script src="{% static 'global/js/chat/chat.js' %}"></script>
 </body>
 
 </html>

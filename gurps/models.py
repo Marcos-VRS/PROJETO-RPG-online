@@ -52,7 +52,7 @@ class Campanha(models.Model):
         return self.nome
 
 
-class CamapanhaAssets(models.Model):
+class CampanhaAssets(models.Model):
     campanha = models.ForeignKey(
         Campanha,
         on_delete=models.CASCADE,

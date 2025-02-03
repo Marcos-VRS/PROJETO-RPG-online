@@ -32,6 +32,7 @@ class RegisterUserAdmin(admin.ModelAdmin):
 @admin.register(Campanha)
 class CampanhaAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "dono",
         "nome",
         "xp_inicial",
@@ -134,10 +135,19 @@ class CharacterSheetAdmin(admin.ModelAdmin):
     )
 
 
-# Registrando os modelos restantes automaticamente
-models_to_register = [Message]  # Adicione outros modelos que não possuem customização
-for model in models_to_register:
-    admin.site.register(model)
+# Registrando o modelo CampanhaAssets com customização
+@admin.register(CampanhaAssets)
+class CampanhaAssetsAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "campanha", "description", "image")
+    search_fields = ("id", "name", "campanha__nome")
+
+
+# Registrando o modelo Message com customização
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ("user", "campanha", "content", "timestamp")
+    search_fields = ("user__username", "campanha__nome", "content")
+
 
 # Registrando o modelo CharacterSheet com a customização específica
 admin.site.register(CharacterSheet, CharacterSheetAdmin)
