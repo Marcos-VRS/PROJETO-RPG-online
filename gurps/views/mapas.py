@@ -3,8 +3,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from gurps.models import Campanha, CampanhaAssets, Message
+from django.contrib.auth.decorators import login_required
 
 
+@login_required(login_url="gurps:login")
 def show_mapas(request, campanha_id, campanha_assets_id):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(

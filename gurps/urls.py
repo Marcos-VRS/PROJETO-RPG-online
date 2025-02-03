@@ -37,8 +37,6 @@ urlpatterns = [
     ),
     # Opções
     path("Opções/", views.opcoes, name="opcoes_index"),
-    # Chat
-    path("chat/<int:campanha_id>/", views.chat_view, name="chat"),
     # Mapas
     path(
         "mapas/<int:campanha_id>/<int:campanha_assets_id>/",
