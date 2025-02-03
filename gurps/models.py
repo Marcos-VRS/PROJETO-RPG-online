@@ -52,6 +52,22 @@ class Campanha(models.Model):
         return self.nome
 
 
+class CamapanhaAssets(models.Model):
+    campanha = models.ForeignKey(
+        Campanha,
+        on_delete=models.CASCADE,
+        related_name="assets",
+        blank=True,
+        null=True,
+    )
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to="campanhas_assets/", blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
 class CharacterSheet(models.Model):
 
     # Informações básicas
