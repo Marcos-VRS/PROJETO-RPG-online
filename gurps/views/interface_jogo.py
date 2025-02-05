@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from gurps.models import Campanha, CampanhaAssets, Message
 from django.contrib.auth.decorators import login_required
+from django.contrib import auth
 
 
 @login_required(login_url="gurps:login")
@@ -19,7 +20,7 @@ def show_mapas(request, campanha_id, campanha_assets_id):
         "pagina_inicial": pagina_inicial,
         "messages": messages,
     }
-    return render(request, "global/mapas.html", context)
+    return render(request, "global/interface_jogo.html", context)
 
 
 @csrf_exempt
@@ -39,3 +40,10 @@ def save_message(request):
             )
             return JsonResponse({"status": "success"})
     return JsonResponse({"status": "error"}, status=400)
+
+
+@login_required(login_url="gurps:login")
+def leave_game(request):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM LEAVE GAME\n")
+    return redirect("gurps:index")

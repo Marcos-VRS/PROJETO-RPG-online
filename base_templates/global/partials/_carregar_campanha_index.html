@@ -1,16 +1,29 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Carregar Campanha</title>
 </head>
 
 <body>
-    ESSA É A TELA DE CARREGAR CAMPANHAS
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Carregar Campanha</h1>
+    <ul class="ul-lista">
+        {% for campanha in campanhas %}
+        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
+            <a href="{% url 'gurps:criar_ficha_campanha' campanha.id %}">
+                <h2>{{ campanha.nome }}</h2>
+                <h2>GM: {{ campanha.dono }}</h2>
+                <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
 </body>
 
 </html>

@@ -1,3 +1,3 @@
 from .login_view import *
 from .menu_view import *
-from .mapas import *
+from .interface_jogo import *

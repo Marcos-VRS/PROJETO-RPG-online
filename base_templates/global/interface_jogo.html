@@ -18,6 +18,11 @@
     </div>
 
     <div class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
+        <div class="menu-container">
+            <button class="menu-button">Fichas</button>
+            <button class="menu-button">Opções</button>
+            <button class="menu-button"><a href="{% url 'gurps:leave_game' %}">SAIR</a></button>
+        </div>
 
         <!-- Lista de mensagens -->
         <ul id="messages">
@@ -35,7 +40,6 @@
         </form>
     </div>
 
-    <div class="menu-container"></div>
     <div class="personagem-container"></div>
     <div class="ferramentas-container"></div>
 

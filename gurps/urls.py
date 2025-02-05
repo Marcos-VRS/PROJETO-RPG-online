@@ -37,12 +37,13 @@ urlpatterns = [
     ),
     # Opções
     path("Opções/", views.opcoes, name="opcoes_index"),
-    # Mapas
+    # interface do jogo
     path(
-        "mapas/<int:campanha_id>/<int:campanha_assets_id>/",
+        "game/<int:campanha_id>/<int:campanha_assets_id>/",
         views.show_mapas,
         name="show_mapas",
     ),
-    # Save Message
+    path("leave_game/", views.leave_game, name="leave_game"),
+    # CHAT
     path("save_message/", views.save_message, name="save_message"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
