@@ -52,7 +52,7 @@ def criar_campanha(request):
 
 @login_required(login_url="gurps:login")
 def lista_campanhas(request):
-    campanhas = Campanha.objects.all()  # Recupera todas as campanhas
+    campanhas = Campanha.objects.all().order_by("-id")  # Recupera todas as campanhas
     return render(
         request, "global/lista_campanhas_nova_campanha.html", {"campanhas": campanhas}
     )
@@ -122,12 +122,14 @@ def carregar_campanha_index(request):
 @login_required(login_url="gurps:login")
 def carregar_campanha_gm(request):
     username = request.user.username
-    campanhas = Campanha.objects.filter(dono__username=username)
+    campanhas = Campanha.objects.filter(dono__username=username).order_by("-id")
+    asset_id = "1"  # Variável fixa ou pode ser dinâmica conforme necessário
+    context = {"campanhas": campanhas, "asset_id": asset_id}
     print(f"\n  O USUÁRIO [{username}] CARREGOU AS CAMPANHAS {campanhas}\n")
     return render(
         request,
         "global/partials/_lista_carregar_campanha_gm.html",
-        {"campanhas": campanhas},
+        context,
     )
 
 
@@ -135,9 +137,11 @@ def carregar_campanha_gm(request):
 def carregar_campanha_player(request):
     username = request.user.username
 
-    personagens = CharacterSheet.objects.filter(
-        info_campanha__player_name=username
-    ).distinct()
+    personagens = (
+        CharacterSheet.objects.filter(info_campanha__player_name=username)
+        .distinct()
+        .order_by("-id")
+    )
 
     # Criar um dicionário para mapear nome da campanha para id
     campanhas_dict = {campanha.nome: campanha.id for campanha in Campanha.objects.all()}
