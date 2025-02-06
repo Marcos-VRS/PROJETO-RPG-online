@@ -15,7 +15,7 @@
     <ul class="ul-lista">
         {% for campanha in campanhas %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <a href="{% url 'gurps:show_mapas' campanha.id asset_id %}">
+            <a href="{% url 'gurps:game_interface' campanha.id asset_id %}">
                 <h2>{{ campanha.nome }}</h2>
                 <h2>GM: {{ campanha.dono }}</h2>
                 <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />

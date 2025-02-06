@@ -50,8 +50,8 @@ urlpatterns = [
     # interface do jogo
     path(
         "game/<int:campanha_id>/<int:slot>/",
-        views.show_mapas,
-        name="show_mapas",
+        views.game_interface,
+        name="game_interface",
     ),
     path("leave_game/", views.leave_game, name="leave_game"),
     # CHAT
