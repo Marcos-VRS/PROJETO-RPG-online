@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
             { type: 'text', name: 'equipamentos_melee_damage[]', placeholder: 'Damage', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
             { type: 'text', name: 'equipamentos_melee_reach[]', placeholder: 'Reach', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
             { type: 'text', name: 'equipamentos_melee_parry[]', placeholder: 'Parry', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'number', name: 'equipamentos_melee_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'number', name: 'equipamentos_melee_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
+            { type: 'text', name: 'equipamentos_melee_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
         ];
 
         // Criando inputs para os campos principais

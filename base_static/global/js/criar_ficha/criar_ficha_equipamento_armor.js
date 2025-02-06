@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const campos = [
             { type: 'text', name: 'equipamentos_armor_nome[]', placeholder: 'Nome da armadura', extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
             { type: 'text', name: 'equipamentos_armor_location[]', placeholder: 'Location', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'number', name: 'equipamentos_armor_rd[]', placeholder: 'RD', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'number', name: 'equipamentos_armor_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'number', name: 'equipamentos_armor_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
+            { type: 'text', name: 'equipamentos_armor_rd[]', placeholder: 'RD', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_armor_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_armor_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
         ];
 
         // Criando inputs para os campos

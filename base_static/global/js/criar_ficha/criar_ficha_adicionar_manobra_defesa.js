@@ -17,8 +17,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]" placeholder="Nome da manobra" type="text" />
                 </div>
                 <div>
-                    <label for="manobra_damage_defesa_id" class="medievalsharp-mini">Dano:</label>
-                    <input class="campo-curto-equip medievalsharp-mini" name="damage_manobra_defesa[]" placeholder="Damage" type="text">
                     <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
                     <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]" placeholder="NH" type="text">
                 </div>
