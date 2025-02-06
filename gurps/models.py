@@ -60,7 +60,8 @@ class CampanhaAssets(models.Model):
         blank=True,
         null=True,
     )
-    name = models.CharField(max_length=100)
+    slot = models.IntegerField(default=1)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to="campanhas_assets/", blank=True, null=True)
 

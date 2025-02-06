@@ -138,7 +138,7 @@ class CharacterSheetAdmin(admin.ModelAdmin):
 # Registrando o modelo CampanhaAssets com customização
 @admin.register(CampanhaAssets)
 class CampanhaAssetsAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "campanha", "description", "image")
+    list_display = ("id", "name", "slot", "campanha", "description", "image")
     search_fields = ("id", "name", "campanha__nome")
 
 

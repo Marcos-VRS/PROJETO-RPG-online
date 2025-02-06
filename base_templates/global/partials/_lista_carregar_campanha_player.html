@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Lista de personagens</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Lista de personagens como PLAYER</h1>
+    <ul class="ul-lista">
+        {% for personagem in personagens %}
+        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
+            <a href="{% url 'gurps:show_mapas' personagem.campanha_id asset_id %}">
+                <h2>CAMPANHA: {{ personagem.info_campanha.nome_campanha }}</h2>
+                <h2>PERSONAGEM: {{ personagem.nome_personagem }}</h2>
+                {% if personagem.photo %}
+                <img class="imagem-miniatura" src="{{ personagem.photo.url }}" alt="Imagem do personagem">
+                {% else %}
+                <p>Sem imagem disponível</p>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

@@ -110,7 +110,56 @@ def save_character_sheet(request):
 def carregar_campanha_index(request):
     username = request.user.username
     print(f"\n  O USUÁRIO [{username}] CLICOU EM CARREGAR CAMPANHA\n")
+
+    campanhas = Campanha.objects.filter(
+        dono=request.user
+    )  # Filtra as campanhas do usuário
+    print(f"\n  O USUÁRIO [{username}] CARREGOU AS CAMPANHAS {campanhas}\n")
+
     return render(request, "global/partials/_carregar_campanha_index.html")
+
+
+@login_required(login_url="gurps:login")
+def carregar_campanha_gm(request):
+    username = request.user.username
+    campanhas = Campanha.objects.filter(dono__username=username)
+    print(f"\n  O USUÁRIO [{username}] CARREGOU AS CAMPANHAS {campanhas}\n")
+    return render(
+        request,
+        "global/partials/_lista_carregar_campanha_gm.html",
+        {"campanhas": campanhas},
+    )
+
+
+@login_required(login_url="gurps:login")
+def carregar_campanha_player(request):
+    username = request.user.username
+
+    personagens = CharacterSheet.objects.filter(
+        info_campanha__player_name=username
+    ).distinct()
+
+    # Criar um dicionário para mapear nome da campanha para id
+    campanhas_dict = {campanha.nome: campanha.id for campanha in Campanha.objects.all()}
+
+    # Adicionar o ID da campanha dentro de cada personagem no contexto
+    for personagem in personagens:
+        nome_campanha = personagem.info_campanha.get("nome_campanha")
+        personagem.campanha_id = campanhas_dict.get(
+            nome_campanha, None
+        )  # Adicionando dinamicamente o ID da campanha
+
+    asset_id = "1"  # Variável fixa ou pode ser dinâmica conforme necessário
+
+    context = {
+        "personagens": personagens,
+        "asset_id": asset_id,
+    }
+    return render(
+        request,
+        "global/partials/_lista_carregar_campanha_player.html",
+        context,
+    )
 
 
 @login_required(login_url="gurps:login")

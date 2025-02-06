@@ -8,11 +8,9 @@ from django.contrib import auth
 
 
 @login_required(login_url="gurps:login")
-def show_mapas(request, campanha_id, campanha_assets_id):
+def show_mapas(request, campanha_id, slot):
     campanha = get_object_or_404(Campanha, id=campanha_id)
-    pagina_inicial = get_object_or_404(
-        CampanhaAssets, id=campanha_assets_id, campanha=campanha
-    )
+    pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
 
     context = {

@@ -26,6 +26,16 @@ urlpatterns = [
         name="carregar_campanha_index",
     ),
     path(
+        "Carregar_campanha/GM/",
+        views.carregar_campanha_gm,
+        name="carregar_campanha_gm",
+    ),
+    path(
+        "Carregar_campanha/Player/",
+        views.carregar_campanha_player,
+        name="carregar_campanha_player",
+    ),
+    path(
         "Campanha/<int:id>/Criar_Ficha/",
         views.criar_ficha_campanha,
         name="criar_ficha_campanha",
@@ -39,7 +49,7 @@ urlpatterns = [
     path("Opções/", views.opcoes, name="opcoes_index"),
     # interface do jogo
     path(
-        "game/<int:campanha_id>/<int:campanha_assets_id>/",
+        "game/<int:campanha_id>/<int:slot>/",
         views.show_mapas,
         name="show_mapas",
     ),
