@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from gurps.forms import CharacterSheetForm, CampanhaForm
 from django.contrib import messages
 from django.http import JsonResponse
+from django.urls import reverse
 
 
 # View da pagina inicial
@@ -39,9 +40,9 @@ def criar_campanha(request):
             # Criar um asset automaticamente para a campanha
             CampanhaAssets.objects.create(
                 campanha=campanha,
-                name=campanha.nome,  # Nome do asset igual ao da campanha
-                description=campanha.descricao,  # Descrição igual à da campanha
-                image=campanha.imagem,  # Mesma imagem da campanha
+                name=campanha.nome,
+                description=campanha.descricao,
+                image=campanha.imagem,
             )
 
             messages.success(request, "Campanha criada com sucesso!")
@@ -49,7 +50,8 @@ def criar_campanha(request):
                 f"\n  O USUÁRIO [{username}] CRIOU UMA NOVA CAMPANHA COM O NOME [{campanha.nome}]\n"
             )
 
-            return redirect("gurps:index")
+            # Redirecionar para a URL da interface do jogo, passando o ID da campanha e slot=1
+            return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
 
     else:
         form = CampanhaForm()
