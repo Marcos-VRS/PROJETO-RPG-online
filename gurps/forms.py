@@ -50,6 +50,7 @@ class CampanhaForm(forms.ModelForm):
             "tl",
             "descricao",
             "regras",
+            "imagem",
         ]
         widgets = {
             "descricao": forms.Textarea(attrs={"rows": 4, "cols": 40}),

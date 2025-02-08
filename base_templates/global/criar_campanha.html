@@ -16,11 +16,6 @@
         {% csrf_token %}
         {{ form.as_p }}
 
-        <!-- Campo de upload de imagem -->
-        <label class="txt-miniatura-imagem medievalsharp-regular " for="id_imagem">Imagem da Campanha:</label>
-        <input class="input-imagem-miniatura medievalsharp-regular " type="file" id="id_imagem" name="imagem"
-            accept="image/*" onchange="previewImagem(event)">
-
         <!-- Miniatura da imagem -->
         <div>
             <img class="imagem-miniatura" id="miniatura_imagem" src="#" alt="Pré-visualização da imagem">

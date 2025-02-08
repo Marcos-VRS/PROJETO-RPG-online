@@ -31,19 +31,15 @@ def criar_campanha(request):
 
     if request.method == "POST":
         form = CampanhaForm(request.POST, request.FILES)
-        nome_campanha = request.POST.get("nome")
         if form.is_valid():
             campanha = form.save(commit=False)
-            campanha.dono = request.user  # define o usuário logado como dono
-            if "imagem" in request.FILES:
-                campanha.imagem = request.FILES["imagem"]  # Atribui o arquivo de imagem
-
+            campanha.dono = request.user  # Define o usuário logado como dono
             campanha.save()
             messages.success(request, "Campanha criada com sucesso!")
             print(
-                f"\n  O USUÁRIO [{username}] CRIOU UMA NOVA CAMPANHA COM O NOME [{nome_campanha}]\n"
+                f"\n  O USUÁRIO [{username}] CRIOU UMA NOVA CAMPANHA COM O NOME [{campanha.nome}]\n"
             )
-            return redirect("gurps:index")  # Altere para a URL desejada após a criação
+            return redirect("gurps:index")
     else:
         form = CampanhaForm()
 

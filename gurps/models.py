@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 
 
 class RegisterUser(AbstractUser):
@@ -46,7 +47,12 @@ class Campanha(models.Model):
 
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
     regras = models.TextField(blank=True, null=True)
-    imagem = models.ImageField(upload_to="campanhas/")
+    imagem = models.ImageField(
+        upload_to="campanhas/",
+        blank=False,
+        null=False,  # Permite nulo no banco, mas não no form
+        default=None,  # Evita que Django preencha com string vazia
+    )
 
     def __str__(self):
         return self.nome
