@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from gurps.models import CharacterSheet, Campanha
+from gurps.models import CharacterSheet, Campanha, CampanhaAssets
 from django.contrib.auth.decorators import login_required
 from gurps.forms import CharacterSheetForm, CampanhaForm
 from django.contrib import messages
@@ -33,13 +33,24 @@ def criar_campanha(request):
         form = CampanhaForm(request.POST, request.FILES)
         if form.is_valid():
             campanha = form.save(commit=False)
-            campanha.dono = request.user  # Define o usuário logado como dono
+            campanha.dono = request.user
             campanha.save()
+
+            # Criar um asset automaticamente para a campanha
+            CampanhaAssets.objects.create(
+                campanha=campanha,
+                name=campanha.nome,  # Nome do asset igual ao da campanha
+                description=campanha.descricao,  # Descrição igual à da campanha
+                image=campanha.imagem,  # Mesma imagem da campanha
+            )
+
             messages.success(request, "Campanha criada com sucesso!")
             print(
                 f"\n  O USUÁRIO [{username}] CRIOU UMA NOVA CAMPANHA COM O NOME [{campanha.nome}]\n"
             )
+
             return redirect("gurps:index")
+
     else:
         form = CampanhaForm()
 
