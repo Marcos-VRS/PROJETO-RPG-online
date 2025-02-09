@@ -79,6 +79,17 @@ def save_character_sheet(request):
             # Salva os dados no banco de dados
             character_sheet = form.save()
             print(f"O usuário {username} Salvou a ficha ")
+
+            # Buscar o ID da campanha com base no nome da campanha em info_campanha
+            nome_campanha = character_sheet.info_campanha.get("nome_campanha")
+            campanha = Campanha.objects.filter(nome=nome_campanha).first()
+
+            if campanha:
+                # Redirecionar para a URL da interface do jogo, passando o ID da campanha e slot=1
+                return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+            else:
+                messages.error(request, "Campanha não encontrada.")
+
             # Resposta de sucesso
             return JsonResponse(
                 {
@@ -100,8 +111,6 @@ def save_character_sheet(request):
                 status=400,
             )
     else:
-        print("\naqui é o else\n")
-
         # Renderiza o formulário para criar/editar uma ficha
         form = CharacterSheetForm()
 
