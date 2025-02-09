@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from gurps.models import Campanha, CampanhaAssets, Message
+from gurps.models import Campanha, CampanhaAssets, Message, CharacterSheet
 from django.contrib.auth.decorators import login_required
 from django.contrib import auth
 import random
@@ -13,8 +13,13 @@ def game_interface(request, campanha_id, slot):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
+    personagem = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=campanha.nome,
+        info_campanha__player_name=request.user.username,
+    ).first()
 
     context = {
+        "personagem": personagem,
         "campanha": campanha,
         "pagina_inicial": pagina_inicial,
         "messages": messages,

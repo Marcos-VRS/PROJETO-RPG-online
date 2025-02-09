@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapas - {{ campanha.nome }}</title>
-    <link rel="stylesheet" href="{% static 'global/css/mapas.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}">
 </head>
 
 <body>
@@ -40,7 +40,21 @@
         </form>
     </div>
 
-    <div class="personagem-container"></div>
+    <div class="personagem-container">
+        <div class="personagem-display">
+            <div class="personagem-info">
+                <span>
+                    {{personagem.nome_personagem}}
+                </span>
+                <span>
+                    HP: {{personagem.sub_attributes.hp}}
+                </span>
+                <span>
+                    FP: {{personagem.sub_attributes.fp}}
+                </span>
+            </div>
+        </div>
+    </div>
     <div class="ferramentas-container"></div>
 
     <script src="{% static 'global/js/mapas/zoom.js' %}"></script>

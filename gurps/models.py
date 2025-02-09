@@ -30,7 +30,7 @@ class RegisterUser(AbstractUser):
 
 
 class Campanha(models.Model):
-    nome = models.CharField(max_length=100)
+    nome = models.CharField(max_length=100, unique=True)
     dono = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -80,7 +80,9 @@ class CharacterSheet(models.Model):
     # Informações básicas
     info_campanha = models.JSONField(blank=True, null=True)  # JSON opcional
 
-    nome_personagem = models.CharField(max_length=255, blank=True, null=True)
+    nome_personagem = models.CharField(
+        max_length=255, blank=True, null=True, unique=True
+    )
     aparencia_idade = models.JSONField(blank=True, null=True)  # JSON opcional
 
     # Pontos
