@@ -66,13 +66,31 @@ class CampanhaAdmin(admin.ModelAdmin):
 class CharacterSheetAdmin(admin.ModelAdmin):
     form = CharacterSheetForm  # Usando um form personalizado, se necessário
     list_display = (
+        "get_player_name",
         "nome_personagem",
-        "money",
-        "background",
-        "photo",  # Exibe esses campos na lista do Admin
+        "get_nome_campanha",
     )
-    search_fields = ("nome_personagem",)  # Permite buscar por nome
-    list_filter = ("money",)  # Filtro para o campo 'money' no Admin
+    search_fields = (
+        "nome_personagem",
+        "info_campanha__player_name",
+        "info_campanha__nome_campanha",
+    )  # Permite buscar por nome
+    list_filter = (
+        "id",
+        "nome_personagem",
+    )  # Filtro para o Admin
+
+    # Método personalizado para exibir o valor da chave 'player_name' do campo JSON 'info_campanha'
+    def get_player_name(self, obj):
+        return obj.info_campanha.get("player_name", "N/A")
+
+    get_player_name.short_description = "Player Name"
+
+    # Método personalizado para exibir o valor da chave 'campanha' do campo JSON 'info_campanha'
+    def get_nome_campanha(self, obj):
+        return obj.info_campanha.get("nome_campanha", "N/A")
+
+    get_nome_campanha.short_description = "Nome Campanha"
 
     # Personalizando o formulário de edição
     fieldsets = (
