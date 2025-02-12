@@ -19,9 +19,9 @@
 
     <div class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
         <div class="menu-container">
-            <button class="menu-button">Fichas</button>
-            <button class="menu-button">Opções</button>
-            <button class="menu-button"><a href="{% url 'gurps:leave_game' %}">SAIR</a></button>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">FICHAS</a></button>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a></button>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a></button>
         </div>
 
         <!-- Lista de mensagens -->
@@ -40,25 +40,73 @@
         </form>
     </div>
 
+
+
+    <!-- Ficha do personagem -->
     <div class="personagem-container">
         <div class="personagem-display">
             <div class="personagem-info">
-                <span>
-                    {{personagem.nome_personagem}}
-                </span>
-                <span>
-                    HP: {{personagem.sub_attributes.hp}}
-                </span>
-                <span>
-                    FP: {{personagem.sub_attributes.fp}}
-                </span>
+                <span>{{ personagem.nome_personagem }}</span>
+                <span>HP: {{ personagem.sub_attributes.hp }}</span>
+                <span>FP: {{ personagem.sub_attributes.fp }}</span>
+            </div>
+
+            <div class="personagem-info-button">
+                <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
+            </div>
+            <div class="personagem-info-button">
+                <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
+            </div>
+            <div class="personagem-info-button">
+                <button onclick="abrirJanela('ataque')">ATAQUE</button>
+            </div>
+            <div class="personagem-info-button">
+                <button onclick="abrirJanela('defesa')">DEFESA</button>
             </div>
         </div>
     </div>
+
+    <!-- Divs das janelas -->
+    <div id="janela-atributos" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <ul>
+            <li>ST: {{ personagem.atributos.ST }} <button onclick="rollAttribute('ST')">Rolar</button></li>
+            <li>DX: {{ personagem.atributos.DX }} <button onclick="rollAttribute('DX')">Rolar</button></li>
+            <li>IQ: {{ personagem.atributos.IQ }} <button onclick="rollAttribute('IQ')">Rolar</button></li>
+            <li>HT: {{ personagem.atributos.HT }} <button onclick="rollAttribute('HT')">Rolar</button></li>
+        </ul>
+    </div>
+
+    <div id="janela-pericias" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        Carregando Perícias...
+    </div>
+
+    <div id="janela-ataque" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        Carregando Ataque...
+    </div>
+
+    <div id="janela-defesa" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        Carregando Defesa...
+    </div>
+
+
+
+
+
+
+
+
+
+
+
     <div class="ferramentas-container"></div>
 
     <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
 </body>
 
 </html>
