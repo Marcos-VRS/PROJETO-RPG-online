@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    <!-- Divs das janelas -->
+    <!-- atributos -->
     <div id="janela-atributos" class="janela">
         <button class="fechar" onclick="fecharJanela()">×</button>
         <ul>
@@ -74,7 +74,7 @@
                 <input type="number" id="bonus-ST" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-ST" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button>
+                <button onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
             </li>
             <li>
                 DX: {{ personagem.atributos.DX }}
@@ -82,7 +82,7 @@
                 <input type="number" id="bonus-DX" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-DX" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button>
+                <button onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
             </li>
             <li>
                 IQ: {{ personagem.atributos.IQ }}
@@ -90,7 +90,7 @@
                 <input type="number" id="bonus-IQ" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-IQ" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button>
+                <button onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
             </li>
             <li>
                 HT: {{ personagem.atributos.HT }}
@@ -98,10 +98,65 @@
                 <input type="number" id="bonus-HT" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-HT" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button>
+                <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
             </li>
         </ul>
-        <p id="resultado-rolagem"></p>
+    </div>
+
+
+
+
+    <!-- Perícias -->
+    <div id="janela-pericias" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <ul>
+            {% for skill in personagem.skills %}
+            <li>
+                <strong>Nome:</strong> {{ skill.nome }}
+
+                <strong>NH:</strong> {{ skill.nh }}<br><br>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+
+    <!--Ataques-->
+    <div id="janela-ataque" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <ul>
+            <h2>Melee</h2>
+            {% for attack in personagem.maneuvers_melee %}
+            <strong>Nome:</strong> {{ attack.nome }}
+            <strong>NH:</strong> {{ attack.nh }}
+            <strong>Dano:</strong> {{ attack.damage }}<br>
+            <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+            {% endfor %}
+            <br><br><br><br>
+            <h2>Ranged</h2>
+            {% for attack in personagem.maneuvers_ranged %}
+            <strong>Nome:</strong> {{ attack.nome }}
+            <strong>NH:</strong> {{ attack.nh }}
+            <strong>Dano:</strong> {{ attack.damage }}<br>
+            <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+
+            {%endfor%}
+        </ul>
+    </div>
+
+
+    
+    <!--Defesas-->
+    <div id="janela-defesa" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <ul>
+            {% for defense in personagem.maneuvers_defense %}
+            <strong>Nome:</strong> {{ defense.nome }}
+            <strong>NH:</strong> {{ defense.nh }}<br>
+            <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
+            {% endfor %}
+        </ul>
     </div>
 
 
