@@ -120,11 +120,20 @@ def roll_test_attribute(
 ):
     roll = roll_d6(3)
     message = verify_roll(nh_attribute, roll, bonus, redutor)
+    nh_final = nh_attribute + bonus - redutor
     print(
-        f"\nATRIBUTO: {atributo}  NH: {nh_attribute}, ROLL: {roll}, MESSAGE: {message}\n"
+        f"\nATRIBUTO: {atributo}  NH: {nh_attribute}, NH_FINAL:{nh_final}ROLL: {roll}, MESSAGE: {message}\n"
     )
 
-    return JsonResponse({"atributo": atributo, "roll": roll, "message": message})
+    return JsonResponse(
+        {
+            "atributo": atributo,
+            "roll": roll,
+            "nh": nh_attribute,
+            "nh_final": nh_final,
+            "message": message,
+        }
+    )
 
 
 @login_required(login_url="gurps:login")

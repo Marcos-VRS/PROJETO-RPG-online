@@ -24,7 +24,7 @@
         </div>
     
         <!-- Lista de mensagens -->
-        <ul id="messages">
+        <ul class="message-single-box" id="messages">
             {% for message in messages %}
             <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em></li>
             {% endfor %}
@@ -34,7 +34,7 @@
         <form method="POST" action="">
             {% csrf_token %}
             <textarea id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
-            <button type="submit">Enviar</button>
+            <button id="button-chat-submit" type="submit">Enviar</button>
         </form>
     </div>
 
@@ -100,7 +100,9 @@
                 <input type="number" id="redutor-HT" value="0">
                 <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button>
             </li>
-            
+        </ul>
+        <p id="resultado-rolagem"></p>
+    </div>
 
 
 
@@ -116,7 +118,7 @@
 
     <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
-    <script src="{% static 'global/js/game_interface/roll_atributos_st.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
 </body>
 
