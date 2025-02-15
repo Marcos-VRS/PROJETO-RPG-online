@@ -53,52 +53,78 @@ def save_message(request):
     return JsonResponse({"status": "error"}, status=400)
 
 
-@login_required(login_url="gurps:login")
-def roll_d6(quantidade: int, incremento: int) -> int:
+def roll_d6(quantidade: int) -> int:
     """Rola uma quantidade de dados de 6 lados e aplica um incremento."""
-    resultado = sum(random.randint(1, 6) for _ in range(quantidade)) + incremento
+    print(f"\nquantidade de dados: {quantidade}\n")
+    resultado = sum(random.randint(1, 6) for _ in range(quantidade))
+    print(f"\nRESULTADO: {resultado}\n")
     return resultado
 
 
-def verify_roll(nh: int, roll: int) -> str:
+def verify_roll(nh: int, roll: int, bonus: int, redutor: int) -> str:
     """Verifica se o resultado de um teste de habilidade foi um sucesso ou falha."""
-    result = roll - nh
+    nh_final = nh + bonus - redutor
+    result = nh_final - roll
+    print(
+        f"\nVERIFY_ROLL:\nNH: {nh},NH_final:{nh_final} ROLL: {roll}, RESULT: {result}\n"
+    )
 
     if roll == 18:
+        print(f"Motivo: ROLL == 18")
         message = "ERRO CRÍTICO"
         return message
 
     elif roll == 3:
+        print(f"Motivo: ROLL == 3")
         message = "SUCESSO DECISIVO"
         return message
 
     elif roll == 4:
+        print(f"Motivo: ROLL == 4")
         message = "SUCESSO"
         return message
 
-    elif roll == 5 and nh >= 15:
+    elif roll == 5 and nh_final >= 15:
+        print(f"Motivo: ROLL == 5")
         message = "SUCESSO"
         return message
 
-    elif roll == 6 and nh >= 16:
+    elif roll == 6 and nh_final >= 16:
+        print(f"Motivo: ROLL == 6")
         message = "SUCESSO"
         return message
 
-    elif roll == 17:
-        message = "Falha"
-        return message
-
-    elif roll >= (nh + 10):
+    elif roll > 14 and nh_final < 7:
+        print(f"Diferença de 10")
         message = "ERRO CRÍTICO"
         return message
 
+    elif roll == 17:
+        print(f"Motivo: ROLL == 17")
+        message = "Falha"
+        return message
+
     elif result >= 0:
+        print(f"Motivo: RESULT >= 0")
         message = "Acerto"
         return message
 
     elif result < 0:
+        print(f"Motivo: RESULT < 0")
         message = "Falha"
         return message
+
+
+def roll_test_attribute(
+    request, atributo: str, nh_attribute: int, bonus: int, redutor: int
+):
+    roll = roll_d6(3)
+    message = verify_roll(nh_attribute, roll, bonus, redutor)
+    print(
+        f"\nATRIBUTO: {atributo}  NH: {nh_attribute}, ROLL: {roll}, MESSAGE: {message}\n"
+    )
+
+    return JsonResponse({"atributo": atributo, "roll": roll, "message": message})
 
 
 @login_required(login_url="gurps:login")
@@ -106,4 +132,5 @@ def roll_test_skill(nh_skill: int):
     roll = roll_d6(3, 0)
     nh = nh_skill
     message = verify_roll(nh, roll)
+    print(f"\nNH: {nh}, ROLL: {roll}, MESSAGE: {message}\n")
     return message

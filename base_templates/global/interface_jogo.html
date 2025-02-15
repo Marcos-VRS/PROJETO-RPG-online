@@ -70,27 +70,39 @@
     <div id="janela-atributos" class="janela">
         <button class="fechar" onclick="fecharJanela()">×</button>
         <ul>
-            <li>ST: {{ personagem.atributos.ST }} <button onclick="rollAttribute('ST')">Rolar</button></li>
-            <li>DX: {{ personagem.atributos.DX }} <button onclick="rollAttribute('DX')">Rolar</button></li>
-            <li>IQ: {{ personagem.atributos.IQ }} <button onclick="rollAttribute('IQ')">Rolar</button></li>
-            <li>HT: {{ personagem.atributos.HT }} <button onclick="rollAttribute('HT')">Rolar</button></li>
-        </ul>
-    </div>
-
-    <div id="janela-pericias" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        Carregando Perícias...
-    </div>
-
-    <div id="janela-ataque" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        Carregando Ataque...
-    </div>
-
-    <div id="janela-defesa" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        Carregando Defesa...
-    </div>
+            <li>
+                ST: {{ personagem.atributos.ST }}
+                BÔNUS:
+                <input type="number" id="bonus-ST" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-ST" value="0">
+                <button onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button>
+            </li>
+            <li>
+                DX: {{ personagem.atributos.DX }}
+                BÔNUS:
+                <input type="number" id="bonus-DX" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-DX" value="0">
+                <button onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button>
+            </li>
+            <li>
+                IQ: {{ personagem.atributos.IQ }}
+                BÔNUS:
+                <input type="number" id="bonus-IQ" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-IQ" value="0">
+                <button onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button>
+            </li>
+            <li>
+                HT: {{ personagem.atributos.HT }}
+                BÔNUS:
+                <input type="number" id="bonus-HT" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-HT" value="0">
+                <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button>
+            </li>
+            
 
 
 
@@ -106,6 +118,7 @@
 
     <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/roll_atributos_st.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
 </body>
 

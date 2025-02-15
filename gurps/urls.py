@@ -53,6 +53,13 @@ urlpatterns = [
         views.game_interface,
         name="game_interface",
     ),
+    # Teste de atributos
+    path(
+        "teste_atributos/<str:atributo>/<int:nh_attribute>/<int:bonus>/<int:redutor>/",
+        views.roll_test_attribute,
+        name="teste_atributos",
+    ),
+    # Leave Game
     path("leave_game/", views.leave_game, name="leave_game"),
     # CHAT
     path("save_message/", views.save_message, name="save_message"),
