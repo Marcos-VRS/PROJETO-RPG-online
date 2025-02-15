@@ -12,31 +12,29 @@
 <body>
     <div class="image-container">
         {% if pagina_inicial.image %}
-        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"
-            id="map-image">
+        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image" id="map-image">
         {% endif %}
     </div>
-
+    
     <div class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
         <div class="menu-container">
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">FICHAS</a></button>
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a></button>
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a></button>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">FICHAS</a>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
-
+    
         <!-- Lista de mensagens -->
         <ul id="messages">
             {% for message in messages %}
-            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em>
-            </li>
+            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em></li>
             {% endfor %}
         </ul>
-
+    
         <!-- Formulário para enviar uma nova mensagem -->
         <form method="POST" action="">
             {% csrf_token %}
             <textarea id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
-            <button type="submit" onclick="sendMessage()">Enviar</button>
+            <button type="submit">Enviar</button>
         </form>
     </div>
 

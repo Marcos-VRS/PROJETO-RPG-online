@@ -1,11 +1,8 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    const roomName = document.querySelector('.chat-container').dataset.roomName;  // Certifique-se de que esta variável está sendo renderizada corretamente
-    const username = document.querySelector('.chat-container').dataset.username;  // Nome do usuário
-
-    // Verifica se a página está sendo acessada via HTTP ou HTTPS
-    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const roomName = document.querySelector('.chat-container').dataset.roomName;
+    const username = document.querySelector('.chat-container').dataset.username;
     const chatSocket = new WebSocket(
-        `${wsProtocol}${window.location.host}/ws/chat/${roomName}/`
+        `${window.location.protocol === "https:" ? "wss://" : "ws://"}${window.location.host}/ws/chat/${roomName}/`
     );
 
     // Quando uma nova mensagem for recebida
@@ -13,7 +10,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const data = JSON.parse(e.data);
         const messages = document.getElementById('messages');
         messages.innerHTML += `<li><strong>${data.username}:</strong> ${data.message}</li>`;
-        // Rolagem para o final da lista
         messages.scrollTop = messages.scrollHeight;
     };
 
@@ -22,17 +18,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     };
 
     // Função para enviar uma mensagem
-    document.querySelector('form').onsubmit = function (e) {
-        e.preventDefault();
+    function sendMessage(message) {
         const input = document.getElementById('messageInput');
-        const message = input.value;
         if (message.trim() !== "") {
-            // Envia a mensagem para salvar no banco de dados via AJAX
             fetch('/save_message/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')  // para incluir o CSRF token
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
                     'message': message,
@@ -42,8 +35,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // Limpar o campo após o envio
-                        input.value = '';
+                        input.value = '';  // Limpar o campo após o envio
                     }
                 });
 
@@ -53,6 +45,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 'username': username
             }));
         }
+    }
+
+    // Captura do evento Enter no campo de input
+    document.getElementById('messageInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {  // Se pressionar Enter sem Shift (sem adicionar nova linha)
+            e.preventDefault();  // Impede a ação padrão do Enter (como um "submit")
+            const message = this.value;
+            sendMessage(message);  // Envia a mensagem
+        }
+    });
+
+    // Envia a mensagem ao clicar no botão
+    document.querySelector('form').onsubmit = function (e) {
+        e.preventDefault();  // Impede o envio do formulário padrão
+        const input = document.getElementById('messageInput');
+        const message = input.value;
+        sendMessage(message);  // Envia a mensagem
     };
 
     function getCookie(name) {
