@@ -80,6 +80,21 @@ a {
 
 }
 
+.nome-personagem {
+    display: flex;
+    width: 100%;
+    font-weight: bold;
+    color: var(--primary-color);
+    justify-content: center;
+}
+
+.personagem-primeira-linha {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    gap: 5rem;
+}
+
 .chat-container {
     position: fixed;
     top: 6%;
@@ -130,11 +145,13 @@ a {
     height: 10%;
     background-color: rgba(255, 255, 255, 0.9);
     /* Fundo branco semi-transparente */
-    overflow-y: auto;
-    /* Permite rolagem vertical */
+
     z-index: 1000;
     /* Garante que o chat fique por cima do mapa */
-    padding: 1rem;
+    padding-top: 1rem;
+    padding-left: 2rem;
+    padding-bottom: 2rem;
+
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     /* Adiciona uma sombra para destaque */
     border: black solid 1px;

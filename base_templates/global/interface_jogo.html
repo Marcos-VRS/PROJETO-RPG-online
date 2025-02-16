@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campanha - {{ campanha.nome }}</title>
     <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
 </head>
 
 <body>
@@ -51,8 +52,14 @@
 
     <!-- Ficha do personagem -->
     <div class="personagem-container">
-        <span class="nome-personagem">{{ personagem.nome_personagem }}</span>
-
+        <span class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
+        <div class="personagem-primeira-linha">
+            <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
+            <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
+            <button onclick="abrirJanela('ataque')">ATAQUE</button>
+            <button onclick="abrirJanela('defesa')">DEFESA</button>
+            <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
+        </div>
         <div class="personagem-display">
 
             <div class="personagem-info">
@@ -64,22 +71,35 @@
                 <span>SPEED:{{personagem.sub_attributes.speed}}</span>
                 <span>MOVE:{{personagem.sub_attributes.move}}m/s</span>
             </div>
+            <div class="personagem-info">
+                <span>B. LIFT:{{personagem.sub_attributes.basic_lift}}kg</span>
+                <span>Dodge:{{personagem.sub_attributes.dodge}}m/s</span>
+            </div>
+            <div class="personagem-info">
+                <span>SWING:{{personagem.sub_attributes.swing}}</span>
+                <span>THRUST:{{personagem.sub_attributes.thrust}}</span>
+            </div>
+            <div class="personagem-info">
+                <span>SWING W:{{personagem.sub_attributes.swing_weapon}}</span>
+                <span>THRUST W:{{personagem.sub_attributes.thrust_weapon}}</span>
+            </div>
+            <div class="personagem-info">
+                <span>PARRY:{{personagem.sub_attributes.parry_unarmed}}</span>
+                <span>PARRY W:{{personagem.sub_attributes.parry_weapon}}</span>
+            </div>
+            <div class="personagem-info">
+                <span>STRESS:{{personagem.sub_attributes.stress}}</span>
+                <span>JUMP:{{personagem.sub_attributes.Jump}}m</span>
+            </div>
+            <div class="personagem-info">
+                <span>WILL:{{personagem.sub_attributes.will}}</span>
+                <span>PERC:{{personagem.sub_attributes.perception}}</span>
+            </div>
 
-            <div class="personagem-info-button">
-                <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
-            </div>
-            <div class="personagem-info-button">
-                <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
-            </div>
-            <div class="personagem-info-button">
-                <button onclick="abrirJanela('ataque')">ATAQUE</button>
-            </div>
-            <div class="personagem-info-button">
-                <button onclick="abrirJanela('defesa')">DEFESA</button>
-            </div>
-            <div class="personagem-info-button">
-                <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
-            </div>
+
+            
+            
+           
             
         </div>
     </div>
