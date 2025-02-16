@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
         bonus = parseInt(bonus, 10);
         redutor = parseInt(redutor, 10);
 
+        console.log(`Rolling attribute: ${attribute} with NH: ${nh}, bonus: ${bonus}, redutor: ${redutor}`);
+
         fetch(`/teste_atributos/${attribute}/${nh}/${bonus}/${redutor}/`)
             .then(response => response.json())
             .then(data => {

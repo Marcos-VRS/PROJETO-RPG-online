@@ -113,8 +113,12 @@
             {% for skill in personagem.skills %}
             <li>
                 <strong>Nome:</strong> {{ skill.nome }}
-
                 <strong>NH:</strong> {{ skill.nh }}<br><br>
+                BÔNUS:
+                <input type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
+                <button onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
             </li>
             {% endfor %}
         </ul>
@@ -132,7 +136,18 @@
             <strong>NH:</strong> {{ attack.nh }}
             <strong>Dano:</strong> {{ attack.damage }}<br>
             <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+
+
+            BÔNUS:
+            <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+            REDUTOR:
+            <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+            <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
+
+
             {% endfor %}
+
+
             <br><br><br><br>
             <h2>Ranged</h2>
             {% for attack in personagem.maneuvers_ranged %}
@@ -140,6 +155,12 @@
             <strong>NH:</strong> {{ attack.nh }}
             <strong>Dano:</strong> {{ attack.damage }}<br>
             <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+
+            BÔNUS:
+            <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+            REDUTOR:
+            <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+            <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
 
             {%endfor%}
         </ul>
@@ -155,6 +176,16 @@
             <strong>Nome:</strong> {{ defense.nome }}
             <strong>NH:</strong> {{ defense.nh }}<br>
             <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
+            
+
+            BÔNUS:
+            <input type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
+            REDUTOR:
+            <input type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
+            <button onclick="rollAttribute({{ defense.nh }}, '{{ defense.nome|slugify }}')">Rolar</button><br><br>
+
+
+
             {% endfor %}
         </ul>
     </div>

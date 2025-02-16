@@ -134,12 +134,3 @@ def roll_test_attribute(
             "message": message,
         }
     )
-
-
-@login_required(login_url="gurps:login")
-def roll_test_skill(nh_skill: int):
-    roll = roll_d6(3, 0)
-    nh = nh_skill
-    message = verify_roll(nh, roll)
-    print(f"\nNH: {nh}, ROLL: {roll}, MESSAGE: {message}\n")
-    return message
