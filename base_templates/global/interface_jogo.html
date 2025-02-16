@@ -61,6 +61,10 @@
             <div class="personagem-info-button">
                 <button onclick="abrirJanela('defesa')">DEFESA</button>
             </div>
+            <div class="personagem-info-button">
+                <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
+            </div>
+            
         </div>
     </div>
 
@@ -186,6 +190,49 @@
 
 
 
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!--equipamento-->
+    <div id="janela-equipamento" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <ul>
+            <h2>Melee</h2>
+            {% for equip in personagem.equipment_melee %}
+            <strong>Nome:</strong> {{ equip.nome }}
+            <strong>DMG:</strong> {{ equip.damage }}
+            <strong>Reach:</strong> {{ equip.reach }}
+            <strong>Parry:</strong> {{ equip.parry }}
+            <strong>Cost: $</strong> {{ equip.cost }}
+            <strong>Detalhes:</strong> {{ equip.detalhes }}
+            <strong>Weight:</strong> {{ equip.weight }}
+            <strong>Detalhes:</strong> {{ equip.details }}<br><br>
+            {% endfor %}
+
+            <h2>Ranged</h2>
+            {% for equip in personagem.equipment_ranged %}
+            <strong>Nome:</strong> {{ equip.nome }}
+            <strong>DMG:</strong> {{ equip.damage }}
+            <strong>ACC:</strong> {{ equip.acc }}
+            <strong>Range:</strong> {{ equip.range }}
+            <strong>Weight:</strong> {{ equip.weight }}
+            <strong>ROF:</strong> {{ equip.rof }}
+            <strong>Shots:</strong> {{ equip.shots }}
+            <strong>Bulk:</strong> {{ equip.bulk }}
+            <strong>RCL:</strong> {{ equip.rcl }}
+            <strong>Cost: $</strong> {{ equip.cost }}
+            <strong>Detalhes:</strong> {{ equip.details }}<br><br>
+            
+            {% endfor %}
+
+            <h2>Armor</h2>
+            {% for equip in personagem.equipment_armor %}
+            <strong>Nome:</strong> {{ equip.nome }}
+            <strong>Location:</strong> {{ equip.location }}
+            <strong>DR:</strong> {{ equip.rd }}
+            <strong>Weight:</strong> {{ equip.weight }}
+            <strong>Cost: $</strong> {{ equip.cost }}<br><br>
             {% endfor %}
         </ul>
     </div>
