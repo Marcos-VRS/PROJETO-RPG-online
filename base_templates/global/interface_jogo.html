@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapas - {{ campanha.nome }}</title>
+    <title>Campanha - {{ campanha.nome }}</title>
     <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}">
 </head>
 
@@ -16,12 +16,16 @@
         {% endif %}
     </div>
     
-    <div class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
+    <div class="chat-container-menu">   
         <div class="menu-container">
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">FICHAS</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
+    </div>
+
+    <div id= "chat-container-id"class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
+        
     
         <!-- Lista de mensagens -->
         <ul class="message-single-box" id="messages">
@@ -30,6 +34,10 @@
             {% endfor %}
         </ul>
     
+        
+    </div>
+
+    <div class="chat-container-submit">
         <!-- Formulário para enviar uma nova mensagem -->
         <form method="POST" action="">
             {% csrf_token %}
@@ -37,6 +45,7 @@
             <button id="button-chat-submit" type="submit">Enviar</button>
         </form>
     </div>
+    
 
 
 
@@ -253,6 +262,7 @@
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
+    <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
 </body>
 
 </html>
