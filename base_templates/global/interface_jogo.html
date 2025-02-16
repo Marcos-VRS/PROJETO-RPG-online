@@ -51,11 +51,18 @@
 
     <!-- Ficha do personagem -->
     <div class="personagem-container">
+        <span class="nome-personagem">{{ personagem.nome_personagem }}</span>
+
         <div class="personagem-display">
+
             <div class="personagem-info">
-                <span>{{ personagem.nome_personagem }}</span>
                 <span>HP: {{ personagem.sub_attributes.hp }}</span>
                 <span>FP: {{ personagem.sub_attributes.fp }}</span>
+            </div>
+
+            <div class="personagem-info">
+                <span>SPEED:{{personagem.sub_attributes.speed}}</span>
+                <span>MOVE:{{personagem.sub_attributes.move}}m/s</span>
             </div>
 
             <div class="personagem-info-button">
