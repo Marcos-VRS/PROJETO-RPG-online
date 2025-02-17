@@ -86,6 +86,7 @@ a {
     font-weight: bold;
     color: var(--primary-color);
     justify-content: center;
+    padding-bottom: 0.5rem;
 }
 
 .personagem-primeira-linha {
@@ -150,7 +151,7 @@ a {
     /* Garante que o chat fique por cima do mapa */
     padding-top: 1rem;
     padding-left: 2rem;
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
 
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     /* Adiciona uma sombra para destaque */
@@ -192,6 +193,7 @@ a {
 
 .personagem-display {
     display: flex;
+    justify-content: center;
     flex-direction: row;
     gap: 1rem;
 }

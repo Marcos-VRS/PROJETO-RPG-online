@@ -59,6 +59,8 @@ urlpatterns = [
         views.roll_test_attribute,
         name="teste_atributos",
     ),
+    # roll d6
+    path("rolld6/<int:quantidade>/<str:inc>/", views.roll_d6_interface, name="rolld6"),
     # Leave Game
     path("leave_game/", views.leave_game, name="leave_game"),
     # CHAT

@@ -61,6 +61,16 @@ def roll_d6(quantidade: int) -> int:
     return resultado
 
 
+def roll_d6_interface(request, quantidade: int, inc: str):
+    """Rola uma quantidade de dados de 6 lados e aplica um incremento."""
+    inc = float(inc)  # Converte o incremento para float
+
+    print(f"\nquantidade de dados: {quantidade}\n")
+    resultado = sum(random.randint(1, 6) for _ in range(quantidade)) + inc
+    print(f"\nRESULTADO: {resultado}\n")
+    return JsonResponse({"resultado": resultado})
+
+
 def verify_roll(nh: int, roll: int, bonus: int, redutor: int) -> str:
     """Verifica se o resultado de um teste de habilidade foi um sucesso ou falha."""
     nh_final = nh + bonus - redutor

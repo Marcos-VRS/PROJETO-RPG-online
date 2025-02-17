@@ -59,6 +59,8 @@
             <button onclick="abrirJanela('ataque')">ATAQUE</button>
             <button onclick="abrirJanela('defesa')">DEFESA</button>
             <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
+            <button onclick="abrirJanela('dados')">DADOS</button>
+
         </div>
         <div class="personagem-display">
 
@@ -274,6 +276,22 @@
     </div>
 
 
+    <!-- dados -->
+    <div id="janela-dados" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        <strong>Roll:</strong>
+        QUANTIDADE:
+        <input type="number" id="quantidade-d6-id" value="3">
+        INCREMENTO:
+        <input type="number" id="incremento_d6_id" value="0">
+        <button id="botao-rolar-d6">Rolar</button><br><br>
+    </div>
+
+
+
+
+
+
 
 
 
@@ -290,6 +308,7 @@
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
     <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
 </body>
 
 </html>
