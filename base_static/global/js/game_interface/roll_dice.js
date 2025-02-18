@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 let form = submitButton.closest("form"); // Obtém o formulário mais próximo
 
                 // Preenche a mensagem 
-                messageInput.value = `Roll ${quantidade} + (${incremento}): Resultado = \n${data.resultado}`;
+                messageInput.value = `Roll ${quantidade}d6 + (${incremento}): Resultado = \n${data.resultado}`;
 
                 // Aguarda um pequeno tempo para evitar conflitos e clica no botão de envio
                 setTimeout(() => {

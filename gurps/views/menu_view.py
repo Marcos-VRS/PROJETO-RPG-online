@@ -197,10 +197,20 @@ def criar_ficha_campanha(request, id):
 
 
 @login_required(login_url="gurps:login")
-def fichas(request):
+def carregar_fichas(request):
     username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM FICHAS\n")
-    return render(request, "global/partials/_fichas_index.html")
+
+    personagens = (
+        CharacterSheet.objects.filter(info_campanha__player_name=username)
+        .distinct()
+        .order_by("-id")
+    )
+    print(f"\nAqui estão os personagens{personagens}\n")
+    return render(
+        request,
+        "global/lista_carregar_ficha.html",
+        {"personagens": personagens},
+    )
 
 
 @login_required(login_url="gurps:login")

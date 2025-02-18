@@ -41,7 +41,8 @@ urlpatterns = [
         name="criar_ficha_campanha",
     ),
     # Fichas
-    path("Fichas/", views.fichas, name="fichas_index"),
+    path("Fichas/", views.carregar_fichas, name="carregar_fichas"),
+    # Save Character
     path(
         "save-character-sheet/", views.save_character_sheet, name="save_character_sheet"
     ),

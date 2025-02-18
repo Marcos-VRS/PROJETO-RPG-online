@@ -75,7 +75,7 @@
             </div>
             <div class="personagem-info">
                 <span>B. LIFT:{{personagem.sub_attributes.basic_lift}}kg</span>
-                <span>Dodge:{{personagem.sub_attributes.dodge}}m/s</span>
+                <span>Dodge:{{personagem.sub_attributes.dodge}}</span>
             </div>
             <div class="personagem-info">
                 <span>SWING:{{personagem.sub_attributes.swing}}</span>
@@ -236,6 +236,10 @@
     <div id="janela-equipamento" class="janela">
         <button class="fechar" onclick="fecharJanela()">×</button>
         <ul>
+
+
+
+
             <h2>Melee</h2>
             {% for equip in personagem.equipment_melee %}
             <strong>Nome:</strong> {{ equip.nome }}
@@ -247,6 +251,11 @@
             <strong>Weight:</strong> {{ equip.weight }}
             <strong>Detalhes:</strong> {{ equip.details }}<br><br>
             {% endfor %}
+
+
+
+
+
 
             <h2>Ranged</h2>
             {% for equip in personagem.equipment_ranged %}
@@ -261,8 +270,11 @@
             <strong>RCL:</strong> {{ equip.rcl }}
             <strong>Cost: $</strong> {{ equip.cost }}
             <strong>Detalhes:</strong> {{ equip.details }}<br><br>
-            
             {% endfor %}
+
+
+
+
 
             <h2>Armor</h2>
             {% for equip in personagem.equipment_armor %}
@@ -273,6 +285,11 @@
             <strong>Cost: $</strong> {{ equip.cost }}<br><br>
             {% endfor %}
         </ul>
+
+
+
+
+
     </div>
 
 
