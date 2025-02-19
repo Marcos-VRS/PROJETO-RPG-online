@@ -221,4 +221,15 @@ def opcoes(request):
 
 
 @login_required(login_url="gurps:login")
-def carregar_ficha_view(): ...
+def editar_fichas(request, id, nome_campanha):
+    username = request.user.username
+    personagem = get_object_or_404(CharacterSheet, id=id)
+    campanha = get_object_or_404(Campanha, nome=nome_campanha)
+    print(
+        f"URL da imagem: {personagem.photo.url if personagem.photo else 'Sem imagem'}"
+    )
+
+    context = {"personagem": personagem, "username": username}
+    print(f"O id da ficha é {id}")
+
+    return render(request, "global/fichas_editar.html", context)

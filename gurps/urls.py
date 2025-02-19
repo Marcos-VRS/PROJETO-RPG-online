@@ -35,6 +35,13 @@ urlpatterns = [
         views.carregar_campanha_player,
         name="carregar_campanha_player",
     ),
+    # Editar fichas
+    path(
+        "Fichas/Editar/<int:id>/<str:nome_campanha>/",
+        views.editar_fichas,
+        name="editar_fichas",
+    ),
+    # Criar fichas
     path(
         "Campanha/<int:id>/Criar_Ficha/",
         views.criar_ficha_campanha,

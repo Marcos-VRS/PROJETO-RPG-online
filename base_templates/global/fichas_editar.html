@@ -1,0 +1,780 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/criar_ficha_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Editar Ficha</title>
+</head>
+
+<body class="ficha-box  medievalsharp-regular">
+    <h1 class="ficha-box-legacy">Editar Ficha</h1>
+    <div class="ficha-box-legacy">
+        <div>
+
+            <label for="">PLAYER:</label>
+            <label id="player_name_id" name="player_name" for="">{{ username }}</label>
+        </div>
+
+        <div>
+            <label for="">CAMPANHA:</label>
+
+            <label id="nome_campanha_id" name="nome_campanha" for="">{{personagem.info_campanha.nome_campanha}}</label>
+        </div>
+
+        <div>
+            <label for="">GM:</label>
+
+            <label id="nome_gm_id" name="nome_gm" for="">{{ personagem.info_campanha.nome_gm}}</label>
+        </div>
+    </div>
+
+    <form action="{% url 'gurps:save_character_sheet' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form.as_p}}
+
+
+
+
+        <!-- Campo Nome do Personagem -->
+        <div class="ficha-box-section medievalsharp-regular ">
+
+
+
+            <div class="info-col">
+                <div class="form-field">
+                    <label for="id_nome_personagem">Nome:</label>
+                    <input class="campo-curto-nome-ficha medievalsharp-regular" type="text" name="nome_personagem"
+                        id="id_nome_personagem" value="{{personagem.nome_personagem}}" />
+                </div>
+
+
+
+
+                <!-- Campo PONTOS DA CAMPANHA -->
+                <div class="form-field-pontos linha-alinhada">
+                    <label for="pontos_da_campanha">PONTOS DA CAMPANHA: </label>
+                    <label id="pontos_da_campanha" class="pontos-total"> {{campanha.xp_inicial}}</label>
+                </div>
+
+
+
+
+                <!-- Campo TOTAL DE PONTOS-->
+                <div class="form-field-pontos">
+                    <label for="total_de_pontos">TOTAL DE PONTOS:</label>
+                    <label id="total_de_pontos" class="pontos-total"> </label>
+                </div>
+
+                <!-- Campo Aparência -->
+                <div class="form-field">
+                    <label for="id_aparencia">Aparência:</label>
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
+                        value="{{personagem.aparencia_idade.aparencia}}"></input>
+                </div>
+
+
+                <!-- Campo TOTAL DE VANTAGENS -->
+                <div class="form-field-pontos">
+                    <label for="total_de_vantagens">TOTAL VANTAGENS:</label>
+                    <label id="total_de_vantagens" class="pontos-campanha"> </label>
+                </div>
+
+
+
+                <!-- Campo TOTAL DE DESVANTAGENS -->
+                <div class="form-field-pontos">
+                    <label for="total_de_desvantagens">TOTAL DESVANTAGENS:</label>
+                    <label id="total_de_desvantagens" class="pontos-campanha"> </label>
+                </div>
+
+
+                <!-- Campo Idade -->
+                <div class="form-field">
+                    <label for="id_idade">Idade:</label>
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" type="number" name="idade"
+                        placeholder="Idade" id="id_idade" value="{{ personagem.aparencia_idade.idade}}" min="0" />
+                </div>
+
+                <!-- Campo PONTOS DE PERÍCIAS -->
+                <div class="form-field-pontos">
+                    <label for="pontos_de_pericias">TOTAL PERÍCIAS:</label>
+                    <label id="pontos_de_pericias" class="pontos-campanha"> </label>
+                </div>
+
+
+                <!-- Campo PONTOS DE -->
+                <div class="form-field-pontos">
+                    <label for="pontos_de_atributo">TOTAL ATRIBUTOS:</label>
+                    <label id="pontos_de_atributo" class="pontos-campanha"> </label>
+                </div>
+
+            </div>
+
+
+            <!-- Campo de upload de imagem -->
+            <label class="txt-miniatura-imagem medievalsharp-mini" for="id_imagem">Foto:</label>
+            <input class="input-imagem-miniatura medievalsharp-mini btn-adicionar-campo-foto" type="file" id="id_imagem"
+                name="photo" accept="image/*" onchange="previewImagem(event)">
+
+            <!-- Miniatura da imagem -->
+            <div class="grid-imagem-background">
+                <img class="imagem-miniatura btn-adicionar-campo" id="miniatura_imagem"
+                    src="{% if personagem.photo %}{{ personagem.photo.url }}{% else %}#{% endif %}"
+                    alt="Pré-visualização da imagem">
+
+
+                <div class="grid-bg">
+                    <label>Background:</label>
+                    <textarea name="background" id="id_background" type="text"
+                        class="text-background medievalsharp-mini campo-background">{{ personagem.background }}</textarea>
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+
+
+        <!-- Campos de Atributos (ST, DX, IQ, HT e seus XP) -->
+        <div class="ficha-box-section box-atributo">
+
+            <div class=" ">
+                <div class="form-field">
+
+                    <label class="medievalsharp-large caixa-atributo-label" for="id_st"></label>
+
+                    <label class="label-atributo medievalsharp-regular " for="id_st"></label>
+
+                    <label class="label-atributo medievalsharp-regular " for="id_xp_st">Pontos</label>
+
+                    <label class="label-atributo medievalsharp-regular " for="id_st_bonus">Mod</label>
+
+                </div>
+
+                <div class="form-field">
+
+                    <label class="medievalsharp-large caixa-atributo" for="id_st">ST:</label>
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="st"
+                        id="id_st" readonly />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_st"
+                        id="id_xp_st" value="{{personagem.atributos.XP_ST}}" />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
+                        name="st_bonus" id="id_st_bonus" value="{{personagem.atributos.ST_Bonus}}" />
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label class="medievalsharp-large caixa-atributo" for="id_dx">DX:</label>
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="dx"
+                        id="id_dx" readonly />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_dx"
+                        id="id_xp_dx" value="{{personagem.atributos.XP_DX}}" />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
+                        name="dx_bonus" id="id_dx_bonus" value="{{personagem.atributos.DX_Bonus}}" />
+
+                </div>
+
+                <div class="form-field">
+
+                    <label class="medievalsharp-large caixa-atributo" for="id_iq">IQ:</label>
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="iq"
+                        id="id_iq" readonly />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_iq"
+                        id="id_xp_iq" value="{{personagem.atributos.XP_IQ}}" />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
+                        name="iq_bonus" id="id_iq_bonus" value="{{personagem.atributos.IQ_Bonus}}" />
+                </div>
+
+                <div class="form-field">
+
+                    <label class="medievalsharp-large caixa-atributo" for="id_ht">HT:</label>
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="ht"
+                        id="id_ht" readonly />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_ht"
+                        id="id_xp_ht" value="{{personagem.atributos.XP_HT}}" />
+
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
+                        name="ht_bonus" id="id_ht_bonus" value="{{personagem.atributos.HT_Bonus}}" />
+                </div>
+            </div>
+
+
+
+
+
+            <!--Subatributos-->
+            <div class="ficha-box box-subatributo">
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_hp">HP:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[hp]"
+                        id="subatributo_hp" value="{{personagem.sub_attributes.hp}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_speed">Speed:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[speed]"
+                        id="subatributo_speed" value="{{personagem.sub_attributes.speed}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_fp">FP:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[fp]"
+                        id="subatributo_fp" value="{{personagem.sub_attributes.fp}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_move">Move:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[move]"
+                        id="subatributo_move" value="{{personagem.sub_attributes.move}}">
+                    <label class="medievalsharp-regular" for="subatributo_move">m/s</label>
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_basic_lift">Basic Lift:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[basic_lift]" id="subatributo_basic_lift"
+                        value="{{personagem.sub_attributes.basic_lift}}">
+                    <label class="medievalsharp-regular" for="subatributo_basic_lift">kg</label>
+
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_dodge">Dodge:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[dodge]"
+                        id="subatributo_dodge" value="{{personagem.sub_attributes.dodge}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_swing">Swing:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[swing]"
+                        id="subatributo_swing" value="{{personagem.sub_attributes.swing}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_swing_weapon">Swing Weapon:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[swing_weapon]" id="subatributo_swing_weapon"
+                        value="{{personagem.sub_attributes.swing_weapon}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_thrust">Thrust:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[thrust]"
+                        id="subatributo_thrust" value="{{personagem.sub_attributes.thrust}}">
+                </div>
+
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_thrust_weapon">Thrust Weapon:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[thrust_weapon]" id="subatributo_thrust_weapon"
+                        value="{{personagem.sub_attributes.thrust_weapon}}">
+                </div>
+
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_parry_unarmed">Parry Unarmed:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[parry_unarmed]" id="subatributo_parry_unarmed"
+                        value="{{personagem.sub_attributes.parry_unarmed}}">
+                </div>
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_parry_weapon">Parry Weapon:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[parry_weapon]" id="subatributo_parry_weapon"
+                        value="{{personagem.sub_attributes.parry_weapon}}">
+                </div>
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_stress">Stress:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[stress]"
+                        id="subatributo_stress" value="{{personagem.sub_attributes.stress}}">
+                </div>
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_will">Will:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[will]"
+                        id="subatributo_will" value="{{personagem.sub_attributes.will}}">
+                </div>
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_perception">Perception:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                        name="subatributos[perception]" id="subatributo_perception"
+                        value="{{personagem.sub_attributes.perception}}">
+                </div>
+                <div class="form-field">
+                    <label class="medievalsharp-regular" for="subatributo_Jump">Jump:</label>
+                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[Jump]"
+                        id="subatributo_Jump" value="{{personagem.sub_attributes.Jump}}">
+                    <label class="medievalsharp-regular" for="subatributo_Jump">m</label>
+
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Campo Vantagens -->
+        <div class="ficha-box-section grid-vantagem-desvantagem">
+            <div class="ficha-box ">
+                <h2 class="medievalsharp-large ">Vantagens</h2>
+
+                <div id="vantagens-container">
+                    <!-- Linha para uma vantagem -->
+                    <div id="container" class="form-field vantagem-linha">
+                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]"
+                            placeholder="Nome da vantagem" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                            name="vantagens_valor[]" placeholder="Valor" />
+                        <span id="botao1" class="botao-adicionar "></span>
+                    </div>
+                </div>
+
+                <!-- Botão para adicionar mais vantagens -->
+                <button class="btn-adicionar-campo" type="button" id="adicionar-vantagem">Adicionar Vantagem</button>
+            </div>
+
+
+            <!-- Campo Desvantagens -->
+            <div class="ficha-box">
+                <h2 class="medievalsharp-large ">Desvantagens</h2>
+
+                <div id="desvantagens-container">
+                    <!-- Linha para uma desvantagem -->
+                    <div class="form-field desvantagem-linha">
+                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="desvantagens_nome[]"
+                            placeholder="Nome da desvantagem" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                            name="desvantagens_valor[]" placeholder="Valor" />
+
+                    </div>
+                </div>
+
+                <!-- Botão para adicionar mais desvantagens -->
+                <button class="btn-adicionar-campo" type="button" id="adicionar-desvantagem">Adicionar
+                    Desvantagem</button>
+            </div>
+        </div>
+
+
+
+        <!-- Campo Perícias -->
+        <div class="ficha-box ">
+            <h2>Perícias</h2>
+            <div class="form-field">
+
+                <label class="medievalsharp-mini campo-curto-nome" for="nome_pericia">Nome</label>
+                <label class="campo-curto-equip medievalsharp-mini" for="atributo_pericia">Atrib</label>
+                <label class="campo-curto-dif medievalsharp-mini" for="dificuldade_pericia">Dificuldade</label>
+                <label class="campo-curto-equip medievalsharp-mini" for="custo_pericia">Custo</label>
+                <label class="campo-curto-equip medievalsharp-mini" for="nh_pericia">NH</label>
+
+            </div>
+            <div id="pericias-container">
+                <!-- Linha para uma perícia -->
+                <div class="form-field pericia-linha">
+                    <input id="nome_pericia" type="text" name="pericias_nome[]"
+                        class="pericia-nome campo-curto-nome medievalsharp-mini" placeholder="Nome da perícia" />
+
+                    <!-- Primeiro select para Atributo Base -->
+                    <select id="atributo_pericia" name="pericias_atributo_base[]"
+                        class="pericia-atributo-base campo-curto-equip medievalsharp-mini">
+                        <option value="">Atributo Base</option>
+                        <option value="ST">ST</option>
+                        <option value="DX">DX</option>
+                        <option value="IQ">IQ</option>
+                        <option value="HT">HT</option>
+                        <option value="Will">Will</option>
+                        <option value="Per">Per</option>
+                    </select>
+                    <!-- Segundo select para Dificuldade -->
+                    <select id="dificuldade_pericia" name="pericias_dificuldade[]"
+                        class="pericia-dificuldade campo-curto-dif medievalsharp-mini">
+                        <option value="">Dificuldade</option>
+                        <option value="Fácil">Fácil</option>
+                        <option value="Média">Média</option>
+                        <option value="Difícil">Difícil</option>
+                        <option value="Muito Difícil">Muito Difícil</option>
+                    </select>
+
+                    <input id="custo_pericia" type="number" name="pericias_custo[]"
+                        class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
+                    <input id="nh_pericia" type="number" name="pericias_nh[]"
+                        class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly />
+                </div>
+            </div>
+
+            <!-- Botão para adicionar mais perícias -->
+            <button class="btn-adicionar-campo" type="button" id="adicionar-pericia">Adicionar Perícia</button>
+        </div>
+
+
+
+        <!-- Campo Equipamentos -->
+        <div class="ficha-box ">
+            <h2>Equipamentos</h2>
+            <div class="form-field">
+                <label class="medievalsharp-regular" for="subatributo_money">Money: $</label>
+                <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="money"
+                    id="subatributo_money">
+            </div>
+
+            <!-- Campo Equipamentos Melee -->
+            <div class="ficha-box ">
+                <h3>Melee</h3>
+                <div class="form-field">
+
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_melee">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_melee">Damage</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="reach_melee">Reach</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="parry_melee">Parry</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_melee">Cost</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_melee">Weight</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="details_melee">Details</label>
+
+                </div>
+                <div id="equipamentos-melee-container">
+                    <!-- Linha para um equipamento Melee -->
+                    <div class="form-field equipamento-linha">
+
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" type="text"
+                            name="equipamentos_melee_nome[]" placeholder="Nome do equipamento Melee" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" type="text"
+                            name="equipamentos_melee_damage[]" placeholder="Damage" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" type="text"
+                            name="equipamentos_melee_reach[]" placeholder="Reach" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" type="text"
+                            name="equipamentos_melee_parry[]" placeholder="Parry" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" type="text"
+                            name="equipamentos_melee_cost[]" placeholder="Cost" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" type="text"
+                            name="equipamentos_melee_weight[]" placeholder="Weight" />
+                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
+                            name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea>
+                    </div>
+                </div>
+                <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-melee">Adicionar
+                    Melee</button>
+            </div>
+
+
+            <!-- Campo Equipamentos Ranged -->
+            <div class="ficha-box ">
+                <h3>Ranged</h3>
+                <div class="form-field">
+
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_ranged">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_ranged">Damage</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="acc">Acc</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="range">Range</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_ranged">Weight</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="rof">RoF</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="shots">Shots</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="bulk">Bulk</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="rcl">RCL</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="details_ranged">Details</label>
+
+
+                </div>
+                <div id="equipamentos-ranged-container">
+                    <!-- Linha para um equipamento Ranged -->
+                    <div class="form-field equipamento-linha">
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" type="text"
+                            name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" type="text"
+                            name="equipamentos_ranged_damage[]" placeholder="Damage" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="acc" type="text"
+                            name="equipamentos_ranged_acc[]" placeholder="Acc" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="range"
+                            name="equipamentos_ranged_range[]" placeholder="Range" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="weight_ranged"
+                            name="equipamentos_ranged_weight[]" placeholder="Weight" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rof"
+                            name="equipamentos_ranged_rof[]" placeholder="Rof" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="shots"
+                            name="equipamentos_ranged_shots[]" placeholder="Shots" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="bulk"
+                            name="equipamentos_ranged_bulk[]" placeholder="Bulk" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rcl"
+                            name="equipamentos_ranged_rcl[]" placeholder="RCL" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="cost_ranged"
+                            name="equipamentos_ranged_cost[]" placeholder="Cost" />
+                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_range"
+                            name="equipamentos_ranged_details[]" placeholder="Details" rows="2"></textarea>
+                    </div>
+                </div>
+                <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-ranged">Adicionar
+                    Ranged</button>
+            </div>
+
+
+            <!-- Campo Equipamentos Armor -->
+            <div class="ficha-box ">
+                <h3>Armor</h3>
+                <div class="form-field">
+
+                    <label class="campo-curto-nome-label medievalsharp-mini" for="nome_ranged">Nome</label>
+                    <label class="campo-curto-equip-label medievalsharp-mini" for="dmg_ranged">Location</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="rd">RD</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="weight_armor">Weight</label>
+                    <label class="campo-curto-equip-label  medievalsharp-mini" for="cost_ranged">Cost</label>
+
+                </div>
+                <div id="equipamentos-armor-container">
+                    <!-- Linha para uma armadura -->
+                    <div class="form-field equipamento-linha">
+                        <input class="campo-curto-nome medievalsharp-mini" type="text" name="equipamentos_armor_nome[]"
+                            placeholder="Nome da armadura" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                            name="equipamentos_armor_location[]" placeholder="Location" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_rd[]"
+                            placeholder="RD" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                            name="equipamentos_armor_weight[]" placeholder="Weight" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_cost[]"
+                            placeholder="Cost" />
+                    </div>
+                </div>
+                <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-armor">Adicionar
+                    Armor</button>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        <div class="ficha-box">
+            <h2>Manobras</h2>
+            <div class="form-field ficha-box-manobra">
+                <h2>ATAQUE</h2>
+                <div>
+                    <h4 class="titulo-area-manobra">Melee</h4>
+                    <span id="botao2" class="botao-adicionar "></span>
+
+                    <div id="ficha-box-melee" class="ficha-box-melee">
+
+
+                        <div class="ficha-box-manobra-ataque">
+                            <div class="manobra-ataque-melee-id">
+
+
+
+                                <div class="col-manobra">
+                                    <label for="nome_manobra_melee_id"
+                                        class="label-nome-manobra medievalsharp-mini">Nome da
+                                        manobra</label>
+                                    <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_melee[]"
+                                        placeholder="Nome da manobra" type="text" />
+
+                                </div>
+                                <div>
+                                    <label for="manobra_damage_melee_id" class="medievalsharp-mini">Dano:</label>
+                                    <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
+                                        name="damage_manobra_melee[]" placeholder="Damage" type="text">
+                                    <label for="manobra_nh_melee_id" class="medievalsharp-mini">NH:</label>
+
+                                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_melee[]"
+                                        placeholder="NH" type="text">
+                                </div>
+
+
+                                <div>
+                                    <label for="manobra_melee_detalhe_id"
+                                        class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
+
+
+                                    <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
+                                        placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
+                                        name="detalhes_manobra_melee[]"></textarea>
+
+                                    <div class="posicao-botao-remover">
+                                        <span id="botao3" class="botao-remover "></span>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <h4 class="titulo-area-manobra">Ranged</h4>
+                    <span id="botao4" class="botao-adicionar "></span>
+
+                    <div class="ficha-box-ranged">
+
+
+                        <div id="div_ataque_ranged_id" class="ficha-box-manobra-ataque">
+                            <div class="manobra-ataque-ranged-id">
+
+
+
+                                <div class="col-manobra">
+                                    <label for="nome_manobra_Ranged_id"
+                                        class="label-nome-manobra medievalsharp-mini">Nome da
+                                        manobra</label>
+                                    <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_Ranged[]"
+                                        placeholder="Nome da manobra" type="text" />
+
+                                </div>
+                                <div>
+                                    <label for="manobra_damage_Ranged_id" class="medievalsharp-mini">Dano:</label>
+                                    <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
+                                        name="damage_manobra_Ranged[]" placeholder="Damage" type="text">
+                                    <label for="manobra_nh_Ranged_id" class="medievalsharp-mini">NH:</label>
+
+                                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_Ranged[]"
+                                        placeholder="NH" type="text">
+                                </div>
+
+
+                                <div>
+                                    <label for="manobra_Ranged_detalhe_id"
+                                        class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
+
+                                    <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
+                                        placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
+                                        name="detalhes_manobra_Ranged[]"></textarea>
+                                    <div class="posicao-botao-remover">
+                                        <span id="botao5" class="botao-remover "></span>
+                                    </div>
+
+                                </div>
+
+
+
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="form-field ficha-box">
+                <div class="form-field ficha-box-manobra">
+                    <h2>DEFESA</h2>
+                    <div>
+                        <span id="botao6" class="botao-adicionar "></span>
+
+                        <div class="ficha-box-defesa">
+
+
+                            <div class="ficha-box-manobra-defesa">
+                                <div class="manobra-defesa-id">
+
+
+
+                                    <div class="col-manobra">
+                                        <label for="nome_manobra_defesa_id"
+                                            class="label-nome-manobra medievalsharp-mini">Nome da
+                                            manobra</label>
+                                        <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]"
+                                            placeholder="Nome da manobra" type="text" />
+
+                                    </div>
+                                    <div>
+
+                                        <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
+
+                                        <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]"
+                                            placeholder="NH" type="text">
+                                    </div>
+
+
+                                    <div>
+                                        <label for="manobra_defesa_detalhe_id"
+                                            class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
+
+
+                                        <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
+                                            placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
+                                            name="detalhes_manobra_defesa[]"></textarea>
+
+                                        <div class="posicao-botao-remover">
+                                            <span id="botao7" class="botao-remover "></span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Botão de Enviar -->
+            <button class="btn-adicionar-campo-salvar" type="submit">Salvar Ficha</button>
+    </form>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_info_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_fotosave.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_pontos_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos_pontos_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_campanha_info_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_imagem.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_atributos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_subatributos_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_atributos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_vantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_vantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_vantagens_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_mod.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_desvantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_desvantagens.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_desvantagens_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_pericias.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_pericias_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_pericias.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_melee.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_equipamento_melee_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_range.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_equipamento_ranged_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_equipamento_armor.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_equipamento_armor_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_calculo_total_de_pontos.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_melee.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_melee_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_ranged.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_ranged_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_defesa.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_defesa_json.js' %}"></script>
+    <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
+</body>
+
+</html>

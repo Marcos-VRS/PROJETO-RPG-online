@@ -15,14 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Inicializa os valores dos campos XP e Bônus com 0
     function inicializarCampos() {
-        id_xp_st.value = 0;
-        id_st_bonus.value = 0;
-        id_xp_dx.value = 0;
-        id_dx_bonus.value = 0;
-        id_xp_iq.value = 0;
-        id_iq_bonus.value = 0;
-        id_xp_ht.value = 0;
-        id_ht_bonus.value = 0;
+
 
 
         // Calcula os valores iniciais dos atributos
