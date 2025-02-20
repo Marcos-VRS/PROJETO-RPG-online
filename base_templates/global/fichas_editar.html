@@ -32,9 +32,10 @@
         </div>
     </div>
 
-    <form action="{% url 'gurps:save_character_sheet' %}" method="post" enctype="multipart/form-data">
+    <form action="{% url 'gurps:save_edit_character_sheet' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{form.as_p}}
+        <input type="hidden" name="id" value="{{ personagem.id }}">
 
 
 
@@ -349,7 +350,7 @@
                     <!-- Linha para uma vantagem -->
                     {% for personagem_vantagem in personagem.advantages %}
                     <div id="container" class="form-field vantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome_[]" value="{{personagem_vantagem.nome}}" />
+                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]" value="{{personagem_vantagem.nome}}" />
                         <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
                             name="vantagens_valor[]" value="{{personagem_vantagem.valor}}" />
                         
@@ -455,8 +456,8 @@
                 </div>
                 <div id="equipamentos-melee-container">
                     <!-- Linha para um equipamento Melee -->
+                    {% for personagem_equip_melee in personagem.equipment_melee %}
                     <div class="form-field equipamento-linha">
-                        {% for personagem_equip_melee in personagem.equipment_melee %}
 
                         <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" type="text"
                             name="equipamentos_melee_nome[]" value="{{personagem_equip_melee.nome}}" />
@@ -472,9 +473,10 @@
                             name="equipamentos_melee_weight[]" value="{{personagem_equip_melee.weight}}" />
                         <textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
                             name="equipamentos_melee_details[]" placeholder="Details" rows="2">{{personagem_equip_melee.details}}</textarea>
-                        {% endfor %}
+                        
 
                     </div>
+                    {% endfor %}
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-melee">Adicionar
                     Melee</button>
@@ -502,8 +504,8 @@
                 </div>
                 <div id="equipamentos-ranged-container">
                     <!-- Linha para um equipamento Ranged -->
+                    {% for personagem_equip_ranged in personagem.equipment_ranged %}
                     <div class="form-field equipamento-linha">
-                        {% for personagem_equip_ranged in personagem.equipment_ranged %}
                         <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" type="text"
                             name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged" value="{{personagem_equip_ranged.nome}}" />
                         <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" type="text"
@@ -526,8 +528,8 @@
                             name="equipamentos_ranged_cost[]" placeholder="Cost" value="{{personagem_equip_ranged.cost}}"/>
                         <textarea class="campo-curto-equip medievalsharp-mini" id="details_range"
                             name="equipamentos_ranged_details[]" placeholder="Details" rows="2">{{personagem_equip_ranged.details}}</textarea>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-ranged">Adicionar
                     Ranged</button>
@@ -635,8 +637,8 @@
                     <span id="botao4" class="botao-adicionar "></span>
 
                     <div class="ficha-box-ranged">
+                        
                         {% for personagem_manobra_ranged in personagem.maneuvers_ranged %}
-
                         <div id="div_ataque_ranged_id" class="ficha-box-manobra-ataque">
                             <div class="manobra-ataque-ranged-id">
 
@@ -677,8 +679,8 @@
 
 
                             </div>
-                            {% endfor %}
                         </div>
+                        {% endfor %}
 
 
 
@@ -784,7 +786,6 @@
     <script src="{% static 'global/js/criar_ficha/criar_ficha_adicionar_manobra_defesa.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_salvar_manobra_defesa_json.js' %}"></script>
     <script src="{% static 'global/js/criar_ficha/criar_ficha_enter.js' %}"></script>
-    <script src="{% static 'global/js/editar_ficha/preencher_vantagens.js' %}"></script>
 
 
 

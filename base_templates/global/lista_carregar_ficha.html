@@ -15,7 +15,7 @@
     <ul class="ul-lista">
         {% for personagem in personagens %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <a href="{% url "gurps:editar_fichas" personagem.id personagem.info_campanha.nome_campanha %}">
+            <a href="{% url "gurps:editar_fichas" personagem.id  %}">
                 <h2>CAMPANHA: {{ personagem.info_campanha.nome_campanha }}</h2>
                 <h2>PERSONAGEM: {{ personagem.nome_personagem }}</h2>
                 {% if personagem.photo %}

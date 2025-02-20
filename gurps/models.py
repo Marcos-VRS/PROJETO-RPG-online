@@ -100,9 +100,8 @@ class CharacterSheet(models.Model):
     skills = models.JSONField(blank=True, null=True)
 
     # Dinheiro e background
-    money = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0, blank=True, null=True
-    )
+    money = models.CharField(max_length=20, blank=True, null=True)
+
     background = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to="character_photos/", blank=True, null=True)
 

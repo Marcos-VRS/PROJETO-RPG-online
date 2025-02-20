@@ -70,6 +70,7 @@ def lista_campanhas(request):
 @login_required(login_url="gurps:login")
 def save_character_sheet(request):
     username = request.user.username
+    print("\n ENTROU NO SAVE_CHARACTER_SHEET")
     if request.method == "POST":
         form = CharacterSheetForm(
             request.POST, request.FILES
@@ -112,6 +113,69 @@ def save_character_sheet(request):
             )
     else:
         # Renderiza o formulário para criar/editar uma ficha
+        form = CharacterSheetForm()
+
+    return render(
+        request,
+        "global/criar_ficha.html",
+        {
+            "form": form,
+            "username": username,
+        },
+    )
+
+
+@login_required(login_url="gurps:login")
+def save_edit_character_sheet(request):
+    username = request.user.username
+    print("\n ENTROU NO SAVE_EDIT_CHARACTER_SHEET")
+
+    if request.method == "POST":
+        ficha_id = request.POST.get("id")  # Obtém o ID da ficha enviada no form
+        ficha_existente = None
+
+        if ficha_id:  # Verifica se a ficha já existe no banco de dados
+            ficha_existente = CharacterSheet.objects.filter(id=ficha_id).first()
+
+        if ficha_existente:
+            # Se a ficha já existir, atualizar os dados ao invés de criar um novo
+            form = CharacterSheetForm(
+                request.POST, request.FILES, instance=ficha_existente
+            )
+        else:
+            form = CharacterSheetForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            character_sheet = form.save()  # Salva ou atualiza a ficha
+            print(f"O usuário {username} Salvou a ficha ")
+
+            nome_campanha = character_sheet.info_campanha.get("nome_campanha")
+            campanha = Campanha.objects.filter(nome=nome_campanha).first()
+
+            if campanha:
+                return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+            else:
+                messages.error(request, "Campanha não encontrada.")
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Ficha salva com sucesso!",
+                    "character_id": character_sheet.id,
+                },
+                status=200,
+            )
+        else:
+            print(f"\nAqui está o erro\n ")
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Erro ao salvar a ficha.",
+                    "errors": form.errors,
+                },
+                status=400,
+            )
+    else:
         form = CharacterSheetForm()
 
     return render(
@@ -221,10 +285,9 @@ def opcoes(request):
 
 
 @login_required(login_url="gurps:login")
-def editar_fichas(request, id, nome_campanha):
+def editar_fichas(request, id):
     username = request.user.username
     personagem = get_object_or_404(CharacterSheet, id=id)
-    campanha = get_object_or_404(Campanha, nome=nome_campanha)
     print(
         f"URL da imagem: {personagem.photo.url if personagem.photo else 'Sem imagem'}"
     )

@@ -13,29 +13,32 @@
 <body>
     <div class="image-container">
         {% if pagina_inicial.image %}
-        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image" id="map-image">
+        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"
+            id="map-image">
         {% endif %}
     </div>
-    
-    <div class="chat-container-menu">   
+
+    <div class="chat-container-menu">
         <div class="menu-container">
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">FICHAS</a>
+            <a class="menu-button" href="{% url 'gurps:editar_fichas' personagem.id %}">FICHA</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
     </div>
 
-    <div id= "chat-container-id"class="chat-container" data-room-name="{{ campanha.id }}" data-username="{{ user.username }}">
-        
-    
+    <div id="chat-container-id" class="chat-container" data-room-name="{{ campanha.id }}"
+        data-username="{{ user.username }}">
+
+
         <!-- Lista de mensagens -->
         <ul class="message-single-box" id="messages">
             {% for message in messages %}
-            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em></li>
+            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em>
+            </li>
             {% endfor %}
         </ul>
-    
-        
+
+
     </div>
 
     <div class="chat-container-submit">
@@ -46,7 +49,7 @@
             <button id="button-chat-submit" type="submit">Enviar</button>
         </form>
     </div>
-    
+
 
 
 
@@ -99,10 +102,10 @@
             </div>
 
 
-            
-            
-           
-            
+
+
+
+
         </div>
     </div>
 
@@ -209,7 +212,7 @@
     </div>
 
 
-    
+
     <!--Defesas-->
     <div id="janela-defesa" class="janela">
         <button class="fechar" onclick="fecharJanela()">×</button>
@@ -218,7 +221,7 @@
             <strong>Nome:</strong> {{ defense.nome }}
             <strong>NH:</strong> {{ defense.nh }}<br>
             <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
-            
+
 
             BÔNUS:
             <input type="number" id="bonus-{{ defense.nome|slugify }}" value="0">

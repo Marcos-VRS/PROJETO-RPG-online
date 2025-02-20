@@ -7,11 +7,11 @@ document.querySelector("form").addEventListener("submit", function (event) {
     const periciaLinhas = document.querySelectorAll("#pericias-container .pericia-linha");
 
     periciaLinhas.forEach(linha => {
-        const nome = linha.querySelector("input[name='pericias_nome[]']").value.trim();
-        const atributoBase = linha.querySelector("select[name='pericias_atributo_base[]']").value;
-        const dificuldade = linha.querySelector("select[name='pericias_dificuldade[]']").value;
-        const custo = linha.querySelector("input[name='pericias_custo[]']").value;
-        const nh = linha.querySelector("input[name='pericias_nh[]']").value;
+        const nome = linha.querySelector("[name='pericias_nome[]']").value.trim();
+        const atributoBase = linha.querySelector("[name='pericias_atributo_base[]']").value;
+        const dificuldade = linha.querySelector("[name='pericias_dificuldade[]']").value;
+        const custo = linha.querySelector("[name='pericias_custo[]']").value;
+        const nh = linha.querySelector("[name='pericias_nh[]']").value;
 
         if (nome || atributoBase || dificuldade || custo || nh) { // Verifica se pelo menos um campo foi preenchido
             pericias.push({

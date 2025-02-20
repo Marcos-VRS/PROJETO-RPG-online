@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     # Editar fichas
     path(
-        "Fichas/Editar/<int:id>/<str:nome_campanha>/",
+        "Fichas/Editar/<int:id>/",
         views.editar_fichas,
         name="editar_fichas",
     ),
@@ -52,6 +52,12 @@ urlpatterns = [
     # Save Character
     path(
         "save-character-sheet/", views.save_character_sheet, name="save_character_sheet"
+    ),
+    # save edit character
+    path(
+        "save-edit-character-sheet/",
+        views.save_edit_character_sheet,
+        name="save_edit_character_sheet",
     ),
     # Opções
     path("Opções/", views.opcoes, name="opcoes_index"),
