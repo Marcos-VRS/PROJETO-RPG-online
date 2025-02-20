@@ -299,3 +299,21 @@ def editar_fichas(request, id, nome_campanha):
     print(f"\nO id da ficha é {id}\n")
 
     return render(request, "global/fichas_editar.html", context)
+
+
+@login_required(login_url="gurps:login")
+def lista_gm_fichas(request, campanha_id):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU EM Fichas do GM\n")
+
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    nome_campanha = campanha.nome
+    print(f"\nA CAMPANHA SELECIONADA É : {campanha}\n")
+
+    personagens = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=nome_campanha, info_campanha__player_name=username
+    )
+    print(f"\nOS PERSONAGENS SÃO :{personagens}\n")
+    context = {"username": username, "campanha": campanha, "personagens": personagens}
+
+    return render(request, "global/lista_carregar_fichas_gm.html", context)

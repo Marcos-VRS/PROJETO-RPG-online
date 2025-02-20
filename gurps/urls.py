@@ -49,6 +49,12 @@ urlpatterns = [
     ),
     # Fichas
     path("Fichas/", views.carregar_fichas, name="carregar_fichas"),
+    # lista de fichas GM
+    path(
+        "Fichas/lista/gm/<int:campanha_id>/",
+        views.lista_gm_fichas,
+        name="lista_gm_fichas",
+    ),
     # Save Character
     path(
         "save-character-sheet/", views.save_character_sheet, name="save_character_sheet"

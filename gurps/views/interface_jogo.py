@@ -10,6 +10,7 @@ import random
 
 @login_required(login_url="gurps:login")
 def game_interface(request, campanha_id, slot):
+    username = request.user.username
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
@@ -17,12 +18,19 @@ def game_interface(request, campanha_id, slot):
         info_campanha__nome_campanha=campanha.nome,
         info_campanha__player_name=request.user.username,
     ).first()
+    personagens_gm = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=campanha.nome,
+        info_campanha__player_name=request.user.username,
+    )
+    print(f"\nPersonagens do GM: {list(personagens_gm)}\n")
 
     context = {
         "personagem": personagem,
+        "personagens_gm": personagens_gm,
         "campanha": campanha,
         "pagina_inicial": pagina_inicial,
         "messages": messages,
+        "username": username,
     }
     return render(request, "global/interface_jogo.html", context)
 

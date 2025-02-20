@@ -20,7 +20,14 @@
 
     <div class="chat-container-menu">
         <div class="menu-container">
-            <a class="menu-button" href="{% url 'gurps:editar_fichas' personagem.id %}">FICHA</a>
+
+            {% if username == campanha.dono.username %}
+                <a class="menu-button" href="{% url 'gurps:lista_gm_fichas' campanha.id %}">FICHAS</a>
+            {% else %}
+                <a class="menu-button" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
+            {% endif %} 
+            
+
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
@@ -51,261 +58,275 @@
     </div>
 
 
+    {% if username != campanha.dono.username %}
+
+        <!-- Ficha do personagem -->
+        <div class="personagem-container">
+            <span class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
+            <div class="personagem-primeira-linha">
+                <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
+                <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
+                <button onclick="abrirJanela('ataque')">ATAQUE</button>
+                <button onclick="abrirJanela('defesa')">DEFESA</button>
+                <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
+                <button onclick="abrirJanela('dados')">DADOS</button>
+
+            </div>
+            <div class="personagem-display">
+
+                <div class="personagem-info">
+                    <span>HP: {{ personagem.sub_attributes.hp }}</span>
+                    <span>FP: {{ personagem.sub_attributes.fp }}</span>
+                </div>
+
+                <div class="personagem-info">
+                    <span>SPEED:{{personagem.sub_attributes.speed}}</span>
+                    <span>MOVE:{{personagem.sub_attributes.move}}m/s</span>
+                </div>
+                <div class="personagem-info">
+                    <span>B. LIFT:{{personagem.sub_attributes.basic_lift}}kg</span>
+                    <span>Dodge:{{personagem.sub_attributes.dodge}}</span>
+                </div>
+                <div class="personagem-info">
+                    <span>SWING:{{personagem.sub_attributes.swing}}</span>
+                    <span>THRUST:{{personagem.sub_attributes.thrust}}</span>
+                </div>
+                <div class="personagem-info">
+                    <span>SWING W:{{personagem.sub_attributes.swing_weapon}}</span>
+                    <span>THRUST W:{{personagem.sub_attributes.thrust_weapon}}</span>
+                </div>
+                <div class="personagem-info">
+                    <span>PARRY:{{personagem.sub_attributes.parry_unarmed}}</span>
+                    <span>PARRY W:{{personagem.sub_attributes.parry_weapon}}</span>
+                </div>
+                <div class="personagem-info">
+                    <span>STRESS:{{personagem.sub_attributes.stress}}</span>
+                    <span>JUMP:{{personagem.sub_attributes.Jump}}m</span>
+                </div>
+                <div class="personagem-info">
+                    <span>WILL:{{personagem.sub_attributes.will}}</span>
+                    <span>PERC:{{personagem.sub_attributes.perception}}</span>
+                </div>
 
 
-    <!-- Ficha do personagem -->
-    <div class="personagem-container">
-        <span class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
-        <div class="personagem-primeira-linha">
-            <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
-            <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
-            <button onclick="abrirJanela('ataque')">ATAQUE</button>
-            <button onclick="abrirJanela('defesa')">DEFESA</button>
-            <button onclick="abrirJanela('equipamento')">EQUIPAMENTO</button>
-            <button onclick="abrirJanela('dados')">DADOS</button>
+
+
+
+
+            </div>
+        </div>
+
+        <!-- atributos -->
+        <div id="janela-atributos" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <ul>
+                <li>
+                    ST: {{ personagem.atributos.ST }}
+                    BÔNUS:
+                    <input type="number" id="bonus-ST" value="0">
+                    REDUTOR:
+                    <input type="number" id="redutor-ST" value="0">
+                    <button onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
+                </li>
+                <li>
+                    DX: {{ personagem.atributos.DX }}
+                    BÔNUS:
+                    <input type="number" id="bonus-DX" value="0">
+                    REDUTOR:
+                    <input type="number" id="redutor-DX" value="0">
+                    <button onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
+                </li>
+                <li>
+                    IQ: {{ personagem.atributos.IQ }}
+                    BÔNUS:
+                    <input type="number" id="bonus-IQ" value="0">
+                    REDUTOR:
+                    <input type="number" id="redutor-IQ" value="0">
+                    <button onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
+                </li>
+                <li>
+                    HT: {{ personagem.atributos.HT }}
+                    BÔNUS:
+                    <input type="number" id="bonus-HT" value="0">
+                    REDUTOR:
+                    <input type="number" id="redutor-HT" value="0">
+                    <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
+                </li>
+            </ul>
+        </div>
+
+
+
+
+        <!-- Perícias -->
+        <div id="janela-pericias" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <ul>
+                {% for skill in personagem.skills %}
+                <li>
+                    <strong>Nome:</strong> {{ skill.nome }}
+                    <strong>NH:</strong> {{ skill.nh }}<br><br>
+                    BÔNUS:
+                    <input type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
+                    REDUTOR:
+                    <input type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
+                    <button onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+
+        <!--Ataques-->
+        <div id="janela-ataque" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <ul>
+                <h2>Melee</h2>
+                {% for attack in personagem.maneuvers_melee %}
+                <strong>Nome:</strong> {{ attack.nome }}
+                <strong>NH:</strong> {{ attack.nh }}
+                <strong>Dano:</strong> {{ attack.damage }}<br>
+                <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+
+
+                BÔNUS:
+                <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+                <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
+
+
+                {% endfor %}
+
+
+                <br><br><br><br>
+                <h2>Ranged</h2>
+                {% for attack in personagem.maneuvers_ranged %}
+                <strong>Nome:</strong> {{ attack.nome }}
+                <strong>NH:</strong> {{ attack.nh }}
+                <strong>Dano:</strong> {{ attack.damage }}<br>
+                <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+
+                BÔNUS:
+                <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+                <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
+
+                {%endfor%}
+            </ul>
+        </div>
+
+
+
+        <!--Defesas-->
+        <div id="janela-defesa" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <ul>
+                {% for defense in personagem.maneuvers_defense %}
+                <strong>Nome:</strong> {{ defense.nome }}
+                <strong>NH:</strong> {{ defense.nh }}<br>
+                <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
+
+
+                BÔNUS:
+                <input type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
+                REDUTOR:
+                <input type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
+                <button onclick="rollAttribute({{ defense.nh }}, '{{ defense.nome|slugify }}')">Rolar</button><br><br>
+
+
+
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!--equipamento-->
+        <div id="janela-equipamento" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <ul>
+
+
+
+
+                <h2>Melee</h2>
+                {% for equip in personagem.equipment_melee %}
+                <strong>Nome:</strong> {{ equip.nome }}
+                <strong>DMG:</strong> {{ equip.damage }}
+                <strong>Reach:</strong> {{ equip.reach }}
+                <strong>Parry:</strong> {{ equip.parry }}
+                <strong>Cost: $</strong> {{ equip.cost }}
+                <strong>Detalhes:</strong> {{ equip.detalhes }}
+                <strong>Weight:</strong> {{ equip.weight }}
+                <strong>Detalhes:</strong> {{ equip.details }}<br><br>
+                {% endfor %}
+
+
+
+
+
+
+                <h2>Ranged</h2>
+                {% for equip in personagem.equipment_ranged %}
+                <strong>Nome:</strong> {{ equip.nome }}
+                <strong>DMG:</strong> {{ equip.damage }}
+                <strong>ACC:</strong> {{ equip.acc }}
+                <strong>Range:</strong> {{ equip.range }}
+                <strong>Weight:</strong> {{ equip.weight }}
+                <strong>ROF:</strong> {{ equip.rof }}
+                <strong>Shots:</strong> {{ equip.shots }}
+                <strong>Bulk:</strong> {{ equip.bulk }}
+                <strong>RCL:</strong> {{ equip.rcl }}
+                <strong>Cost: $</strong> {{ equip.cost }}
+                <strong>Detalhes:</strong> {{ equip.details }}<br><br>
+                {% endfor %}
+
+
+
+
+
+                <h2>Armor</h2>
+                {% for equip in personagem.equipment_armor %}
+                <strong>Nome:</strong> {{ equip.nome }}
+                <strong>Location:</strong> {{ equip.location }}
+                <strong>DR:</strong> {{ equip.rd }}
+                <strong>Weight:</strong> {{ equip.weight }}
+                <strong>Cost: $</strong> {{ equip.cost }}<br><br>
+                {% endfor %}
+            </ul>
+
+
+
+
 
         </div>
-        <div class="personagem-display">
-
-            <div class="personagem-info">
-                <span>HP: {{ personagem.sub_attributes.hp }}</span>
-                <span>FP: {{ personagem.sub_attributes.fp }}</span>
-            </div>
-
-            <div class="personagem-info">
-                <span>SPEED:{{personagem.sub_attributes.speed}}</span>
-                <span>MOVE:{{personagem.sub_attributes.move}}m/s</span>
-            </div>
-            <div class="personagem-info">
-                <span>B. LIFT:{{personagem.sub_attributes.basic_lift}}kg</span>
-                <span>Dodge:{{personagem.sub_attributes.dodge}}</span>
-            </div>
-            <div class="personagem-info">
-                <span>SWING:{{personagem.sub_attributes.swing}}</span>
-                <span>THRUST:{{personagem.sub_attributes.thrust}}</span>
-            </div>
-            <div class="personagem-info">
-                <span>SWING W:{{personagem.sub_attributes.swing_weapon}}</span>
-                <span>THRUST W:{{personagem.sub_attributes.thrust_weapon}}</span>
-            </div>
-            <div class="personagem-info">
-                <span>PARRY:{{personagem.sub_attributes.parry_unarmed}}</span>
-                <span>PARRY W:{{personagem.sub_attributes.parry_weapon}}</span>
-            </div>
-            <div class="personagem-info">
-                <span>STRESS:{{personagem.sub_attributes.stress}}</span>
-                <span>JUMP:{{personagem.sub_attributes.Jump}}m</span>
-            </div>
-            <div class="personagem-info">
-                <span>WILL:{{personagem.sub_attributes.will}}</span>
-                <span>PERC:{{personagem.sub_attributes.perception}}</span>
-            </div>
 
 
-
-
-
-
+        <!-- dados -->
+        <div id="janela-dados" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <strong>Roll:</strong>
+            QUANTIDADE:
+            <input type="number" id="quantidade-d6-id" value="3">
+            INCREMENTO:
+            <input type="number" id="incremento_d6_id" value="0">
+            <button id="botao-rolar-d6">Rolar</button><br><br>
         </div>
-    </div>
-
-    <!-- atributos -->
-    <div id="janela-atributos" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <ul>
-            <li>
-                ST: {{ personagem.atributos.ST }}
-                BÔNUS:
-                <input type="number" id="bonus-ST" value="0">
-                REDUTOR:
-                <input type="number" id="redutor-ST" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
-            </li>
-            <li>
-                DX: {{ personagem.atributos.DX }}
-                BÔNUS:
-                <input type="number" id="bonus-DX" value="0">
-                REDUTOR:
-                <input type="number" id="redutor-DX" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
-            </li>
-            <li>
-                IQ: {{ personagem.atributos.IQ }}
-                BÔNUS:
-                <input type="number" id="bonus-IQ" value="0">
-                REDUTOR:
-                <input type="number" id="redutor-IQ" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
-            </li>
-            <li>
-                HT: {{ personagem.atributos.HT }}
-                BÔNUS:
-                <input type="number" id="bonus-HT" value="0">
-                REDUTOR:
-                <input type="number" id="redutor-HT" value="0">
-                <button onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
-            </li>
-        </ul>
-    </div>
-
-
-
-
-    <!-- Perícias -->
-    <div id="janela-pericias" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <ul>
-            {% for skill in personagem.skills %}
-            <li>
-                <strong>Nome:</strong> {{ skill.nome }}
-                <strong>NH:</strong> {{ skill.nh }}<br><br>
-                BÔNUS:
-                <input type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
-                REDUTOR:
-                <input type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
-                <button onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
-            </li>
+    {% else %}
+        <!-- Ficha dos personagens do GM -->
+        <div class="personagem-container">
+            {% for personagem in personagens_gm %}
+                <label>{{ personagem.nome_personagem }}</label>
+            {% empty %}
+                <p>Nenhum personagem encontrado.</p>
             {% endfor %}
-        </ul>
-    </div>
+        </div>
 
 
 
-    <!--Ataques-->
-    <div id="janela-ataque" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <ul>
-            <h2>Melee</h2>
-            {% for attack in personagem.maneuvers_melee %}
-            <strong>Nome:</strong> {{ attack.nome }}
-            <strong>NH:</strong> {{ attack.nh }}
-            <strong>Dano:</strong> {{ attack.damage }}<br>
-            <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+    {% endif %}
 
-
-            BÔNUS:
-            <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
-            REDUTOR:
-            <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-            <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
-
-
-            {% endfor %}
-
-
-            <br><br><br><br>
-            <h2>Ranged</h2>
-            {% for attack in personagem.maneuvers_ranged %}
-            <strong>Nome:</strong> {{ attack.nome }}
-            <strong>NH:</strong> {{ attack.nh }}
-            <strong>Dano:</strong> {{ attack.damage }}<br>
-            <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
-
-            BÔNUS:
-            <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
-            REDUTOR:
-            <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-            <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
-
-            {%endfor%}
-        </ul>
-    </div>
-
-
-
-    <!--Defesas-->
-    <div id="janela-defesa" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <ul>
-            {% for defense in personagem.maneuvers_defense %}
-            <strong>Nome:</strong> {{ defense.nome }}
-            <strong>NH:</strong> {{ defense.nh }}<br>
-            <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
-
-
-            BÔNUS:
-            <input type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
-            REDUTOR:
-            <input type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
-            <button onclick="rollAttribute({{ defense.nh }}, '{{ defense.nome|slugify }}')">Rolar</button><br><br>
-
-
-
-            {% endfor %}
-        </ul>
-    </div>
-
-    <!--equipamento-->
-    <div id="janela-equipamento" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <ul>
-
-
-
-
-            <h2>Melee</h2>
-            {% for equip in personagem.equipment_melee %}
-            <strong>Nome:</strong> {{ equip.nome }}
-            <strong>DMG:</strong> {{ equip.damage }}
-            <strong>Reach:</strong> {{ equip.reach }}
-            <strong>Parry:</strong> {{ equip.parry }}
-            <strong>Cost: $</strong> {{ equip.cost }}
-            <strong>Detalhes:</strong> {{ equip.detalhes }}
-            <strong>Weight:</strong> {{ equip.weight }}
-            <strong>Detalhes:</strong> {{ equip.details }}<br><br>
-            {% endfor %}
-
-
-
-
-
-
-            <h2>Ranged</h2>
-            {% for equip in personagem.equipment_ranged %}
-            <strong>Nome:</strong> {{ equip.nome }}
-            <strong>DMG:</strong> {{ equip.damage }}
-            <strong>ACC:</strong> {{ equip.acc }}
-            <strong>Range:</strong> {{ equip.range }}
-            <strong>Weight:</strong> {{ equip.weight }}
-            <strong>ROF:</strong> {{ equip.rof }}
-            <strong>Shots:</strong> {{ equip.shots }}
-            <strong>Bulk:</strong> {{ equip.bulk }}
-            <strong>RCL:</strong> {{ equip.rcl }}
-            <strong>Cost: $</strong> {{ equip.cost }}
-            <strong>Detalhes:</strong> {{ equip.details }}<br><br>
-            {% endfor %}
-
-
-
-
-
-            <h2>Armor</h2>
-            {% for equip in personagem.equipment_armor %}
-            <strong>Nome:</strong> {{ equip.nome }}
-            <strong>Location:</strong> {{ equip.location }}
-            <strong>DR:</strong> {{ equip.rd }}
-            <strong>Weight:</strong> {{ equip.weight }}
-            <strong>Cost: $</strong> {{ equip.cost }}<br><br>
-            {% endfor %}
-        </ul>
-
-
-
-
-
-    </div>
-
-
-    <!-- dados -->
-    <div id="janela-dados" class="janela">
-        <button class="fechar" onclick="fecharJanela()">×</button>
-        <strong>Roll:</strong>
-        QUANTIDADE:
-        <input type="number" id="quantidade-d6-id" value="3">
-        INCREMENTO:
-        <input type="number" id="incremento_d6_id" value="0">
-        <button id="botao-rolar-d6">Rolar</button><br><br>
-    </div>
 
 
 
