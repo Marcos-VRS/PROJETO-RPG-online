@@ -39,7 +39,7 @@ class Campanha(models.Model):
         null=True,
     )
 
-    xp_inicial = models.IntegerField(default=0)
+    pontos_de_ficha = models.IntegerField(default=0)
     pontos_de_desvantagens = models.IntegerField(default=0)
     xp_acumulado = models.IntegerField(default=0)
     tl = models.IntegerField(default=0)

@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     # Editar fichas
     path(
-        "Fichas/Editar/<int:id>/",
+        "Fichas/Editar/<int:id>/<str:nome_campanha>/",
         views.editar_fichas,
         name="editar_fichas",
     ),

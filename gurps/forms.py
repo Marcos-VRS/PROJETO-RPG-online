@@ -45,7 +45,7 @@ class CampanhaForm(forms.ModelForm):
         model = Campanha
         fields = [
             "nome",
-            "xp_inicial",
+            "pontos_de_ficha",
             "pontos_de_desvantagens",
             "tl",
             "descricao",
