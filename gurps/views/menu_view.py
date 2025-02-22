@@ -5,6 +5,7 @@ from gurps.forms import CharacterSheetForm, CampanhaForm
 from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse
+from django.db.models import Q
 
 
 # View da pagina inicial
@@ -220,14 +221,17 @@ def carregar_campanha_player(request):
     username = request.user.username
 
     personagens = (
-        CharacterSheet.objects.filter(info_campanha__player_name=username)
+        CharacterSheet.objects.filter(
+            info_campanha__player_name=username  # Mantém a condição existente
+        )
+        .filter(~Q(info_campanha__nome_gm=username))  # Adiciona a condição de exclusão
         .distinct()
         .order_by("-id")
     )
 
     # Criar um dicionário para mapear nome da campanha para id
     campanhas_dict = {campanha.nome: campanha.id for campanha in Campanha.objects.all()}
-
+    print(f"\nAQUI ESTÁ O CAMPANHA DICT:{campanhas_dict}\n")
     # Adicionar o ID da campanha dentro de cada personagem no contexto
     for personagem in personagens:
         nome_campanha = personagem.info_campanha.get("nome_campanha")
