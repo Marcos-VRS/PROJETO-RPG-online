@@ -321,3 +321,14 @@ def lista_gm_fichas(request, campanha_id):
     context = {"username": username, "campanha": campanha, "personagens": personagens}
 
     return render(request, "global/lista_carregar_fichas_gm.html", context)
+
+
+@login_required(login_url="gurps:login")
+def menu_fichas_gm(request, campanha_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou na no MENU DE FICHAS DO GM\n")
+    return render(
+        request,
+        "global/menu_carregar_ficha_gm.html",
+        {"username": username, "campanha_id": campanha_id},
+    )

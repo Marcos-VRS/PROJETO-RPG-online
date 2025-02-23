@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Menu de Fichas GM</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Menu de FICHAS GM</h1>
+            
+    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:lista_gm_fichas" campanha_id %}">
+        <h1>EDITAR FICHA</h1>
+    </a>
+    
+
+
+    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:criar_ficha_campanha" campanha_id %}">
+        <h1>CRIAR NOVO PERSONAGEM</h1>
+    </a>
+
+</body>
+
+</html>

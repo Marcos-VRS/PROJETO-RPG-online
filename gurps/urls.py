@@ -49,6 +49,10 @@ urlpatterns = [
     ),
     # Fichas
     path("Fichas/", views.carregar_fichas, name="carregar_fichas"),
+    # Menu de fichas GM
+    path(
+        "Fichas/Menu/GM/<int:campanha_id>", views.menu_fichas_gm, name="menu_fichas_gm"
+    ),
     # lista de fichas GM
     path(
         "Fichas/lista/gm/<int:campanha_id>/",
@@ -65,8 +69,6 @@ urlpatterns = [
         views.save_edit_character_sheet,
         name="save_edit_character_sheet",
     ),
-    # Opções
-    path("Opções/", views.opcoes, name="opcoes_index"),
     # interface do jogo
     path(
         "game/<int:campanha_id>/<int:slot>/",

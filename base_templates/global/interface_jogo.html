@@ -22,7 +22,7 @@
         <div class="menu-container">
 
             {% if username == campanha.dono.username %}
-                <a class="menu-button" href="{% url 'gurps:lista_gm_fichas' campanha.id %}">FICHAS</a>
+                <a class="menu-button" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
             {% else %}
                 <a class="menu-button" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
             {% endif %} 
@@ -316,8 +316,10 @@
     {% else %}
         <!-- Ficha dos personagens do GM -->
         <div class="personagem-container">
+            <h2>Personagens</h2>
             {% for personagem in personagens_gm %}
-                <label>{{ personagem.nome_personagem }}</label>
+            <button onclick="abrirJanela('personagem_gm')">{{ personagem.nome_personagem }}</button>
+            
             {% empty %}
                 <p>Nenhum personagem encontrado.</p>
             {% endfor %}

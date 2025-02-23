@@ -63,7 +63,7 @@ body {
     color: var(--white-color);
     justify-content: center;
     flex-direction: column;
-    border: #e2dee2 solid 0.3rem;
+    border: black solid 0.3rem;
     border-radius: 1rem;
     padding: 3rem;
     height: auto;
