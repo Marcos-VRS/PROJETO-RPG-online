@@ -59,6 +59,8 @@ urlpatterns = [
         views.lista_gm_fichas,
         name="lista_gm_fichas",
     ),
+    # Get GM characters
+    path("api/character/", views.get_character_gm, name="api_get_character_gm"),
     # Save Character
     path(
         "save-character-sheet/", views.save_character_sheet, name="save_character_sheet"
@@ -77,9 +79,15 @@ urlpatterns = [
     ),
     # Teste de atributos
     path(
-        "teste_atributos/<str:atributo>/<int:nh_attribute>/<int:bonus>/<int:redutor>/",
+        "teste_atributos/<str:atributo>/<int:nh_attribute>/<int:bonus>/<int:redutor>/<str:name>/",
         views.roll_test_attribute,
         name="teste_atributos",
+    ),
+    # Teste de ataque
+    path(
+        "teste_ataque/<str:atributo>/<int:nh_attribute>/<int:bonus>/<int:redutor>/<str:dmg>/<str:name>/",
+        views.roll_test_attack,
+        name="teste_ataque",
     ),
     # roll d6
     path("rolld6/<int:quantidade>/<str:inc>/", views.roll_d6_interface, name="rolld6"),

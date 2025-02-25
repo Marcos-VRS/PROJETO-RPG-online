@@ -1,21 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
-    window.rollAttribute = function (nh, attribute, name) {
+    window.rollAttack = function (nh, attribute, dmg, name) {
         let bonus = document.getElementById(`bonus-${attribute}`)?.value || 0;
         let redutor = document.getElementById(`redutor-${attribute}`)?.value || 0;
 
         // Converte os valores para inteiros
-        bonus = parseInt(bonus, 10) || 0;
-        redutor = parseInt(redutor, 10) || 0;
+        bonus = parseInt(bonus, 10);
+        redutor = parseInt(redutor, 10);
 
-        console.log(`Rolling attribute: ${attribute} with NH: ${nh}, bonus: ${bonus}, redutor: ${redutor}`);
+        console.log(`${name} is Rolling attribute: ${attribute} with NH: ${nh}, bonus: ${bonus}, redutor: ${redutor}, Damage: ${dmg}`);
 
-        fetch(`/teste_atributos/${attribute}/${nh}/${bonus}/${redutor}/${name}/`)
+        fetch(`/teste_ataque/${attribute}/${nh}/${bonus}/${redutor}/${dmg}/${name}/`)
             .then(response => response.json())
             .then(data => {
                 let messageInput = document.getElementById("messageInput");
                 let submitButton = document.getElementById("button-chat-submit");
                 let form = submitButton.closest("form"); // Obtém o formulário mais próximo
-
                 // Acessa a div com id 'owner-status'
                 var hiddenDiv = document.getElementById("owner-status");
 
@@ -26,14 +25,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (isOwner === "False") {
                     nomePersonagem = document.getElementById("personagem-nome").getAttribute("data-nome");
-                    messageInput.value = `\nNOME:${nomePersonagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\n${data.message}\n`;
+                    messageInput.value = `\nNOME:${nomePersonagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
 
                     console.log(nomePersonagem);
                 } else {
                     // Preenche a mensagem
                     console.log(data.nome_personagem);
 
-                    messageInput.value = `\nNOME:${data.nome_personagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\n${data.message}\n`;
+                    messageInput.value = `\nNOME:${data.nome_personagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
                 }
 
                 // Aguarda um pequeno tempo para evitar conflitos e clica no botão de envio

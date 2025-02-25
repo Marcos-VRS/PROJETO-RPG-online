@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         const messages = document.getElementById('messages');
-        messages.innerHTML += `<li><strong>${data.username}:</strong> ${data.message}</li>`;
+        const formattedMessage = data.message.replace(/\n/g, '<br>');
+
+        messages.innerHTML += `<li><strong>${data.username}:</strong> ${formattedMessage}</li>`;
         messages.scrollTop = messages.scrollHeight;
     };
 

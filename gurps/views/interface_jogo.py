@@ -134,7 +134,7 @@ def verify_roll(nh: int, roll: int, bonus: int, redutor: int) -> str:
 
 
 def roll_test_attribute(
-    request, atributo: str, nh_attribute: int, bonus: int, redutor: int
+    request, atributo: str, nh_attribute: int, bonus: int, redutor: int, name: str
 ):
     roll = roll_d6(3)
     message = verify_roll(nh_attribute, roll, bonus, redutor)
@@ -150,5 +150,69 @@ def roll_test_attribute(
             "nh": nh_attribute,
             "nh_final": nh_final,
             "message": message,
+            "nome_personagem": name,
         }
     )
+
+
+def roll_test_attack(
+    request,
+    atributo: str,
+    nh_attribute: int,
+    bonus: int,
+    redutor: int,
+    dmg: str,
+    name: str,
+):
+    print(f"\nDANO: {dmg}\n")
+
+    # Divide a string em partes
+    qtd_dices = int(dmg.split("d")[0])
+    parts = dmg.split("d6")
+
+    # Verifica se há um incremento (exemplo: "+1" ou "-2") e converte para inteiro, caso contrário, assume 0
+    inc = int(parts[1]) if len(parts) > 1 and parts[1] else 0
+
+    print(f"\nQUANTIDADE DE DADOS: {qtd_dices} com incremento de : {inc}\n")
+
+    roll = roll_d6(3)
+    message = verify_roll(nh_attribute, roll, bonus, redutor)
+    nh_final = nh_attribute + bonus - redutor
+    roll_dmg = roll_d6(qtd_dices)
+    dano_final = roll_dmg + inc  # Usa 'inc' que já está tratado
+
+    print(
+        f"\nNOME:{name}\nATRIBUTO: {atributo}\nNH: {nh_attribute}\nNH_FINAL:{nh_final}\nROLL: {roll}\nROLL DMG:{roll_dmg}\nDMG:{dano_final}\nMESSAGE: {message}\n\n"
+    )
+
+    return JsonResponse(
+        {
+            "atributo": atributo,
+            "roll": roll,
+            "nh": nh_attribute,
+            "nh_final": nh_final,
+            "message": message,
+            "damage": dano_final,
+            "nome_personagem": name,
+        }
+    )
+
+
+def get_character_gm(request):
+    name = request.GET.get("nome")  # Obtém o nome do personagem da query string
+    character = get_object_or_404(CharacterSheet, nome_personagem=name)  # Busca no BD
+
+    print(f"\nCHARACTER NAME: {name}\n")  # Debug para verificar no terminal
+
+    # Cria o dicionário dinamicamente, pegando todos os campos do modelo
+    data = {
+        field.name: getattr(character, field.name)
+        for field in CharacterSheet._meta.fields
+    }
+
+    # Remove o campo 'photo' se ele existir
+    data.pop("photo", None)
+
+    print(f"\nCHARACTER SHEET: {data}\n")
+
+    return JsonResponse(data)  # Retorna os dados como JSON

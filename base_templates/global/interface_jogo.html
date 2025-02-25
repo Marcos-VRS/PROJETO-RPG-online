@@ -28,7 +28,7 @@
             {% endif %} 
             
 
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">OPÇÕES</a>
+            <a class="menu-button" href="{% url 'gurps:leave_game' %}">JORNAL</a>
             <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
     </div>
@@ -57,12 +57,14 @@
         </form>
     </div>
 
+    
+
 
     {% if username != campanha.dono.username %}
-
-        <!-- Ficha do personagem -->
+    <div style="display:none;" id="owner-status" data-is-owner="False"></div>
+    <!-- Ficha do personagem -->
         <div class="personagem-container">
-            <span class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
+            <span id="personagem-nome" data-nome="{{ personagem.nome_personagem }}" class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
             <div class="personagem-primeira-linha">
                 <button onclick="abrirJanela('atributos')">ATRIBUTOS</button>
                 <button onclick="abrirJanela('pericias')">PERÍCIAS</button>
@@ -194,7 +196,7 @@
                 <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-                <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
+                <button onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
 
 
                 {% endfor %}
@@ -212,7 +214,7 @@
                 <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
                 REDUTOR:
                 <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-                <button onclick="rollAttribute({{ attack.nh }}, '{{ attack.nome|slugify }}')">Rolar</button><br><br>
+                <button onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
 
                 {%endfor%}
             </ul>
@@ -315,10 +317,12 @@
         </div>
     {% else %}
         <!-- Ficha dos personagens do GM -->
-        <div class="personagem-container">
+        <div style="display:none;" id="owner-status" data-is-owner="True"></div>
+
+        <div class="personagem-container-gm">
             <h2>Personagens</h2>
             {% for personagem in personagens_gm %}
-            <button onclick="abrirJanela('personagem_gm')">{{ personagem.nome_personagem }}</button>
+                <button onclick="abrirJanela('personagem_gm')">{{ personagem.nome_personagem }}</button>
             
             {% empty %}
                 <p>Nenhum personagem encontrado.</p>
@@ -332,7 +336,11 @@
 
 
 
-
+    <!--Ficha completa GM-->
+    <div id="janela-personagem_gm" class="janela">
+        <button class="fechar" onclick="fecharJanela()">×</button>
+        
+    </div>
 
 
 
@@ -349,9 +357,11 @@
     <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/roll_ataque.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
     <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/window_gm_characters.js' %}"></script>
 </body>
 
 </html>
