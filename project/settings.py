@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-&koef1^d04z2y($vy5&$&3bg-2*kv_-_*v$ru5hnb1(ddhs7y&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["34.68.70.77"]
+ALLOWED_HOSTS = ["34.68.70.77"]  # Seu IP de produção
 
 
 # Application definition
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "django_htmx",
     "channels",
+    "corsheaders",  # Certifique-se de que o CORS está instalado
 ]
 
 # Configuração dos backends de autenticação
@@ -74,13 +75,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # Adicionando o middleware do CORS
 ]
 
 ROOT_URLCONF = "project.urls"
 
-
 SITE_ID = 1
-
 
 TEMPLATES = [
     {
@@ -173,6 +173,12 @@ MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
+
+# CORS Settings - Permitir acesso do IP diretamente
+CORS_ALLOWED_ORIGINS = [
+    "http://34.68.70.77",  # Seu IP de produção sem HTTPS
+    "https://34.68.70.77",  # Se você configurar HTTPS no futuro
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
