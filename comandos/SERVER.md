@@ -54,35 +54,35 @@ git config --global init.defaultBranch main
 Criando as pastas do projeto e repositório
 
 ```
-mkdir ~/agendarepo ~/agendaapp
+mkdir ~/roll3d6repo ~/roll3d6app
 ```
 
 ## Configurando os repositórios
 
 ```
-cd ~/agendarepo
+cd ~/roll3d6repo
 git init --bare
 cd ..
-cd ~/agendaapp
+cd ~/roll3d6app
 git init
-git remote add agendarepo ~/agendarepo
+git remote add roll3d6repo ~/roll3d6repo
 git add .
 git commit -m 'Initial'
-git push agendarepo main -u # erro
+git push roll3d6repo main -u # erro
 ```
 
 ## No seu computador local
 
 ```
-git remote add agendarepo usuario@IP_SERVIDOR:~/agendarepo
-git push agendarepo main
+git remote add roll3d6repo usuario@IP_SERVIDOR:~/roll3d6repo
+git push roll3d6repo main
 ```
 
 ## No servidor
 
 ```
-cd ~/agendaapp
-git pull agendarepo main
+cd ~/roll3d6app
+git pull roll3d6repo main
 ```
 
 ## Configurando o Postgresql
@@ -90,11 +90,11 @@ git pull agendarepo main
 ```
 sudo -u postgres psql
 
-postgres=# create role usuario_agenda with login superuser createdb createrole password 'senha_usuario_agenda';
+postgres=# create role marcosvrsdevmail with login superuser createdb createrole password 'tunebrightspeed32178094666';
 CREATE ROLE
-postgres=# create database projeto_agenda with owner usuario_agenda;
+postgres=# create database roll3d6_data_base with owner marcosvrsdevmail;
 CREATE DATABASE
-postgres=# grant all privileges on database projeto_agenda to usuario_agenda;
+postgres=# grant all privileges on database roll3d6_data_base to marcosvrsdevmail;
 GRANT
 postgres=# \q
 
@@ -104,7 +104,7 @@ sudo systemctl restart postgresql
 ## Criando o local_settings.py no servidor
 
 ```
-nano ~/agendaapp/project/local_settings.py
+nano ~/roll3d6app/project/local_settings.py
 ```
 
 Cole os dados.
@@ -112,15 +112,14 @@ Cole os dados.
 ## Configurando o Django no servidor
 
 ```
-cd ~/agendaapp
-python3.11 -m venv venv
+cd ~/roll3d6app
+python3.13 -m venv venv
 . venv/bin/activate
 pip install --upgrade pip
 pip install django
 pip install pillow
 pip install gunicorn
 pip install psycopg
-pip install faker
 
 python manage.py runserver
 python manage.py migrate
