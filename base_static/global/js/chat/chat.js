@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     const roomName = document.querySelector('.chat-container').dataset.roomName;
     const username = document.querySelector('.chat-container').dataset.username;
-    const chatSocket = new WebSocket(
+    if (!roomName || !username) {
+        console.error('Erro: Dados necessários não encontrados.');
+        return;
+    }
+
+    const socket = new WebSocket(
         `${window.location.protocol === "https:" ? "wss://" : "ws://"}${window.location.host}/ws/chat/${roomName}/`
     );
 
