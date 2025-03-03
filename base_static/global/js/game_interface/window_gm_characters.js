@@ -2,13 +2,18 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".personagem-container-gm button").forEach(button => {
         button.addEventListener("click", function () {
             const characterName = this.textContent;
-            abrirJanela("personagem_gm");
-            get_character_gm(characterName);
+
+            // Verifica se o nome do botão é "Dados"
+            if (characterName === "DADOS") {
+                abrirJanela("dados")
+            } else {
+                // Caso não seja "Dados", abre a ficha do personagem
+                abrirJanela("personagem_gm");
+                get_character_gm(characterName);
+            }
         });
     });
 });
-
-
 
 function get_character_gm(name) {
     console.log(`Buscando personagem: ${name}`); // 🟢 Debug no console do navegador
@@ -45,7 +50,6 @@ function get_character_gm(name) {
                         <button onclick="rollAttack(${maneuvers_melee.nh}, '${maneuvers_melee.nome}','${maneuvers_melee.damage}','${encodeURIComponent(name)}')">Rolar</button><br><br>
                     </li>
                 `;
-
             });
 
             let ataque_rangedList = '';
@@ -75,7 +79,6 @@ function get_character_gm(name) {
                     </li>
                 `;
             });
-
 
             // Acessa os atributos do personagem a partir do objeto 'data'
             window.innerHTML = `
@@ -182,17 +185,6 @@ function get_character_gm(name) {
                     
                     <h3>Defesas</h3>
                     ${defesaList}
-
-
-                    
-                    
-                    
-                    
-                   
-
-
-
-
                 </ul>
             `;
         })

@@ -322,13 +322,26 @@
             <h2>Personagens</h2>
             {% for personagem in personagens_gm %}
                 <button onclick="abrirJanela('personagem_gm')">{{ personagem.nome_personagem }}</button>
+                
             
             {% empty %}
                 <p>Nenhum personagem encontrado.</p>
             {% endfor %}
+            <button onclick="abrirJanela('dados')">DADOS</button>
         </div>
 
+        
 
+        <!-- dados -->
+        <div id="janela-dados" class="janela">
+            <button class="fechar" onclick="fecharJanela()">×</button>
+            <strong>Roll:</strong>
+            QUANTIDADE:
+            <input type="number" id="quantidade-d6-id" value="3">
+            INCREMENTO:
+            <input type="number" id="incremento_d6_id" value="0">
+            <button id="botao-rolar-d6">Rolar</button><br><br>
+        </div>
 
     {% endif %}
 
