@@ -145,5 +145,7 @@ sudo systemctl restart nginx
 
 
 ## Reiniciando serviço 
+. venv/bin/activate
+python manage.py collectstatic
 sudo systemctl restart nginx
 sudo systemctl restart daphne
