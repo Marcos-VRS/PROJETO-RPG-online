@@ -142,3 +142,8 @@ client_max_body_size 30M;
 ```
 sudo systemctl restart nginx
 ```
+
+
+## Reiniciando serviço 
+sudo systemctl restart nginx
+sudo systemctl restart daphne
