@@ -1,14 +1,12 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    const roomName = document.querySelector('.chat-container')?.dataset.roomName;
-    const username = document.querySelector('.chat-container')?.dataset.username;
-
+    const roomName = document.querySelector('.chat-container').dataset.roomName;
+    const username = document.querySelector('.chat-container').dataset.username;
     if (!roomName || !username) {
         console.error('Erro: Dados necessários não encontrados.');
         return;
     }
 
-    // Define chatSocket corretamente, verificando se já existe
-    const chatSocket = window.chatSocket || new WebSocket(
+    const socket = new WebSocket(
         `${window.location.protocol === "https:" ? "wss://" : "ws://"}${window.location.host}/ws/chat/${roomName}/`
     );
 
@@ -26,6 +24,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         console.error('WebSocket fechado inesperadamente.');
     };
 
+    // Função para enviar uma mensagem
     function sendMessage(message) {
         const input = document.getElementById('messageInput');
         if (message.trim() !== "") {
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        input.value = '';
+                        input.value = '';  // Limpar o campo após o envio
                     }
                 });
 
@@ -55,27 +54,34 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    document.getElementById('messageInput')?.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage(this.value);
+    // Captura do evento Enter no campo de input
+    document.getElementById('messageInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {  // Se pressionar Enter sem Shift (sem adicionar nova linha)
+            e.preventDefault();  // Impede a ação padrão do Enter (como um "submit")
+            const message = this.value;
+            sendMessage(message);  // Envia a mensagem
         }
     });
 
-    document.querySelector('form')?.addEventListener('submit', function (e) {
-        e.preventDefault();
-        sendMessage(document.getElementById('messageInput').value);
-    });
+    // Envia a mensagem ao clicar no botão
+    document.querySelector('form').onsubmit = function (e) {
+        e.preventDefault();  // Impede o envio do formulário padrão
+        const input = document.getElementById('messageInput');
+        const message = input.value;
+        sendMessage(message);  // Envia a mensagem
+    };
 
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
-            document.cookie.split(';').forEach(cookie => {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-            });
+            }
         }
         return cookieValue;
     }
