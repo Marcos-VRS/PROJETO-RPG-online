@@ -13,7 +13,7 @@ class RegisterUser(AbstractUser):
     username = models.CharField(
         max_length=20,
         unique=True,
-        help_text="Digite um nome de usuário único para login com no máximo 10 caracteres.",
+        help_text="Digite um nome de usuário único para login com no máximo 20 caracteres.",
         verbose_name="Nome de usuário",
     )
 
