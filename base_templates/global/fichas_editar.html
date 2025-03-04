@@ -48,8 +48,8 @@
             <div class="info-col">
                 <div class="form-field">
                     <label for="id_nome_personagem">Nome:</label>
-                    <input class="campo-curto-nome-ficha medievalsharp-regular" type="text" name="nome_personagem"
-                        id="id_nome_personagem" value="{{personagem.nome_personagem}}" />
+                    <input class="campo-curto-nome-ficha medievalsharp-regular" maxlength="30" type="text"
+                        name="nome_personagem" id="id_nome_personagem" value="{{personagem.nome_personagem}}" />
                 </div>
 
 
@@ -73,8 +73,8 @@
                 <!-- Campo Aparência -->
                 <div class="form-field">
                     <label for="id_aparencia">Aparência:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        value="{{personagem.aparencia_idade.aparencia}}"></input>
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" maxlength="12" name="aparencia"
+                        id="id_aparencia" value="{{personagem.aparencia_idade.aparencia}}"></input>
                 </div>
 
 
@@ -96,8 +96,9 @@
                 <!-- Campo Idade -->
                 <div class="form-field">
                     <label for="id_idade">Idade:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" type="number" name="idade"
-                        placeholder="Idade" id="id_idade" value="{{ personagem.aparencia_idade.idade}}" min="0" />
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" maxlength="12" type="text"
+                        name="idade" placeholder="Idade" id="id_idade" value="{{ personagem.aparencia_idade.idade}}"
+                        min="0" />
                 </div>
 
                 <!-- Campo PONTOS DE PERÍCIAS -->
@@ -130,7 +131,7 @@
 
                 <div class="grid-bg">
                     <label>Background:</label>
-                    <textarea name="background" id="id_background" type="text"
+                    <textarea name="background" id="id_background" maxlength="5000" type="text"
                         class="text-background medievalsharp-mini campo-background">{{ personagem.background }}</textarea>
                 </div>
             </div>
@@ -162,14 +163,14 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_st">ST:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="st"
-                        id="id_st" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="st" id="id_st" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_st"
-                        id="id_xp_st" value="{{personagem.atributos.XP_ST}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_st" id="id_xp_st" value="{{personagem.atributos.XP_ST}}" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="st_bonus" id="id_st_bonus" value="{{personagem.atributos.ST_Bonus}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="st_bonus" id="id_st_bonus" value="{{personagem.atributos.ST_Bonus}}" />
 
                 </div>
 
@@ -178,14 +179,14 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_dx">DX:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="dx"
-                        id="id_dx" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="dx" id="id_dx" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_dx"
-                        id="id_xp_dx" value="{{personagem.atributos.XP_DX}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_dx" id="id_xp_dx" value="{{personagem.atributos.XP_DX}}" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="dx_bonus" id="id_dx_bonus" value="{{personagem.atributos.DX_Bonus}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="dx_bonus" id="id_dx_bonus" value="{{personagem.atributos.DX_Bonus}}" />
 
                 </div>
 
@@ -193,28 +194,28 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_iq">IQ:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="iq"
-                        id="id_iq" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="iq" id="id_iq" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_iq"
-                        id="id_xp_iq" value="{{personagem.atributos.XP_IQ}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_iq" id="id_xp_iq" value="{{personagem.atributos.XP_IQ}}" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="iq_bonus" id="id_iq_bonus" value="{{personagem.atributos.IQ_Bonus}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="iq_bonus" id="id_iq_bonus" value="{{personagem.atributos.IQ_Bonus}}" />
                 </div>
 
                 <div class="form-field">
 
                     <label class="medievalsharp-large caixa-atributo" for="id_ht">HT:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="ht"
-                        id="id_ht" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="ht" id="id_ht" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_ht"
-                        id="id_xp_ht" value="{{personagem.atributos.XP_HT}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_ht" id="id_xp_ht" value="{{personagem.atributos.XP_HT}}" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="ht_bonus" id="id_ht_bonus" value="{{personagem.atributos.HT_Bonus}}" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="ht_bonus" id="id_ht_bonus" value="{{personagem.atributos.HT_Bonus}}" />
                 </div>
             </div>
 
@@ -228,36 +229,36 @@
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_hp">HP:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[hp]"
-                        id="subatributo_hp" value="{{personagem.sub_attributes.hp}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[hp]" id="subatributo_hp" value="{{personagem.sub_attributes.hp}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_speed">Speed:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[speed]"
-                        id="subatributo_speed" value="{{personagem.sub_attributes.speed}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[speed]" id="subatributo_speed" value="{{personagem.sub_attributes.speed}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_fp">FP:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[fp]"
-                        id="subatributo_fp" value="{{personagem.sub_attributes.fp}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[fp]" id="subatributo_fp" value="{{personagem.sub_attributes.fp}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_move">Move:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[move]"
-                        id="subatributo_move" value="{{personagem.sub_attributes.move}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[move]" id="subatributo_move" value="{{personagem.sub_attributes.move}}">
                     <label class="medievalsharp-regular" for="subatributo_move">m/s</label>
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_basic_lift">Basic Lift:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[basic_lift]" id="subatributo_basic_lift"
                         value="{{personagem.sub_attributes.basic_lift}}">
                     <label class="medievalsharp-regular" for="subatributo_basic_lift">kg</label>
@@ -267,21 +268,21 @@
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_dodge">Dodge:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[dodge]"
-                        id="subatributo_dodge" value="{{personagem.sub_attributes.dodge}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[dodge]" id="subatributo_dodge" value="{{personagem.sub_attributes.dodge}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_swing">Swing:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[swing]"
-                        id="subatributo_swing" value="{{personagem.sub_attributes.swing}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[swing]" id="subatributo_swing" value="{{personagem.sub_attributes.swing}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_swing_weapon">Swing Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[swing_weapon]" id="subatributo_swing_weapon"
                         value="{{personagem.sub_attributes.swing_weapon}}">
                 </div>
@@ -289,50 +290,52 @@
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_thrust">Thrust:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[thrust]"
-                        id="subatributo_thrust" value="{{personagem.sub_attributes.thrust}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[thrust]" id="subatributo_thrust"
+                        value="{{personagem.sub_attributes.thrust}}">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_thrust_weapon">Thrust Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[thrust_weapon]" id="subatributo_thrust_weapon"
                         value="{{personagem.sub_attributes.thrust_weapon}}">
                 </div>
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_parry_unarmed">Parry Unarmed:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[parry_unarmed]" id="subatributo_parry_unarmed"
                         value="{{personagem.sub_attributes.parry_unarmed}}">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_parry_weapon">Parry Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[parry_weapon]" id="subatributo_parry_weapon"
                         value="{{personagem.sub_attributes.parry_weapon}}">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_stress">Stress:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[stress]"
-                        id="subatributo_stress" value="{{personagem.sub_attributes.stress}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[stress]" id="subatributo_stress"
+                        value="{{personagem.sub_attributes.stress}}">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_will">Will:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[will]"
-                        id="subatributo_will" value="{{personagem.sub_attributes.will}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[will]" id="subatributo_will" value="{{personagem.sub_attributes.will}}">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_perception">Perception:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[perception]" id="subatributo_perception"
                         value="{{personagem.sub_attributes.perception}}">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_Jump">Jump:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[Jump]"
-                        id="subatributo_Jump" value="{{personagem.sub_attributes.Jump}}">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[Jump]" id="subatributo_Jump" value="{{personagem.sub_attributes.Jump}}">
                     <label class="medievalsharp-regular" for="subatributo_Jump">m</label>
 
                 </div>
@@ -345,19 +348,21 @@
         <div class="ficha-box-section grid-vantagem-desvantagem">
             <div class="ficha-box ">
                 <h2 class="medievalsharp-large ">Vantagens</h2>
-                
+
                 <div id="vantagens-container">
                     <!-- Linha para uma vantagem -->
                     {% for personagem_vantagem in personagem.advantages %}
                     <div id="container" class="form-field vantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]" value="{{personagem_vantagem.nome}}" />
-                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                        <input class="campo-curto-vantagem medievalsharp-regular" maxlength="30" type="text"
+                            name="vantagens_nome[]" value="{{personagem_vantagem.nome}}" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" maxlength="12" type="text"
                             name="vantagens_valor[]" value="{{personagem_vantagem.valor}}" />
-                        
+
                     </div>
                     <div class="form-field-mod mod-container">
                         <label style="margin-right: 0.5rem;">Mod:</label>
-                        <textarea name="mod[]"  class="medievalsharp-mini" style="width: 43.5%; resize: vertical; height: 3rem; border-radius: 0.2rem; margin-bottom: 2rem;">{{personagem_vantagem.modificadores|join:", "|default:""}}</textarea>
+                        <textarea name="mod[]" class="medievalsharp-mini" maxlength="200"
+                            style="width: 43.5%; resize: vertical; height: 3rem; border-radius: 0.2rem; margin-bottom: 2rem;">{{personagem_vantagem.modificadores|join:", "|default:""}}</textarea>
                     </div>
                     {% endfor %}
 
@@ -375,9 +380,10 @@
                     <!-- Linha para uma desvantagem -->
                     {% for personagem_desvantagem in personagem.disadvantages %}
                     <div class="form-field desvantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="desvantagens_nome[]"value="{{personagem_desvantagem.nome}}" />
-                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
-                            name="desvantagens_valor[]" value="{{personagem_desvantagem.valor}}"  />
+                        <input class="campo-curto-vantagem medievalsharp-regular" maxlength="30" type="text"
+                            name="desvantagens_nome[]" value="{{personagem_desvantagem.nome}}" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" maxlength="12" type="text"
+                            name="desvantagens_valor[]" value="{{personagem_desvantagem.valor}}" />
                     </div>
                     {% endfor %}
                 </div>
@@ -403,26 +409,31 @@
 
             </div>
             <div id="pericias-container">
-                
+
                 {% for personagem_skill in personagem.skills %}
                 <!-- Linha para uma perícia -->
                 <div class="form-field pericia-linha">
-                    <input id="nome_pericia" type="text" name="pericias_nome[]"
+                    <input id="nome_pericia" maxlength="30" type="text" name="pericias_nome[]"
                         class="pericia-nome campo-curto-nome medievalsharp-mini" value="{{personagem_skill.nome}}" />
 
                     <!-- Primeiro select para Atributo Base -->
-                        
-                    <input id="atributo_pericia" name="pericias_atributo_base[]" class="pericia-atributo-base campo-curto-equip medievalsharp-mini" value="{{personagem_skill.atributoBase}}" readonly ></input>
-                    
+
+                    <input id="atributo_pericia" name="pericias_atributo_base[]"
+                        class="pericia-atributo-base campo-curto-equip medievalsharp-mini"
+                        value="{{personagem_skill.atributoBase}}" readonly></input>
+
                     <!-- Segundo select para Dificuldade -->
-                    <input 
-                        id="dificuldade_pericia" name="pericias_dificuldade[]" class="pericia-dificuldade campo-curto-dif medievalsharp-mini" readonly value="{{personagem_skill.dificuldade}}">
+                    <input id="dificuldade_pericia" name="pericias_dificuldade[]"
+                        class="pericia-dificuldade campo-curto-dif medievalsharp-mini" readonly
+                        value="{{personagem_skill.dificuldade}}">
                     </input>
 
                     <input id="custo_pericia" type="number" name="pericias_custo[]"
-                        class="pericia-custo campo-curto-equip medievalsharp-mini" value="{{personagem_skill.custo}}" />
+                        class="pericia-custo campo-curto-equip medievalsharp-mini" min="1"
+                        value="{{personagem_skill.custo}}" />
                     <input id="nh_pericia" type="number" name="pericias_nh[]"
-                        class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly value="{{personagem_skill.nh}}" />
+                        class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly
+                        value="{{personagem_skill.nh}}" />
                 </div>
                 {% endfor %}
             </div>
@@ -438,7 +449,7 @@
             <h2>Equipamentos</h2>
             <div class="form-field">
                 <label class="medievalsharp-regular" for="subatributo_money">Money: $</label>
-                <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="money"
+                <input class="campo-curto-subatributo medievalsharp-regular" maxlength="20" type="text" name="money"
                     id="subatributo_money" value="{{personagem.money}}">
             </div>
 
@@ -459,21 +470,22 @@
                     {% for personagem_equip_melee in personagem.equipment_melee %}
                     <div class="form-field equipamento-linha">
 
-                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" maxlength="30" type="text"
                             name="equipamentos_melee_nome[]" value="{{personagem_equip_melee.nome}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" maxlength="12" type="text"
                             name="equipamentos_melee_damage[]" value="{{personagem_equip_melee.damage}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" maxlength="12" type="text"
                             name="equipamentos_melee_reach[]" value="{{personagem_equip_melee.reach}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" maxlength="12" type="text"
                             name="equipamentos_melee_parry[]" value="{{personagem_equip_melee.parry}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" maxlength="12" type="text"
                             name="equipamentos_melee_cost[]" value="{{personagem_equip_melee.cost}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" maxlength="12" type="text"
                             name="equipamentos_melee_weight[]" value="{{personagem_equip_melee.weight}}" />
-                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
-                            name="equipamentos_melee_details[]" placeholder="Details" rows="2">{{personagem_equip_melee.details}}</textarea>
-                        
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="200" id="details_melee"
+                            name="equipamentos_melee_details[]" placeholder="Details"
+                            rows="2">{{personagem_equip_melee.details}}</textarea>
+
 
                     </div>
                     {% endfor %}
@@ -506,28 +518,39 @@
                     <!-- Linha para um equipamento Ranged -->
                     {% for personagem_equip_ranged in personagem.equipment_ranged %}
                     <div class="form-field equipamento-linha">
-                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" type="text"
-                            name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged" value="{{personagem_equip_ranged.nome}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" type="text"
-                            name="equipamentos_ranged_damage[]" placeholder="Damage" value="{{personagem_equip_ranged.damage}}" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="acc" type="text"
-                            name="equipamentos_ranged_acc[]" placeholder="Acc" value="{{personagem_equip_ranged.acc}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="range"
-                            name="equipamentos_ranged_range[]" placeholder="Range" value="{{personagem_equip_ranged.range}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="weight_ranged"
-                            name="equipamentos_ranged_weight[]" placeholder="Weight" value="{{personagem_equip_ranged.weight}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rof"
-                            name="equipamentos_ranged_rof[]" placeholder="Rof" value="{{personagem_equip_ranged.rof}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="shots"
-                            name="equipamentos_ranged_shots[]" placeholder="Shots" value="{{personagem_equip_ranged.shots}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="bulk"
-                            name="equipamentos_ranged_bulk[]" placeholder="Bulk" value="{{personagem_equip_ranged.bulk}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rcl"
-                            name="equipamentos_ranged_rcl[]" placeholder="RCL" value="{{personagem_equip_ranged.rcl}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="cost_ranged"
-                            name="equipamentos_ranged_cost[]" placeholder="Cost" value="{{personagem_equip_ranged.cost}}"/>
-                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_range"
-                            name="equipamentos_ranged_details[]" placeholder="Details" rows="2">{{personagem_equip_ranged.details}}</textarea>
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" maxlength="30" type="text"
+                            name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged"
+                            value="{{personagem_equip_ranged.nome}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" maxlength="12" type="text"
+                            name="equipamentos_ranged_damage[]" placeholder="Damage"
+                            value="{{personagem_equip_ranged.damage}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" id="acc" maxlength="12" type="text"
+                            name="equipamentos_ranged_acc[]" placeholder="Acc"
+                            value="{{personagem_equip_ranged.acc}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="range"
+                            name="equipamentos_ranged_range[]" placeholder="Range"
+                            value="{{personagem_equip_ranged.range}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            id="weight_ranged" name="equipamentos_ranged_weight[]" placeholder="Weight"
+                            value="{{personagem_equip_ranged.weight}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="rof"
+                            name="equipamentos_ranged_rof[]" placeholder="Rof"
+                            value="{{personagem_equip_ranged.rof}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="shots"
+                            name="equipamentos_ranged_shots[]" placeholder="Shots"
+                            value="{{personagem_equip_ranged.shots}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="bulk"
+                            name="equipamentos_ranged_bulk[]" placeholder="Bulk"
+                            value="{{personagem_equip_ranged.bulk}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="rcl"
+                            name="equipamentos_ranged_rcl[]" placeholder="RCL"
+                            value="{{personagem_equip_ranged.rcl}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="cost_ranged"
+                            name="equipamentos_ranged_cost[]" placeholder="Cost"
+                            value="{{personagem_equip_ranged.cost}}" />
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="200" id="details_range"
+                            name="equipamentos_ranged_details[]" placeholder="Details"
+                            rows="2">{{personagem_equip_ranged.details}}</textarea>
                     </div>
                     {% endfor %}
                 </div>
@@ -552,16 +575,20 @@
                     <!-- Linha para uma armadura -->
                     {% for personagem_equip_armor in personagem.equipment_armor %}
                     <div class="form-field equipamento-linha">
-                        <input class="campo-curto-nome medievalsharp-mini" type="text" name="equipamentos_armor_nome[]"
-                            placeholder="Nome da armadura" value="{{personagem_equip_armor.nome}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
-                            name="equipamentos_armor_location[]" placeholder="Location" value="{{personagem_equip_armor.location}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_rd[]"
-                            placeholder="RD" value="{{personagem_equip_armor.rd}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
-                            name="equipamentos_armor_weight[]" placeholder="Weight" value="{{personagem_equip_armor.weight}}"/>
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_cost[]"
-                            placeholder="Cost" value="{{personagem_equip_armor.cost}}"/>
+                        <input class="campo-curto-nome medievalsharp-mini" maxlength="30" type="text"
+                            name="equipamentos_armor_nome[]" placeholder="Nome da armadura"
+                            value="{{personagem_equip_armor.nome}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_location[]" placeholder="Location"
+                            value="{{personagem_equip_armor.location}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_rd[]" placeholder="RD" value="{{personagem_equip_armor.rd}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_weight[]" placeholder="Weight"
+                            value="{{personagem_equip_armor.weight}}" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_cost[]" placeholder="Cost"
+                            value="{{personagem_equip_armor.cost}}" />
                     </div>
                     {% endfor %}
                 </div>
@@ -598,17 +625,20 @@
                                         class="label-nome-manobra medievalsharp-mini">Nome da
                                         manobra</label>
                                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_melee[]"
-                                        placeholder="Nome da manobra" type="text" value="{{personagem_manobra_ataque.nome}}" />
+                                        placeholder="Nome da manobra" maxlength="30" type="text"
+                                        value="{{personagem_manobra_ataque.nome}}" />
 
                                 </div>
                                 <div>
                                     <label for="manobra_damage_melee_id" class="medievalsharp-mini">Dano:</label>
                                     <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                        name="damage_manobra_melee[]" placeholder="Damage" type="text" value="{{personagem_manobra_ataque.damage}}">
+                                        name="damage_manobra_melee[]" placeholder="Damage" maxlength="12" type="text"
+                                        value="{{personagem_manobra_ataque.damage}}">
                                     <label for="manobra_nh_melee_id" class="medievalsharp-mini">NH:</label>
 
                                     <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_melee[]"
-                                        placeholder="NH" type="text" value="{{personagem_manobra_ataque.nh}}">
+                                        placeholder="NH" maxlength="12" type="text"
+                                        value="{{personagem_manobra_ataque.nh}}">
                                 </div>
 
 
@@ -619,7 +649,8 @@
 
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                        name="detalhes_manobra_melee[]">{{personagem_manobra_ataque.detalhes}}</textarea>
+                                        name="detalhes_manobra_melee[]"
+                                        maxlength="200">{{personagem_manobra_ataque.detalhes}}</textarea>
 
                                     <div class="posicao-botao-remover">
                                         <span id="botao3" class="botao-remover "></span>
@@ -637,7 +668,7 @@
                     <span id="botao4" class="botao-adicionar "></span>
 
                     <div class="ficha-box-ranged">
-                        
+
                         {% for personagem_manobra_ranged in personagem.maneuvers_ranged %}
                         <div id="div_ataque_ranged_id" class="ficha-box-manobra-ataque">
                             <div class="manobra-ataque-ranged-id">
@@ -649,17 +680,20 @@
                                         class="label-nome-manobra medievalsharp-mini">Nome da
                                         manobra</label>
                                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_Ranged[]"
-                                        placeholder="Nome da manobra" type="text" value="{{personagem_manobra_ranged.nome}}"/>
+                                        placeholder="Nome da manobra" maxlength="30" type="text"
+                                        value="{{personagem_manobra_ranged.nome}}" />
 
                                 </div>
                                 <div>
                                     <label for="manobra_damage_Ranged_id" class="medievalsharp-mini">Dano:</label>
                                     <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                        name="damage_manobra_Ranged[]" placeholder="Damage" type="text" value="{{personagem_manobra_ranged.damage}}">
+                                        name="damage_manobra_Ranged[]" placeholder="Damage" maxlength="12" type="text"
+                                        value="{{personagem_manobra_ranged.damage}}">
                                     <label for="manobra_nh_Ranged_id" class="medievalsharp-mini">NH:</label>
 
                                     <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_Ranged[]"
-                                        placeholder="NH" type="text" value="{{personagem_manobra_ranged.nh}}">
+                                        placeholder="NH" maxlength="12" type="text"
+                                        value="{{personagem_manobra_ranged.nh}}">
                                 </div>
 
 
@@ -669,7 +703,8 @@
 
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                        name="detalhes_manobra_Ranged[]">{{personagem_manobra_ranged.detalhes}}</textarea>
+                                        name="detalhes_manobra_Ranged[]"
+                                        maxlength="200">{{personagem_manobra_ranged.detalhes}}</textarea>
                                     <div class="posicao-botao-remover">
                                         <span id="botao5" class="botao-remover "></span>
                                     </div>
@@ -711,7 +746,8 @@
                                             class="label-nome-manobra medievalsharp-mini">Nome da
                                             manobra</label>
                                         <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]"
-                                            placeholder="Nome da manobra" type="text" value="{{personagem_manobra_defesa.nome}}" />
+                                            placeholder="Nome da manobra" maxlength="30" type="text"
+                                            value="{{personagem_manobra_defesa.nome}}" />
 
                                     </div>
                                     <div>
@@ -719,7 +755,8 @@
                                         <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
 
                                         <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]"
-                                            placeholder="NH" type="text" value="{{personagem_manobra_defesa.nh}}">
+                                            placeholder="NH" maxlength="12" type="text"
+                                            value="{{personagem_manobra_defesa.nh}}">
                                     </div>
 
 
@@ -730,7 +767,8 @@
 
                                         <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                             placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                            name="detalhes_manobra_defesa[]">{{personagem_manobra_defesa.detalhes}}</textarea>
+                                            name="detalhes_manobra_defesa[]"
+                                            maxlength="200">{{personagem_manobra_defesa.detalhes}}</textarea>
 
                                         <div class="posicao-botao-remover">
                                             <span id="botao7" class="botao-remover "></span>

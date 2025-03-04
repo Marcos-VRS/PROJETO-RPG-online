@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Campos principais do equipamento Melee
         const campos = [
-            { type: 'text', name: 'equipamentos_melee_nome[]', placeholder: 'Nome do equipamento Melee', extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_melee_damage[]', placeholder: 'Damage', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_melee_reach[]', placeholder: 'Reach', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_melee_parry[]', placeholder: 'Parry', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_melee_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_melee_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
+            { type: 'text', name: 'equipamentos_melee_nome[]', placeholder: 'Nome do equipamento Melee', maxLength: 30, extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_damage[]', placeholder: 'Damage', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_reach[]', placeholder: 'Reach', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_parry[]', placeholder: 'Parry', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_cost[]', placeholder: 'Cost', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_melee_weight[]', placeholder: 'Weight', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
         ];
 
         // Criando inputs para os campos principais
@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const input = document.createElement('input');
             input.type = campo.type;
             input.name = campo.name;
+            input.maxLength = campo.maxLength; // Define o maxLength conforme especificado
+
             input.placeholder = campo.placeholder;
             input.classList.add('campo-curto'); // Adiciona a classe para os inputs menores
             novaLinha.appendChild(input);
@@ -37,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         textarea.placeholder = 'Details';
         textarea.rows = 2;
         textarea.className = 'campo-curto-equip medievalsharp-mini';
+        textarea.maxLength = 200; // Define o maxLength conforme especificado
 
         // Adiciona o campo "Details" à mesma linha
         novaLinha.appendChild(textarea);

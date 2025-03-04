@@ -7,16 +7,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Campos do equipamento Ranged
         const campos = [
-            { type: 'text', name: 'equipamentos_ranged_nome[]', placeholder: 'Nome da arma Ranged', extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_damage[]', placeholder: 'Damage', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_acc[]', placeholder: 'Acc', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_range[]', placeholder: 'Range', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_weight[]', placeholder: 'Weight', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_rof[]', placeholder: 'Rof', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_shots[]', placeholder: 'Shots', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_bulk[]', placeholder: 'Bulk', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_rcl[]', placeholder: 'RCL', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
-            { type: 'text', name: 'equipamentos_ranged_cost[]', placeholder: 'Cost', extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
+            { type: 'text', name: 'equipamentos_ranged_nome[]', placeholder: 'Nome da arma Ranged', maxLength: 30, extraClasses: ['campo-curto-nome', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_damage[]', placeholder: 'Damage', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_acc[]', placeholder: 'Acc', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_range[]', placeholder: 'Range', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_weight[]', placeholder: 'Weight', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_rof[]', placeholder: 'Rof', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_shots[]', placeholder: 'Shots', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_bulk[]', placeholder: 'Bulk', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_rcl[]', placeholder: 'RCL', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] },
+            { type: 'text', name: 'equipamentos_ranged_cost[]', placeholder: 'Cost', maxLength: 12, extraClasses: ['campo-curto-equip', 'medievalsharp-mini'] }
         ];
 
         // Criando inputs para os campos
@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const input = document.createElement('input');
             input.type = campo.type;
             input.name = campo.name;
+            input.maxLength = campo.maxLength; // Define o maxLength conforme especificado
+
             input.placeholder = campo.placeholder;
             input.classList.add('campo-curto'); // Adiciona a classe para os inputs menores
             novaLinha.appendChild(input);
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         textarea.name = 'equipamentos_ranged_details[]'; // Corrigido: o nome deve ser 'equipamentos_ranged_details[]'
         textarea.placeholder = 'Details';
         textarea.rows = 2;
+        textarea.maxLength = 200; // Define o maxLength conforme especificado
         novaLinha.appendChild(textarea);
 
         // Adicionando a nova linha ao container

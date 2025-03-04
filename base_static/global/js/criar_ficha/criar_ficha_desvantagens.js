@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
         novaDesvantagem.classList.add('form-field', 'desvantagem-linha');
 
         novaDesvantagem.innerHTML = `
-            <input type="text" name="desvantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da desvantagem" />
-            <input type="text" name="desvantagens_valor[]"  class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor" />
+            <input maxlength="30" type="text" name="desvantagens_nome[]" class="campo-curto-vantagem medievalsharp-regular" placeholder="Nome da desvantagem" />
+            <input maxlength="12" type="text" name="desvantagens_valor[]"  class="campo-curto-valor-vantagem medievalsharp-regular" placeholder="Valor" />
         `;
 
         containerDesvantagens.appendChild(novaDesvantagem);

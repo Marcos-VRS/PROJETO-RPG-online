@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
         novaPericia.classList.add('form-field', 'pericia-linha');
 
         novaPericia.innerHTML = `
-            <input type="text" name="pericias_nome[]" class="pericia-nome campo-curto-nome medievalsharp-mini" placeholder="Nome da perícia" />
+            <input type="text" name="pericias_nome[]" maxlength="30" class="pericia-nome campo-curto-nome medievalsharp-mini" placeholder="Nome da perícia" />
             <select name="pericias_atributo_base[]" class="pericia-atributo-base campo-curto-equip medievalsharp-mini">
                 <option value="">Atributo Base</option>
                 <option value="ST">ST</option>
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Difícil">Difícil</option>
                 <option value="Muito Difícil">Muito Difícil</option>
             </select>
-            <input type="number" name="pericias_custo[]" class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
+            <input type="number" name="pericias_custo[]"  min="1" class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
             <input type="number" name="pericias_nh[]" class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly />
         `;
         containerPericias.appendChild(novaPericia);

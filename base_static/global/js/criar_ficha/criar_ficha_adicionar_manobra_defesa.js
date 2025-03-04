@@ -14,17 +14,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="col-manobra">
                     <label for="nome_manobra_defesa_id" class="label-nome-manobra medievalsharp-mini">Nome da
                         manobra</label>
-                    <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]" placeholder="Nome da manobra" type="text" />
+                    <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]" placeholder="Nome da manobra" maxlength="30" type="text" />
                 </div>
                 <div>
                     <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
-                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]" placeholder="NH" type="text">
+                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]" placeholder="NH" maxlength="12" type="text">
                 </div>
                 <div>
                     <label for="manobra_defesa_detalhe_id" class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                        name="detalhes_manobra_defesa[]"></textarea>
+                        name="detalhes_manobra_defesa[]" maxlength="200"></textarea>
                     <div class="posicao-botao-remover">
                         <span class="botao-remover"></span>
                     </div>

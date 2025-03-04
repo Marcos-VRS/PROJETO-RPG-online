@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 
 from ..forms import RegisterUserForm  # Importe o formulário
 from django.urls import reverse
@@ -50,13 +50,15 @@ def register_view(request):
 
         if form.is_valid():
             user = form.save(commit=False)
-            user.set_password(
-                form.cleaned_data["password"]
-            )  # Use set_password em vez de make_password
+            user.set_password(form.cleaned_data["password"])
             user.save()
 
-            messages.success(request, "User registered successfully!")
-            return redirect("gurps:login")
+            # Realiza o login automaticamente após o registro
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+
+            messages.success(request, "User registered and logged in successfully!")
+            print(f"\n  O USUÁRIO [{user}] REGISTROU-SE E LOGOU-SE AUTOMATICAMENTE\n")
+            return redirect("gurps:index")
         else:
             messages.error(request, "Please correct the errors below.")
     else:

@@ -10,6 +10,13 @@ class RegisterUser(AbstractUser):
 
     created_date = models.DateField(default=timezone.now)
 
+    username = models.CharField(
+        max_length=10,
+        unique=True,
+        help_text="Digite um nome de usuário único para login com no máximo 10 caracteres.",
+        verbose_name="Nome de usuário",
+    )
+
     groups = models.ManyToManyField(
         "auth.Group",
         related_name="custom_user_set",  # Nome único para evitar conflitos
@@ -30,7 +37,7 @@ class RegisterUser(AbstractUser):
 
 
 class Campanha(models.Model):
-    nome = models.CharField(max_length=100, unique=True)
+    nome = models.CharField(max_length=30, unique=True)
     dono = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -65,6 +72,7 @@ class CampanhaAssets(models.Model):
         related_name="assets",
         blank=True,
         null=True,
+        max_length=30,
     )
     slot = models.IntegerField(default=1)
     name = models.CharField(max_length=100, unique=True)
@@ -81,7 +89,7 @@ class CharacterSheet(models.Model):
     info_campanha = models.JSONField(blank=True, null=True)  # JSON opcional
 
     nome_personagem = models.CharField(
-        max_length=255, blank=True, null=True, unique=True
+        max_length=30, blank=True, null=True, unique=True
     )
     aparencia_idade = models.JSONField(blank=True, null=True)  # JSON opcional
 

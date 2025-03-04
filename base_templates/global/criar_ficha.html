@@ -47,8 +47,8 @@
             <div class="info-col">
                 <div class="form-field">
                     <label for="id_nome_personagem">Nome:</label>
-                    <input class="campo-curto-nome-ficha medievalsharp-regular" type="text" name="nome_personagem"
-                        id="id_nome_personagem" placeholder="Nome do personagem" />
+                    <input class="campo-curto-nome-ficha medievalsharp-regular" maxlength="30" type="text"
+                        name="nome_personagem" id="id_nome_personagem" placeholder="Nome do personagem" />
                 </div>
 
 
@@ -72,8 +72,8 @@
                 <!-- Campo Aparência -->
                 <div class="form-field">
                     <label for="id_aparencia">Aparência:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" name="aparencia" id="id_aparencia"
-                        placeholder="Aparência"></input>
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" maxlength="12" name="aparencia"
+                        id="id_aparencia" placeholder="Aparência"></input>
                 </div>
 
 
@@ -95,8 +95,8 @@
                 <!-- Campo Idade -->
                 <div class="form-field">
                     <label for="id_idade">Idade:</label>
-                    <input class="campo-curto input-box-atributo medievalsharp-mini" type="number" name="idade"
-                        placeholder="Idade" id="id_idade" value="{{ form.idade.value }}" min="0" />
+                    <input class="campo-curto input-box-atributo medievalsharp-mini" maxlength="12" type="text"
+                        name="idade" placeholder="Idade" id="id_idade" value="{{ form.idade.value }}" min="0" />
                 </div>
 
                 <!-- Campo PONTOS DE PERÍCIAS -->
@@ -127,7 +127,7 @@
 
                 <div class="grid-bg">
                     <label>Background:</label>
-                    <textarea name="background" id="id_background" type="text"
+                    <textarea name="background" id="id_background" maxlength="5000" type="text"
                         class="text-background medievalsharp-mini campo-background"></textarea>
                 </div>
             </div>
@@ -158,14 +158,14 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_st">ST:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="st"
-                        id="id_st" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="st" id="id_st" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_st"
-                        id="id_xp_st" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_st" id="id_xp_st" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="st_bonus" id="id_st_bonus" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="st_bonus" id="id_st_bonus" />
 
                 </div>
 
@@ -174,14 +174,14 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_dx">DX:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="dx"
-                        id="id_dx" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="dx" id="id_dx" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_dx"
-                        id="id_xp_dx" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_dx" id="id_xp_dx" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="dx_bonus" id="id_dx_bonus" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="dx_bonus" id="id_dx_bonus" />
 
                 </div>
 
@@ -189,28 +189,28 @@
 
                     <label class="medievalsharp-large caixa-atributo" for="id_iq">IQ:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="iq"
-                        id="id_iq" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="iq" id="id_iq" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_iq"
-                        id="id_xp_iq" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_iq" id="id_xp_iq" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="iq_bonus" id="id_iq_bonus" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="iq_bonus" id="id_iq_bonus" />
                 </div>
 
                 <div class="form-field">
 
                     <label class="medievalsharp-large caixa-atributo" for="id_ht">HT:</label>
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="number" name="ht"
-                        id="id_ht" readonly />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="number" name="ht" id="id_ht" readonly />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text" name="xp_ht"
-                        id="id_xp_ht" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="xp_ht" id="id_xp_ht" />
 
-                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " type="text"
-                        name="ht_bonus" id="id_ht_bonus" />
+                    <input class="campo-curto-atributo input-box-atributo medievalsharp-large " maxlength="12"
+                        type="text" name="ht_bonus" id="id_ht_bonus" />
                 </div>
             </div>
 
@@ -224,36 +224,36 @@
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_hp">HP:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[hp]"
-                        id="subatributo_hp">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[hp]" id="subatributo_hp">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_speed">Speed:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[speed]"
-                        id="subatributo_speed">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[speed]" id="subatributo_speed">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_fp">FP:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[fp]"
-                        id="subatributo_fp">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[fp]" id="subatributo_fp">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_move">Move:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[move]"
-                        id="subatributo_move">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[move]" id="subatributo_move">
                     <label class="medievalsharp-regular" for="subatributo_move">m/s</label>
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_basic_lift">Basic Lift:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[basic_lift]" id="subatributo_basic_lift">
                     <label class="medievalsharp-regular" for="subatributo_basic_lift">kg</label>
 
@@ -262,67 +262,67 @@
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_dodge">Dodge:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[dodge]"
-                        id="subatributo_dodge">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[dodge]" id="subatributo_dodge">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_swing">Swing:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[swing]"
-                        id="subatributo_swing">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[swing]" id="subatributo_swing">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_swing_weapon">Swing Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[swing_weapon]" id="subatributo_swing_weapon">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_thrust">Thrust:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[thrust]"
-                        id="subatributo_thrust">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[thrust]" id="subatributo_thrust">
                 </div>
 
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_thrust_weapon">Thrust Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[thrust_weapon]" id="subatributo_thrust_weapon">
                 </div>
 
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_parry_unarmed">Parry Unarmed:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[parry_unarmed]" id="subatributo_parry_unarmed">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_parry_weapon">Parry Weapon:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[parry_weapon]" id="subatributo_parry_weapon">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_stress">Stress:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[stress]"
-                        id="subatributo_stress">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[stress]" id="subatributo_stress">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_will">Will:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[will]"
-                        id="subatributo_will">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[will]" id="subatributo_will">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_perception">Perception:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text"
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
                         name="subatributos[perception]" id="subatributo_perception">
                 </div>
                 <div class="form-field">
                     <label class="medievalsharp-regular" for="subatributo_Jump">Jump:</label>
-                    <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="subatributos[Jump]"
-                        id="subatributo_Jump">
+                    <input class="campo-curto-subatributo medievalsharp-regular" maxlength="12" type="text"
+                        name="subatributos[Jump]" id="subatributo_Jump">
                     <label class="medievalsharp-regular" for="subatributo_Jump">m</label>
 
                 </div>
@@ -339,9 +339,9 @@
                 <div id="vantagens-container">
                     <!-- Linha para uma vantagem -->
                     <div id="container" class="form-field vantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="vantagens_nome[]"
-                            placeholder="Nome da vantagem" />
-                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                        <input class="campo-curto-vantagem medievalsharp-regular" maxlength="30" type="text"
+                            name="vantagens_nome[]" placeholder="Nome da vantagem" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" maxlength="12" type="text"
                             name="vantagens_valor[]" placeholder="Valor" />
                         <span id="botao1" class="botao-adicionar "></span>
                     </div>
@@ -359,9 +359,9 @@
                 <div id="desvantagens-container">
                     <!-- Linha para uma desvantagem -->
                     <div class="form-field desvantagem-linha">
-                        <input class="campo-curto-vantagem medievalsharp-regular" type="text" name="desvantagens_nome[]"
-                            placeholder="Nome da desvantagem" />
-                        <input class="campo-curto-valor-vantagem medievalsharp-regular" type="text"
+                        <input class="campo-curto-vantagem medievalsharp-regular" maxlength="30" type="text"
+                            name="desvantagens_nome[]" placeholder="Nome da desvantagem" />
+                        <input class="campo-curto-valor-vantagem medievalsharp-regular" maxlength="12" type="text"
                             name="desvantagens_valor[]" placeholder="Valor" />
 
                     </div>
@@ -390,7 +390,7 @@
             <div id="pericias-container">
                 <!-- Linha para uma perícia -->
                 <div class="form-field pericia-linha">
-                    <input id="nome_pericia" type="text" name="pericias_nome[]"
+                    <input id="nome_pericia" type="text" maxlength="30" name="pericias_nome[]"
                         class="pericia-nome campo-curto-nome medievalsharp-mini" placeholder="Nome da perícia" />
 
                     <!-- Primeiro select para Atributo Base -->
@@ -414,7 +414,7 @@
                         <option value="Muito Difícil">Muito Difícil</option>
                     </select>
 
-                    <input id="custo_pericia" type="number" name="pericias_custo[]"
+                    <input id="custo_pericia" type="number" min="1" name="pericias_custo[]"
                         class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
                     <input id="nh_pericia" type="number" name="pericias_nh[]"
                         class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly />
@@ -432,7 +432,7 @@
             <h2>Equipamentos</h2>
             <div class="form-field">
                 <label class="medievalsharp-regular" for="subatributo_money">Money: $</label>
-                <input class="campo-curto-subatributo medievalsharp-regular" type="text" name="money"
+                <input class="campo-curto-subatributo medievalsharp-regular" maxlength="20" type="text" name="money"
                     id="subatributo_money">
             </div>
 
@@ -454,19 +454,19 @@
                     <!-- Linha para um equipamento Melee -->
                     <div class="form-field equipamento-linha">
 
-                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_melee" maxlength="30" type="text"
                             name="equipamentos_melee_nome[]" placeholder="Nome do equipamento Melee" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_melee" maxlength="12" type="text"
                             name="equipamentos_melee_damage[]" placeholder="Damage" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="reach_melee" maxlength="12" type="text"
                             name="equipamentos_melee_reach[]" placeholder="Reach" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="parry_melee" maxlength="12" type="text"
                             name="equipamentos_melee_parry[]" placeholder="Parry" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="cost_melee" maxlength="12" type="text"
                             name="equipamentos_melee_cost[]" placeholder="Cost" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" maxlength="12" type="text"
                             name="equipamentos_melee_weight[]" placeholder="Weight" />
-                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_melee"
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="500" id="details_melee"
                             name="equipamentos_melee_details[]" placeholder="Details" rows="2"></textarea>
                     </div>
                 </div>
@@ -497,27 +497,27 @@
                 <div id="equipamentos-ranged-container">
                     <!-- Linha para um equipamento Ranged -->
                     <div class="form-field equipamento-linha">
-                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" id="nome_ranged" maxlength="30" type="text"
                             name="equipamentos_ranged_nome[]" placeholder="Nome da arma Ranged" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="dmg_ranged" maxlength="12" type="text"
                             name="equipamentos_ranged_damage[]" placeholder="Damage" />
-                        <input class="campo-curto-equip medievalsharp-mini" id="acc" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" id="acc" maxlength="12" type="text"
                             name="equipamentos_ranged_acc[]" placeholder="Acc" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="range"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="range"
                             name="equipamentos_ranged_range[]" placeholder="Range" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="weight_ranged"
-                            name="equipamentos_ranged_weight[]" placeholder="Weight" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rof"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12"
+                            id="weight_ranged" name="equipamentos_ranged_weight[]" placeholder="Weight" />
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="rof"
                             name="equipamentos_ranged_rof[]" placeholder="Rof" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="shots"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="shots"
                             name="equipamentos_ranged_shots[]" placeholder="Shots" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="bulk"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="bulk"
                             name="equipamentos_ranged_bulk[]" placeholder="Bulk" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="rcl"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="rcl"
                             name="equipamentos_ranged_rcl[]" placeholder="RCL" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" id="cost_ranged"
+                        <input class="campo-curto-equip medievalsharp-mini" type="text" maxlength="12" id="cost_ranged"
                             name="equipamentos_ranged_cost[]" placeholder="Cost" />
-                        <textarea class="campo-curto-equip medievalsharp-mini" id="details_range"
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="500" id="details_range"
                             name="equipamentos_ranged_details[]" placeholder="Details" rows="2"></textarea>
                     </div>
                 </div>
@@ -541,16 +541,16 @@
                 <div id="equipamentos-armor-container">
                     <!-- Linha para uma armadura -->
                     <div class="form-field equipamento-linha">
-                        <input class="campo-curto-nome medievalsharp-mini" type="text" name="equipamentos_armor_nome[]"
-                            placeholder="Nome da armadura" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-nome medievalsharp-mini" maxlength="30" type="text"
+                            name="equipamentos_armor_nome[]" placeholder="Nome da armadura" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
                             name="equipamentos_armor_location[]" placeholder="Location" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_rd[]"
-                            placeholder="RD" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text"
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_rd[]" placeholder="RD" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
                             name="equipamentos_armor_weight[]" placeholder="Weight" />
-                        <input class="campo-curto-equip medievalsharp-mini" type="text" name="equipamentos_armor_cost[]"
-                            placeholder="Cost" />
+                        <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text"
+                            name="equipamentos_armor_cost[]" placeholder="Cost" />
                     </div>
                 </div>
                 <button class="btn-adicionar-campo" type="button" id="adicionar-equipamento-armor">Adicionar
@@ -585,17 +585,17 @@
                                         class="label-nome-manobra medievalsharp-mini">Nome da
                                         manobra</label>
                                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_melee[]"
-                                        placeholder="Nome da manobra" type="text" />
+                                        placeholder="Nome da manobra" maxlength="30" type="text" />
 
                                 </div>
                                 <div>
                                     <label for="manobra_damage_melee_id" class="medievalsharp-mini">Dano:</label>
                                     <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                        name="damage_manobra_melee[]" placeholder="Damage" type="text">
+                                        name="damage_manobra_melee[]" placeholder="Damage" maxlength="12" type="text">
                                     <label for="manobra_nh_melee_id" class="medievalsharp-mini">NH:</label>
 
-                                    <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_melee[]"
-                                        placeholder="NH" type="text">
+                                    <input class="campo-curto-equip medievalsharp-mini" maxlength="12"
+                                        name="nh_manobra_melee[]" placeholder="NH" type="text">
                                 </div>
 
 
@@ -606,7 +606,7 @@
 
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                        name="detalhes_manobra_melee[]"></textarea>
+                                        name="detalhes_manobra_melee[]" maxlength="500"></textarea>
 
                                     <div class="posicao-botao-remover">
                                         <span id="botao3" class="botao-remover "></span>
@@ -636,17 +636,17 @@
                                         class="label-nome-manobra medievalsharp-mini">Nome da
                                         manobra</label>
                                     <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_Ranged[]"
-                                        placeholder="Nome da manobra" type="text" />
+                                        placeholder="Nome da manobra" maxlength="30" type="text" />
 
                                 </div>
                                 <div>
                                     <label for="manobra_damage_Ranged_id" class="medievalsharp-mini">Dano:</label>
                                     <input class="campo-curto-equip medievalsharp-minimedievalsharp-mini"
-                                        name="damage_manobra_Ranged[]" placeholder="Damage" type="text">
+                                        name="damage_manobra_Ranged[]" placeholder="Damage" maxlength="12" type="text">
                                     <label for="manobra_nh_Ranged_id" class="medievalsharp-mini">NH:</label>
 
                                     <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_Ranged[]"
-                                        placeholder="NH" type="text">
+                                        placeholder="NH" maxlength="12" type="text">
                                 </div>
 
 
@@ -656,7 +656,7 @@
 
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                        name="detalhes_manobra_Ranged[]"></textarea>
+                                        name="detalhes_manobra_Ranged[]" maxlength="500"></textarea>
                                     <div class="posicao-botao-remover">
                                         <span id="botao5" class="botao-remover "></span>
                                     </div>
@@ -696,7 +696,7 @@
                                             class="label-nome-manobra medievalsharp-mini">Nome da
                                             manobra</label>
                                         <input class="campo-curto-nome medievalsharp-mini" name="nome_manobra_defesa[]"
-                                            placeholder="Nome da manobra" type="text" />
+                                            placeholder="Nome da manobra" maxlength="30" type="text" />
 
                                     </div>
                                     <div>
@@ -704,7 +704,7 @@
                                         <label for="manobra_nh_defesa_id" class="medievalsharp-mini">NH:</label>
 
                                         <input class="campo-curto-equip medievalsharp-mini" name="nh_manobra_defesa[]"
-                                            placeholder="NH" type="text">
+                                            placeholder="NH" maxlength="12" type="text">
                                     </div>
 
 
@@ -715,7 +715,7 @@
 
                                         <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                             placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                                            name="detalhes_manobra_defesa[]"></textarea>
+                                            name="detalhes_manobra_defesa[]" maxlength="500"></textarea>
 
                                         <div class="posicao-botao-remover">
                                             <span id="botao7" class="botao-remover "></span>
