@@ -17,10 +17,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function get_character_gm(name) {
     console.log(`Buscando personagem: ${name}`); // 🟢 Debug no console do navegador
-    fetch(`/api/character/?nome=${encodeURIComponent(name)}`)
+    const safeName = encodeURIComponent(name);
+    console.log(`Nome Seguro: ${safeName}`);
+    fetch(`/api/character/?nome=${encodeURIComponent(safeName)}`)
         .then(response => response.json())
         .then(data => {
             console.log("Resposta da API:", data); // 🟢 Verifica se a API respondeu
+
             const window = document.getElementById("janela-personagem_gm");
 
             // Acessa as perícias do personagem e usa forEach para iterar sobre elas
@@ -33,7 +36,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-${skill.nome}" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-${skill.nome}" value="0">
-                        <button onclick="rollAttribute(${skill.nh}, '${skill.nome}','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${skill.nh}, '${skill.nome}', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                 `;
             });
@@ -47,7 +50,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-${maneuvers_melee.nome}" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-${maneuvers_melee.nome}" value="0">
-                        <button onclick="rollAttack(${maneuvers_melee.nh}, '${maneuvers_melee.nome}','${maneuvers_melee.damage}','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttack(${maneuvers_melee.nh}, '${maneuvers_melee.nome}', '${maneuvers_melee.damage}', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                 `;
             });
@@ -61,7 +64,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-${maneuvers_ranged.nome}" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-${maneuvers_ranged.nome}" value="0">
-                        <button onclick="rollAttack(${maneuvers_ranged.nh}, '${maneuvers_ranged.nome}','${maneuvers_ranged.damage}','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttack(${maneuvers_ranged.nh}, '${maneuvers_ranged.nome}', '${maneuvers_ranged.damage}', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                 `;
             });
@@ -75,7 +78,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-${defense.nome}" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-${defense.nome}" value="0">
-                        <button onclick="rollAttribute(${defense.nh}, '${defense.nome}','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${defense.nh}, '${defense.nome}', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                 `;
             });
@@ -91,7 +94,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-ST" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-ST" value="0">
-                        <button onclick="rollAttribute(${data.atributos.ST}, 'ST','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.atributos.ST}, 'ST', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                     <li>
                         DX: ${data.atributos.DX}
@@ -99,7 +102,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-DX" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-DX" value="0">
-                        <button onclick="rollAttribute(${data.atributos.DX}, 'DX','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.atributos.DX}, 'DX', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                     <li>
                         IQ: ${data.atributos.IQ}
@@ -107,7 +110,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-IQ" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-IQ" value="0">
-                        <button onclick="rollAttribute(${data.atributos.IQ}, 'IQ','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.atributos.IQ}, 'IQ', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
                     <li>
                         HT: ${data.atributos.HT}
@@ -115,7 +118,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-HT" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-HT" value="0">
-                        <button onclick="rollAttribute(${data.atributos.HT}, 'HT','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.atributos.HT}, 'HT', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <li>
@@ -135,8 +138,8 @@ function get_character_gm(name) {
                         BÔNUS:
                         <input type="number" id="bonus-DODGE" value="0">
                         REDUTOR:
-                        <input type="number" id="redutor-HT" value="0">
-                        <button onclick="rollAttribute(${data.sub_attributes.dodge}, 'DODGE','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <input type="number" id="redutor-DODGE" value="0">
+                        <button onclick="rollAttribute(${data.sub_attributes.dodge}, 'DODGE', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <li>
@@ -145,7 +148,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-PARRY UNARMED" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-PARRY UNARMED" value="0">
-                        <button onclick="rollAttribute(${data.sub_attributes.parry_unarmed}, 'PARRY UNARMED','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.sub_attributes.parry_unarmed}, 'PARRY UNARMED', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <li>
@@ -154,7 +157,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-PARRY WEAPON" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-PARRY WEAPON" value="0">
-                        <button onclick="rollAttribute(${data.sub_attributes.parry_weapon}, 'PARRY WEAPON','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.sub_attributes.parry_weapon}, 'PARRY WEAPON', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <li>
@@ -163,7 +166,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-WILL" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-WILL" value="0">
-                        <button onclick="rollAttribute(${data.sub_attributes.will}, 'WILL','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.sub_attributes.will}, 'WILL', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <li>
@@ -172,7 +175,7 @@ function get_character_gm(name) {
                         <input type="number" id="bonus-PERCEPTION" value="0">
                         REDUTOR:
                         <input type="number" id="redutor-PERCEPTION" value="0">
-                        <button onclick="rollAttribute(${data.sub_attributes.perception}, 'PERCEPTION','${encodeURIComponent(name)}')">Rolar</button><br><br>
+                        <button onclick="rollAttribute(${data.sub_attributes.perception}, 'PERCEPTION', \`${encodeURIComponent(name)}\`)">Rolar</button><br><br>
                     </li>
 
                     <h3>Perícias</h3>

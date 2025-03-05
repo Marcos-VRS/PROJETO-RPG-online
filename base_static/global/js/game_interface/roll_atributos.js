@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         console.log(`Rolling attribute: ${attribute} with NH: ${nh}, bonus: ${bonus}, redutor: ${redutor}`);
 
-        fetch(`/teste_atributos/${attribute}/${nh}/${bonus}/${redutor}/${name}/`)
+        fetch(`/teste_atributos/${attribute}/${nh}/${bonus}/${redutor}/${encodeURIComponent(name)}/`)
             .then(response => response.json())
             .then(data => {
                 let messageInput = document.getElementById("messageInput");
