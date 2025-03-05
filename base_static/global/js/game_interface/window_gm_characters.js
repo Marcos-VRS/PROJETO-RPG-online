@@ -19,7 +19,7 @@ function get_character_gm(name) {
     console.log(`Buscando personagem: ${name}`); // 🟢 Debug no console do navegador
     const safeName = encodeURIComponent(name);
     console.log(`Nome Seguro: ${safeName}`);
-    fetch(`/api/character/?nome=${encodeURIComponent(safeName)}`)
+    fetch(`/api/character/?nome=${safeName}`)
         .then(response => response.json())
         .then(data => {
             console.log("Resposta da API:", data); // 🟢 Verifica se a API respondeu

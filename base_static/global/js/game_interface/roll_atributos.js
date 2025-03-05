@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Preenche a mensagem
                     console.log(data.nome_personagem);
 
-                    messageInput.value = `\nNOME:${data.nome_personagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\n${data.message}\n`;
+                    messageInput.value = `\nNOME:${decodeURIComponent(data.nome_personagem)}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\n${data.message}\n`;
                 }
 
                 // Aguarda um pequeno tempo para evitar conflitos e clica no botão de envio
