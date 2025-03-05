@@ -1,56 +1,35 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
     let scale = 1;
     const scaleFactor = 0.1;
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
 
     function zoom(event) {
         event.preventDefault();
 
+        // Obtém as coordenadas do mouse em relação à imagem
+        const rect = image.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        // Obtém as coordenadas relativas ao centro da imagem
+        const offsetX = (mouseX / rect.width) * 100;
+        const offsetY = (mouseY / rect.height) * 100;
+
+        // Define o novo scale (mantendo limites)
         if (event.deltaY < 0) {
-            // Zoom in
-            scale += scaleFactor;
+            scale += scaleFactor; // Zoom in
         } else {
-            // Zoom out
-            scale -= scaleFactor;
-            if (scale < 1) {
-                scale = 1;
+            scale -= scaleFactor; // Zoom out
+            if (scale < 0.5) {
+                scale = 0.5; // Permite zoom até 50% do tamanho original
             }
         }
 
+        // Aplica o zoom mantendo o ponto do mouse como referência
+        image.style.transformOrigin = `${offsetX}% ${offsetY}%`;
         image.style.transform = `scale(${scale})`;
     }
 
-    function startDrag(event) {
-        if (event.button === 0) { // Verifica se o botão esquerdo do mouse está pressionado
-            isDragging = true;
-            startX = event.clientX;
-            startY = event.clientY;
-            initialX = image.offsetLeft;
-            initialY = image.offsetTop;
-            image.style.cursor = 'grabbing'; // Muda o cursor para indicar que está arrastando
-        }
-    }
-
-    function drag(event) {
-        if (isDragging) {
-            const dx = event.clientX - startX;
-            const dy = event.clientY - startY;
-            image.style.left = `${initialX + dx}px`;
-            image.style.top = `${initialY + dy}px`;
-        }
-    }
-
-    function endDrag() {
-        isDragging = false;
-        image.style.cursor = 'grab'; // Muda o cursor de volta para indicar que pode arrastar
-    }
-
-    if (image) {
-        image.addEventListener('wheel', zoom);
-        image.addEventListener('mousedown', startDrag);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', endDrag);
-    }
+    // Ouvinte de evento global para o zoom (independente da posição do mouse)
+    document.addEventListener('wheel', zoom);
 });
