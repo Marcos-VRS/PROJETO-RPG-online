@@ -1,10 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
+    const chatContainer = document.getElementById('chat-container-id'); // Obtém a div do chat
     let scale = 1;
     const scaleFactor = 0.06; // Zoom mais gradual
     let animationFrameId = null;
+    let isMouseOverChat = false;
+
+    // Detecta quando o mouse entra e sai do chat
+    chatContainer.addEventListener('mouseenter', () => isMouseOverChat = true);
+    chatContainer.addEventListener('mouseleave', () => isMouseOverChat = false);
 
     function zoom(event) {
+        // Impede o zoom se o mouse estiver sobre o chat
+        if (isMouseOverChat) return;
+
         event.preventDefault();
 
         // Obtém as coordenadas do mouse em relação à imagem

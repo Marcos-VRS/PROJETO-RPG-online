@@ -30,14 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
         image.style.cursor = 'grab';
     }
 
-    function disableContextMenu(event) {
-        event.preventDefault(); // Impede o menu de contexto ao clicar com o botão direito
-    }
 
     if (image) {
         image.addEventListener('mousedown', startDrag);
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', endDrag);
-        document.addEventListener('contextmenu', disableContextMenu); // Bloqueia o menu do botão direito
     }
 });

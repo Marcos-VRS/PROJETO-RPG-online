@@ -25,14 +25,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (isOwner === "False") {
                     nomePersonagem = document.getElementById("personagem-nome").getAttribute("data-nome");
-                    messageInput.value = `\nNOME:${nomePersonagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
+                    messageInput.value = `NOME:${nomePersonagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
 
                     console.log(nomePersonagem);
                 } else {
                     // Preenche a mensagem
                     console.log(data.nome_personagem);
 
-                    messageInput.value = `\nNOME:${data.nome_personagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
+                    messageInput.value = `NOME:${data.nome_personagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\nDANO: ${data.damage}\n${data.message}\n`;
                 }
 
                 // Aguarda um pequeno tempo para evitar conflitos e clica no botão de envio

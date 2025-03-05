@@ -279,3 +279,21 @@ a {
 .janela.ativa {
     display: block;
 }
+
+.username-chat {
+    display: flex;
+    justify-content: left;
+    width: 100%;
+    border: black solid 1px;
+}
+
+
+
+.message-single-box {
+    display: flex;
+    background-color: yellowgreen;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    border: black solid 1px;
+}

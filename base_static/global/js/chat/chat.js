@@ -16,9 +16,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         const messages = document.getElementById('messages');
-        const formattedMessage = data.message.replace(/\n/g, '<br>');
+        let formattedMessage = data.message
+            .replace(/\n/g, '<br>');
 
-        messages.innerHTML += `<li><strong>${data.username}:</strong> ${formattedMessage}</li>`;
+        messages.innerHTML += `<li class="message-single-box  medievalsharp-mini"><strong class="username-chat">${data.username}:</strong class="content-message-chat"> ${formattedMessage}</li>`;
         messages.scrollTop = messages.scrollHeight;
     };
 

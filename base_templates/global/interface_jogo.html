@@ -37,10 +37,12 @@
 
 
         <!-- Lista de mensagens -->
-        <ul class="message-single-box" id="messages">
+        <ul class="message-box" id="messages">
             {% for message in messages %}
-            <li><strong>{{ message.user.username }}:</strong> {{ message.content }} <em>({{ message.timestamp }})</em>
-            </li>
+                <li class="message-single-box medievalsharp-mini">
+                    <strong class="username-chat">{{ message.user.username }}:</strong> 
+                    <span class="content-message-chat">{{ message.content|linebreaksbr }}</span>
+                </li><br>
             {% endfor %}
         </ul>
 
