@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
     let scale = 1;
-    const scaleFactor = 0.1;
+    const scaleFactor = 0.06; // Zoom mais gradual
+    let animationFrameId = null;
 
     function zoom(event) {
         event.preventDefault();
@@ -25,10 +26,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Aplica o zoom mantendo o ponto do mouse como referência
-        image.style.transformOrigin = `${offsetX}% ${offsetY}%`;
-        image.style.transform = `scale(${scale})`;
+        // Garante que a animação não seja executada várias vezes ao mesmo tempo
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        animationFrameId = requestAnimationFrame(() => {
+            image.style.transformOrigin = `${offsetX}% ${offsetY}%`;
+            image.style.transform = `scale(${scale})`;
+        });
     }
+
+    // Adiciona transição suave no CSS
+    image.style.transition = "transform 0.2s ease-out";
 
     // Ouvinte de evento global para o zoom (independente da posição do mouse)
     document.addEventListener('wheel', zoom);
