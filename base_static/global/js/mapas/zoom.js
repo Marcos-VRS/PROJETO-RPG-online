@@ -1,18 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
     const chatContainer = document.getElementById('chat-container-id'); // Obtém a div do chat
+    const janelaElements = document.querySelectorAll('.janela'); // Todos os elementos com a classe "janela"
     let scale = 1;
     const scaleFactor = 0.06; // Zoom mais gradual
     let animationFrameId = null;
     let isMouseOverChat = false;
+    let isMouseOverJanela = false;
 
     // Detecta quando o mouse entra e sai do chat
     chatContainer.addEventListener('mouseenter', () => isMouseOverChat = true);
     chatContainer.addEventListener('mouseleave', () => isMouseOverChat = false);
 
+    // Detecta quando o mouse entra e sai dos elementos com a classe "janela"
+    janelaElements.forEach(janela => {
+        janela.addEventListener('mouseenter', () => isMouseOverJanela = true);
+        janela.addEventListener('mouseleave', () => isMouseOverJanela = false);
+    });
+
     function zoom(event) {
-        // Impede o zoom se o mouse estiver sobre o chat
-        if (isMouseOverChat) return;
+        // Impede o zoom se o mouse estiver sobre o chat ou sobre um elemento com a classe "janela"
+        if (isMouseOverChat || isMouseOverJanela) return;
 
         event.preventDefault();
 
