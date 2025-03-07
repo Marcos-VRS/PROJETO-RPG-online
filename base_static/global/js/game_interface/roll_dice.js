@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 let submitButton = document.getElementById("button-chat-submit");
                 let form = submitButton.closest("form"); // Obtém o formulário mais próximo
 
+
                 // Preenche a mensagem 
                 messageInput.value = `Roll ${quantidade}d6 + (${incremento}):\nResultado = ${data.resultado}`;
 

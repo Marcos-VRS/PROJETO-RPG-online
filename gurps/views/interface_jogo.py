@@ -14,6 +14,25 @@ def game_interface(request, campanha_id, slot):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
+
+    def definir_cor(message_content):
+        msg_lower = message_content.lower().strip()
+        if msg_lower.endswith("acerto"):
+            return "bg-green"
+        elif msg_lower.endswith("falha"):
+            return "bg-gray"
+        elif msg_lower.endswith("sucesso"):
+            return "bg-purple"
+        elif msg_lower.endswith("erro crítico"):
+            return "bg-red"
+        elif msg_lower.endswith("sucesso decisivo"):
+            return "bg-orange"
+        return "bg-blue"
+
+    messages_with_colors = [
+        {"message": msg, "color": definir_cor(msg.content)} for msg in messages
+    ]
+
     personagem = CharacterSheet.objects.filter(
         info_campanha__nome_campanha=campanha.nome,
         info_campanha__player_name=request.user.username,
@@ -22,14 +41,13 @@ def game_interface(request, campanha_id, slot):
         info_campanha__nome_campanha=campanha.nome,
         info_campanha__player_name=request.user.username,
     )
-    print(f"\nPersonagens do GM: {list(personagens_gm)}\n")
 
     context = {
         "personagem": personagem,
         "personagens_gm": personagens_gm,
         "campanha": campanha,
         "pagina_inicial": pagina_inicial,
-        "messages": messages,
+        "messages": messages_with_colors,  # Enviamos as mensagens com cor ao template
         "username": username,
     }
     return render(request, "global/interface_jogo.html", context)
@@ -51,6 +69,7 @@ def save_message(request):
         user = request.user
 
         if message_content and campanha_id:
+            print(f"\nMensagem: {message_content}\n")
             campanha = get_object_or_404(Campanha, id=campanha_id)
             Message.objects.create(
                 user=user,

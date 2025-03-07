@@ -38,13 +38,13 @@
 
         <!-- Lista de mensagens -->
         <ul class="message-box" id="messages">
-            {% for message in messages %}
-                <li class="message-single-box medievalsharp-mini">
-                    <strong class="username-chat">{{ message.user.username }}:</strong> 
-                    <span class="content-message-chat">{{ message.content|linebreaksbr }}</span>
+            {% for item in messages %}
+                <li class="message-single-box medievalsharp-mini {{ item.color }}">
+                    <strong class="username-chat">{{ item.message.user.username }}:</strong> 
+                    <span class="content-message-chat">{{ item.message.content|linebreaksbr }}</span>
                 </li><br>
             {% endfor %}
-        </ul>
+            </ul>
 
 
     </div>

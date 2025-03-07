@@ -291,9 +291,39 @@ a {
 
 .message-single-box {
     display: flex;
-    background-color: yellowgreen;
     flex-direction: column;
     justify-content: center;
     width: 100%;
     border: black solid 1px;
+}
+
+
+.bg-green {
+    background-color: green;
+    color: white;
+}
+
+.bg-orange {
+    background-color: orange;
+    color: black;
+}
+
+.bg-purple {
+    background-color: purple;
+    color: white;
+}
+
+.bg-gray {
+    background-color: gray;
+    color: white;
+}
+
+.bg-red {
+    background-color: red;
+    color: white;
+}
+
+.bg-blue {
+    background-color: blue;
+    color: white;
 }
