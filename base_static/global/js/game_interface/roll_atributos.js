@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (isOwner === "False") {
                     nomePersonagem = document.getElementById("personagem-nome").getAttribute("data-nome");
-                    messageInput.value = `NOME:${nomePersonagem}\nTESTE:${data.atributo}\nNH: ${data.nh}(${data.nh_final})\nROLL: ${data.roll}\n${data.message}\n`;
+                    messageInput.value = `NOME:${nomePersonagem}\n\nTESTE:${data.atributo}\n\nNH: ${data.nh}(${data.nh_final})\n\nROLL: ${data.roll}\n\n${data.message}\n`;
 
                     console.log(nomePersonagem);
                 } else {
