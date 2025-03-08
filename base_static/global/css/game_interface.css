@@ -327,3 +327,13 @@ a {
     background-color: blue;
     color: white;
 }
+
+.textarea-chat {
+    width: 95%;
+    height: 100%;
+    border: black solid 1px;
+    border-radius: 0.5rem;
+    resize: none;
+    flex-grow: 1;
+
+}
