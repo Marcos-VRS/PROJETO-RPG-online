@@ -22,13 +22,13 @@
         <div class="menu-container">
 
             {% if username == campanha.dono.username %}
-                <a class="menu-button" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
+                <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
             {% else %}
-                <a class="menu-button" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
+                <a class="menu-button-options" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
             {% endif %} 
             
 
-            <a class="menu-button" href="{% url 'gurps:leave_game' %}">SAIR</a>
+            <a class="menu-button-options" href="{% url 'gurps:leave_game' %}">SAIR</a>
         </div>
     </div>
 
@@ -125,34 +125,34 @@
             <ul>
                 <li>
                     ST: {{ personagem.atributos.ST }}
-                    BÔNUS:
-                    <input type="number" id="bonus-ST" value="0">
+                    => BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-ST" value="0">
                     REDUTOR:
-                    <input type="number" id="redutor-ST" value="0">
+                    <input class="input-inc" type="number" id="redutor-ST" value="0">
                     <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
                 </li>
                 <li>
                     DX: {{ personagem.atributos.DX }}
-                    BÔNUS:
-                    <input type="number" id="bonus-DX" value="0">
+                    => BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-DX" value="0">
                     REDUTOR:
-                    <input type="number" id="redutor-DX" value="0">
+                    <input class="input-inc" type="number" id="redutor-DX" value="0">
                     <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
                 </li>
                 <li>
                     IQ: {{ personagem.atributos.IQ }}
-                    BÔNUS:
-                    <input type="number" id="bonus-IQ" value="0">
+                    => BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-IQ" value="0">
                     REDUTOR:
-                    <input type="number" id="redutor-IQ" value="0">
+                    <input class="input-inc" type="number" id="redutor-IQ" value="0">
                     <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
                 </li>
                 <li>
                     HT: {{ personagem.atributos.HT }}
-                    BÔNUS:
-                    <input type="number" id="bonus-HT" value="0">
+                    => BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-HT" value="0">
                     REDUTOR:
-                    <input type="number" id="redutor-HT" value="0">
+                    <input class="input-inc" type="number" id="redutor-HT" value="0">
                     <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
                 </li>
             </ul>
@@ -169,10 +169,10 @@
                 <li>
                     <strong>Nome:</strong> {{ skill.nome }}
                     <strong>NH:</strong> {{ skill.nh }}<br><br>
-                    BÔNUS:
-                    <input type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
+                    => BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
                     REDUTOR:
-                    <input type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
+                    <input class="input-inc" type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
                     <button class="menu-button" onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
                 </li>
                 {% endfor %}
@@ -193,10 +193,10 @@
                 <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
 
 
-                BÔNUS:
-                <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                => BÔNUS:
+                <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
                 REDUTOR:
-                <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+                <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
                 <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
 
 
@@ -211,10 +211,10 @@
                 <strong>Dano:</strong> {{ attack.damage }}<br>
                 <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
 
-                BÔNUS:
-                <input type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                => BÔNUS:
+                <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
                 REDUTOR:
-                <input type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
+                <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
                 <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
 
                 {%endfor%}
@@ -233,10 +233,10 @@
                 <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
 
 
-                BÔNUS:
-                <input type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
+                => BÔNUS:
+                <input class="input-inc"  type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
                 REDUTOR:
-                <input type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
+                <input class="input-inc" type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
                 <button class="menu-button" onclick="rollAttribute({{ defense.nh }}, '{{ defense.nome|slugify }}')">Rolar</button><br><br>
 
 
@@ -309,27 +309,39 @@
         <!-- dados -->
         <div id="janela-dados" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <strong>Roll:</strong>
-            QUANTIDADE:
-            <input type="number" id="quantidade-d6-id" value="3">
-            INCREMENTO:
-            <input type="number" id="incremento_d6_id" value="0">
-            <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
-        </div>
+            <div class="ficha-parte-box medievalsharp-mini">
+                <strong>Roll:</strong><br>
+                => QUANTIDADE:
+                <input class="input-inc" type="number" id="quantidade-d6-id" value="3">
+                =>INCREMENTO:
+                <input class="input-inc" type="number" id="incremento_d6_id" value="0">
+                <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
+            </div>
     {% else %}
         <!-- Ficha dos personagens do GM -->
         <div style="display:none;" id="owner-status" data-is-owner="True"></div>
 
         <div class="personagem-container-gm">
-            <h2>Personagens</h2>
-            {% for personagem in personagens_gm %}
-                <button class="menu-button" onclick="abrirJanela('personagem_gm')">{{ personagem.nome_personagem }}</button>
-                
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR PERSONAGEM:</label>
+            <input class="input-pesquisa-personagem medievalsharp-mini" 
+                   type="text" 
+                   id="search-personagem" 
+                   placeholder="Pesquisar personagem"
+                   onkeyup="filtrarPersonagens()"> <!-- Chama a função ao digitar -->
+        
+            <br>
             
-            {% empty %}
-                <p>Nenhum personagem encontrado.</p>
-            {% endfor %}
-            <button class="menu-button" onclick="abrirJanela('dados')">DADOS</button>
+            <div id="lista-personagens">
+                <button class="menu-button-gm medievalsharp-mini" onclick="abrirJanela('dados')">DADOS</button>
+                {% for personagem in personagens_gm %}
+                    <button class="menu-button-gm medievalsharp-mini" 
+                            onclick="abrirJanela('personagem_gm')">
+                        {{ personagem.nome_personagem }}
+                    </button>
+                {% empty %}
+                    <p>Nenhum personagem encontrado.</p>
+                {% endfor %}
+            </div>
         </div>
 
         
@@ -337,12 +349,14 @@
         <!-- dados -->
         <div id="janela-dados" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <strong>Roll:</strong>
-            QUANTIDADE:
-            <input type="number" id="quantidade-d6-id" value="3">
-            INCREMENTO:
-            <input type="number" id="incremento_d6_id" value="0">
-            <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
+            <div class="ficha-parte-box medievalsharp-mini">
+                <strong>Roll:</strong><br>
+                => QUANTIDADE:
+                <input class="input-inc" type="number" id="quantidade-d6-id" value="3">
+                =>INCREMENTO:
+                <input class="input-inc" type="number" id="incremento_d6_id" value="0">
+                <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
+            </div>
         </div>
 
     {% endif %}
@@ -377,6 +391,7 @@
     <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
     <script src="{% static 'global/js/game_interface/window_gm_characters.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/filtro_personagens_gm.js' %}"></script>
 </body>
 
 </html>

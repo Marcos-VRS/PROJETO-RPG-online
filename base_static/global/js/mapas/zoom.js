@@ -1,12 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
     const chatContainer = document.getElementById('chat-container-id'); // Obtém a div do chat
+    const personagemContainer = document.querySelector('.personagem-container-gm'); // Obtém a div do personagem
     const janelaElements = document.querySelectorAll('.janela'); // Todos os elementos com a classe "janela"
+
     let scale = 1;
     const scaleFactor = 0.06; // Zoom mais gradual
     let animationFrameId = null;
     let isMouseOverChat = false;
     let isMouseOverJanela = false;
+    let isMouseOverPersonagem = false;
 
     // Detecta quando o mouse entra e sai do chat
     chatContainer.addEventListener('mouseenter', () => isMouseOverChat = true);
@@ -18,9 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
         janela.addEventListener('mouseleave', () => isMouseOverJanela = false);
     });
 
+    // Detecta quando o mouse entra e sai da div .personagem-container-gm
+    personagemContainer.addEventListener('mouseenter', () => isMouseOverPersonagem = true);
+    personagemContainer.addEventListener('mouseleave', () => isMouseOverPersonagem = false);
+
     function zoom(event) {
-        // Impede o zoom se o mouse estiver sobre o chat ou sobre um elemento com a classe "janela"
-        if (isMouseOverChat || isMouseOverJanela) return;
+        // Impede o zoom se o mouse estiver sobre o chat, a div personagem-container-gm ou uma janela
+        if (isMouseOverChat || isMouseOverJanela || isMouseOverPersonagem) return;
 
         event.preventDefault();
 
@@ -58,5 +65,5 @@ document.addEventListener('DOMContentLoaded', () => {
     image.style.transition = "transform 0.2s ease-out";
 
     // Ouvinte de evento global para o zoom (independente da posição do mouse)
-    document.addEventListener('wheel', zoom);
+    document.addEventListener('wheel', zoom, { passive: false });
 });

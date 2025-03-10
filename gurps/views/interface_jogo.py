@@ -40,7 +40,7 @@ def game_interface(request, campanha_id, slot):
     personagens_gm = CharacterSheet.objects.filter(
         info_campanha__nome_campanha=campanha.nome,
         info_campanha__player_name=request.user.username,
-    )
+    ).order_by("-id")
 
     context = {
         "personagem": personagem,
@@ -218,7 +218,7 @@ def roll_test_attack(
 
 
 def get_character_gm(request):
-    name = request.GET.get("nome")  # Obtém o nome do personagem da query string
+    name = request.GET.get("nome").strip()  # Obtém o nome do personagem da query string
     character = get_object_or_404(CharacterSheet, nome_personagem=name)  # Busca no BD
 
     print(f"\nCHARACTER NAME: {name}\n")  # Debug para verificar no terminal
