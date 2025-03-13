@@ -1,9 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
     const chatContainer = document.getElementById('chat-container-id'); // Obtém a div do chat
-    const personagemContainer = document.querySelector('.personagem-container-gm'); // Obtém a div do personagem
+    const personagemContainer = document.querySelector('.personagem-container-gm') || document.querySelector('.personagem-container'); // Obtém a div do personagem
     const janelaElements = document.querySelectorAll('.janela'); // Todos os elementos com a classe "janela"
 
+
+    console.log('Esse é o image:', image);
+    console.log('Esse é o chatContainer:', chatContainer);
+    console.log('Esse é o personagemContainer:', personagemContainer);
+    console.log('Esses são os janelaElements:', janelaElements);
     let scale = 1;
     const scaleFactor = 0.06; // Zoom mais gradual
     let animationFrameId = null;

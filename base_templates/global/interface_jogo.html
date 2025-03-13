@@ -18,46 +18,49 @@
         {% endif %}
     </div>
 
-    <div class="chat-container-menu">
-        <div class="menu-container">
 
-            {% if username == campanha.dono.username %}
-                <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
-            {% else %}
-                <a class="menu-button-options" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
-            {% endif %} 
-            
 
-            <a class="menu-button-options" href="{% url 'gurps:leave_game' %}">SAIR</a>
+    <div class="coluna-chat">
+        <div class="chat-container-menu">
+            <div class="menu-container">
+
+                {% if username == campanha.dono.username %}
+                    <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
+                {% else %}
+                    <a class="menu-button-options" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
+                {% endif %} 
+                
+
+                <a class="menu-button-options" href="{% url 'gurps:leave_game' %}">SAIR</a>
+            </div>
+        </div>
+
+        <div id="chat-container-id" class="chat-container" data-room-name="{{ campanha.id }}"
+            data-username="{{ user.username }}">
+
+
+            <!-- Lista de mensagens -->
+            <ul class="message-box" id="messages">
+                {% for item in messages %}
+                    <li class="message-single-box medievalsharp-mini {{ item.color }}">
+                        <strong class="username-chat">{{ item.message.user.username }}:</strong> 
+                        <span class="content-message-chat">{{ item.message.content|linebreaksbr }}</span>
+                    </li><br>
+                {% endfor %}
+                </ul>
+
+
+        </div>
+
+        <div class="chat-container-submit">
+            <!-- Formulário para enviar uma nova mensagem -->
+            <form method="POST" action="">
+                {% csrf_token %}
+                <textarea class="textarea-chat" id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
+                <button class="menu-button" id="button-chat-submit" type="submit">Enviar</button>
+            </form>
         </div>
     </div>
-
-    <div id="chat-container-id" class="chat-container" data-room-name="{{ campanha.id }}"
-        data-username="{{ user.username }}">
-
-
-        <!-- Lista de mensagens -->
-        <ul class="message-box" id="messages">
-            {% for item in messages %}
-                <li class="message-single-box medievalsharp-mini {{ item.color }}">
-                    <strong class="username-chat">{{ item.message.user.username }}:</strong> 
-                    <span class="content-message-chat">{{ item.message.content|linebreaksbr }}</span>
-                </li><br>
-            {% endfor %}
-            </ul>
-
-
-    </div>
-
-    <div class="chat-container-submit">
-        <!-- Formulário para enviar uma nova mensagem -->
-        <form method="POST" action="">
-            {% csrf_token %}
-            <textarea class="textarea-chat" id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
-            <button class="menu-button" id="button-chat-submit" type="submit">Enviar</button>
-        </form>
-    </div>
-
     
 
 
@@ -65,8 +68,8 @@
     <div style="display:none;" id="owner-status" data-is-owner="False"></div>
     <!-- Ficha do personagem -->
         <div class="personagem-container">
-            <span id="personagem-nome" data-nome="{{ personagem.nome_personagem }}" class="nome-personagem medievalsharp-regular">{{ personagem.nome_personagem }}</span>
-            <div class="personagem-primeira-linha">
+            <span id="personagem-nome" data-nome="{{ personagem.nome_personagem }}" class="nome-personagem fredericka-the-great-regular">{{ personagem.nome_personagem }}</span>
+            <div class="personagem-primeira-linha medievalsharp-mini">
                 <button class="menu-button" onclick="abrirJanela('atributos')">ATRIBUTOS</button>
                 <button class="menu-button" onclick="abrirJanela('pericias')">PERÍCIAS</button>
                 <button class="menu-button" onclick="abrirJanela('ataque')">ATAQUE</button>
@@ -75,7 +78,7 @@
                 <button class="menu-button" onclick="abrirJanela('dados')">DADOS</button>
 
             </div>
-            <div class="personagem-display">
+            <div class="personagem-display medievalsharp-mini">
 
                 <div class="personagem-info">
                     <span>HP: {{ personagem.sub_attributes.hp }}</span>
@@ -123,38 +126,41 @@
         <div id="janela-atributos" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
             <ul>
-                <li>
-                    ST: {{ personagem.atributos.ST }}
-                    => BÔNUS:
-                    <input class="input-inc" type="number" id="bonus-ST" value="0">
-                    REDUTOR:
-                    <input class="input-inc" type="number" id="redutor-ST" value="0">
-                    <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
-                </li>
-                <li>
-                    DX: {{ personagem.atributos.DX }}
-                    => BÔNUS:
-                    <input class="input-inc" type="number" id="bonus-DX" value="0">
-                    REDUTOR:
-                    <input class="input-inc" type="number" id="redutor-DX" value="0">
-                    <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
-                </li>
-                <li>
-                    IQ: {{ personagem.atributos.IQ }}
-                    => BÔNUS:
-                    <input class="input-inc" type="number" id="bonus-IQ" value="0">
-                    REDUTOR:
-                    <input class="input-inc" type="number" id="redutor-IQ" value="0">
-                    <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
-                </li>
-                <li>
-                    HT: {{ personagem.atributos.HT }}
-                    => BÔNUS:
-                    <input class="input-inc" type="number" id="bonus-HT" value="0">
-                    REDUTOR:
-                    <input class="input-inc" type="number" id="redutor-HT" value="0">
-                    <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
-                </li>
+                <div class="ficha-parte-box">
+                    <h3 class="titulo-ficha-gm fredericka-the-great-regular">ATRIBUTOS</h3>
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">ST: {{ personagem.atributos.ST }}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-ST" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-ST" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.ST }}, 'ST')">Rolar</button><br><br>
+                    </li>
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">DX: {{ personagem.atributos.DX }}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-DX" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-DX" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.DX }}, 'DX')">Rolar</button><br><br>
+                    </li>
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">IQ: {{ personagem.atributos.IQ }}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-IQ" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-IQ" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
+                    </li>
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">HT: {{ personagem.atributos.HT }}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-HT" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-HT" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
+                    </li>
+                </div>
             </ul>
         </div>
 
@@ -165,17 +171,19 @@
         <div id="janela-pericias" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
             <ul>
+                <div class="ficha-parte-box">
+                    <h3 class="titulo-ficha-gm fredericka-the-great-regular">PERÍCIAS</h3>
                 {% for skill in personagem.skills %}
-                <li>
-                    <strong>Nome:</strong> {{ skill.nome }}
-                    <strong>NH:</strong> {{ skill.nh }}<br><br>
-                    => BÔNUS:
-                    <input class="input-inc" type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
-                    REDUTOR:
-                    <input class="input-inc" type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
-                    <button class="menu-button" onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
-                </li>
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">{{ skill.nome }} - NH {{ skill.nh }}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-{{ skill.nome|slugify }}" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-{{ skill.nome|slugify }}" value="0">
+                        <button class="menu-button" onclick="rollAttribute({{ skill.nh }}, '{{ skill.nome|slugify }}')">Rolar</button><br><br>
+                    </li>
                 {% endfor %}
+                </div>
             </ul>
         </div>
 
@@ -184,41 +192,48 @@
         <!--Ataques-->
         <div id="janela-ataque" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <ul>
-                <h2>Melee</h2>
-                {% for attack in personagem.maneuvers_melee %}
-                <strong>Nome:</strong> {{ attack.nome }}
-                <strong>NH:</strong> {{ attack.nh }}
-                <strong>Dano:</strong> {{ attack.damage }}<br>
-                <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">MELEE</h3>
+            {% for attack in personagem.maneuvers_melee %}
+                <div class="ficha-parte-box-ataque">
+                    <span class="medievalsharp-large">{{ attack.nome }}</span><br>
+                    <span class="medievalsharp-regular">NH: {{ attack.nh }} <br>DANO: {{ attack.damage }}</span><br>
+                    <span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ attack.detalhes }}</span><br><br>
 
 
-                => BÔNUS:
-                <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
-                REDUTOR:
-                <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-                <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
+                    
+                    &nbsp;&nbsp;BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                    &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                    <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0"><br>
+                    <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
+
+                </div>
+            {% endfor %}
+            </div>
+
+            <br><br><br><br>
 
 
-                {% endfor %}
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">RANGED</h3>    
+            {% for attack in personagem.maneuvers_ranged %}
+                <div class="ficha-parte-box-ataque-ranged">
+                    <span class="medievalsharp-large">{{ attack.nome }}</span><br>
+                    <span class="medievalsharp-regular">NH: {{ attack.nh }} <br>DANO: {{ attack.damage }}</span><br>
+                    <span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ attack.detalhes }}</span><br><br>
 
 
-                <br><br><br><br>
-                <h2>Ranged</h2>
-                {% for attack in personagem.maneuvers_ranged %}
-                <strong>Nome:</strong> {{ attack.nome }}
-                <strong>NH:</strong> {{ attack.nh }}
-                <strong>Dano:</strong> {{ attack.damage }}<br>
-                <strong>Detalhes:</strong> {{ attack.detalhes }}<br><br>
+                    
+                    &nbsp;&nbsp;BÔNUS:
+                    <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
+                    &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                    <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0"><br>
+                    <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
 
-                => BÔNUS:
-                <input class="input-inc" type="number" id="bonus-{{ attack.nome|slugify }}" value="0">
-                REDUTOR:
-                <input class="input-inc" type="number" id="redutor-{{ attack.nome|slugify }}" value="0">
-                <button class="menu-button" onclick="rollAttack({{ attack.nh }}, '{{ attack.nome|slugify }}','{{attack.damage}}')">Rolar</button><br><br>
-
-                {%endfor%}
-            </ul>
+                </div>
+            {%endfor%}
+            </div>
         </div>
 
 
@@ -226,78 +241,91 @@
         <!--Defesas-->
         <div id="janela-defesa" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <ul>
-                {% for defense in personagem.maneuvers_defense %}
-                <strong>Nome:</strong> {{ defense.nome }}
-                <strong>NH:</strong> {{ defense.nh }}<br>
-                <strong>Detalhes:</strong> {{ defense.detalhes }}<br><br>
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">DEFESA</h3>
+            {% for defense in personagem.maneuvers_defense %}
+                <div class="ficha-parte-box-defesa">
+                    <span class="medievalsharp-large">{{ defense.nome }}</span><br>
+                    <span class="medievalsharp-regular">NH: {{ defense.nh }}</span><br>
+                    <span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ defense.detalhes }}</span><br><br>
 
 
-                => BÔNUS:
-                <input class="input-inc"  type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
-                REDUTOR:
+                &nbsp;&nbsp;BÔNUS:
+                <input class="input-inc" type="number" id="bonus-{{ defense.nome|slugify }}" value="0">
+                &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
                 <input class="input-inc" type="number" id="redutor-{{ defense.nome|slugify }}" value="0">
                 <button class="menu-button" onclick="rollAttribute({{ defense.nh }}, '{{ defense.nome|slugify }}')">Rolar</button><br><br>
 
 
-
-                {% endfor %}
-            </ul>
+                </div>
+            {% endfor %}
+            </div>
         </div>
 
         <!--equipamento-->
         <div id="janela-equipamento" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <ul>
-
-
-
-
-                <h2>Melee</h2>
-                {% for equip in personagem.equipment_melee %}
-                <strong>Nome:</strong> {{ equip.nome }}
-                <strong>DMG:</strong> {{ equip.damage }}
-                <strong>Reach:</strong> {{ equip.reach }}
-                <strong>Parry:</strong> {{ equip.parry }}
-                <strong>Cost: $</strong> {{ equip.cost }}
-                <strong>Detalhes:</strong> {{ equip.detalhes }}
-                <strong>Weight:</strong> {{ equip.weight }}
-                <strong>Detalhes:</strong> {{ equip.details }}<br><br>
-                {% endfor %}
-
-
-
-
-
-
-                <h2>Ranged</h2>
-                {% for equip in personagem.equipment_ranged %}
-                <strong>Nome:</strong> {{ equip.nome }}
-                <strong>DMG:</strong> {{ equip.damage }}
-                <strong>ACC:</strong> {{ equip.acc }}
-                <strong>Range:</strong> {{ equip.range }}
-                <strong>Weight:</strong> {{ equip.weight }}
-                <strong>ROF:</strong> {{ equip.rof }}
-                <strong>Shots:</strong> {{ equip.shots }}
-                <strong>Bulk:</strong> {{ equip.bulk }}
-                <strong>RCL:</strong> {{ equip.rcl }}
-                <strong>Cost: $</strong> {{ equip.cost }}
-                <strong>Detalhes:</strong> {{ equip.details }}<br><br>
-                {% endfor %}
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">MELEE</h3>
+            {% for equip in personagem.equipment_melee %}
+                <div class="ficha-parte-box-ataque">
+                    <span class="medievalsharp-large">{{ equip.nome }}</span><br>
+                    <span class="medievalsharp-regular">
+                        DMG: {{ equip.damage }}<br>
+                        Reach: {{ equip.reach }}<br>
+                        Parry: {{ equip.parry }}<br>
+                        Cost: ${{ equip.cost }}<br>
+                        Weight:{{ equip.weight }}<br>
+                    </span><br>
+                    <span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ equip.details }}</span><br><br>                
+                </div>
+            {% endfor %}
+            </div>
 
 
 
 
 
-                <h2>Armor</h2>
-                {% for equip in personagem.equipment_armor %}
-                <strong>Nome:</strong> {{ equip.nome }}
-                <strong>Location:</strong> {{ equip.location }}
-                <strong>DR:</strong> {{ equip.rd }}
-                <strong>Weight:</strong> {{ equip.weight }}
-                <strong>Cost: $</strong> {{ equip.cost }}<br><br>
-                {% endfor %}
-            </ul>
+
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">RANGED</h3>
+            {% for equip in personagem.equipment_ranged %}
+                <div class="ficha-parte-box-ataque-ranged">
+                    <span class="medievalsharp-large">Nome:</strong> {{ equip.nome }}</span><br>
+                    <span class="medievalsharp-regular">
+                        DMG: {{ equip.damage }}<br>
+                        ACC: {{ equip.acc }}<br>
+                        Range: {{ equip.range }}<br>
+                        Weight: {{ equip.weight }}<br>
+                        ROF: {{ equip.rof }}<br>
+                        Shots: {{ equip.shots }}<br>
+                        Bulk: {{ equip.bulk }}<br>
+                        RCL: {{ equip.rcl }}<br>
+                        Cost: ${{ equip.cost }}<br>
+                    </span><br>
+                    <span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ equip.details }}</span><br><br>                
+                </div>
+            {% endfor %}
+            </div>
+
+
+
+
+
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">ARMOR</h3>
+            {% for equip in personagem.equipment_armor %}
+                <div class="ficha-parte-box-defesa">
+                    <span class="medievalsharp-large">Nome:</strong> {{ equip.nome }}</span><br>
+                    <span class="medievalsharp-regular">
+                        DR: {{ equip.dr }}<br>
+                        Location: {{ equip.location }}<br>
+                        Cost: ${{ equip.cost }}<br>
+                        Weight: {{ equip.weight }}<br>
+                    </span><br><br>
+                </div>
+            {% endfor %}
+            </div>
 
 
 
@@ -307,16 +335,17 @@
 
 
         <!-- dados -->
-        <div id="janela-dados" class="janela">
+        <div id="janela-dados" style="width:200px;" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
             <div class="ficha-parte-box medievalsharp-mini">
-                <strong>Roll:</strong><br>
+                <span style="margin-bottom:1rem;" class="medievalsharp-large">Roll:</span><br>
                 => QUANTIDADE:
-                <input class="input-inc" type="number" id="quantidade-d6-id" value="3">
+                <input style="margin-bottom:1rem;" class="input-inc" type="number" id="quantidade-d6-id" value="3">
                 =>INCREMENTO:
-                <input class="input-inc" type="number" id="incremento_d6_id" value="0">
+                <input style="margin-bottom:1rem;" class="input-inc" type="number" id="incremento_d6_id" value="0">
                 <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
             </div>
+        </div>
     {% else %}
         <!-- Ficha dos personagens do GM -->
         <div style="display:none;" id="owner-status" data-is-owner="True"></div>
@@ -347,14 +376,14 @@
         
 
         <!-- dados -->
-        <div id="janela-dados" class="janela">
+        <div id="janela-dados" style="width:200px;" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
             <div class="ficha-parte-box medievalsharp-mini">
-                <strong>Roll:</strong><br>
-                => QUANTIDADE:
-                <input class="input-inc" type="number" id="quantidade-d6-id" value="3">
+                <span style="margin-bottom:1rem;" class="medievalsharp-large">Roll:</span><br>
+                =>QUANTIDADE:
+                <input style="margin-bottom:1rem;" class="input-inc" type="number" id="quantidade-d6-id" value="3">
                 =>INCREMENTO:
-                <input class="input-inc" type="number" id="incremento_d6_id" value="0">
+                <input style="margin-bottom:1rem;" class="input-inc" type="number" id="incremento_d6_id" value="0">
                 <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
             </div>
         </div>
