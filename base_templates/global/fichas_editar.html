@@ -361,7 +361,7 @@
                     </div>
                     <div class="form-field-mod mod-container">
                         <label style="margin-right: 0.5rem;">Mod:</label>
-                        <textarea name="mod[]" class="medievalsharp-mini" maxlength="200"
+                        <textarea name="mod[]" class="medievalsharp-mini" maxlength="1000"
                             style="width: 43.5%; resize: vertical; height: 3rem; border-radius: 0.2rem; margin-bottom: 2rem;">{{personagem_vantagem.modificadores|join:", "|default:""}}</textarea>
                     </div>
                     {% endfor %}
@@ -482,7 +482,7 @@
                             name="equipamentos_melee_cost[]" value="{{personagem_equip_melee.cost}}" />
                         <input class="campo-curto-equip medievalsharp-mini" id="weight_melee" maxlength="12" type="text"
                             name="equipamentos_melee_weight[]" value="{{personagem_equip_melee.weight}}" />
-                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="200" id="details_melee"
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="1000" id="details_melee"
                             name="equipamentos_melee_details[]" placeholder="Details"
                             rows="2">{{personagem_equip_melee.details}}</textarea>
 
@@ -548,7 +548,7 @@
                         <input class="campo-curto-equip medievalsharp-mini" maxlength="12" type="text" id="cost_ranged"
                             name="equipamentos_ranged_cost[]" placeholder="Cost"
                             value="{{personagem_equip_ranged.cost}}" />
-                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="200" id="details_range"
+                        <textarea class="campo-curto-equip medievalsharp-mini" maxlength="1000" id="details_range"
                             name="equipamentos_ranged_details[]" placeholder="Details"
                             rows="2">{{personagem_equip_ranged.details}}</textarea>
                     </div>
@@ -650,7 +650,7 @@
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                                         name="detalhes_manobra_melee[]"
-                                        maxlength="200">{{personagem_manobra_ataque.detalhes}}</textarea>
+                                        maxlength="1000">{{personagem_manobra_ataque.detalhes}}</textarea>
 
                                     <div class="posicao-botao-remover">
                                         <span id="botao3" class="botao-remover "></span>
@@ -704,7 +704,7 @@
                                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                                         name="detalhes_manobra_Ranged[]"
-                                        maxlength="200">{{personagem_manobra_ranged.detalhes}}</textarea>
+                                        maxlength="1000">{{personagem_manobra_ranged.detalhes}}</textarea>
                                     <div class="posicao-botao-remover">
                                         <span id="botao5" class="botao-remover "></span>
                                     </div>
@@ -768,7 +768,7 @@
                                         <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                                             placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
                                             name="detalhes_manobra_defesa[]"
-                                            maxlength="200">{{personagem_manobra_defesa.detalhes}}</textarea>
+                                            maxlength="1000">{{personagem_manobra_defesa.detalhes}}</textarea>
 
                                         <div class="posicao-botao-remover">
                                             <span id="botao7" class="botao-remover "></span>

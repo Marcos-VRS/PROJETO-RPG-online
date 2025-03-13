@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <label for="manobra_Ranged_detalhe_id" class="label-nome-detalhes medievalsharp-mini">Detalhes:</label>
                     <textarea class="campo-curto-detalhes-manobra medievalsharp-mini"
                         placeholder="Detalhes como tipo de dano, alcance, modificadores, e características do ataque"
-                        name="detalhes_manobra_Ranged[]" maxlength="200"></textarea>
+                        name="detalhes_manobra_Ranged[]" maxlength="1000"></textarea>
                     <div class="posicao-botao-remover">
                         <span class="botao-remover"></span>
                     </div>

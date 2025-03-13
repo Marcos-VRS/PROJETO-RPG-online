@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 textareaMod.style.borderRadius = "0.2rem";
                 textareaMod.style.marginBottom = "2rem";
                 textareaMod.className = "medievalsharp-mini";
-                textareaMod.maxLength = 200;
+                textareaMod.maxLength = 1000;
 
                 // Adiciona o label e o textarea na nova linha
                 modLinha.appendChild(labelMod);
