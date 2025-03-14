@@ -72,6 +72,7 @@ def lista_campanhas(request):
 def save_character_sheet(request):
     username = request.user.username
     print("\n ENTROU NO SAVE_CHARACTER_SHEET")
+
     if request.method == "POST":
         form = CharacterSheetForm(
             request.POST, request.FILES
@@ -92,7 +93,6 @@ def save_character_sheet(request):
             else:
                 messages.error(request, "Campanha não encontrada.")
 
-            # Resposta de sucesso
             return JsonResponse(
                 {
                     "success": True,
@@ -102,15 +102,15 @@ def save_character_sheet(request):
                 status=200,
             )
         else:
-            # Resposta de erro com detalhes
-            print(f"\nAqui está o erro\n ")
-            return JsonResponse(
+            # Renderiza a tela de erro com as mensagens de erro
+            print("\nAqui está o erro\n")
+            return render(
+                request,
+                "global/tela_erro.html",
                 {
-                    "success": False,
-                    "message": "Erro ao salvar a ficha.",
+                    "message": "Erro ao salvar a ficha. Retorne a página anterior através do seu navegador e corrija os erros.",
                     "errors": form.errors,
                 },
-                status=400,
             )
     else:
         # Renderiza o formulário para criar/editar uma ficha
@@ -167,14 +167,14 @@ def save_edit_character_sheet(request):
                 status=200,
             )
         else:
-            print(f"\nAqui está o erro\n ")
-            return JsonResponse(
+            print("\nAqui está o erro\n")
+            return render(
+                request,
+                "global/tela_erro.html",
                 {
-                    "success": False,
                     "message": "Erro ao salvar a ficha.",
                     "errors": form.errors,
                 },
-                status=400,
             )
     else:
         form = CharacterSheetForm()

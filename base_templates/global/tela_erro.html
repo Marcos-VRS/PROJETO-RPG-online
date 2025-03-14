@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/tela_erro.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Tela de ERRO</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Erro</h1>
+    <ul class="ul-lista">
+        {% for field, error_list in errors.items %}
+        
+        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular"><p>{{ message }}</p><br><strong>Local do erro: {{ field }}:</strong> {{error_list}}</li>
+        {% endfor %}
+    </ul>
+
+</body>
+
+</html>
