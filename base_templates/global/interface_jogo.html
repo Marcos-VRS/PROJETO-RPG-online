@@ -56,7 +56,7 @@
             <!-- Formulário para enviar uma nova mensagem -->
             <form method="POST" action="">
                 {% csrf_token %}
-                <textarea class="textarea-chat" id="messageInput" name="content" placeholder="Digite sua mensagem"></textarea>
+                <textarea class="textarea-chat" id="messageInput" maxlength="256" name="content" placeholder="Digite sua mensagem"></textarea>
                 <button class="menu-button" id="button-chat-submit" type="submit">Enviar</button>
             </form>
         </div>

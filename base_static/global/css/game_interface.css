@@ -100,6 +100,14 @@ a {
 
 }
 
+.message-box {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
 .chat-container {
     display: flex;
     position: fixed;
@@ -112,6 +120,8 @@ a {
     background-color: var(--faded-black-color);
     /* Fundo branco semi-transparente */
     overflow-y: auto;
+    overflow-x: hidden;
+
     /* Permite rolagem vertical */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
@@ -127,25 +137,22 @@ a {
 
 
 .chat-container-submit {
-    display: flex;
+    display: block;
+    /* Mantém o layout em bloco */
     position: fixed;
     top: 88%;
     right: 0;
     width: 17%;
-    height: 10%;
+    height: 12%;
+    /* Aumenta a altura da div */
     background-color: var(--faded-black-color);
-    /* Fundo branco semi-transparente */
     overflow-y: auto;
-    /* Permite rolagem vertical */
     z-index: 1000;
-    align-items: center;
-    /* Adiciona uma sombra para destaque */
     border: black solid 1px;
     padding: 0.5rem;
     border-radius: 0 0 0 0.5rem;
-
-
 }
+
 
 .nome-personagem {
     display: flex;
@@ -377,16 +384,25 @@ a {
 
 
 
+
+.content-message-chat {
+    max-width: 100%;
+    /* Garante que não force barra de rolagem */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
 .message-single-box {
     display: flex;
     flex-direction: column;
     padding: 0.1rem;
-
-    justify-content: center;
-    width: 95%;
+    width: 90%;
     border: black solid 1px;
-}
 
+
+
+}
 
 .bg-green {
     background-color: green;
@@ -420,8 +436,8 @@ a {
 
 .textarea-chat {
     display: flex;
-    width: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
     white-space: pre-line;
     /* Garante que \n seja tratado corretamente */
 

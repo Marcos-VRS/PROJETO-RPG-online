@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
 
         console.log(formattedMessage);
-        messages.innerHTML += `<li class="message-single-box medievalsharp-mini ${bgColorClass}">
-        <strong class="username-chat">${data.username}:</strong> ${formattedMessage}
+        messages.innerHTML += `<li class="message-single-box  medievalsharp-mini ${bgColorClass}">
+        <strong class="username-chat">${data.username}:</strong> <span class="content-message-chat">${formattedMessage}</span>
         </li><br>`;
 
         // Rolar para o final sempre que uma nova mensagem chegar
