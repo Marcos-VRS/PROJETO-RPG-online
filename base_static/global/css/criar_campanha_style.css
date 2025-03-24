@@ -28,6 +28,8 @@ body {
     background-repeat: no-repeat;
     background-attachment: fixed;
     padding: 20px;
+    color: var(--white-gray-color);
+
 }
 
 .titulo {

@@ -14,6 +14,9 @@ def game_interface(request, campanha_id, slot):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
+    assets = CampanhaAssets.objects.filter(campanha=campanha).order_by("-slot")
+
+    print(f"\n Aqui estão os assets {assets} \n")
 
     def definir_cor(message_content):
         msg_lower = message_content.lower().strip()
@@ -42,6 +45,10 @@ def game_interface(request, campanha_id, slot):
         info_campanha__player_name=request.user.username,
     ).order_by("-id")
 
+    personagens_journal = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=campanha.nome
+    ).order_by("-id")
+
     context = {
         "personagem": personagem,
         "personagens_gm": personagens_gm,
@@ -49,6 +56,8 @@ def game_interface(request, campanha_id, slot):
         "pagina_inicial": pagina_inicial,
         "messages": messages_with_colors,  # Enviamos as mensagens com cor ao template
         "username": username,
+        "assets": assets,
+        "personagens_journal": personagens_journal,
     }
     return render(request, "global/interface_jogo.html", context)
 

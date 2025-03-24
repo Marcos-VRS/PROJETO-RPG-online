@@ -26,8 +26,12 @@
 
                 {% if username == campanha.dono.username %}
                     <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
+                    <button class="menu-button-options" onclick="abrirJanela('journal-gm')">JOURNAL</button>
+
                 {% else %}
                     <a class="menu-button-options" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
+                    <button class="menu-button-options" onclick="abrirJanela('journal-player')">JOURNAL</button>
+
                 {% endif %} 
                 
 
@@ -346,6 +350,48 @@
                 <button class="menu-button" id="botao-rolar-d6">Rolar</button><br><br>
             </div>
         </div>
+
+
+        <!--Journal Player-->
+        <div id="janela-journal-player" class="janela">
+            
+            <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
+            <input class="input-pesquisa-asset medievalsharp-mini" type="text" id="search-journal" onkeyup="filtrarJournal()" placeholder="Pesquisar no Journal"><br>
+            
+            
+            {% for psjournal in personagens_journal %}
+                <div class="ficha-parte-box-journal medievalsharp-mini">
+                    <div class="medievalsharp-large asset-line">{{ psjournal.nome_personagem }}</div><br>
+                    <div class="medievalsharp-mini asset-line">{{ psjournal.background }}</div><br>
+                    {% if psjournal.photo %}
+                        <img src="{{ psjournal.photo.url }}" alt="Miniatura de {{ psjournal.nome_personagem }}" class="miniatura-imagem"><br><br>
+                    {% else %}
+                        <p>Sem imagem disponível</p>
+
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            {% for asset in assets %}
+            
+                <div class="ficha-parte-box-journal medievalsharp-mini">
+                    <div class="medievalsharp-large asset-line">{{ asset.name }}</div><br>
+                    <div class="medievalsharp-mini asset-line">{{ asset.description }}</div><br>
+                    {% if asset.image %}
+                        <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
+                    {% else %}
+                        <p>Sem imagem disponível</p>
+
+                    {% endif %}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
     {% else %}
         <!-- Ficha dos personagens do GM -->
         <div style="display:none;" id="owner-status" data-is-owner="True"></div>
@@ -388,6 +434,46 @@
             </div>
         </div>
 
+
+        <!--Journal GM-->
+        <div id="janela-journal-gm" class="janela">
+    
+            <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
+            <input class="input-pesquisa-asset medievalsharp-mini" type="text" id="search-journal" onkeyup="filtrarJournal()" placeholder="Pesquisar no Journal"><br>
+            
+            
+            {% for psjournal in personagens_journal %}
+                <div class="ficha-parte-box-journal medievalsharp-mini">
+                    <div class="medievalsharp-large asset-line">{{ psjournal.nome_personagem }}</div><br>
+                    <div class="medievalsharp-mini asset-line">{{ psjournal.background }}</div><br>
+                    {% if psjournal.photo %}
+                        <img src="{{ psjournal.photo.url }}" alt="Miniatura de {{ psjournal.nome_personagem }}" class="miniatura-imagem"><br><br>
+                    {% else %}
+                        <p>Sem imagem disponível</p>
+
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            {% for asset in assets %}
+            
+                <div class="ficha-parte-box-journal medievalsharp-mini">
+                    <div class="medievalsharp-large asset-line">{{ asset.name }}</div><br>
+                    <div class="medievalsharp-mini asset-line">{{ asset.description }}</div><br>
+                    {% if asset.image %}
+                        <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
+                    {% else %}
+                        <p>Sem imagem disponível</p>
+
+                    {% endif %}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
     {% endif %}
 
 
@@ -417,10 +503,12 @@
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_ataque.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
-    <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/assets_img.js' %}"></script>
     <script src="{% static 'global/js/game_interface/window_gm_characters.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filtro_personagens_gm.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/filter_journal.js' %}"></script>
+    <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
 </body>
 
 </html>

@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from django.utils.text import slugify
 
 
 class RegisterUser(AbstractUser):
@@ -75,7 +76,7 @@ class CampanhaAssets(models.Model):
         max_length=30,
     )
     slot = models.IntegerField(default=1)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=30)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to="campanhas_assets/", blank=True, null=True)
 

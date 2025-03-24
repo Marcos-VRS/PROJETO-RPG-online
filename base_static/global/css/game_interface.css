@@ -233,6 +233,13 @@ a {
     border-radius: 0.5rem;
 }
 
+.input-pesquisa-asset {
+    width: 76%;
+    padding: 0.5rem;
+    border: black solid 1px;
+    border-radius: 0.5rem;
+}
+
 .menu-container {
     display: flex;
     border-radius: 0.5rem;
@@ -258,7 +265,7 @@ a {
 
 .menu-button-options {
     flex: 1;
-    width: 5rem;
+    width: 3.5rem;
     padding: 5px;
     background-color: var(--primary-color);
     color: var(--white-color);
@@ -266,7 +273,7 @@ a {
     text-align: center;
     border-radius: 3px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 10px;
     gap: 0.5rem;
     margin: 0.25rem;
 
@@ -335,6 +342,7 @@ a {
     color: var(--white-color);
 }
 
+
 .janela-ficha-gm {
     display: none;
     position: fixed;
@@ -382,7 +390,25 @@ a {
     border: black solid 1px;
 }
 
+.asset-line {
+    display: block;
+    /* Importante para respeitar as quebras */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+}
 
+.miniatura-imagem {
+    max-width: 100%;
+    /* Garante que a imagem nunca ultrapasse a largura da div */
+    height: auto;
+    /* Mantém a proporção da imagem */
+    display: block;
+    /* Evita espaços extras abaixo da imagem */
+    margin-top: 0.5rem;
+    /* Dá um pequeno espaçamento entre a imagem e o texto */
+}
 
 
 .content-message-chat {
@@ -485,6 +511,25 @@ a {
     justify-content: space-between;
     background-color: var(--faded-black-color);
     color: var(--white-color)
+}
+
+.ficha-parte-box-journal {
+    list-style: none;
+    border: black solid 1px;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Corrige erro */
+    justify-content: center;
+    background-color: var(--faded-black-color);
+    color: var(--white-color);
+    max-width: 100%;
+    /* Garante que a div respeite os limites do container pai */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .ficha-parte-box-ataque {
