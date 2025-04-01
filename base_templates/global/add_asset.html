@@ -1,0 +1,33 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADD Asset</title>
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/add_asset_style.css' %}">
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Adicionar ASSET</h1>
+
+    <form method="POST" action="{% url 'gurps:add_asset_save' campanha.id %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-box medievalsharp-regular">
+            {{ form.as_p }}
+            <!-- Miniatura da imagem -->
+            <div>
+                <img class="imagem-miniatura" id="miniatura_imagem" src="#" alt="Pré-visualização da imagem">
+            </div>
+
+            <button class="menu-button" type="submit">Adicionar Asset</button>
+        </div>
+    </form>
+    <script src="{% static 'global/js/criar_campanha.js' %}"></script>
+
+</body>
+
+</html>

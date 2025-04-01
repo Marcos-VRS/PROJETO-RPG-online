@@ -25,7 +25,7 @@
             <div class="menu-container">
 
                 {% if username == campanha.dono.username %}
-                    <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">FICHAS</a>
+                    <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">GM</a>
                     <button class="menu-button-options" onclick="abrirJanela('journal-gm')">JOURNAL</button>
 
                 {% else %}

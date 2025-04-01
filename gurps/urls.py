@@ -71,6 +71,22 @@ urlpatterns = [
         views.save_edit_character_sheet,
         name="save_edit_character_sheet",
     ),
+    # Delete Character
+    path(
+        "delete-character-sheet-menu/<int:id>/",
+        views.delete_sheet_menu,
+        name="delete_sheet_menu",
+    ),
+    # New Asset
+    path("add-asset/<int:campanha_id>", views.add_asset, name="add_asset"),
+    path(
+        "add-asset/<int:campanha_id>/save", views.add_asset_save, name="add_asset_save"
+    ),
+    # Edit Asset
+    path("edit-asset/<int:id>/", views.edit_asset, name="edit_asset"),
+    # Delete Asset
+    path("delete-asset/<int:id>/", views.delete_asset, name="delete_asset"),
+    path("delete-character-sheet/<int:id>/", views.delete_sheet, name="delete_sheet"),
     # interface do jogo
     path(
         "game/<int:campanha_id>/<int:slot>/",

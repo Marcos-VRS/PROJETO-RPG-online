@@ -14,7 +14,9 @@ def game_interface(request, campanha_id, slot):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
-    assets = CampanhaAssets.objects.filter(campanha=campanha).order_by("-slot")
+    assets = CampanhaAssets.objects.filter(campanha=campanha, slot__in=[1, 2]).order_by(
+        "-id"
+    )
 
     print(f"\n Aqui estão os assets {assets} \n")
 

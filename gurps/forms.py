@@ -58,6 +58,29 @@ class CampanhaForm(forms.ModelForm):
         }
 
 
+class CampanhaAssetsForm(forms.ModelForm):
+    class Meta:
+        model = CampanhaAssets
+        fields = ["name", "description", "show", "image"]  # Corrigida a vírgula ausente
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "show": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),  # Adicionado campo 'show'
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "image": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        }
+
+    def __init__(self, *args, campanha=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if campanha:
+            self.fields["campanha"] = forms.ModelChoiceField(
+                queryset=Campanha.objects.filter(id=campanha.id),
+                initial=campanha,
+                widget=forms.HiddenInput(),  # Mantém a campanha oculta para garantir que não seja editável
+            )
+
+
 class CharacterSheetForm(forms.ModelForm):
     class Meta:
         model = CharacterSheet

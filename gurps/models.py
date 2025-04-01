@@ -53,8 +53,10 @@ class Campanha(models.Model):
     tl = models.IntegerField(default=0)
     fichas_players = models.JSONField(blank=True, null=True)
 
-    descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
-    regras = models.TextField(blank=True, null=True)
+    descricao = models.TextField(
+        max_length=500, blank=True, null=True, verbose_name="Descrição"
+    )
+    regras = models.TextField(blank=True, null=True, max_length=10000)
     imagem = models.ImageField(
         upload_to="campanhas/",
         blank=False,
@@ -76,8 +78,9 @@ class CampanhaAssets(models.Model):
         max_length=30,
     )
     slot = models.IntegerField(default=1)
+    show = models.BooleanField(default=True)
     name = models.CharField(max_length=30)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, max_length=500)
     image = models.ImageField(upload_to="campanhas_assets/", blank=True, null=True)
 
     def __str__(self):

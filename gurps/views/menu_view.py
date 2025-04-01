@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from gurps.models import CharacterSheet, Campanha, CampanhaAssets
 from django.contrib.auth.decorators import login_required
-from gurps.forms import CharacterSheetForm, CampanhaForm
+from gurps.forms import CharacterSheetForm, CampanhaForm, CampanhaAssetsForm
 from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse
@@ -282,13 +282,6 @@ def carregar_fichas(request):
 
 
 @login_required(login_url="gurps:login")
-def opcoes(request):
-    username = request.user.username
-    print(f"\n  O USUÁRIO [{username}] CLICOU EM OPÇÕES\n")
-    return render(request, "global/partials/_opcoes_index.html")
-
-
-@login_required(login_url="gurps:login")
 def editar_fichas(request, id, nome_campanha):
     username = request.user.username
     personagem = get_object_or_404(CharacterSheet, id=id)
@@ -332,3 +325,119 @@ def menu_fichas_gm(request, campanha_id):
         "global/menu_carregar_ficha_gm.html",
         {"username": username, "campanha_id": campanha_id},
     )
+
+
+@login_required(login_url="gurps:login")
+def delete_sheet_menu(request, id):
+    username = request.user.username
+    campanha = get_object_or_404(Campanha, id=id)
+    print(f"\n A campanha atual é {campanha} \n")
+    print(f"\nO usuário {username} entrou na no MENU DE REMOVER PERSONAGEM\n")
+    sheets = CharacterSheet.objects.all().filter(
+        info_campanha__nome_campanha=campanha.nome
+    )
+    return render(request, "global/remove_sheet_menu.html", {"sheets": sheets})
+
+
+@login_required(login_url="gurps:login")
+def delete_sheet(request, id):
+    username = request.user.username
+    sheet = get_object_or_404(CharacterSheet, id=id)
+    campanha = sheet.info_campanha.get("nome_campanha")
+    print(f"\n A campanha atual é {campanha} \n")
+    campanha_id = Campanha.objects.get(nome=campanha).id
+    print(f"\n A campanha id é {campanha_id} \n")
+    print(f"\nO usuário {username} deletou o personagem {sheet}\n")
+    sheet.delete()
+    return redirect(reverse("gurps:game_interface", args=[campanha_id, 1]))
+
+
+@login_required(login_url="gurps:login")
+def add_asset(request, campanha_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou no MENU DE CRIAR ASSET\n")
+
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    print(f"\nA campanha atual é {campanha} \n")
+
+    form = CampanhaAssetsForm(campanha=campanha)  # Passamos a campanha para o form
+
+    return render(
+        request, "global/add_asset.html", {"campanha": campanha, "form": form}
+    )
+
+
+@login_required(login_url="gurps:login")
+def add_asset_save(request, campanha_id):
+    username = request.user.username
+    print(f"\nO usuário {username} enviou um ASSET para salvar\n")
+
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    print(f"\nA campanha atual é {campanha} \n")
+
+    if request.method == "POST":
+        form = CampanhaAssetsForm(request.POST, request.FILES, campanha=campanha)
+        if form.is_valid():
+            asset = form.save(commit=False)
+            asset.campanha = campanha  # Garante que a campanha correta seja atribuída
+
+            # Define o slot com base no valor do show
+            asset.slot = 2 if asset.show else 3
+
+            print(f"\nO asset é {asset} \n")
+            asset.save()
+            return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+
+    else:
+        print("\nO formulário não é válido\n")
+
+    return redirect(reverse("gurps:add_asset", args=[campanha.id]))
+
+
+@login_required(login_url="gurps:login")
+def edit_asset(request, asset_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
+    asset = get_object_or_404(CampanhaAssets, id=asset_id)
+    print(f"\nA campanha atual é {asset.campanha} \n")
+
+    return render(request, "global/edit_asset.html", {"asset": asset})
+
+
+@login_required(login_url="gurps:login")
+def save_edit_asset(request, asset_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
+    asset = get_object_or_404(CampanhaAssets, id=asset_id)
+    print(f"\nA campanha atual é {asset.campanha} \n")
+
+    if request.method == "POST":
+        form = CampanhaForm(request.POST, request.FILES, instance=asset)
+        if form.is_valid():
+            form.save()
+            return redirect(
+                reverse("gurps:game_interface", args=[asset.campanha.id, 1])
+            )
+
+
+@login_required(login_url="gurps:login")
+def remove_asset_menu(request, campanha_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou na no MENU DE REMOVER ASSET\n")
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    print(f"\nA campanha atual é {campanha} \n")
+    assets = CampanhaAssets.objects.all().filter(campanha=campanha)
+    return render(request, "global/remove_asset_menu.html", {"assets": assets})
+
+
+@login_required(login_url="gurps:login")
+def delete_asset(request, asset_id):
+    username = request.user.username
+    asset = get_object_or_404(CampanhaAssets, id=asset_id)
+    campanha = asset.campanha.nome
+    print(f"\n A campanha atual é {campanha} \n")
+    campanha_id = Campanha.objects.get(nome=campanha).id
+    print(f"\n A campanha id é {campanha_id} \n")
+    print(f"\nO usuário {username} deletou o asset {asset}\n")
+    asset.delete()
+    return redirect(reverse("gurps:game_interface", args=[campanha_id, 1]))
