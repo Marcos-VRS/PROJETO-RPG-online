@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Menu de remover Asset GM</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">REMOVER Asset</h1>
+    <ul class="ul-lista">
+        {% for asset in assets %}
+        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
+            <a href="#" onclick="abrirJanela('{{ asset.id }}'); return false;">
+                <h2>NOME: {{ asset.name }}</h2>
+                <h2>CAMPANHA: {{ asset.campanha}}</h2>
+                <h2>DESCRIÇÃO: {{asset.description}}</h2>
+                {% if asset.image %}
+                <img class="imagem-miniatura" src="{{ asset.image.url }}" alt="Imagem do personagem">
+                {% else %}
+                <p>Sem imagem disponível</p>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+
+
+    <div id="janelas">
+        {% for asset in assets %}
+        <div id="janela-{{ asset.id }}" class="janela">
+            <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+            <h2 class="medievalsharp-large">Tem certeza que deseja remover?<p> {{asset.name}}</p>
+            </h2>
+            <a href="{% url 'gurps:delete_asset' asset.id %}">
+                <button class="menu-button medievalsharp-regular">Confirmar</button></a>
+        </div>
+        {% endfor %}
+
+    </div>
+
+
+
+    <script src="{% static 'global/js/menu/pop_window.js' %}"></script>
+
+</body>
+
+</html>

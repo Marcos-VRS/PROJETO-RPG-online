@@ -77,6 +77,7 @@ urlpatterns = [
         views.delete_sheet_menu,
         name="delete_sheet_menu",
     ),
+    path("delete-character-sheet/<int:id>/", views.delete_sheet, name="delete_sheet"),
     # New Asset
     path("add-asset/<int:campanha_id>", views.add_asset, name="add_asset"),
     path(
@@ -85,8 +86,12 @@ urlpatterns = [
     # Edit Asset
     path("edit-asset/<int:id>/", views.edit_asset, name="edit_asset"),
     # Delete Asset
-    path("delete-asset/<int:id>/", views.delete_asset, name="delete_asset"),
-    path("delete-character-sheet/<int:id>/", views.delete_sheet, name="delete_sheet"),
+    path(
+        "delete-asset-menu/<int:campanha_id>/",
+        views.remove_asset_menu,
+        name="remove_asset_menu",
+    ),
+    path("delete-asset/<int:asset_id>/", views.delete_asset, name="delete_asset"),
     # interface do jogo
     path(
         "game/<int:campanha_id>/<int:slot>/",
