@@ -42,6 +42,8 @@ def criar_campanha(request):
             CampanhaAssets.objects.create(
                 campanha=campanha,
                 name=campanha.nome,
+                slot=1,
+                show=True,
                 description=campanha.descricao,
                 image=campanha.imagem,
             )
