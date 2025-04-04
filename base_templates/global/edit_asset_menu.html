@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Menu de EDIT Asset GM</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">EDIT Asset</h1>
+    <ul class="ul-lista">
+        {% for asset in assets %}
+        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
+            <a href="{% url "gurps:edit_asset" asset.id %}" >
+                <h2>NOME: {{ asset.name }}</h2>
+                <h2>CAMPANHA: {{ asset.campanha}}</h2>
+                <h2>DESCRIÇÃO: {{asset.description}}</h2>
+                <h2>SHOW: {{ asset.show }}</h2>
+                {% if asset.image %}
+                <img class="imagem-miniatura" src="{{ asset.image.url }}" alt="Imagem do personagem">
+                {% else %}
+                <p>Sem imagem disponível</p>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+
+
+
+
+
+
+
+</body>
+
+</html>

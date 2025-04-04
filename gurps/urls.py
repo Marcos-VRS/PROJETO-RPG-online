@@ -84,7 +84,15 @@ urlpatterns = [
         "add-asset/<int:campanha_id>/save", views.add_asset_save, name="add_asset_save"
     ),
     # Edit Asset
-    path("edit-asset/<int:id>/", views.edit_asset, name="edit_asset"),
+    path(
+        "edit-asset_menu/<int:campanha_id>/",
+        views.edit_asset_menu,
+        name="edit_asset_menu",
+    ),
+    path("edit-asset/<int:asset_id>/", views.edit_asset, name="edit_asset"),
+    path(
+        "edit-asset/<int:asset_id>/save", views.edit_asset_save, name="edit_asset_save"
+    ),
     # Delete Asset
     path(
         "delete-asset-menu/<int:campanha_id>/",

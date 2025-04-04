@@ -6,49 +6,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADD Asset</title>
+    <title>Editar Asset</title>
     <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
     <link rel="stylesheet" href="{% static 'global/css/add_asset_style.css' %}">
 </head>
 
 <body>
-    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Adicionar ASSET</h1>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Editar ASSET</h1>
 
-    <form method="POST" action="{% url 'gurps:add_asset_save' campanha.id %}" enctype="multipart/form-data">
+    <form method="POST" action="{% url 'gurps:edit_asset_save' asset.id %}" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-box medievalsharp-regular">
+
             <!-- Nome -->
             <div class="form-line">
                 <label for="name">NOME:</label>
-                <input type="text" id="name" name="name" placeholder="Nome do asset" class="form-control" required><br>
+                <input type="text" id="name" name="name" value="{{ asset.name }}" class="form-control" required><br>
             </div>
 
             <!-- Descrição -->
             <div class="form-line">
                 <label for="description">DESCRIÇÃO:</label>
-                <textarea id="description" name="description" placeholder="Descrição do asset" class="form-control" rows="3"
-                    required></textarea><br>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                    required>{{ asset.description }}</textarea><br>
             </div>
-
+            
             <!-- Show (Checkbox) -->
             <div class="form-line">
                 <label for="show">SHOW:</label>
                 <input type="checkbox" id="show" name="show" class="form-check-input"><br>
             </div>
 
-
-
             <!-- Imagem -->
             <div class="form-line-image">
-                <input type="file" id="image" name="image" class="form-line-image"><br>
-            </div>
-            <div>
-                <img class="imagem-miniatura" id="miniatura_imagem" src="#" alt="Imagem do Asset" >
+                <input type="file" id="image" name="image" class="form-control-file"><br>
             </div>
 
-            <button class="menu-button" type="submit">Adicionar Asset</button>
+            <!-- Miniatura da imagem -->
+            {% if asset.image %}
+            <div>
+                <img class="imagem-miniatura" id="miniatura_imagem" src="{{ asset.image.url }}" alt="Imagem do Asset">
+            </div>
+            {% endif %}
+
+            <button class="menu-button" type="submit">Salvar Alterações</button>
         </div>
     </form>
+
     <script src="{% static 'global/js/criar_campanha.js' %}"></script>
 
 </body>

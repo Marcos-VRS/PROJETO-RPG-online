@@ -362,11 +362,7 @@ def add_asset(request, campanha_id):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     print(f"\nA campanha atual é {campanha} \n")
 
-    form = CampanhaAssetsForm(campanha=campanha)  # Passamos a campanha para o form
-
-    return render(
-        request, "global/add_asset.html", {"campanha": campanha, "form": form}
-    )
+    return render(request, "global/add_asset.html", {"campanha": campanha})
 
 
 @login_required(login_url="gurps:login")
@@ -375,51 +371,96 @@ def add_asset_save(request, campanha_id):
     print(f"\nO usuário {username} enviou um ASSET para salvar\n")
 
     campanha = get_object_or_404(Campanha, id=campanha_id)
-    print(f"\nA campanha atual é {campanha} \n")
 
     if request.method == "POST":
-        form = CampanhaAssetsForm(request.POST, request.FILES, campanha=campanha)
-        if form.is_valid():
-            asset = form.save(commit=False)
-            asset.campanha = campanha  # Garante que a campanha correta seja atribuída
+        # Captura os valores do formulário
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        show = request.POST.get("show", "off") == "on"  # Converte para booleano
+        if show:
+            slot = 2
+        elif not show:
+            slot = 3
+        image = request.FILES.get("image")  # Captura a imagem
 
-            # Define o slot com base no valor do show
-            asset.slot = 2 if asset.show else 3
+        print(
+            f"Dados recebidos: Name={name}, Description={description}, Show={show}, Image={image}"
+        )
 
-            print(f"\nO asset é {asset} \n")
-            asset.save()
-            return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+        # Criando o objeto no banco de dados
+        asset = CampanhaAssets(
+            name=name, description=description, show=show, campanha=campanha, slot=slot
+        )
 
-    else:
-        print("\nO formulário não é válido\n")
+        # Se houver imagem, adiciona ao objeto antes de salvar
+        if image:
+            asset.image = image
 
+        asset.save()  # Salva no banco de dados
+        print(f"Asset salvo: {asset}")
+
+        return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+
+    print("\nO formulário não foi enviado corretamente (não é POST)\n")
     return redirect(reverse("gurps:add_asset", args=[campanha.id]))
+
+
+@login_required(login_url="gurps:login")
+def edit_asset_menu(request, campanha_id):
+    username = request.user.username
+    print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
+    campanha = Campanha.objects.get(id=campanha_id)
+    assets = CampanhaAssets.objects.filter(campanha=campanha)
+    return render(request, "global/edit_asset_menu.html", {"assets": assets})
 
 
 @login_required(login_url="gurps:login")
 def edit_asset(request, asset_id):
     username = request.user.username
-    print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
+    print(f"\nO usuário {username} entrou no MENU DE EDITAR ASSET\n")
+
     asset = get_object_or_404(CampanhaAssets, id=asset_id)
     print(f"\nA campanha atual é {asset.campanha} \n")
 
-    return render(request, "global/edit_asset.html", {"asset": asset})
+    return render(
+        request,
+        "global/edit_asset.html",
+        {"asset": asset, "username": username},
+    )
 
 
 @login_required(login_url="gurps:login")
-def save_edit_asset(request, asset_id):
+def edit_asset_save(request, asset_id):
     username = request.user.username
     print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
+
     asset = get_object_or_404(CampanhaAssets, id=asset_id)
     print(f"\nA campanha atual é {asset.campanha} \n")
 
     if request.method == "POST":
-        form = CampanhaForm(request.POST, request.FILES, instance=asset)
-        if form.is_valid():
-            form.save()
-            return redirect(
-                reverse("gurps:game_interface", args=[asset.campanha.id, 1])
-            )
+        # Atualizar os campos do asset
+        asset.name = request.POST.get("name")
+        asset.show = (
+            request.POST.get("show") == "on"
+        )  # Checkbox retorna "on" se marcado
+        if asset.show:
+            asset.slot = 2
+        elif not asset.show:
+            asset.slot = 3
+        asset.description = request.POST.get("description")
+
+        # Se uma nova imagem foi enviada, atualiza
+        if "image" in request.FILES:
+            asset.image = request.FILES["image"]
+
+        # Salvar as alterações no banco
+        asset.save()
+
+        print(f"\nAsset {asset.name} atualizado com sucesso!\n")
+
+        return redirect(reverse("gurps:game_interface", args=[asset.campanha.id, 1]))
+
+    return render(request, "editar_asset.html", {"asset": asset})
 
 
 @login_required(login_url="gurps:login")
