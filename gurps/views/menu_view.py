@@ -469,7 +469,7 @@ def remove_asset_menu(request, campanha_id):
     print(f"\nO usuário {username} entrou na no MENU DE REMOVER ASSET\n")
     campanha = get_object_or_404(Campanha, id=campanha_id)
     print(f"\nA campanha atual é {campanha} \n")
-    assets = CampanhaAssets.objects.all().filter(campanha=campanha)
+    assets = CampanhaAssets.objects.all().filter(campanha=campanha, slot__in=[2, 3])
     return render(request, "global/remove_asset_menu.html", {"assets": assets})
 
 
