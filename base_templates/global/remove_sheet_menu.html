@@ -12,11 +12,18 @@
 
 <body>
     <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">REMOVER personagem</h1>
+
+    <!-- Campo de busca -->
+    <label for="search-campanha" class="pesquisa-label medievalsharp-regular">Buscar Campanha:</label>
+    <input type="text" id="search-campanha" placeholder="Buscar campanha..." class="campo-busca medievalsharp-regular">
+
+
+
     <ul class="ul-lista">
         {% for sheet in sheets %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
             <a href="#" onclick="abrirJanela('{{ sheet.id }}'); return false;">
-                <h2>PERSONAGEM: {{ sheet.nome_personagem }}</h2>
+                <h2 class="nome-personagem">PERSONAGEM: {{ sheet.nome_personagem }}</h2>
                 <h2>CAMPANHA: {{ sheet.info_campanha.nome_campanha }}</h2>
                 <h2>PLAYER: {{sheet.info_campanha.player_name}}</h2>
                 {% if sheet.photo %}
@@ -34,7 +41,8 @@
         {% for sheet in sheets %}
         <div id="janela-{{ sheet.id }}" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-            <h2 class="medievalsharp-large">Tem certeza que deseja remover?<p> {{sheet.nome_personagem}}</p></h2>
+            <h2 class="medievalsharp-large">Tem certeza que deseja remover?<p> {{sheet.nome_personagem}}</p>
+            </h2>
             <a href="{% url 'gurps:delete_sheet' sheet.id %}">
                 <button class="menu-button medievalsharp-regular">Confirmar</button></a>
         </div>
@@ -45,6 +53,8 @@
 
 
     <script src="{% static 'global/js/menu/pop_window.js' %}"></script>
+    <script src="{% static 'global/js/menu/filter_remove_sheet.js' %}"></script>
+
 
 </body>
 

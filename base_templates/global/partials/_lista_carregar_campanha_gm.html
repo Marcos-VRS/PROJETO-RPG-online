@@ -11,18 +11,24 @@
 </head>
 
 <body>
-    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Lista de Campanhas Como GM</h1>
-    <ul class="ul-lista">
+    <h1 class="titulo-pagina medievalsharp-large">Lista de Campanhas Como GM</h1>
+
+    <!-- Campo de busca -->
+    <label for="search-campanha" class="pesquisa-label medievalsharp-regular">Buscar Campanha:</label>
+    <input type="text" id="search-campanha" placeholder="Buscar campanha..." class="campo-busca medievalsharp-regular">
+
+    <ul class="ul-lista" id="lista-campanhas">
         {% for campanha in campanhas %}
-        <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
+        <li class="item-lista medievalsharp-regular">
             <a href="{% url 'gurps:game_interface' campanha.id asset_id %}">
-                <h2>{{ campanha.nome }}</h2>
-                <h2>GM: {{ campanha.dono }}</h2>
+                <h2 class="titulo-campanha">{{ campanha.nome }}</h2>
                 <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />
             </a>
         </li>
         {% endfor %}
     </ul>
+
+    <script src="{% static 'global/js/menu/filter_campaign_list_gm.js' %}"></script>
 </body>
 
 </html>

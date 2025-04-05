@@ -12,11 +12,20 @@
 
 <body>
     <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">EDIT Asset</h1>
+
+
+
+    <!-- Campo de busca -->
+    <label for="search-campanha" class="pesquisa-label medievalsharp-regular">Buscar Campanha:</label>
+    <input type="text" id="search-campanha" placeholder="Buscar campanha..." class="campo-busca medievalsharp-regular">
+
+
+
     <ul class="ul-lista">
         {% for asset in assets %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <a href="{% url "gurps:edit_asset" asset.id %}" >
-                <h2>NOME: {{ asset.name }}</h2>
+            <a href="{% url "gurps:edit_asset" asset.id %}">
+                <h2 class="nome-asset">NOME: {{ asset.name }}</h2>
                 <h2>CAMPANHA: {{ asset.campanha}}</h2>
                 <h2>DESCRIÇÃO: {{asset.description}}</h2>
                 <h2>SHOW: {{ asset.show }}</h2>
@@ -35,6 +44,7 @@
 
 
 
+    <script src="{% static 'global/js/menu/filter_edit_asset.js' %}"></script>
 
 </body>
 

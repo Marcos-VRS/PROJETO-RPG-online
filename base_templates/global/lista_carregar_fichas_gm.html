@@ -12,11 +12,17 @@
 
 <body>
     <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Lista de FICHAS GM - {{campanha.nome}}</h1>
+
+    <!-- Campo de busca -->
+    <label for="search-campanha" class="pesquisa-label medievalsharp-regular">Buscar Campanha:</label>
+    <input type="text" id="search-campanha" placeholder="Buscar campanha..." class="campo-busca medievalsharp-regular">
+
+
     <ul class="ul-lista">
         {% for personagem in personagens %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
             <a href="{% url "gurps:editar_fichas" personagem.id personagem.info_campanha.nome_campanha%}">
-                <h2>PERSONAGEM: {{ personagem.nome_personagem }}</h2>
+                <h2 class="nome-personagem">PERSONAGEM: {{ personagem.nome_personagem }}</h2>
                 <h2>CAMPANHA: {{ personagem.info_campanha.nome_campanha }}</h2>
                 {% if personagem.photo %}
                 <img class="imagem-miniatura" src="{{ personagem.photo.url }}" alt="Imagem do personagem">
@@ -27,6 +33,8 @@
         </li>
         {% endfor %}
     </ul>
+    <script src="{% static 'global/js/menu/filter_edit_sheet.js' %}"></script>
+
 </body>
 
 </html>
