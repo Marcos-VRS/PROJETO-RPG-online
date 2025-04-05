@@ -410,7 +410,7 @@ def edit_asset_menu(request, campanha_id):
     username = request.user.username
     print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
     campanha = Campanha.objects.get(id=campanha_id)
-    assets = CampanhaAssets.objects.filter(campanha=campanha)
+    assets = CampanhaAssets.objects.filter(campanha=campanha, slot__in=[2, 3])
     return render(request, "global/edit_asset_menu.html", {"assets": assets})
 
 
