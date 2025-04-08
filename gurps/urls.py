@@ -37,6 +37,11 @@ urlpatterns = [
     ),
     # Editar fichas
     path(
+        "Fichas/Editar/<int:campanha_id>/",
+        views.editar_fichas_menu,
+        name="editar_fichas_menu",
+    ),
+    path(
         "Fichas/Editar/<int:id>/<str:nome_campanha>/",
         views.editar_fichas,
         name="editar_fichas",
@@ -76,6 +81,11 @@ urlpatterns = [
         "delete-character-sheet-menu/<int:id>/",
         views.delete_sheet_menu,
         name="delete_sheet_menu",
+    ),
+    path(
+        "delete-character-sheet-menu/Player/<int:id>/",
+        views.delete_sheet_menu_player,
+        name="delete_sheet_menu_player",
     ),
     path("delete-character-sheet/<int:id>/", views.delete_sheet, name="delete_sheet"),
     # New Asset

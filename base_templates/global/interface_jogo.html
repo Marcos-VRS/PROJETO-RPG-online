@@ -29,7 +29,7 @@
                     <button class="menu-button-options" onclick="abrirJanela('journal-gm')">JOURNAL</button>
 
                 {% else %}
-                    <a class="menu-button-options" href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">FICHA</a>
+                    <a class="menu-button-options" href="{% url 'gurps:editar_fichas_menu' campanha.id %}">FICHA</a>
                     <button class="menu-button-options" onclick="abrirJanela('journal-player')">JOURNAL</button>
 
                 {% endif %} 

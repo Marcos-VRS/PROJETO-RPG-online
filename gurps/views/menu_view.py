@@ -64,7 +64,11 @@ def criar_campanha(request):
 
 @login_required(login_url="gurps:login")
 def lista_campanhas(request):
-    campanhas = Campanha.objects.all().order_by("-id")  # Recupera todas as campanhas
+    username = request.user
+
+    campanhas = Campanha.objects.exclude(dono=username).order_by(
+        "-id"
+    )  # Recupera todas as campanhas
     return render(
         request, "global/lista_campanhas_nova_campanha.html", {"campanhas": campanhas}
     )
@@ -284,6 +288,24 @@ def carregar_fichas(request):
 
 
 @login_required(login_url="gurps:login")
+def editar_fichas_menu(request, campanha_id):
+    username = request.user.username
+    print(f"\n  O USUÁRIO [{username}] CLICOU NO MENU EDITAR FICHAS\n")
+
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    personagens = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=campanha.nome,
+        info_campanha__player_name=username,
+    ).order_by("-id")
+    print(f"\nAqui estão os personagens{personagens}\n")
+    return render(
+        request,
+        "global/editar_fichas_menu.html",
+        {"personagens": personagens, "campanha": campanha, "campanha_id": campanha_id},
+    )
+
+
+@login_required(login_url="gurps:login")
 def editar_fichas(request, id, nome_campanha):
     username = request.user.username
     personagem = get_object_or_404(CharacterSheet, id=id)
@@ -339,6 +361,25 @@ def delete_sheet_menu(request, id):
         info_campanha__nome_campanha=campanha.nome
     )
     return render(request, "global/remove_sheet_menu.html", {"sheets": sheets})
+
+
+@login_required(login_url="gurps:login")
+def delete_sheet_menu_player(request, id):
+    username = request.user.username
+    campanha = get_object_or_404(Campanha, id=id)
+    print(f"\n A campanha atual é {campanha} \n")
+    print(f"\nO usuário {username} entrou na no MENU DE REMOVER PERSONAGEM\n")
+
+    sheets = CharacterSheet.objects.all().filter(
+        info_campanha__nome_campanha=campanha.nome
+    )
+    first_id = sheets.order_by("id").first()
+    print(f"\nO primeiro id é {first_id.id}\n")
+    sheet_list = sheets.exclude(id=first_id.id)  # Exclui o primeiro id da lista
+    print(f"\nA lista de fichas é {sheet_list}\n")
+    return render(
+        request, "global/remove_sheet_menu_player.html", {"sheet_list": sheet_list}
+    )
 
 
 @login_required(login_url="gurps:login")
