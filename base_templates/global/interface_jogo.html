@@ -73,6 +73,13 @@
     <!-- Ficha do personagem -->
         <div class="personagem-container">
             <span id="personagem-nome" data-nome="{{ personagem.nome_personagem }}" class="nome-personagem fredericka-the-great-regular">{{ personagem.nome_personagem }}</span>
+            <ul class="lista-personagens medievalsharp-regular">
+                {% for sheet in sheet_list %}
+                    <li>
+                        <a id="personagem-nome-alt" data-nome="{{sheet.nome_personagem}}" class="menu-button-gm medievalsharp-mini" onclick="abrirJanelaSecundario('personagem_secundario')">{{sheet.nome_personagem}}</a>
+                    </li>
+                {% endfor %}
+            </ul>
             <div class="personagem-primeira-linha medievalsharp-mini">
                 <button class="menu-button" onclick="abrirJanela('atributos')">ATRIBUTOS</button>
                 <button class="menu-button" onclick="abrirJanela('pericias')">PERÍCIAS</button>
@@ -476,7 +483,11 @@
 
     {% endif %}
 
-
+    <!--Ficha completa personagem secundário-->
+    <div id="janela-personagem_secundario" class="janela">
+        <button class="fechar menu-button" onclick="fecharJanelaSecundario()">×</button>
+        
+    </div>
 
 
     <!--Ficha completa GM-->
@@ -506,6 +517,7 @@
     <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
     <script src="{% static 'global/js/game_interface/assets_img.js' %}"></script>
     <script src="{% static 'global/js/game_interface/window_gm_characters.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/window_player_characters.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filtro_personagens_gm.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filter_journal.js' %}"></script>
     <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>

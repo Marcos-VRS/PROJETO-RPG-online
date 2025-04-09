@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (characterName.toUpperCase() === "DADOS") {
                 abrirJanela("dados");
             } else {
-                abrirJanela("personagem_gm");
+                abrirJanela("personagem_secundario");
                 get_character_gm(characterName);
             }
         });
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".lista-personagens .menu-button-gm").forEach(link => {
         link.addEventListener("click", function () {
             const characterName = this.textContent.trim();
-            abrirJanela("personagem_gm");
+            abrirJanela("personagem_secundario");
             get_character_gm(characterName);
         });
     });
@@ -32,7 +32,7 @@ function get_character_gm(name) {
         .then(response => response.json())
         .then(data => {
             console.log("Resposta da API:", data);
-            const window = document.getElementById("janela-personagem_gm");
+            const window = document.getElementById("janela-personagem_secundario");
 
             let skillsList = '';
             data.skills.forEach(skill => {
@@ -93,7 +93,7 @@ function get_character_gm(name) {
             // Atualiza a janela com os dados do personagem
             window.innerHTML = `
                 <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-                <h2 class="nome-personagem-gm">${data.nome_personagem}</h2>
+                <h2 class="nome-personagem-player" data-nome="${data.nome_personagem}" >${data.nome_personagem}</h2>
                 <ul>
                     <div class="ficha-parte-box">
                         <h3 class="titulo-ficha-gm">ATRIBUTOS</h3>

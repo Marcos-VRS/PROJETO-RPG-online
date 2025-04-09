@@ -24,10 +24,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log(isOwner);  // Isso vai imprimir "True" no console do navegador
 
                 if (isOwner === "False") {
-                    nomePersonagem = document.getElementById("personagem-nome").getAttribute("data-nome");
-                    messageInput.value = `${nomePersonagem}\n\n-${data.atributo}-\n\nNH: ${data.nh}(${data.nh_final})\n\nROLL: ${data.roll}\n\nDANO: ${data.damage}\n\n${data.message}\n`;
-
-                    console.log(nomePersonagem);
+                    let nomeElement = document.querySelector("#janela-personagem_secundario.janela.ativa .nome-personagem-player");
+                    if (nomeElement) {
+                        nomePersonagem = nomeElement.getAttribute("data-nome");
+                        console.log("Nome Personagem dentro do if do personagem secundario:", nomePersonagem);
+                        messageInput.value = `${nomePersonagem}\n\n-${data.atributo}-\n\nNH: ${data.nh}(${data.nh_final})\n\nROLL: ${data.roll}\n\n${data.message}\n`;
+                    }
+                    else {
+                        console.log("A janela do personagem principal está ativa!");
+                        nomePersonagem = document.getElementById("personagem-nome").getAttribute("data-nome");
+                        messageInput.value = `${nomePersonagem}\n\n-${data.atributo}-\n\nNH: ${data.nh}(${data.nh_final})\n\nROLL: ${data.roll}\n\n${data.message}\n`;
+                    }
                 } else {
                     // Preenche a mensagem
                     console.log(data.nome_personagem);

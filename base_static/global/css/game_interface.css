@@ -28,6 +28,11 @@ html {
     align-items: center;
 }
 
+li {
+    list-style: none;
+    ;
+}
+
 a {
     text-decoration: none;
     color: inherit;
@@ -172,6 +177,23 @@ a {
     background-color: var(--faded-black-color);
     border: solid 1px black;
     border-radius: 0.5rem;
+}
+
+.lista-personagens {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    /* <-- ESSA LINHA É A CHAVE */
+    justify-content: flex-start;
+    align-items: center;
+    max-height: 100%;
+    gap: 0.5rem;
+    background-color: var(--faded-black-color);
+    border: solid 1px black;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    overflow: hidden;
+    /* Evita vazamentos se necessário */
 }
 
 
@@ -576,6 +598,16 @@ a {
 }
 
 .nome-personagem-gm {
+    display: flex;
+    width: 100%;
+    font-weight: bold;
+    color: var(--white-color);
+    justify-content: left;
+    padding-bottom: 0.5rem;
+    background-color: var(--faded-black-color);
+}
+
+.nome-personagem-player {
     display: flex;
     width: 100%;
     font-weight: bold;

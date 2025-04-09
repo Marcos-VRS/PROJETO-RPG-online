@@ -51,6 +51,19 @@ def game_interface(request, campanha_id, slot):
         info_campanha__nome_campanha=campanha.nome
     ).order_by("-id")
 
+    sheets = CharacterSheet.objects.all().filter(
+        info_campanha__nome_campanha=campanha.nome,
+        info_campanha__player_name=username,
+    )
+    if sheets.exists():
+        first_id_sheet = sheets.first()
+        sheet_list = sheets.exclude(id=first_id_sheet.id).order_by("id")
+    else:
+        first_id_sheet = None
+        sheet_list = []
+    print(f"\nSHEETS: {sheets}\n")
+    print(f"\nFIRST ID SHEET: {first_id_sheet}\n")
+    print(f"\nSHEET LIST: {sheet_list}\n")
     context = {
         "personagem": personagem,
         "personagens_gm": personagens_gm,
@@ -60,6 +73,7 @@ def game_interface(request, campanha_id, slot):
         "username": username,
         "assets": assets,
         "personagens_journal": personagens_journal,
+        "sheet_list": sheet_list,
     }
     return render(request, "global/interface_jogo.html", context)
 

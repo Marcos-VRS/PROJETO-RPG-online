@@ -371,7 +371,8 @@ def delete_sheet_menu_player(request, id):
     print(f"\nO usuário {username} entrou na no MENU DE REMOVER PERSONAGEM\n")
 
     sheets = CharacterSheet.objects.all().filter(
-        info_campanha__nome_campanha=campanha.nome
+        info_campanha__nome_campanha=campanha.nome,
+        info_campanha__player_name=username,
     )
     first_id = sheets.order_by("id").first()
     print(f"\nO primeiro id é {first_id.id}\n")
