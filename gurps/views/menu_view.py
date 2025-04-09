@@ -452,7 +452,9 @@ def edit_asset_menu(request, campanha_id):
     username = request.user.username
     print(f"\nO usuário {username} entrou na no MENU DE EDITAR ASSET\n")
     campanha = Campanha.objects.get(id=campanha_id)
-    assets = CampanhaAssets.objects.filter(campanha=campanha, slot__in=[2, 3])
+    assets = CampanhaAssets.objects.filter(campanha=campanha, slot__in=[2, 3]).order_by(
+        "-id"
+    )
     return render(request, "global/edit_asset_menu.html", {"assets": assets})
 
 
@@ -511,7 +513,11 @@ def remove_asset_menu(request, campanha_id):
     print(f"\nO usuário {username} entrou na no MENU DE REMOVER ASSET\n")
     campanha = get_object_or_404(Campanha, id=campanha_id)
     print(f"\nA campanha atual é {campanha} \n")
-    assets = CampanhaAssets.objects.all().filter(campanha=campanha, slot__in=[2, 3])
+    assets = (
+        CampanhaAssets.objects.all()
+        .filter(campanha=campanha, slot__in=[2, 3])
+        .order_by("-id")
+    )
     return render(request, "global/remove_asset_menu.html", {"assets": assets})
 
 

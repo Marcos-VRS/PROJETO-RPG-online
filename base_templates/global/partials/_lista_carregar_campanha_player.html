@@ -25,9 +25,9 @@
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
             <a href="{% url 'gurps:game_interface' personagem.campanha_id asset_id %}">
                 <h2 class="personagem-nome">PERSONAGEM:<p> {{ personagem.nome_personagem }}</p>
-                </h2>
-                <h2>CAMPANHA: <p>{{ personagem.info_campanha.nome_campanha }}</p>
-                </h2>
+                </h2><br>
+                <h2>CAMPANHA:<br>{{ personagem.info_campanha.nome_campanha }}
+                </h2><br>
                 {% if personagem.photo %}
                 <img class="imagem-miniatura" src="{{ personagem.photo.url }}" alt="Imagem do personagem">
                 {% else %}
