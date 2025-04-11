@@ -260,3 +260,16 @@ def get_character_gm(request):
     print(f"\nCHARACTER SHEET: {data}\n")
 
     return JsonResponse(data)  # Retorna os dados como JSON
+
+
+@login_required(login_url="gurps:login")
+def game_interface_ws(request, campanha_id, slot):
+    username = request.user.username
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+
+    context = {
+        "campanha_id": campanha.id,
+        "slot": slot,
+        "username": username,
+    }
+    return render(request, "global/interface_jogo.html", context)

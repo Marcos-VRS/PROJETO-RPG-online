@@ -54,9 +54,9 @@ class Campanha(models.Model):
     fichas_players = models.JSONField(blank=True, null=True)
 
     descricao = models.TextField(
-        max_length=500, blank=True, null=True, verbose_name="Descrição"
+        max_length=20000, blank=True, null=True, verbose_name="Descrição"
     )
-    regras = models.TextField(blank=True, null=True, max_length=10000)
+    regras = models.TextField(blank=True, null=True, max_length=20000)
     imagem = models.ImageField(
         upload_to="campanhas/",
         blank=False,

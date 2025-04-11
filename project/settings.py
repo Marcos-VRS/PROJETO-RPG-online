@@ -25,10 +25,7 @@ SECRET_KEY = "django-insecure-&koef1^d04z2y($vy5&$&3bg-2*kv_-_*v$ru5hnb1(ddhs7y&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "roll3d6rpg.com",
-    "www.roll3d6rpg.com",
-]
+ALLOWED_HOSTS = ["roll3d6rpg.com", "www.roll3d6rpg.com", "127.0.0.1", "localhost"]
 
 
 # Application definition
