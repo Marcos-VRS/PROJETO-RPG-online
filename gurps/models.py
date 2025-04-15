@@ -80,7 +80,7 @@ class CampanhaAssets(models.Model):
     slot = models.IntegerField(default=1)
     show = models.BooleanField(default=True)
     name = models.CharField(max_length=30)
-    description = models.TextField(blank=True, null=True, max_length=2000)
+    description = models.TextField(blank=True, null=True, max_length=20000)
     image = models.ImageField(upload_to="campanhas_assets/", blank=True, null=True)
 
     def __str__(self):
