@@ -25,10 +25,7 @@ SECRET_KEY = "django-insecure-&koef1^d04z2y($vy5&$&3bg-2*kv_-_*v$ru5hnb1(ddhs7y&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "roll3d6rpg.com",
-    "www.roll3d6rpg.com",
-]
+ALLOWED_HOSTS = ["roll3d6rpg.com", "www.roll3d6rpg.com"]  # Seu IP de produção
 
 
 # Application definition
@@ -181,6 +178,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.roll3d6rpg.com",
 ]
 
+
+# CORS Settings - Permitir acesso do IP diretamente
 CORS_ALLOWED_ORIGINS = [
     "https://roll3d6rpg.com",
     "https://www.roll3d6rpg.com",
