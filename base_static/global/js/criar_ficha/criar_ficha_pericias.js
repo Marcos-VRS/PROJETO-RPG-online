@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const atributoBaseSelecionado = linha.querySelector('.pericia-atributo-base').value;
         const dificuldade = linha.querySelector('.pericia-dificuldade').value;
         const custo = parseInt(linha.querySelector('.pericia-custo').value) || 0;
+        const mod = parseInt(linha.querySelector('#mod_pericia').value) || 0;
+
+        console.log('MOD:', mod);
 
         let atributoBaseValor = 0;
         switch (atributoBaseSelecionado) {
@@ -64,6 +67,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (custo >= 4) nhFinal += 1;
         if (custo >= 5) nhFinal += Math.floor((custo - 4) / 4);
 
+        nhFinal += mod; // Adiciona o modificador
+
         linha.querySelector('.pericia-nh').value = nhFinal;
     }
 
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Muito Difícil">Muito Difícil</option>
             </select>
             <input type="number" name="pericias_custo[]"  min="1" class="pericia-custo campo-curto-equip medievalsharp-mini" placeholder="Custo" />
+            <input id="mod_pericia" type="number" min="0" name="pericias_mod[]" class="pericia-custo campo-curto-equip medievalsharp-mini" value="0" />
             <input type="number" name="pericias_nh[]" class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly />
         `;
         containerPericias.appendChild(novaPericia);

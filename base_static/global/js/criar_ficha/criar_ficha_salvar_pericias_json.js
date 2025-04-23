@@ -11,14 +11,17 @@ document.querySelector("form").addEventListener("submit", function (event) {
         const atributoBase = linha.querySelector("[name='pericias_atributo_base[]']").value;
         const dificuldade = linha.querySelector("[name='pericias_dificuldade[]']").value;
         const custo = linha.querySelector("[name='pericias_custo[]']").value;
+        const mod = linha.querySelector("[name='pericias_mod[]']").value;
+
         const nh = linha.querySelector("[name='pericias_nh[]']").value;
 
-        if (nome || atributoBase || dificuldade || custo || nh) { // Verifica se pelo menos um campo foi preenchido
+        if (nome || atributoBase || dificuldade || custo || nh || mod) { // Verifica se pelo menos um campo foi preenchido
             pericias.push({
                 nome,
                 atributoBase,
                 dificuldade,
                 custo: custo ? parseInt(custo) : null, // Converte para número, se existir
+                mod: mod ? parseInt(mod) : null,       // Converte para número, se existir
                 nh: nh ? parseInt(nh) : null           // Converte para número, se existir
             });
         }

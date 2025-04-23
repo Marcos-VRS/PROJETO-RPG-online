@@ -405,6 +405,7 @@
                 <label class="campo-curto-equip medievalsharp-mini" for="atributo_pericia">Atrib</label>
                 <label class="campo-curto-dif medievalsharp-mini" for="dificuldade_pericia">Dificuldade</label>
                 <label class="campo-curto-equip medievalsharp-mini" for="custo_pericia">Custo</label>
+                <label class="campo-curto-equip medievalsharp-mini" for="mod_pericia">Mod</label>
                 <label class="campo-curto-equip medievalsharp-mini" for="nh_pericia">NH</label>
 
             </div>
@@ -431,6 +432,8 @@
                     <input id="custo_pericia" type="number" name="pericias_custo[]"
                         class="pericia-custo campo-curto-equip medievalsharp-mini" min="1"
                         value="{{personagem_skill.custo}}" />
+                    <input id="mod_pericia" type="number" min="0" name="pericias_mod[]"
+                        class="pericia-custo campo-curto-equip medievalsharp-mini" value="{{personagem_skill.mod}}" />
                     <input id="nh_pericia" type="number" name="pericias_nh[]"
                         class="pericia-nh campo-curto-equip medievalsharp-mini" placeholder="NH" readonly
                         value="{{personagem_skill.nh}}" />
