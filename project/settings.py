@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "roll3d6rpg.com",
     "www.roll3d6rpg.com",
-    "127.0.0.1",
 ]  # Seu IP de produção
 
 
