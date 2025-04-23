@@ -146,3 +146,19 @@ class Message(models.Model):
     def __str__(self):
         campanha_nome = self.campanha.nome if self.campanha else "Sem Campanha"
         return f"[{campanha_nome}] {self.user.username}: {self.content}"
+
+
+class SaveState(models.Model):
+    campanha = models.ForeignKey(
+        Campanha,
+        on_delete=models.CASCADE,
+        related_name="saves",
+        blank=True,
+        null=True,
+    )
+
+    data = models.JSONField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Save de {self.user.username} para {self.campanha.nome}"
