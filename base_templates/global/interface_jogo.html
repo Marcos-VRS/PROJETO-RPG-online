@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div class="image-container">
+    <div class="image-container" data-room-name="{{ campanha.id }}" data-asset-id="{{ pagina_inicial.id }}">
         {% if pagina_inicial.image %}
         <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"
             id="map-image">
@@ -181,6 +181,12 @@
         <!-- Perícias -->
         <div id="janela-pericias" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
+            <input class="input-pesquisa-skill medievalsharp-mini" type="text" id="search-skill" onkeyup="filtrarPericia()" placeholder="Pesquisar Perícia"><br>
+
+
+            
             <ul>
                 <div class="ficha-parte-box">
                     <h3 class="titulo-ficha-gm fredericka-the-great-regular">PERÍCIAS</h3>
@@ -203,6 +209,11 @@
         <!--Ataques-->
         <div id="janela-ataque" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
+            <input class="input-pesquisa-attack medievalsharp-mini" type="text" id="search-attack" onkeyup="filtrarAtaque()" placeholder="Pesquisar Ataque"><br>
+
+
             <div class="ficha-parte-box">
                 <h3 class="titulo-ficha-gm fredericka-the-great-regular">MELEE</h3>
             {% for attack in personagem.maneuvers_melee %}
@@ -252,6 +263,12 @@
         <!--Defesas-->
         <div id="janela-defesa" class="janela">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+
+
+            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
+            <input class="input-pesquisa-defense medievalsharp-mini" type="text" id="search-defense" onkeyup="filtrarDefesa()" placeholder="Pesquisar Defesa"><br>
+
+
             <div class="ficha-parte-box">
                 <h3 class="titulo-ficha-gm fredericka-the-great-regular">DEFESA</h3>
             {% for defense in personagem.maneuvers_defense %}
@@ -520,6 +537,9 @@
     <script src="{% static 'global/js/game_interface/window_player_characters.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filtro_personagens_gm.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filter_journal.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/filter_attack_player.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/filter_defense_player.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/filter_skill_player.js' %}"></script>
     <script src="{% static 'global/js/chat/autoScroll.js' %}"></script>
 </body>
 
