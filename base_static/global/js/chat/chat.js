@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     const roomName = document.querySelector('.chat-container')?.dataset.roomName;
     const username = document.querySelector('.chat-container')?.dataset.username;
 
@@ -7,57 +7,88 @@ document.addEventListener('DOMContentLoaded', (event) => {
         return;
     }
 
-    // Define chatSocket corretamente, verificando se já existe
-    const chatSocket = window.chatSocket || new WebSocket(
-        `${window.location.protocol === "https:" ? "wss://" : "ws://"}${window.location.host}/ws/chat/${roomName}/`
-    );
+    let chatSocket = null;
+    let reconnectDelay = 3000; // 3 segundos entre tentativas
 
-    // Função para rolar automaticamente para o final do chat
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(cookie => {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+
     function scrollToBottom() {
         const messages = document.getElementById('messages');
         setTimeout(() => {
             messages.scrollTop = messages.scrollHeight;
-        }, 500); // Pequeno delay para garantir a renderização
+        }, 500);
     }
 
-    // Quando uma nova mensagem for recebida
-    chatSocket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-        const messages = document.getElementById('messages');
+    function connectWebSocket() {
+        const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const wsUrl = `${protocol}${window.location.host}/ws/chat/${roomName}/`;
 
-        let formattedMessage = data.message.replace(/\n/g, '<br>');
+        chatSocket = new WebSocket(wsUrl);
+        window.chatSocket = chatSocket;
 
-        // Define a classe de cor com base no texto da mensagem
-        let bgColorClass = "";
-        if (formattedMessage.endsWith("<br>Acerto<br>")) {
-            bgColorClass = "bg-green"; // Verde
-        } else if (formattedMessage.endsWith("<br>SUCESSO DECISIVO<br>")) {
-            bgColorClass = "bg-orange"; // Laranja
-        } else if (formattedMessage.endsWith("<br>SUCESSO<br>")) {
-            bgColorClass = "bg-purple"; // Roxo
-        } else if (formattedMessage.endsWith("<br>Falha<br>")) {
-            bgColorClass = "bg-gray"; // Cinza
-        } else if (formattedMessage.endsWith("<br>ERRO CRÍTICO<br>")) {
-            bgColorClass = "bg-red"; // Vermelho
-        } else if (formattedMessage) {
-            bgColorClass = "bg-blue"; // Azul
-        }
+        // Recebendo mensagens
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            const messages = document.getElementById('messages');
 
-        console.log(formattedMessage);
-        messages.innerHTML += `<li class="message-single-box  medievalsharp-mini ${bgColorClass}">
-        <strong class="username-chat">${data.username}:</strong> <span class="content-message-chat">${formattedMessage}</span>
-        </li><br>`;
+            if (data.type === "pong") return; // Ignora respostas de ping
 
-        // Rolar para o final sempre que uma nova mensagem chegar
-        scrollToBottom();
-        // Rolar para o final da nova mensagem adicionada
-        const newMessage = messages.lastElementChild;
-        newMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    };
+            let formattedMessage = data.message.replace(/\n/g, '<br>');
 
-    chatSocket.onclose = function (e) {
-        console.error('WebSocket fechado inesperadamente.');
-    };
+            let bgColorClass = "";
+            if (formattedMessage.endsWith("<br>Acerto<br>")) {
+                bgColorClass = "bg-green";
+            } else if (formattedMessage.endsWith("<br>SUCESSO DECISIVO<br>")) {
+                bgColorClass = "bg-orange";
+            } else if (formattedMessage.endsWith("<br>SUCESSO<br>")) {
+                bgColorClass = "bg-purple";
+            } else if (formattedMessage.endsWith("<br>Falha<br>")) {
+                bgColorClass = "bg-gray";
+            } else if (formattedMessage.endsWith("<br>ERRO CRÍTICO<br>")) {
+                bgColorClass = "bg-red";
+            } else if (formattedMessage) {
+                bgColorClass = "bg-blue";
+            }
+
+            messages.innerHTML += `<li class="message-single-box medievalsharp-mini ${bgColorClass}">
+                <strong class="username-chat">${data.username}:</strong> <span class="content-message-chat">${formattedMessage}</span>
+            </li><br>`;
+
+            scrollToBottom();
+            messages.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        };
+
+        // Erros de conexão
+        chatSocket.onerror = function (error) {
+            console.error('Erro no WebSocket:', error);
+        };
+
+        // Conexão fechada
+        chatSocket.onclose = function (e) {
+            console.warn('WebSocket desconectado. Tentando reconectar em 3 segundos...');
+            setTimeout(connectWebSocket, reconnectDelay);
+        };
+
+        // Envio de ping a cada 30s
+        setInterval(() => {
+            if (chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+    }
+
+    connectWebSocket();
 
     function sendMessage(message) {
         const input = document.getElementById('messageInput');
@@ -72,19 +103,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     'message': message,
                     'campanha_id': roomName
                 })
-            })
-                .then(response => response.json())
+            }).then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
                         input.value = '';
                     }
                 });
 
-            // Enviar a mensagem via WebSocket para atualização em tempo real
-            chatSocket.send(JSON.stringify({
-                'message': message,
-                'username': username
-            }));
+            if (chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'username': username
+                }));
+            } else {
+                console.error('WebSocket não está conectado. Mensagem não enviada.');
+            }
         }
     }
 
@@ -100,19 +133,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
         sendMessage(document.getElementById('messageInput').value);
     });
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            document.cookie.split(';').forEach(cookie => {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                }
-            });
-        }
-        return cookieValue;
-    }
-
-    // Garante que o chat role para baixo ao carregar a página
     scrollToBottom();
 });

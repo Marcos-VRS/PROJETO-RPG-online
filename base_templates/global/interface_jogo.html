@@ -163,6 +163,7 @@
                         <input class="input-inc" type="number" id="redutor-IQ" value="0">
                         <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.IQ }}, 'IQ')">Rolar</button><br><br>
                     </li>
+                   
                     <li class="li-gm">
                         <span class="medievalsharp-regular">HT: {{ personagem.atributos.HT }}</span>&nbsp;&nbsp;
                         =>&nbsp;&nbsp;BÔNUS:
@@ -170,6 +171,24 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
                         <input class="input-inc" type="number" id="redutor-HT" value="0">
                         <button  class="menu-button" onclick="rollAttribute({{ personagem.atributos.HT }}, 'HT')">Rolar</button><br><br>
+                    </li>
+                   
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">WILL: {{personagem.sub_attributes.will}}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-WILL" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-WILL" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{personagem.sub_attributes.will}}, 'WILL')">Rolar</button><br><br>
+                    </li>
+                    
+                    <li class="li-gm">
+                        <span class="medievalsharp-regular">PERC: {{personagem.sub_attributes.perception}}</span>&nbsp;&nbsp;
+                        =>&nbsp;&nbsp;BÔNUS:
+                        <input class="input-inc" type="number" id="bonus-PERC" value="0">
+                        &nbsp;&nbsp;&nbsp;&nbsp;REDUTOR:&nbsp;&nbsp;
+                        <input class="input-inc" type="number" id="redutor-PERC" value="0">
+                        <button  class="menu-button" onclick="rollAttribute({{personagem.sub_attributes.perception}}, 'PERC')">Rolar</button><br><br>
                     </li>
                 </div>
             </ul>
