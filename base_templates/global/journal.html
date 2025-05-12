@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <title>Journal</title>
+</head>
+
+<body>
+    <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Journal - {{campanha.nome}}</h1>
+    <!-- Campo de busca -->
+    <label for="search-journal" class="pesquisa-label medievalsharp-regular">Buscar:</label>
+    <input type="text" id="search-journal"  placeholder="Buscar..." class="campo-busca medievalsharp-regular">
+
+    <ul class="ul-lista">
+    {% if username == campanha.dono.username %}
+        {% for asset in assets_gm %}
+            <li class="item-lista-journal medievalsharp-regular">
+            <h2 class="medievalsharp-large">NOME: {{ asset.name }}</h2>
+            <h2>SHOW: {{ asset.show }}</h2><br>
+            <h2>{{ asset.description }}</h2>        
+
+            {% if asset.image %}
+                <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
+            {% else %}
+                <p>Sem imagem disponível</p>
+
+            {% endif %}
+            </li>
+
+        {% endfor %}
+    {% else %}
+        {% for asset in assets_player %}
+            <li class="item-lista-journal medievalsharp-regular">
+            <h2 class="medievalsharp-large">NOME: {{ asset.name }}</h2><br>
+            <h2>{{ asset.description }}</h2>        
+
+            {% if asset.image %}
+                <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
+            {% else %}
+                <p>Sem imagem disponível</p>
+
+            {% endif %}
+            </li>
+
+        {% endfor %}
+    {% endif %}
+    
+    
+    {% for psjournal in personagens_journal %}
+        <li class="item-lista-journal medievalsharp-regular">
+            <h2 class="medievalsharp-large">NOME: {{ psjournal.nome_personagem }}</h2>
+            <h2>Player: {{ psjournal.info_campanha.player_name }}</h2>
+            <br>
+            <h2>{{psjournal.background}}</h2>
+           
+            {% if psjournal.photo %}
+                <img src="{{ psjournal.photo.url }}" alt="Miniatura de {{ psjournal.nome_personagem }}" class="miniatura-imagem"><br><br>
+            {% else %}
+                <p>Sem imagem disponível</p>
+
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+
+
+
+
+    <script src="{% static 'global/js/menu/filter_journal.js' %}"></script>
+
+</body>
+
+</html>

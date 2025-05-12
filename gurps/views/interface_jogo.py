@@ -273,3 +273,28 @@ def game_interface_ws(request, campanha_id, slot):
         "username": username,
     }
     return render(request, "global/interface_jogo.html", context)
+
+
+@login_required(login_url="gurps:login")
+def journal(request, campanha_id):
+    username = request.user.username
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    personagens_journal = CharacterSheet.objects.filter(
+        info_campanha__nome_campanha=campanha.nome
+    ).order_by("-id")
+    assets_player = CampanhaAssets.objects.filter(
+        campanha=campanha, slot__in=[1, 2], show=True
+    ).order_by("-id")
+    assets_gm = CampanhaAssets.objects.filter(
+        campanha=campanha,
+    ).order_by("-id")
+    print(f"\nPERSONAGENS JOURNAL: {personagens_journal}\n")
+
+    context = {
+        "personagens_journal": personagens_journal,
+        "campanha": campanha,
+        "username": username,
+        "assets_player": assets_player,
+        "assets_gm": assets_gm,
+    }
+    return render(request, "global/journal.html", context)

@@ -26,11 +26,11 @@
 
                 {% if username == campanha.dono.username %}
                     <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">GM</a>
-                    <button class="menu-button-options" onclick="abrirJanela('journal-gm')">JOURNAL</button>
+                    <a class="menu-button-options" href="{% url 'gurps:journal' campanha.id %}">JOURNAL</a>
 
                 {% else %}
                     <a class="menu-button-options" href="{% url 'gurps:editar_fichas_menu' campanha.id %}">FICHA</a>
-                    <button class="menu-button-options" onclick="abrirJanela('journal-player')">JOURNAL</button>
+                    <a class="menu-button-options" href="{% url 'gurps:journal' campanha.id %}">JOURNAL</a>
 
                 {% endif %} 
                 

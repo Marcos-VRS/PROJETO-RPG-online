@@ -54,6 +54,8 @@ urlpatterns = [
     ),
     # Fichas
     path("Fichas/", views.carregar_fichas, name="carregar_fichas"),
+    # Journal
+    path("Journal/<int:campanha_id>/", views.journal, name="journal"),
     # Menu de fichas GM
     path(
         "Fichas/Menu/GM/<int:campanha_id>", views.menu_fichas_gm, name="menu_fichas_gm"
