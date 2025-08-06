@@ -332,7 +332,7 @@ def lista_gm_fichas(request, campanha_id):
     print(f"\nA CAMPANHA SELECIONADA É : {campanha}\n")
 
     personagens = CharacterSheet.objects.filter(
-        info_campanha__nome_campanha=nome_campanha, info_campanha__player_name=username
+        info_campanha__nome_campanha=nome_campanha,
     ).order_by("-id")
     print(f"\nOS PERSONAGENS SÃO :{personagens}\n")
     context = {"username": username, "campanha": campanha, "personagens": personagens}
