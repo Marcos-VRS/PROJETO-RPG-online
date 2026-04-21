@@ -58,6 +58,10 @@
                 <option value="5" selected>top 5</option>
                 <option value="8">top 8</option>
             </select>
+            <select id="model" name="model" title="Modelo LLM">
+                <option value="qwen2.5:3b-instruct" selected>qwen 3b (rápido)</option>
+                <option value="qwen2.5:7b-instruct">qwen 7b (melhor)</option>
+            </select>
             <button type="submit" id="submit-btn">Consultar</button>
         </div>
     </form>
@@ -84,6 +88,7 @@ form.addEventListener('submit', async (e) => {
         question: document.getElementById('question').value.trim(),
         book: document.getElementById('book').value.trim() || null,
         top_k: parseInt(document.getElementById('top_k').value, 10),
+        model: document.getElementById('model').value,
     };
 
     try {

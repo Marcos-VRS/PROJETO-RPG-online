@@ -13,7 +13,9 @@ import urllib.request
 from typing import Iterator
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-DEFAULT_MODEL = "qwen2.5:7b-instruct"
+# Default: 3b é bem mais rápido em CPU sem perder muito em qualidade PT-BR.
+# Para melhor qualidade em trade de velocidade: qwen2.5:7b-instruct.
+DEFAULT_MODEL = "qwen2.5:3b-instruct"
 DEFAULT_TIMEOUT = 600  # seconds — CPU inference is slow; big margin on first call
 
 SYSTEM_PROMPT = """\
