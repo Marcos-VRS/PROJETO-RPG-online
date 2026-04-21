@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>RAG — Consulta de Regras GURPS</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.5;
+            color: #222;
+            background: #fafafa;
+        }
+        h1 { margin-bottom: 0.25rem; }
+        .hint { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        form { display: grid; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .row { display: grid; grid-template-columns: 1fr auto auto; gap: 0.5rem; }
+        textarea, input, select, button {
+            font: inherit;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+        textarea { min-height: 4rem; resize: vertical; }
+        button {
+            background: #2b5; color: white; border: 0; cursor: pointer;
+            padding: 0.5rem 1.25rem; font-weight: 600;
+        }
+        button:disabled { background: #999; cursor: wait; }
+        #answer {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+            min-height: 4rem;
+            white-space: pre-wrap;
+        }
+        #sources { margin-top: 1rem; font-size: 0.9rem; color: #555; }
+        #sources ol { margin: 0.25rem 0 0 1.25rem; padding: 0; }
+        .status { font-size: 0.85rem; color: #888; }
+        .error { color: #c33; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <h1>Consulta de Regras GURPS</h1>
+    <p class="hint">Pergunte em linguagem natural. A resposta é gerada localmente pela VM — pode levar alguns segundos.</p>
+
+    <form id="query-form">
+        <textarea id="question" name="question" required placeholder="Ex: qual o custo da Visão Aguçada?"></textarea>
+        <div class="row">
+            <input id="book" name="book" placeholder="Filtrar por livro (opcional): ex. Campaigns">
+            <select id="top_k" name="top_k" title="Quantos chunks considerar">
+                <option value="3">top 3</option>
+                <option value="5" selected>top 5</option>
+                <option value="8">top 8</option>
+            </select>
+            <button type="submit" id="submit-btn">Consultar</button>
+        </div>
+    </form>
+
+    <div class="status" id="status"></div>
+    <div id="answer"></div>
+    <div id="sources"></div>
+
+<script>
+const form = document.getElementById('query-form');
+const answerEl = document.getElementById('answer');
+const sourcesEl = document.getElementById('sources');
+const statusEl = document.getElementById('status');
+const btn = document.getElementById('submit-btn');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    answerEl.textContent = '';
+    sourcesEl.innerHTML = '';
+    statusEl.textContent = 'Buscando trechos...';
+    btn.disabled = true;
+
+    const body = {
+        question: document.getElementById('question').value.trim(),
+        book: document.getElementById('book').value.trim() || null,
+        top_k: parseInt(document.getElementById('top_k').value, 10),
+    };
+
+    try {
+        const resp = await fetch('/rag/api/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!resp.ok) {
+            throw new Error('HTTP ' + resp.status + ': ' + await resp.text());
+        }
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        let gotFirstToken = false;
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let idx;
+            while ((idx = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, idx).trim();
+                buffer = buffer.slice(idx + 1);
+                if (!line) continue;
+                let obj;
+                try { obj = JSON.parse(line); } catch { continue; }
+
+                if (obj.sources) {
+                    renderSources(obj.sources);
+                    statusEl.textContent = 'Gerando resposta...';
+                } else if (obj.token) {
+                    if (!gotFirstToken) {
+                        statusEl.textContent = '';
+                        gotFirstToken = true;
+                    }
+                    answerEl.textContent += obj.token;
+                } else if (obj.error) {
+                    statusEl.innerHTML = '<span class="error">Erro: ' + escapeHtml(obj.error) + '</span>';
+                } else if (obj.done) {
+                    if (!gotFirstToken && !statusEl.querySelector('.error')) {
+                        statusEl.textContent = '(sem resposta)';
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        statusEl.innerHTML = '<span class="error">Falha: ' + escapeHtml(String(err)) + '</span>';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+function renderSources(sources) {
+    if (!sources.length) {
+        sourcesEl.innerHTML = '<em>(nenhum chunk encontrado)</em>';
+        return;
+    }
+    const lines = sources.map(s =>
+        `<li>${escapeHtml(s.book)}, p.${s.page_start} — similaridade ${s.similarity}</li>`
+    ).join('');
+    sourcesEl.innerHTML = '<strong>Fontes consultadas:</strong><ol>' + lines + '</ol>';
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+</script>
+</body>
+</html>
