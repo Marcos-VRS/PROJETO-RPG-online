@@ -14,8 +14,10 @@ Exemplos:
 """
 from django.core.management.base import BaseCommand
 
+import sys
+
 from rag.query import search_rules
-from rag.synthesis import DEFAULT_MODEL, synthesize
+from rag.synthesis import DEFAULT_MODEL, synthesize_stream
 
 EXCERPT_CHARS = 600
 
@@ -80,9 +82,15 @@ class Command(BaseCommand):
                     self.stdout.write(hit.text[:EXCERPT_CHARS] + "\n  [...truncado]")
             return
 
-        self.stdout.write(self.style.NOTICE("\n>>> Gerando resposta (pode levar ~10-40s em CPU)...\n"))
-        answer = synthesize(question, hits, model=model)
-        self.stdout.write(answer)
+        self.stdout.write(self.style.NOTICE(
+            "\n>>> Gerando resposta (streaming; primeira chamada carrega o "
+            "modelo em RAM e pode levar 1-3 min):\n"
+        ))
+        # Print each token as it arrives so the user gets immediate feedback.
+        for piece in synthesize_stream(question, hits, model=model):
+            sys.stdout.write(piece)
+            sys.stdout.flush()
+        sys.stdout.write("\n")
 
         self.stdout.write(self.style.NOTICE("\n--- fontes ---"))
         for i, hit in enumerate(hits, 1):

@@ -10,11 +10,11 @@ Model:    qwen2.5:7b-instruct (multilingual, ~4.7GB, CPU-friendly).
 import json
 import urllib.error
 import urllib.request
-from typing import Iterable
+from typing import Iterator
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 DEFAULT_MODEL = "qwen2.5:7b-instruct"
-DEFAULT_TIMEOUT = 180  # seconds — CPU inference is slow
+DEFAULT_TIMEOUT = 600  # seconds — CPU inference is slow; big margin on first call
 
 SYSTEM_PROMPT = """\
 Você é um assistente especialista em GURPS 4ª Edição.
@@ -43,6 +43,31 @@ def _build_prompt(question: str, hits) -> str:
     )
 
 
+def _request_body(question, hits, model, temperature, stream):
+    return {
+        "model": model,
+        "prompt": _build_prompt(question, hits),
+        "stream": stream,
+        "options": {
+            "temperature": temperature,
+            "top_p": 0.9,
+            "num_ctx": 4096,
+            "num_predict": 500,  # cap output length
+        },
+    }
+
+
+def _open_ollama(req, timeout):
+    try:
+        return urllib.request.urlopen(req, timeout=timeout)
+    except urllib.error.URLError as exc:
+        raise RuntimeError(
+            f"Não consegui conectar no Ollama em {OLLAMA_URL}. "
+            f"Verifique se o serviço está rodando (`systemctl status ollama`). "
+            f"Detalhe: {exc}"
+        ) from exc
+
+
 def synthesize(
     question: str,
     hits,
@@ -51,36 +76,56 @@ def synthesize(
     temperature: float = 0.2,
     timeout: int = DEFAULT_TIMEOUT,
 ) -> str:
-    """Call Ollama to produce a grounded answer from `hits`."""
+    """Non-streaming: retorna a resposta completa quando termina."""
     if not hits:
         return "Não encontrei trechos relevantes para essa pergunta."
 
-    prompt = _build_prompt(question, hits)
-    body = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "temperature": temperature,
-            "top_p": 0.9,
-            "num_ctx": 4096,
-        },
-    }
-
+    body = _request_body(question, hits, model, temperature, stream=False)
     req = urllib.request.Request(
         OLLAMA_URL,
         data=json.dumps(body).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.URLError as exc:
-        raise RuntimeError(
-            f"Não consegui conectar no Ollama em {OLLAMA_URL}. "
-            f"Verifique se `ollama serve` está rodando. Detalhe: {exc}"
-        ) from exc
-
+    with _open_ollama(req, timeout) as resp:
+        payload = json.loads(resp.read().decode("utf-8"))
     return (payload.get("response") or "").strip()
+
+
+def synthesize_stream(
+    question: str,
+    hits,
+    *,
+    model: str = DEFAULT_MODEL,
+    temperature: float = 0.2,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> Iterator[str]:
+    """Streaming: yielda fragmentos conforme o modelo os gera.
+
+    Consumidores devem imprimir cada chunk assim que chegar pra UX imediato.
+    Encerra naturalmente quando `done: true` vier no JSON de controle.
+    """
+    if not hits:
+        yield "Não encontrei trechos relevantes para essa pergunta."
+        return
+
+    body = _request_body(question, hits, model, temperature, stream=True)
+    req = urllib.request.Request(
+        OLLAMA_URL,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with _open_ollama(req, timeout) as resp:
+        for raw_line in resp:
+            if not raw_line:
+                continue
+            try:
+                obj = json.loads(raw_line.decode("utf-8"))
+            except json.JSONDecodeError:
+                continue
+            piece = obj.get("response", "")
+            if piece:
+                yield piece
+            if obj.get("done"):
+                break
