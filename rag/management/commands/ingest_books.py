@@ -3,28 +3,33 @@ Management command: ingest GURPS PDFs into the RuleChunk vector store.
 
 Pipeline:
   1. Collect PDFs from `books/` directory (or a single --book path).
-  2. For each PDF, extract text page by page via pymupdf (fitz).
-  3. One chunk per non-empty page (V-1 MVP — smarter chunking later).
+  2. Extract text page by page via pymupdf (fitz).
+  3. Paragraph-aware chunking (see `rag.chunking.chunk_page`): one page
+     may yield several chunks, each between 50 and 500 "tokens" (approx).
   4. Deduplicate by (book, text_hash) to stay idempotent across re-runs.
   5. Embed new chunks locally via `rag.embeddings.embed_texts`
-     (sentence-transformers multilingual, 768 dims — zero API cost).
+     (sentence-transformers multilingual, 768 dims).
   6. Persist to `rag.RuleChunk`.
 
-Requires:
-  - `pymupdf` and `sentence-transformers` in the active venv.
-  - First run downloads the embedding model (~280MB) from HuggingFace.
+Flags:
+  --book PATH       ingest a single PDF
+  --books-dir PATH  override books directory
+  --dry-run         extract + chunk without embedding/persisting
+  --reset           delete existing chunks of the same book(s) before ingesting
 """
 import hashlib
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
+from rag.chunking import chunk_page
 from rag.embeddings import EMBEDDING_MODEL_NAME, embed_texts
 from rag.models import RuleChunk
 
-EMBED_BATCH_SIZE = 32  # sentence-transformers encodes in mini-batches internally
-MIN_CHUNK_CHARS = 20  # below this is almost certainly noise
+EMBED_BATCH_SIZE = 32
+MIN_CHUNK_CHARS = 20
 
 
 def _sha256(s: str) -> str:
@@ -60,11 +65,24 @@ class Command(BaseCommand):
             default=None,
             help="Directory with PDFs (default: <BASE_DIR>/books).",
         )
+        parser.add_argument(
+            "--reset",
+            action="store_true",
+            help="Delete existing chunks for the targeted book(s) before ingesting.",
+        )
 
     def handle(self, *args, **opts):
-        import fitz  # noqa: F401  -- proves pymupdf is installed
+        import fitz  # noqa: F401
 
         pdfs = self._collect_pdfs(opts["book"], opts["books_dir"])
+
+        if opts["reset"]:
+            for pdf in pdfs:
+                book = _book_title(pdf)
+                deleted, _ = RuleChunk.objects.filter(book=book).delete()
+                self.stdout.write(
+                    self.style.WARNING(f"  [reset] deleted {deleted} existing chunks for {book}")
+                )
 
         grand_total = 0
         for pdf in pdfs:
@@ -107,29 +125,30 @@ class Command(BaseCommand):
             skipped_tiny = 0
 
             for page_num in range(total_pages):
-                text = doc[page_num].get_text().strip()
-                if not text:
+                raw = doc[page_num].get_text().strip()
+                if not raw:
                     skipped_empty += 1
                     continue
-                if len(text) < MIN_CHUNK_CHARS:
-                    skipped_tiny += 1
-                    continue
-                h = _sha256(text)
-                if RuleChunk.objects.filter(book=book, text_hash=h).exists():
-                    skipped_existing += 1
-                    continue
-                pending.append(
-                    {
-                        "book": book,
-                        "chapter": "",
-                        "section": "",
-                        "page_start": page_num + 1,
-                        "page_end": page_num + 1,
-                        "text": text,
-                        "tokens": _approx_tokens(text),
-                        "text_hash": h,
-                    }
-                )
+                for chunk_text in chunk_page(raw):
+                    if len(chunk_text) < MIN_CHUNK_CHARS:
+                        skipped_tiny += 1
+                        continue
+                    h = _sha256(chunk_text)
+                    if RuleChunk.objects.filter(book=book, text_hash=h).exists():
+                        skipped_existing += 1
+                        continue
+                    pending.append(
+                        {
+                            "book": book,
+                            "chapter": "",
+                            "section": "",
+                            "page_start": page_num + 1,
+                            "page_end": page_num + 1,
+                            "text": chunk_text,
+                            "tokens": _approx_tokens(chunk_text),
+                            "text_hash": h,
+                        }
+                    )
         finally:
             doc.close()
 
@@ -151,13 +170,14 @@ class Command(BaseCommand):
             page_range = f"p.{batch[0]['page_start']}-{batch[-1]['page_end']}"
             self.stdout.write(f"  batch {i + 1}-{i + len(batch)} ({page_range})...")
             vectors = embed_texts([c["text"] for c in batch])
-            for chunk, vec in zip(batch, vectors):
-                RuleChunk.objects.create(
-                    **chunk,
-                    embedding=vec,
-                    embedding_model=EMBEDDING_MODEL_NAME,
-                )
-                embedded += 1
+            with transaction.atomic():
+                for chunk, vec in zip(batch, vectors):
+                    RuleChunk.objects.create(
+                        **chunk,
+                        embedding=vec,
+                        embedding_model=EMBEDDING_MODEL_NAME,
+                    )
+                    embedded += 1
 
         self.stdout.write(self.style.SUCCESS(f"  done: {embedded} chunks"))
         return embedded

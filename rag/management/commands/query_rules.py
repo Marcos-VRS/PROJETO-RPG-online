@@ -1,20 +1,27 @@
 """
-CLI wrapper para busca semântica em RuleChunk.
+CLI para consulta do RAG.
 
-Exemplo:
-    python manage.py query_rules "penalidade de Parry apos All-Out Attack"
-    python manage.py query_rules "como funciona a magia" --book Campaigns --top-k 3
-    python manage.py query_rules "skill Broadsword" --full
+Por default, retorna uma resposta sintetizada pelo LLM local (Ollama), com
+citações das páginas. Use --raw para ver apenas os chunks recuperados,
+sem síntese.
+
+Exemplos:
+    python manage.py query_rules "qual o custo da Visão Aguçada?"
+    python manage.py query_rules "penalidade de Parry depois de All-Out Attack"
+    python manage.py query_rules "como funciona magia" --book Campaigns --top-k 3
+    python manage.py query_rules "skill Broadsword" --raw      # só retrieval
+    python manage.py query_rules "..." --raw --full            # raw sem truncar
 """
 from django.core.management.base import BaseCommand
 
 from rag.query import search_rules
+from rag.synthesis import DEFAULT_MODEL, synthesize
 
 EXCERPT_CHARS = 600
 
 
 class Command(BaseCommand):
-    help = "Semantic search over ingested GURPS rule chunks."
+    help = "Consulta semântica sobre os livros GURPS com resposta sintetizada."
 
     def add_arguments(self, parser):
         parser.add_argument("question", type=str, help="Pergunta em linguagem natural.")
@@ -22,7 +29,7 @@ class Command(BaseCommand):
             "--top-k",
             type=int,
             default=5,
-            help="Quantos resultados retornar (default: 5).",
+            help="Quantos chunks alimentar no sintetizador / retornar em raw (default: 5).",
         )
         parser.add_argument(
             "--book",
@@ -31,31 +38,54 @@ class Command(BaseCommand):
             help="Filtra por substring do nome do livro (ex.: Campaigns).",
         )
         parser.add_argument(
+            "--raw",
+            action="store_true",
+            help="Não chama LLM; devolve chunks crus com similaridade e página.",
+        )
+        parser.add_argument(
             "--full",
             action="store_true",
-            help="Imprime o texto completo de cada chunk, em vez de excerto.",
+            help="No modo --raw, imprime o texto completo de cada chunk (sem truncar).",
+        )
+        parser.add_argument(
+            "--model",
+            type=str,
+            default=DEFAULT_MODEL,
+            help=f"Modelo do Ollama para síntese (default: {DEFAULT_MODEL}).",
         )
 
-    def handle(self, *args, question, top_k, book, full, **opts):
+    def handle(self, *args, question, top_k, book, raw, full, model, **opts):
         hits = search_rules(question, top_k=top_k, book=book)
 
-        self.stdout.write(self.style.NOTICE(f"\nQuery: {question}"))
+        self.stdout.write(self.style.NOTICE(f"\nPergunta: {question}"))
         if book:
-            self.stdout.write(self.style.NOTICE(f"Filter book ~ {book}"))
-        self.stdout.write(f"Results: {len(hits)}\n")
+            self.stdout.write(self.style.NOTICE(f"Filtro livro ~ {book}"))
+        self.stdout.write(f"Chunks encontrados: {len(hits)}")
 
         if not hits:
-            self.stdout.write(self.style.WARNING("  (no matches)"))
+            self.stdout.write(self.style.WARNING("  (sem correspondências)"))
             return
 
+        if raw:
+            for i, hit in enumerate(hits, 1):
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"\n[{i}] {hit.book}  p.{hit.page_start}"
+                        f"  (similaridade={hit.similarity:.3f})"
+                    )
+                )
+                if full or len(hit.text) <= EXCERPT_CHARS:
+                    self.stdout.write(hit.text)
+                else:
+                    self.stdout.write(hit.text[:EXCERPT_CHARS] + "\n  [...truncado]")
+            return
+
+        self.stdout.write(self.style.NOTICE("\n>>> Gerando resposta (pode levar ~10-40s em CPU)...\n"))
+        answer = synthesize(question, hits, model=model)
+        self.stdout.write(answer)
+
+        self.stdout.write(self.style.NOTICE("\n--- fontes ---"))
         for i, hit in enumerate(hits, 1):
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"\n[{i}] {hit.book}  p.{hit.page_start}"
-                    f"  (similarity={hit.similarity:.3f})"
-                )
+                f"[{i}] {hit.book}, p.{hit.page_start}  (similaridade={hit.similarity:.3f})"
             )
-            if full or len(hit.text) <= EXCERPT_CHARS:
-                self.stdout.write(hit.text)
-            else:
-                self.stdout.write(hit.text[:EXCERPT_CHARS] + "\n  [...truncated]")
