@@ -1,4 +1,4 @@
-"""
+    """
 RAG models.
 
 - `RuleChunk`: trecho de livro de regras (GURPS PDFs), embeddings gerados via OpenAI.
@@ -13,7 +13,7 @@ from pgvector.django import HnswIndex, VectorField
 
 
 class RuleChunk(models.Model):
-    """Trecho de livro de regras, embeddings gerados via OpenAI text-embedding-3-small (1536 dims)."""
+    """Trecho de livro de regras, embeddings gerados localmente via sentence-transformers multilingual-mpnet (768 dims)."""
 
     book = models.CharField(max_length=200)
     chapter = models.CharField(max_length=200, blank=True)
@@ -23,9 +23,9 @@ class RuleChunk(models.Model):
     text = models.TextField()
     tokens = models.PositiveIntegerField()
     text_hash = models.CharField(max_length=64, db_index=True)
-    embedding = VectorField(dimensions=1536)
+    embedding = VectorField(dimensions=768)
     embedding_model = models.CharField(
-        max_length=100, default="text-embedding-3-small"
+        max_length=100, default="paraphrase-multilingual-mpnet-base-v2"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,10 +53,11 @@ class RuleChunk(models.Model):
 
 
 class EntityEmbedding(models.Model):
-    """Embedding local (sentence-transformers multilingual, 384 dims) de qualquer model do banco.
+    """Embedding local (sentence-transformers multilingual-mpnet, 768 dims) de qualquer model do banco.
 
     Vinculado via GenericForeignKey para cobrir Campanha, CharacterSheet, Message, etc.
     `campanha` e `scope` implementam o isolamento obrigatório entre mesas.
+    Usa o mesmo modelo e dimensão que RuleChunk para simplificar e permitir queries cruzadas.
     """
 
     SCOPE_CHOICES = [
@@ -82,10 +83,10 @@ class EntityEmbedding(models.Model):
 
     text = models.TextField()
     text_hash = models.CharField(max_length=64, db_index=True)
-    embedding = VectorField(dimensions=384)
+    embedding = VectorField(dimensions=768)
     embedding_model = models.CharField(
         max_length=100,
-        default="paraphrase-multilingual-MiniLM-L12-v2",
+        default="paraphrase-multilingual-mpnet-base-v2",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -6,13 +6,13 @@ Pipeline:
   2. For each PDF, extract text page by page via pymupdf (fitz).
   3. One chunk per non-empty page (V-1 MVP — smarter chunking later).
   4. Deduplicate by (book, text_hash) to stay idempotent across re-runs.
-  5. Embed new chunks in batches via OpenAI `text-embedding-3-small`,
-     with automatic retries and per-item fallback on persistent batch failures.
+  5. Embed new chunks locally via `rag.embeddings.embed_texts`
+     (sentence-transformers multilingual, 768 dims — zero API cost).
   6. Persist to `rag.RuleChunk`.
 
 Requires:
-  - `pymupdf` (pip install pymupdf).
-  - OPENAI_API_KEY environment variable (unless --dry-run).
+  - `pymupdf` and `sentence-transformers` in the active venv.
+  - First run downloads the embedding model (~280MB) from HuggingFace.
 """
 import hashlib
 from pathlib import Path
@@ -20,11 +20,10 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from rag.embeddings import EMBEDDING_MODEL_NAME, embed_texts
 from rag.models import RuleChunk
 
-OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
-OPENAI_EMBEDDING_DIMENSIONS = 1536
-EMBED_BATCH_SIZE = 50
+EMBED_BATCH_SIZE = 32  # sentence-transformers encodes in mini-batches internally
 MIN_CHUNK_CHARS = 20  # below this is almost certainly noise
 
 
@@ -53,7 +52,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="Extract and chunk without calling OpenAI or persisting.",
+            help="Extract and chunk without embedding or persisting.",
         )
         parser.add_argument(
             "--books-dir",
@@ -63,20 +62,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **opts):
-        import fitz  # noqa: F401
+        import fitz  # noqa: F401  -- proves pymupdf is installed
 
         pdfs = self._collect_pdfs(opts["book"], opts["books_dir"])
-        client = None
-        if not opts["dry_run"]:
-            from openai import OpenAI
-
-            # max_retries handles transient 429/5xx automatically with backoff.
-            client = OpenAI(max_retries=5)
 
         grand_total = 0
         for pdf in pdfs:
             self.stdout.write(self.style.NOTICE(f"\n=== {pdf.name} ==="))
-            count = self._ingest_pdf(pdf, client, dry_run=opts["dry_run"])
+            count = self._ingest_pdf(pdf, dry_run=opts["dry_run"])
             grand_total += count
 
         self.stdout.write(
@@ -99,7 +92,7 @@ class Command(BaseCommand):
             raise CommandError(f"No PDFs found in {base}")
         return pdfs
 
-    def _ingest_pdf(self, pdf, client, *, dry_run):
+    def _ingest_pdf(self, pdf, *, dry_run):
         import fitz
 
         book = _book_title(pdf)
@@ -153,69 +146,18 @@ class Command(BaseCommand):
             return 0
 
         embedded = 0
-        failed_pages = []
         for i in range(0, len(pending), EMBED_BATCH_SIZE):
             batch = pending[i : i + EMBED_BATCH_SIZE]
             page_range = f"p.{batch[0]['page_start']}-{batch[-1]['page_end']}"
             self.stdout.write(f"  batch {i + 1}-{i + len(batch)} ({page_range})...")
-            embedded += self._embed_batch_with_fallback(client, batch, failed_pages)
-
-        if failed_pages:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"  pages that failed even on retry: {failed_pages}"
+            vectors = embed_texts([c["text"] for c in batch])
+            for chunk, vec in zip(batch, vectors):
+                RuleChunk.objects.create(
+                    **chunk,
+                    embedding=vec,
+                    embedding_model=EMBEDDING_MODEL_NAME,
                 )
-            )
+                embedded += 1
 
         self.stdout.write(self.style.SUCCESS(f"  done: {embedded} chunks"))
         return embedded
-
-    def _embed_batch_with_fallback(self, client, batch, failed_pages):
-        """Try the batch as one call; if it fails, fall back to one-at-a-time.
-
-        `max_retries` on the client already retries transient errors. A final
-        failure at this layer means something is persistently wrong (likely
-        malformed input). Isolate by embedding each chunk individually so one
-        bad page doesn't sink the whole batch.
-        """
-        from openai import OpenAIError
-
-        try:
-            resp = client.embeddings.create(
-                model=OPENAI_EMBEDDING_MODEL,
-                input=[c["text"] for c in batch],
-            )
-            self._persist_batch(batch, resp.data)
-            return len(batch)
-        except OpenAIError as e:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"    batch failed ({type(e).__name__}); falling back to per-chunk"
-                )
-            )
-
-        embedded = 0
-        for chunk in batch:
-            try:
-                resp = client.embeddings.create(
-                    model=OPENAI_EMBEDDING_MODEL,
-                    input=[chunk["text"]],
-                )
-                self._persist_batch([chunk], resp.data)
-                embedded += 1
-            except OpenAIError as e:
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"    p.{chunk['page_start']} failed: {type(e).__name__}"
-                    )
-                )
-                failed_pages.append(chunk["page_start"])
-        return embedded
-
-    def _persist_batch(self, chunks, data):
-        for chunk, datum in zip(chunks, data):
-            RuleChunk.objects.create(
-                **chunk,
-                embedding=datum.embedding,
-                embedding_model=OPENAI_EMBEDDING_MODEL,
-            )
