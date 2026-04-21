@@ -54,13 +54,15 @@
         <div class="row">
             <input id="book" name="book" placeholder="Filtrar por livro (opcional): ex. Campaigns">
             <select id="top_k" name="top_k" title="Quantos chunks considerar">
-                <option value="3">top 3</option>
-                <option value="5" selected>top 5</option>
+                <option value="2">top 2</option>
+                <option value="3" selected>top 3</option>
+                <option value="5">top 5</option>
                 <option value="8">top 8</option>
             </select>
             <select id="model" name="model" title="Modelo LLM">
-                <option value="qwen2.5:3b-instruct" selected>qwen 3b (rápido)</option>
-                <option value="qwen2.5:7b-instruct">qwen 7b (melhor)</option>
+                <option value="qwen2.5:1.5b-instruct">qwen 1.5b (mais rápido)</option>
+                <option value="qwen2.5:3b-instruct" selected>qwen 3b (padrão)</option>
+                <option value="qwen2.5:7b-instruct">qwen 7b (melhor qualidade)</option>
             </select>
             <button type="submit" id="submit-btn">Consultar</button>
         </div>

@@ -32,9 +32,12 @@ class RuleHit:
         return 1 - self.distance
 
 
+DEFAULT_TOP_K = 3  # balanço entre cobertura e prompt eval speed em CPU
+
+
 def search_rules(
     query: str,
-    top_k: int = 5,
+    top_k: int = DEFAULT_TOP_K,
     book: Optional[str] = None,
 ) -> list[RuleHit]:
     """Retorna os top-K chunks mais próximos da pergunta.

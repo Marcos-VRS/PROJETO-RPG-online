@@ -30,8 +30,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--top-k",
             type=int,
-            default=5,
-            help="Quantos chunks alimentar no sintetizador / retornar em raw (default: 5).",
+            default=3,
+            help="Quantos chunks alimentar no sintetizador / retornar em raw (default: 3).",
         )
         parser.add_argument(
             "--book",

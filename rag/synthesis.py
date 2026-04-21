@@ -53,8 +53,10 @@ def _request_body(question, hits, model, temperature, stream):
         "options": {
             "temperature": temperature,
             "top_p": 0.9,
-            "num_ctx": 4096,
-            "num_predict": 500,  # cap output length
+            # num_ctx reduzido de 4096 para 2048: nosso prompt + output cabe
+            # folgado, e cache KV fica menor (menor pressão de memória).
+            "num_ctx": 2048,
+            "num_predict": 400,  # cap output length
         },
     }
 
