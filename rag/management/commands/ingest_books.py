@@ -3,18 +3,17 @@ Management command: ingest GURPS PDFs into the RuleChunk vector store.
 
 Pipeline:
   1. Collect PDFs from `books/` directory (or a single --book path).
-  2. For each PDF, extract text page by page via `pdftotext` (poppler-utils).
+  2. For each PDF, extract text page by page via pymupdf (fitz).
   3. One chunk per non-empty page (V-1 MVP — smarter chunking later).
   4. Deduplicate by (book, text_hash) to stay idempotent across re-runs.
   5. Embed new chunks in batches via OpenAI `text-embedding-3-small`.
   6. Persist to `rag.RuleChunk`.
 
 Requires:
-  - `pdftotext` and `pdfinfo` binaries (sudo apt install poppler-utils).
-  - OPENAI_API_KEY environment variable.
+  - `pymupdf` (pip install pymupdf).
+  - OPENAI_API_KEY environment variable (unless --dry-run).
 """
 import hashlib
-import subprocess
 from pathlib import Path
 
 from django.conf import settings
@@ -32,43 +31,12 @@ def _sha256(s: str) -> str:
 
 
 def _approx_tokens(text: str) -> int:
-    """Rough token count: 1 token ~= 4 chars for English. Good enough for V-1."""
+    """Rough token count: 1 token ~= 4 chars. Good enough for V-1."""
     return max(1, len(text) // 4)
 
 
-def _pdf_page_count(pdf: Path) -> int:
-    out = subprocess.run(
-        ["pdfinfo", str(pdf)],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout
-    for line in out.splitlines():
-        if line.lower().startswith("pages:"):
-            return int(line.split(":", 1)[1].strip())
-    raise CommandError(f"Could not determine page count for {pdf}")
-
-
-def _extract_page_text(pdf: Path, page: int) -> str:
-    result = subprocess.run(
-        [
-            "pdftotext",
-            "-f", str(page),
-            "-l", str(page),
-            "-layout",
-            str(pdf),
-            "-",
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
-
-
 def _book_title(pdf: Path) -> str:
-    # V-1: use filename stem as book identifier.
-    # Can be normalized/renamed later without losing data (text_hash is the dedup key).
+    # V-1: filename stem as book identifier.
     return pdf.stem
 
 
@@ -95,13 +63,16 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **opts):
+        # Lazy imports so the command loads even if pymupdf/openai are missing
+        # (Django autodiscovery imports every management command at startup).
+        import fitz  # noqa: F401  -- proves pymupdf is installed
+
         pdfs = self._collect_pdfs(opts["book"], opts["books_dir"])
         client = None
         if not opts["dry_run"]:
-            # Lazy import so dry-run works even without openai configured.
             from openai import OpenAI
 
-            client = OpenAI()  # uses OPENAI_API_KEY env var
+            client = OpenAI()  # reads OPENAI_API_KEY from env
 
         grand_total = 0
         for pdf in pdfs:
@@ -130,35 +101,41 @@ class Command(BaseCommand):
         return pdfs
 
     def _ingest_pdf(self, pdf, client, *, dry_run):
+        import fitz
+
         book = _book_title(pdf)
-        total_pages = _pdf_page_count(pdf)
-        self.stdout.write(f"  pages: {total_pages}")
+        doc = fitz.open(pdf)
+        try:
+            total_pages = len(doc)
+            self.stdout.write(f"  pages: {total_pages}")
 
-        pending = []  # chunks to embed + persist
-        skipped_existing = 0
-        skipped_empty = 0
+            pending = []
+            skipped_existing = 0
+            skipped_empty = 0
 
-        for page in range(1, total_pages + 1):
-            text = _extract_page_text(pdf, page)
-            if not text.strip():
-                skipped_empty += 1
-                continue
-            h = _sha256(text)
-            if RuleChunk.objects.filter(book=book, text_hash=h).exists():
-                skipped_existing += 1
-                continue
-            pending.append(
-                {
-                    "book": book,
-                    "chapter": "",
-                    "section": "",
-                    "page_start": page,
-                    "page_end": page,
-                    "text": text,
-                    "tokens": _approx_tokens(text),
-                    "text_hash": h,
-                }
-            )
+            for page_num in range(total_pages):
+                text = doc[page_num].get_text().strip()
+                if not text:
+                    skipped_empty += 1
+                    continue
+                h = _sha256(text)
+                if RuleChunk.objects.filter(book=book, text_hash=h).exists():
+                    skipped_existing += 1
+                    continue
+                pending.append(
+                    {
+                        "book": book,
+                        "chapter": "",
+                        "section": "",
+                        "page_start": page_num + 1,
+                        "page_end": page_num + 1,
+                        "text": text,
+                        "tokens": _approx_tokens(text),
+                        "text_hash": h,
+                    }
+                )
+        finally:
+            doc.close()
 
         self.stdout.write(
             f"  new: {len(pending)} | skipped existing: {skipped_existing} | empty: {skipped_empty}"
@@ -171,8 +148,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("  [dry-run] skipping embeddings"))
             return 0
 
-        # Embed in batches; OpenAI API accepts up to 2048 inputs per call,
-        # but 100 keeps memory and error surface small.
         embedded = 0
         for i in range(0, len(pending), EMBED_BATCH_SIZE):
             batch = pending[i : i + EMBED_BATCH_SIZE]
