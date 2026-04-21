@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "channels",
     "corsheaders",  # Certifique-se de que o CORS está instalado
+    "rag",
 ]
 
 # Configuração dos backends de autenticação
