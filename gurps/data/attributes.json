@@ -1,0 +1,233 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Characters",
+    "pages": "14-21",
+    "edition": "Fourth Edition"
+  },
+  "primary_attributes": [
+    {
+      "id": "ST",
+      "name_en": "Strength",
+      "name_pt": "Força",
+      "cost_per_level": 10,
+      "base_value": 10,
+      "typical_range_humans": [1, 20],
+      "no_negative_scores": true,
+      "derives": ["basic_lift", "damage_thrust", "damage_swing", "hp", "build"],
+      "description_pt": "Mede poder físico e massa. Crucial para guerreiros e qualquer aventureiro.",
+      "page_ref": 14,
+      "special_limitations": [
+        { "id": "no_fine_manipulators", "value_percent": -40 },
+        { "id": "size", "value_percent_per_sm": -10, "max_total_percent": -80 }
+      ]
+    },
+    {
+      "id": "DX",
+      "name_en": "Dexterity",
+      "name_pt": "Destreza",
+      "cost_per_level": 20,
+      "base_value": 10,
+      "typical_range_humans": [1, 20],
+      "no_negative_scores": true,
+      "derives": ["basic_speed", "basic_move"],
+      "description_pt": "Mede agilidade, coordenação e motricidade fina.",
+      "page_ref": 15,
+      "special_limitations": [
+        { "id": "no_fine_manipulators", "value_percent": -40 }
+      ]
+    },
+    {
+      "id": "IQ",
+      "name_en": "Intelligence",
+      "name_pt": "Inteligência",
+      "cost_per_level": 20,
+      "base_value": 10,
+      "typical_range_humans": [1, 20],
+      "no_negative_scores": true,
+      "derives": ["will", "per"],
+      "description_pt": "Mede capacidade mental: criatividade, memória, razão, percepção, sanidade, vontade.",
+      "page_ref": 15,
+      "sentience_notes": {
+        "iq_0_nonsentient_cost": -200,
+        "sapience_min_iq": 6,
+        "below_6_cannot_learn_technological_skills": true,
+        "below_6_cannot_possess_languages": true
+      }
+    },
+    {
+      "id": "HT",
+      "name_en": "Health",
+      "name_pt": "Vigor",
+      "cost_per_level": 10,
+      "base_value": 10,
+      "typical_range_humans": [1, 20],
+      "no_negative_scores": true,
+      "derives": ["fp", "basic_speed", "basic_move"],
+      "description_pt": "Mede energia, vitalidade, resistência a veneno/doença/radiação e 'grit'.",
+      "page_ref": 15
+    }
+  ],
+  "secondary_characteristics": [
+    {
+      "id": "HP",
+      "name_en": "Hit Points",
+      "name_pt": "Pontos de Vida",
+      "default_formula": "ST",
+      "cost_per_level": 2,
+      "realistic_limit": { "type": "percent_of_base", "percent": 30, "base_attribute": "ST" },
+      "nonhumans_supers_exempt": true,
+      "description_pt": "Capacidade do corpo de resistir a ferimentos. Lost HP não reduzem ST.",
+      "page_ref": 16
+    },
+    {
+      "id": "Will",
+      "name_en": "Will",
+      "name_pt": "Vontade",
+      "default_formula": "IQ",
+      "cost_per_level": 5,
+      "limits": { "max": 20, "max_negative_delta": 4 },
+      "gm_override_possible": true,
+      "description_pt": "Resistência a estresse mental (tortura, lavagem cerebral, sedução) e a ataques sobrenaturais.",
+      "page_ref": 16
+    },
+    {
+      "id": "Per",
+      "name_en": "Perception",
+      "name_pt": "Percepção",
+      "default_formula": "IQ",
+      "cost_per_level": 5,
+      "limits": { "max": 20, "max_negative_delta": 4 },
+      "gm_override_possible": true,
+      "description_pt": "Alerta geral. Base para Sense Rolls.",
+      "page_ref": 16
+    },
+    {
+      "id": "FP",
+      "name_en": "Fatigue Points",
+      "name_pt": "Pontos de Fadiga",
+      "default_formula": "HT",
+      "cost_per_level": 3,
+      "realistic_limit": { "type": "percent_of_base", "percent": 30, "base_attribute": "HT" },
+      "no_upper_cap": true,
+      "machine_meta_trait_value": "N/A",
+      "description_pt": "Reserva de energia do corpo. Consumido por esforço, doença, calor, fome, sono perdido, efeitos especiais.",
+      "page_ref": 16
+    },
+    {
+      "id": "BasicSpeed",
+      "name_en": "Basic Speed",
+      "name_pt": "Velocidade Básica",
+      "default_formula": "(HT + DX) / 4",
+      "round_formula": "no_rounding",
+      "cost_per_step": 5,
+      "step_size": 0.25,
+      "realistic_limit": { "type": "absolute_delta", "value": 2.0 },
+      "description_pt": "Medida de reflexos e rapidez física. Influencia corrida, dodge e ordem de ação.",
+      "page_ref": 17
+    },
+    {
+      "id": "BasicMove",
+      "name_en": "Basic Move",
+      "name_pt": "Movimento Básico",
+      "default_formula": "floor(BasicSpeed)",
+      "cost_per_level": 5,
+      "unit": "yards/second",
+      "humans_training_max_delta": 3,
+      "description_pt": "Velocidade de corrida em terreno normal sem carga.",
+      "page_ref": 17
+    },
+    {
+      "id": "Dodge",
+      "name_en": "Dodge",
+      "name_pt": "Esquiva",
+      "default_formula": "floor(BasicSpeed) + 3",
+      "buyable_directly": false,
+      "description_pt": "Defesa ativa por esquiva. Rolar 3d ≤ Dodge. Reduzida por encumbrance.",
+      "page_ref": 17
+    },
+    {
+      "id": "BasicLift",
+      "name_en": "Basic Lift",
+      "name_pt": "Carga Básica",
+      "default_formula": "(ST * ST) / 5",
+      "unit": "lbs",
+      "round_if_geq_10": true,
+      "buyable_directly": false,
+      "description_pt": "Peso máximo sobre a cabeça com uma mão em 1 segundo.",
+      "page_ref": 15
+    }
+  ],
+  "damage_table": {
+    "notes_pt": "Dano básico por thrust/swing em função de ST. Formato 'NdM±X' = N dados d6 modificados por M e somar/subtrair X.",
+    "per_10_over_100_add": { "thrust": "1d", "swing": "1d" },
+    "rows": [
+      { "st": 1,  "thrust": "1d-6", "swing": "1d-5" },
+      { "st": 2,  "thrust": "1d-6", "swing": "1d-5" },
+      { "st": 3,  "thrust": "1d-5", "swing": "1d-4" },
+      { "st": 4,  "thrust": "1d-5", "swing": "1d-4" },
+      { "st": 5,  "thrust": "1d-4", "swing": "1d-3" },
+      { "st": 6,  "thrust": "1d-4", "swing": "1d-3" },
+      { "st": 7,  "thrust": "1d-3", "swing": "1d-2" },
+      { "st": 8,  "thrust": "1d-3", "swing": "1d-2" },
+      { "st": 9,  "thrust": "1d-2", "swing": "1d-1" },
+      { "st": 10, "thrust": "1d-2", "swing": "1d" },
+      { "st": 11, "thrust": "1d-1", "swing": "1d+1" },
+      { "st": 12, "thrust": "1d-1", "swing": "1d+2" },
+      { "st": 13, "thrust": "1d",   "swing": "2d-1" },
+      { "st": 14, "thrust": "1d",   "swing": "2d" },
+      { "st": 15, "thrust": "1d+1", "swing": "2d+1" },
+      { "st": 16, "thrust": "1d+1", "swing": "2d+2" },
+      { "st": 17, "thrust": "1d+2", "swing": "3d-1" },
+      { "st": 18, "thrust": "1d+2", "swing": "3d" },
+      { "st": 19, "thrust": "2d-1", "swing": "3d+1" },
+      { "st": 20, "thrust": "2d-1", "swing": "3d+2" },
+      { "st": 21, "thrust": "2d",   "swing": "4d-1" },
+      { "st": 22, "thrust": "2d",   "swing": "4d" },
+      { "st": 23, "thrust": "2d+1", "swing": "4d+1" },
+      { "st": 24, "thrust": "2d+1", "swing": "4d+2" },
+      { "st": 25, "thrust": "2d+2", "swing": "5d-1" },
+      { "st": 26, "thrust": "2d+2", "swing": "5d" },
+      { "st": 27, "thrust": "3d-1", "swing": "5d+1" },
+      { "st": 28, "thrust": "3d-1", "swing": "5d+1" },
+      { "st": 29, "thrust": "3d",   "swing": "5d+2" },
+      { "st": 30, "thrust": "3d",   "swing": "5d+2" },
+      { "st": 31, "thrust": "3d+1", "swing": "6d-1" },
+      { "st": 32, "thrust": "3d+1", "swing": "6d-1" },
+      { "st": 33, "thrust": "3d+2", "swing": "6d" },
+      { "st": 34, "thrust": "3d+2", "swing": "6d" },
+      { "st": 35, "thrust": "4d-1", "swing": "6d+1" },
+      { "st": 36, "thrust": "4d-1", "swing": "6d+1" },
+      { "st": 37, "thrust": "4d",   "swing": "6d+2" },
+      { "st": 38, "thrust": "4d",   "swing": "6d+2" },
+      { "st": 39, "thrust": "4d+1", "swing": "7d-1" },
+      { "st": 40, "thrust": "4d+1", "swing": "7d-1" },
+      { "st": 45, "thrust": "5d",   "swing": "7d+1" },
+      { "st": 50, "thrust": "5d+2", "swing": "8d-1" },
+      { "st": 55, "thrust": "6d",   "swing": "8d+1" },
+      { "st": 60, "thrust": "7d-1", "swing": "9d" },
+      { "st": 65, "thrust": "7d+1", "swing": "9d+2" },
+      { "st": 70, "thrust": "8d",   "swing": "10d" },
+      { "st": 75, "thrust": "8d+2", "swing": "10d+2" },
+      { "st": 80, "thrust": "9d",   "swing": "11d" },
+      { "st": 85, "thrust": "9d+2", "swing": "11d+2" },
+      { "st": 90, "thrust": "10d",  "swing": "12d" },
+      { "st": 95, "thrust": "10d+2","swing": "12d+2" },
+      { "st": 100,"thrust": "11d",  "swing": "13d" }
+    ]
+  },
+  "encumbrance_levels": [
+    { "level": 0, "id": "none",        "name_pt": "Nenhuma",      "max_weight_multiplier_of_bl": 1,  "move_multiplier": 1.0, "dodge_modifier":  0 },
+    { "level": 1, "id": "light",       "name_pt": "Leve",         "max_weight_multiplier_of_bl": 2,  "move_multiplier": 0.8, "dodge_modifier": -1 },
+    { "level": 2, "id": "medium",      "name_pt": "Média",        "max_weight_multiplier_of_bl": 3,  "move_multiplier": 0.6, "dodge_modifier": -2 },
+    { "level": 3, "id": "heavy",       "name_pt": "Pesada",       "max_weight_multiplier_of_bl": 6,  "move_multiplier": 0.4, "dodge_modifier": -3 },
+    { "level": 4, "id": "extra_heavy", "name_pt": "Muito Pesada", "max_weight_multiplier_of_bl": 10, "move_multiplier": 0.2, "dodge_modifier": -4 }
+  ],
+  "encumbrance_rules": {
+    "drop_fractions": true,
+    "minimum_move": 1,
+    "minimum_dodge": 1
+  },
+  "reaction_scale_notes_pt": "Escala humana: ≤6 incapacitante, 7 pobre, 8-9 abaixo da média, 10 média, 11-12 acima da média, 13-14 excepcional, ≥15 impressionante, >20 divino/não-humano (requer GM).",
+  "non_human_point_interpretation_pt": "Para não-humanos, cada ponto acima/abaixo de 10 representa ±10% sobre a norma da raça, não ±1 unidade absoluta."
+}
