@@ -1,9 +1,9 @@
-    """
+"""
 RAG models.
 
-- `RuleChunk`: trecho de livro de regras (GURPS PDFs), embeddings gerados via OpenAI.
+- `RuleChunk`: trecho de livro de regras (GURPS PDFs), embeddings gerados localmente via sentence-transformers multilingual-mpnet (768 dims).
 - `EntityEmbedding`: embedding de uma entidade do banco (ficha, campanha, mensagem),
-  gerado localmente via sentence-transformers para não vazar dados privados.
+  gerado pelo mesmo modelo local. Dados privados nunca saem da VM.
 """
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
