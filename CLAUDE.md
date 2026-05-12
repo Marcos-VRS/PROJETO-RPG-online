@@ -4,10 +4,17 @@ Este arquivo é carregado automaticamente em toda conversa deste repositório. E
 
 ## Documentos
 
-- [Estado da sessão — última parada e plano de continuação](docs/SESSION_STATE.md) — **leia primeiro ao retomar**
-- [Prompt do agente — missão, papel, stack, responsabilidades](docs/AGENT_PROMPT.md)
+### V2 (refatoração ativa)
+- [Estado da Execução V2 — onde paramos](docs/V2_EXECUTION_STATE.md) — **leia primeiro ao retomar**
+- [Prompt do Arquiteto V2 — produto, decisões, restrições](docs/PLATFORM_V2_PROMPT.md)
+- [Plano de Execução V2 — fases F-0 → F-11 com passo a passo](docs/PLATFORM_V2_EXECUTION_PLAN.md)
+
+### V1 / referência
+- [Estado da sessão V1 (chatbot RAG)](docs/SESSION_STATE.md)
+- [Prompt do agente V1](docs/AGENT_PROMPT.md)
 - [Arquitetura RAG — busca semântica sobre regras e estado do jogo](docs/RAG_ARCHITECTURE.md)
-- [Base de conhecimento GURPS 4e — visão geral + plano de catalogação](docs/GURPS_KNOWLEDGE.md)
+- [Blueprint reutilizável do chatbot RAG](docs/CHATBOT_BLUEPRINT.md)
+- [Base de conhecimento GURPS 4e](docs/GURPS_KNOWLEDGE.md)
   - [Atributos e características secundárias](docs/gurps/attributes.md) — dados em `gurps/data/attributes.json`
 
 Novos documentos (arquitetura, roadmap, decisões, catálogos específicos em `docs/gurps/`) serão criados sob demanda e indexados aqui.

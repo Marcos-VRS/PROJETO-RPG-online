@@ -1,6 +1,12 @@
 # Reference material (large + copyrighted — never commit) #
 books/
 
+# Scratch files (não commitar) #
+gurps/views/ccccc.py
+
+# PyCharm workspace (já tinha algumas linhas mais abaixo, consolidando aqui) #
+.idea/
+
 # Django #
 *.log
 *.pot
@@ -111,12 +117,29 @@ celerybeat-schedule.*
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Frontend (React/Vite/Tauri) #
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+frontend/src-tauri/WixTools/
+frontend/.env.local
+frontend/.env.*.local
+
+# Docker volumes (caso bind-mount) #
+postgres_data/
+redis_data/
+minio_data/
 
 # mkdocs documentation
 /site

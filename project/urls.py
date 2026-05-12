@@ -20,7 +20,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("api.urls")),  # API V2 (SPA / Tauri)
     path("rag/", include("rag.urls")),  # consulta RAG de regras
-    path("", include("gurps.urls")),  # inclui URLs do app "gurps"
-    path("accounts/", include("allauth.urls")),  # Inclui as URLs do allauth
+    path("accounts/", include("allauth.urls")),  # allauth
+    path("", include("gurps.urls")),  # site legado (htmx) — mantido durante a transição
 ]
