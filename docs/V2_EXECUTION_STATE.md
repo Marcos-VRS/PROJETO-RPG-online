@@ -36,7 +36,7 @@ Legenda: ✅ feito · 🔄 em andamento · ⏳ pendente · ⛔ bloqueado
 | 10 | Scaffold `frontend/` (package.json, tsconfig, vite, tailwind, src/, README) | ✅ |
 | 11 | Este doc criado | ✅ |
 | 12 | `CLAUDE.md` atualizado com novos docs V2 | ✅ |
-| 13 | Commit + push da branch | 🔄 |
+| 13 | Commit + push da branch (`5c00c3e`) | ✅ |
 
 ---
 
