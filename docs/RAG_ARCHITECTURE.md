@@ -1,6 +1,20 @@
 # Arquitetura RAG — busca semântica sobre regras e estado do jogo
 
-> Documento vivo. Atualizar conforme a implementação evoluir. Decisões foram tomadas em **2026-04-21**.
+> **STATUS: EM HIBERNAÇÃO desde 2026-05-14.**
+>
+> O pivô para o modelo desktop ([`DESKTOP_DISTRIBUTION.md`](DESKTOP_DISTRIBUTION.md)) troca Postgres por SQLite, e o `pgvector` em que toda a camada de retrieval foi construída **não roda em SQLite**. O app `rag/` foi desativado de `INSTALLED_APPS` (manter código no repo — não deletar).
+>
+> **Para reativar, será preciso decidir entre:**
+> 1. **Vector store SQLite-friendly**: `sqlite-vss` (extensão SQLite que adiciona busca vetorial), `faiss` (in-memory, persistido como arquivo), ou `chroma`/`lancedb` (banco vetorial embarcado).
+> 2. **Endpoint externo opcional**: o app desktop chama um serviço de retrieval na nuvem (Claude API com prompt caching de regras, ou serviço próprio). Trade-off: precisa de internet sempre, custo recorrente.
+> 3. **Híbrido**: SQLite vetorial pro retrieval simples + Claude API opcional pra síntese final.
+>
+> **O que da implementação anterior continua aproveitável:**
+> - `rag/chunking.py`, `rag/embeddings.py`, `rag/synthesis.py` (síntese via Ollama) — lógica de chunking/embedding/síntese é agnóstica ao vector store.
+> - `rag/models.py:RuleChunk` precisa trocar `pgvector.django.VectorField` por equivalente do novo backend.
+> - Management commands (`ingest_books`, `query_rules`, `bench_ollama`) — só precisam adaptar a query final.
+>
+> **Conteúdo abaixo é histórico** — descreve a arquitetura pgvector-on-Postgres válida até 2026-05-13. Mantido como referência das decisões originais, motivos e modelagem de dados. Quando RAG voltar à pauta, criar nova seção "RAG v2 — vector store SQLite-friendly" abaixo desta linha.
 
 ---
 

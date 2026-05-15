@@ -1,204 +1,196 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-04-21 (noite).
-> **Próxima sessão:** migração completa do dev pra WSL2 local.
+> **Última sessão:** 2026-05-15 (madrugada).
+> **Próxima sessão:** começar **Fase 3.5 (Inno Setup)** — empacotar a pasta `dist\roll3d6\` num instalador `roll3d6-setup.exe` de dois cliques.
 >
 > Quando voltar, leia este documento primeiro.
 
 ---
 
-## Decisão ativa: pivô pra dev local (WSL2 + Ollama no Windows host)
+## Pivô estrutural de 2026-05-14
 
-Decidido em 2026-04-21 ao final do dia. O dev estava na VM do GCP (4 vCPUs, sem GPU), mas a inferência LLM do RAG ficava em 1-3 min por query — inutilizável interativamente. A TI da empresa bloqueia instalações na conta Windows "normal" do usuário, mas **ele tem WSL2 instalado com acesso root**. Todo o dev migra pra lá.
+O produto deixou de ser SaaS hospedado no GCP e virou **aplicativo desktop com dois cliques** (Windows). Detalhes em [`AGENT_PROMPT.md`](AGENT_PROMPT.md) e [`DESKTOP_DISTRIBUTION.md`](DESKTOP_DISTRIBUTION.md). Resumo das decisões:
 
-**Produção (GCP VM, IP 35.239.231.110) continua intocada.** O site segue no ar normalmente.
+| Decisão | Escolha |
+|---|---|
+| Banco do produto | SQLite (`%APPDATA%\roll3d6\data.sqlite3`) |
+| Multiplayer | Cloudflare Quick Tunnel (URL rotária por sessão) |
+| Channel layer | InMemoryChannelLayer (sem Redis) |
+| Empacotamento | PyInstaller `--onedir --noconsole` + Inno Setup |
+| UI do launcher | pywebview (HTML/CSS embutido) |
+| Destino do SaaS GCP | Sunset gradual (congelado, desligado quando desktop maduro) |
+| Assinatura de código | Adiada (SmartScreen na 1ª execução é aceito) |
+| RAG | **Hibernado** — código preservado, comentado em INSTALLED_APPS e urls.py |
 
 ---
 
-## Status das etapas V-0 até V-4
+## Estado das fases
 
-| Etapa | Descrição | Status |
+| Fase | Descrição | Status |
 |---|---|---|
-| V-0.0 | Postgres em dev | ✅ no GCP VM (dev `roll3d6_dev`) / ⏳ refazer no WSL2 |
-| V-0 | App Django `rag` + models + pgvector | ✅ commit `d48500e` (scaffold) + `a4b3ea3` (migration) |
-| V-1 | Ingestão PDFs → `RuleChunk` | ✅ 3 livros, 3124 chunks, 768 dims (local embedder) |
-| V-2 | Embeddings de entidades do banco | ⏳ não começado |
-| V-3 | Retrieval semântico (`search_rules`) + CLI `query_rules` | ✅ commit `6f0ea25` |
-| V-3.1 | Síntese via Ollama (streaming) | ✅ commits `909d34e` / `1f6f8b2` |
-| V-3.2 | Endpoint HTTP + página HTML `/rag/` | ✅ commit `670c365` |
-| V-3.3 | Perf tuning (top_k=3, num_ctx=2048, 1.5b/3b/7b opcionais) | ✅ commit `aceec0d` |
-| V-4 | Síntese via Claude API | 📌 backlog (custo) |
-
-Hashes estão na history do repo. Commit mais recente relevante: `aceec0d`.
+| 0 | Reset de documentação | ✅ concluída (2026-05-14) |
+| 1 | venv Windows + Django/SQLite local funcionando | ✅ concluída (2026-05-14, validada pelo usuário no browser) |
+| 2 | Launcher (daphne + cloudflared + UI pywebview) | ✅ concluída (2026-05-15, validada pelo usuário) |
+| 3 | Empacotamento PyInstaller (`dist\roll3d6\roll3d6.exe`) | ✅ concluída (2026-05-15, .exe testado e responde HTTP+statics) |
+| **3.5** | **Inno Setup → `roll3d6-setup.exe` (instalador final)** | **🟡 próximo passo** |
+| 4 | Migração de dados GCP Postgres → SQLite desktop | ⏳ não começado |
+| 5 | Sunset GCP (banner + export + desligar VM) | ⏳ não começado |
 
 ---
 
-## O que está no repo hoje
+## O que existe no repo hoje (uncommitted)
 
-- `rag/` — app completa: models, chunking, embeddings locais, síntese via Ollama, retrieval, CLI commands, view HTTP, template HTML.
-- `rag/management/commands/` — `ingest_books`, `query_rules`, `bench_ollama`.
-- `gurps/` — app principal do site (inalterada exceto pelo ccccc.py scratch que NÃO deve ser commitado).
-- `project/settings.py` — `"rag"` em `INSTALLED_APPS`.
-- `project/urls.py` — `rag.urls` montado em `/rag/`.
-- `docs/` — AGENT_PROMPT, RAG_ARCHITECTURE, GURPS_KNOWLEDGE, este SESSION_STATE, e subpastas por tema (atributos GURPS em `docs/gurps/attributes.md`).
-- `gurps/data/` — catálogo estruturado GURPS (`attributes.json`, `advantages.json` parcial).
-- `books/` — gitignored; PDFs ficam só no ambiente local.
-- `CLAUDE.md` — índice principal.
+**Modificados:**
+- `CLAUDE.md` — índice atualizado para o pivô desktop
+- `requirements.txt` — removido `channels_redis`/`redis`, adicionado `pywebview`. Em UTF-8 sem BOM (era UTF-16 antes — armadilha que travou o pip).
+- `project/settings.py` — múltiplas adições condicionais ao modo desktop (ver "Mudanças principais em settings.py" abaixo)
+- `project/urls.py` — `rag.urls` comentado
+- `docs/AGENT_PROMPT.md` — reescrito
+- `docs/RAG_ARCHITECTURE.md` — prefixado com nota de hibernação
+- `docs/SESSION_STATE.md` — este arquivo
+- `.gitignore` — adicionada exceção `!desktop/roll3d6.spec` + `/build/` + `warn-*.txt` + `xref-*.html`
+
+**Novos:**
+- `docs/DESKTOP_DISTRIBUTION.md` — arquitetura completa do instalador
+- `desktop/` — pacote do launcher (ver árvore abaixo)
+- `static/` — gerado por `collectstatic`, **gitignored**
+- `db.sqlite3` na raiz — banco do dev em modo `python manage.py runserver`, **gitignored**
+- `%APPDATA%\roll3d6\` (FORA do repo) — banco do modo desktop com:
+  - `data.sqlite3` (admin user: `admin` / senha `admin`)
+  - `secret.key` — chave Django
+  - `bin\cloudflared.exe` (~50 MB, baixado uma vez)
+  - `logs\daphne.log`, `logs\cloudflared.log`
+
+**Bundle pronto:**
+- `dist\roll3d6\roll3d6.exe` — 18 MB, com pasta `_internal` de ~114 MB. Total ~132 MB. **Gitignored**, gerar com `desktop\build.ps1`.
+
+### Árvore de `desktop/`
+
+```
+desktop/
+├── __init__.py
+├── launcher.py            # entry point: orquestra setup_django + server + tunnel + ui
+├── runtime_config.py      # %APPDATA%\roll3d6, SECRET_KEY auto-gerada
+├── server.py              # spawn de daphne (subprocess) — frozen-aware
+├── tunnel.py              # cloudflared: bundle-first, fallback download
+├── ui.py                  # janelinha pywebview com HTML+JS inline
+├── roll3d6.spec           # PyInstaller spec (com django.setup() no header)
+├── build.ps1              # collectstatic + pyinstaller num comando só
+├── _smoketest.py          # teste manual: config + porta + download cloudflared
+└── _e2e_test.py           # teste manual: pipeline E2E headless (sem UI)
+```
+
+Os arquivos `_smoketest.py` e `_e2e_test.py` são utilitários de debug — podem ser mantidos ou removidos, não rodam automaticamente.
 
 ---
 
-## Arquitetura local alvo (WSL2 + Windows host)
+## Mudanças principais em `project/settings.py`
 
-```
-┌────────────────────────────────┐        ┌────────────────────────────────┐
-│ Windows host                   │        │ WSL2 Ubuntu                    │
-│ ─────────────────────────────  │        │ ─────────────────────────────  │
-│ Ollama nativo (CUDA)           │ ←HTTP→ │ Django + daphne                │
-│   - qwen2.5:3b-instruct        │ :11434 │ Postgres 16 + pgvector         │
-│   - usa GPU RTX 1000 Ada (4GB) │        │ Python 3.13 venv               │
-│                                │        │ sentence-transformers (CPU)    │
-└────────────────────────────────┘        │ pymupdf, openai (não usa),     │
-                                          │ anthropic (não usa), pgvector  │
-                                          └────────────────────────────────┘
-```
-
-- **Django/Postgres/embeddings ficam no WSL2.** A GPU não é necessária pra embedder (CPU já é rápido pra 300 chunks).
-- **Ollama fica no Windows host.** Só ele precisa da GPU, e o driver NVIDIA está no Windows.
-- **Django chama Ollama via HTTP** através do gateway entre WSL2 e host.
-
----
-
-## Plano pra primeira sessão no WSL2
-
-### 1. Preparar o WSL2 (Ubuntu)
-
-```bash
-# dentro do WSL2
-sudo apt update
-sudo apt install -y postgresql postgresql-contrib postgresql-16-pgvector python3.13 python3.13-venv python3.13-dev git build-essential
-```
-
-(Se `postgresql-16` não estiver disponível na distro, aceitar 14 ou 15 — pgvector funciona em todas.)
-
-### 2. Criar o banco dev
-
-```bash
-sudo -u postgres psql -c "CREATE USER roll3d6_dev WITH PASSWORD 'ESCOLHA_UMA_SENHA';"
-sudo -u postgres psql -c "CREATE DATABASE roll3d6_dev OWNER roll3d6_dev ENCODING 'UTF8' TEMPLATE template0;"
-sudo -u postgres psql -d roll3d6_dev -c "CREATE EXTENSION IF NOT EXISTS vector;"
-sudo -u postgres psql -d roll3d6_dev -c "GRANT ALL ON SCHEMA public TO roll3d6_dev;"
-```
-
-### 3. Clonar repo e criar venv
-
-```bash
-cd ~
-git clone git@github.com:Marcos-VRS/PROJETO-RPG-online.git roll3d6rpgdev
-cd roll3d6rpgdev
-python3.13 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-pip install 'psycopg[binary]>=3.2' pgvector sentence-transformers pymupdf
-```
-
-> Se a chave SSH do WSL2 não estiver cadastrada no GitHub, use HTTPS ou gere uma nova chave (ed25519) e cadastre antes.
-
-### 4. Configurar segredos
-
-```bash
-cat > ~/.roll3d6_secrets <<'EOF'
-export ROLL3D6_DEV_DB_PASSWORD='<senha do banco dev>'
-EOF
-chmod 600 ~/.roll3d6_secrets
-echo '[ -f "$HOME/.roll3d6_secrets" ] && source "$HOME/.roll3d6_secrets"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### 5. `project/local_settings.py`
-
-Conteúdo (não commitar — já está no `.gitignore`):
+Tudo controlado por **uma única env var**: `ROLL3D6_DESKTOP_HOME`. Quando setada (sempre que o launcher inicia), ativa o modo desktop.
 
 ```python
-import os
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "roll3d6_dev",
-        "USER": "roll3d6_dev",
-        "PASSWORD": os.environ.get("ROLL3D6_DEV_DB_PASSWORD", ""),
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
-}
-
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
-
-# Windows host Ollama — IP ou hostname visto de dentro do WSL2.
-# Descobrir com:  ip route | awk '/^default/ {print $3}'
-# Exemplo: 172.29.224.1
-OLLAMA_URL = "http://<WINDOWS_HOST_IP>:11434/api/generate"
+DESKTOP_HOME = Path(os.environ.get("ROLL3D6_DESKTOP_HOME") or "") or None
 ```
 
-**Necessário**: atualizar `rag/synthesis.py` pra respeitar essa variável `settings.OLLAMA_URL` em vez de usar `localhost:11434` hardcoded. Ajuste de 3 linhas; fazer na próxima sessão.
+Comportamento condicional:
 
-### 6. Instalar Ollama no Windows
+| Setting | Modo dev (sem var) | Modo desktop dev (var setada, não-frozen) | Modo bundleado (var + frozen) |
+|---|---|---|---|
+| `SECRET_KEY` | hardcoded | de `%APPDATA%\roll3d6\secret.key` | idem |
+| `DEBUG` | True | False | False |
+| `ALLOWED_HOSTS` | lista fixa | `["*"]` | `["*"]` |
+| `DATABASES.default.NAME` | `BASE_DIR/db.sqlite3` | `%APPDATA%\roll3d6\data.sqlite3` | idem |
+| `MEDIA_ROOT` | `BASE_DIR/media` | `%APPDATA%\roll3d6\media` | idem |
+| `CHANNEL_LAYERS` | InMemory (default) | InMemory | InMemory |
+| `STATICFILES_STORAGE` | manifest | `StaticFilesStorage`+`USE_FINDERS` | `CompressedStaticFilesStorage` |
+| `STATIC_ROOT` | `BASE_DIR/static` | idem | `_MEIPASS/static` |
+| `CSRF_TRUSTED_ORIGINS` | domínio prod | localhost + `ROLL3D6_TUNNEL_URL` se presente | idem |
 
-Baixar instalador nativo em https://ollama.com/download/windows e rodar.
+Modo `gcp_legacy` (Redis): ativado por `ROLL3D6_MODE=gcp_legacy`. Não usado em dev/desktop.
 
-Ollama no Windows escuta só em `localhost` por padrão. Pra aceitar conexões do WSL2, setar a variável de ambiente `OLLAMA_HOST=0.0.0.0:11434` no Windows (Painel de Controle → Sistema → Variáveis de Ambiente) e reiniciar o serviço.
+---
 
-Depois:
+## Como rodar / testar (cheat sheet)
 
 ```powershell
-ollama pull qwen2.5:3b-instruct
+# Pré-requisito: estar em PROJETO-RPG-online com .venv ativada.
+.\.venv\Scripts\Activate.ps1
+
+# 1. Modo dev clássico (db.sqlite3 na raiz, DEBUG=True)
+python manage.py runserver
+
+# 2. Modo desktop em dev (não-bundleado) — sobe launcher com UI
+python -m desktop.launcher
+
+# 3. Teste E2E headless (sem UI) do pipeline launcher
+python -m desktop._e2e_test
+
+# 4. Rebuild do .exe completo
+.\desktop\build.ps1
+# saída: dist\roll3d6\roll3d6.exe
+
+# 5. Rodar o .exe bundleado
+Start-Process dist\roll3d6\roll3d6.exe
 ```
-
-### 7. Copiar os livros pra estrutura acessível
-
-Opção A: deixar em `C:\Users\...\PROJETO-RPG-online\books` e apontar via `--books-dir /mnt/c/Users/.../PROJETO-RPG-online/books`.
-Opção B: copiar pra dentro do WSL2 `~/roll3d6rpgdev/books/` (mais rápido, duplica).
-
-### 8. Migrations + ingestão
-
-```bash
-cd ~/roll3d6rpgdev
-source .venv/bin/activate
-python manage.py migrate
-python manage.py ingest_books  # ou --books-dir /mnt/c/...
-```
-
-### 9. Testar
-
-```bash
-time python manage.py query_rules "qual o custo da Visao Aguçada?"
-```
-
-Expectativa (GPU via Ollama Windows): **2-8 segundos** por query.
-
-```bash
-python manage.py runserver 0.0.0.0:8000
-```
-
-Abrir no navegador Windows: http://localhost:8000/rag/
 
 ---
 
-## Próximas coisas depois que o ambiente local estiver funcional
+## Gotchas descobertos nesta sessão (não esquecer)
 
-Em ordem sugerida:
-
-1. **V-2 — Embeddings de entidades do banco.** Signals `post_save`/`post_delete` em CharacterSheet, Campanha, Message etc. Re-embed em tempo real via `rag.embeddings`. Model `EntityEmbedding` já existe; falta só popular + criar `search_entities` + integrar no endpoint.
-2. **Migrar embedder pra `BAAI/bge-m3`** (se qualidade de retrieval continuar marginal). Modelo maior, melhor em PT-BR, 1024 dims. Requer migration + re-ingestão dos 3 livros.
-3. **Catalogar mais GURPS.** Etapa 2 (Vantagens) ficou em 30 entradas A-C. Faltam D-Z + desvantagens + skills + modificadores + combate. Ver [`docs/GURPS_KNOWLEDGE.md`](GURPS_KNOWLEDGE.md).
-4. **OCR do GM Screen.** É só imagem; precisa tesseract. Pode ser V-1.1.
-5. **Auth + CSRF** no endpoint `/rag/api/query` (atualmente `@csrf_exempt`, sem login).
+1. **PyInstaller + Django: `collect_submodules('gurps')` falha silenciosamente** se Django não está configurado quando o spec é avaliado. Sintoma: `App 'gurps' doesn't have a 'RegisterUser' model` no startup do bundle. **Fix:** o spec faz `django.setup()` no header antes de `collect_submodules`. **Plus** lista explícita de `gurps.*` como rede de segurança.
+2. **`requirements.txt` UTF-16:** o arquivo veio de outra máquina em UTF-16-LE com BOM, pip parsava errado. Reescrito em UTF-8 puro. Se algum script futuro reescrever via PowerShell `Out-File`, **passar `-Encoding utf8`** ou usar `[System.IO.File]::WriteAllText` com `UTF8Encoding($false)`.
+3. **Whitenoise + DEBUG=False sem collectstatic:** em modo dev-launcher (não-frozen), `WHITENOISE_USE_FINDERS=True` resolve. Em modo bundleado, precisa de `collectstatic` em **build-time** (o `build.ps1` cuida disso) e `STATIC_ROOT=_MEIPASS/static`.
+4. **Sandbox do Claude Code não eleva UAC:** `Start-Process -Verb RunAs` falha silenciosa. Comandos que precisam de admin (WSL, certbot, etc.) o usuário tem que rodar manualmente.
+5. **`*.spec` no .gitignore:** o template Python padrão ignora todos os `.spec`, mas precisamos do `desktop/roll3d6.spec` em commit. Adicionada exceção `!desktop/roll3d6.spec`.
+6. **`daphne` subprocess no .exe frozen:** `sys.executable` aponta pro próprio `roll3d6.exe`. Subprocess passaria `--daphne` como flag — o `launcher.main()` detecta esse arg e executa `daphne.cli` em vez de abrir a UI de novo.
 
 ---
 
-## Detalhes operacionais guardados
+## Próximo passo concreto (Fase 3.5)
 
-- **Chave OpenAI**: o usuário tem uma (sem crédito no momento). Está no `~/.roll3d6_secrets` da VM GCP. **Não é usada** desde o pivô pra embeddings locais, mas fica guardada.
-- **Chave SSH GCP VM**: `~/.ssh/id_ed25519` no WSL2 precisa ser gerada e cadastrada se quiser acessar a VM da máquina nova. A chave antiga que está no Windows host não é vista de dentro do WSL2 (embora o `~/.ssh/` seja montado de `/mnt/c/Users/<user>/.ssh/` em alguns setups).
-- **Banco de produção no GCP** (`roll3d6_data_base`): NÃO copiado pra dev. Se quiser dados realistas pra testar, fazer `pg_dump` do prod e `pg_restore` no dev.
+**Objetivo:** transformar `dist\roll3d6\` (pasta de 132 MB) num único `roll3d6-setup.exe` que:
+- Copia tudo pra `%LOCALAPPDATA%\roll3d6\`
+- Cria atalho na área de trabalho + menu iniciar
+- Faz bootstrap do WebView2 Runtime se faltar (Win10)
+- Registra desinstalador
+- Sem CLI, sem UAC além do consentimento de instalação
+
+**Ferramenta:** Inno Setup (gratuito, instalador Windows clássico, sintaxe Pascal-like).
+
+**Passos:**
+1. Baixar e instalar Inno Setup 6 (https://jrsoftware.org/isdl.php) — uma vez só. Tarefa do usuário (admin install).
+2. Criar `desktop\installer.iss` (script Inno Setup) com:
+   - `AppName`, `AppVersion`, `AppPublisher`
+   - `Source: "dist\roll3d6\*"; DestDir: "{localappdata}\roll3d6"; Flags: recursesubdirs`
+   - `Icons` na área de trabalho + menu iniciar
+   - WebView2 bootstrapper (download Microsoft, executa silently se faltar)
+3. Atualizar `desktop\build.ps1` pra rodar `iscc.exe desktop\installer.iss` no final, gerando `dist\roll3d6-setup.exe`.
+4. Testar em conta Windows separada (ou VM) pra simular usuário sem o ambiente de dev.
+5. Documentar o passo a passo de "como compilar pra distribuir" em `DESKTOP_DISTRIBUTION.md`.
+
+**Esperado depois disso:** o usuário pode mandar `roll3d6-setup.exe` (~150 MB) pra qualquer pessoa no Windows; ela dá dois cliques, espera, aparece o atalho na área de trabalho, clica e o site fica pronto.
+
+---
+
+## Roadmap remanescente (depois da Fase 3.5)
+
+### Fase 4 — Migração de dados GCP → desktop
+- Script de export na VM: `python manage.py dumpdata --natural-foreign --natural-primary` filtrando por `gurps.*`.
+- Copiar pasta `media/` da VM (avatars, mapas, fichas com upload).
+- Fluxo de "primeira execução" no app desktop: opção "começar do zero" ou "importar dados exportados" (apontar para `.json` + pasta `media/`).
+- Testar com dump real da produção.
+
+### Fase 5 — Distribuição + sunset GCP
+- Banner no site SaaS GCP avisando descontinuação + link do download.
+- Botão de export por usuário no site SaaS (gera `.json` + zip de mídias do usuário).
+- Acompanhar migrações.
+- Após prazo (a definir): parar daphne na VM, desligar VM, liberar recursos GCP.
+
+---
+
+## Notas operacionais preservadas
+
+- **GCP VM (`35.239.231.110`, banco `roll3d6_data_base`)** está congelada. Não evoluir, só patches críticos. SSH continua via chave cadastrada no metadata.
+- **Chave OpenAI** no `~/.roll3d6_secrets` da VM GCP — não é usada hoje.
+- **Banco de produção GCP** continua autoritativo até a migração da Fase 4.
+- **Máquina local:** Windows 11 Pro, Python 3.13.7, GPU RTX 1000 Ada (não usada hoje, fica útil quando RAG voltar com SQLite-vss).
