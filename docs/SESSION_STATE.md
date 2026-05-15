@@ -1,15 +1,11 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-15 (tarde — pausa).
-> **Próxima sessão:** continuar **Fase 4 — baixar dump do GCP e importar no SQLite local**.
+> **Última sessão:** 2026-05-15 (noite).
+> **Fase 4 concluída ✅** — dados de produção GCP estão no OneDrive local, 14 users + 2 campanhas + 16 fichas + 2014 mensagens + 109 arquivos de mídia.
 >
-> **Estado real no fim da última sessão:**
-> - Usuário gerou o dumpdata + tar de media na VM via Browser SSH (`/tmp/roll3d6_dump.json` e `/tmp/roll3d6_media.tar.gz`).
-> - **Os arquivos NÃO chegaram a este PC** — confirmado em 2026-05-15: nada em `Downloads\`, `Desktop\`, `Documents\` ou `OneDrive\` com nome `roll3d6*`.
-> - Usuário não passou pelo passo final (⚙️ → Download file no Browser SSH). Sessão pausada.
-> - **Risco:** se a VM tiver sido desligada, `/tmp/` pode ter sido limpo. Verificar primeiro.
+> **Próxima sessão sugerida:** decidir entre (a) **Fase 5 — sunset GCP** (desligar a VM definitivamente, mas sem prazo) ou (b) features novas no app desktop.
 >
-> Quando voltar, leia este documento primeiro e pule pra seção **"Como retomar Fase 4"** abaixo.
+> Quando voltar, leia este documento primeiro.
 
 ---
 
@@ -41,7 +37,9 @@ O produto deixou de ser SaaS hospedado no GCP e virou **aplicativo desktop com d
 | 3.5 | Inno Setup → `roll3d6-setup.exe` | ✅ concluída + ícone dos 3 dados |
 | 3.6 | OneDrive sync + lock file (`session.lock`) | ✅ concluída |
 | 3.7 | Commits do trabalho (4 commits limpos em `main`) | ✅ concluída |
-| **4** | **Migração de dados GCP Postgres → SQLite desktop** | **🟡 em progresso (dump sendo gerado pelo usuário)** |
+| 3.8 | Fix `/media/` em desktop mode (commit `e013ed6`) | ✅ concluída |
+| 4 | Migração de dados GCP Postgres → SQLite desktop | ✅ concluída |
+| 4.5 | Deletar bucket descartável `gs://onyx-antler-452215-k1-tmp` | 🟡 pendente (comando preparado, falta usuário rodar) |
 | 5 | Sunset GCP (banner + export + desligar VM) | ⏳ não começado (sem prazo) |
 
 ---
@@ -151,10 +149,31 @@ Start-Process dist\roll3d6\roll3d6.exe
 4. **Sandbox do Claude Code não eleva UAC:** `Start-Process -Verb RunAs` falha silenciosa. Comandos que precisam de admin (WSL, certbot, etc.) o usuário tem que rodar manualmente.
 5. **`*.spec` no .gitignore:** o template Python padrão ignora todos os `.spec`, mas precisamos do `desktop/roll3d6.spec` em commit. Adicionada exceção `!desktop/roll3d6.spec`.
 6. **`daphne` subprocess no .exe frozen:** `sys.executable` aponta pro próprio `roll3d6.exe`. Subprocess passaria `--daphne` como flag — o `launcher.main()` detecta esse arg e executa `daphne.cli` em vez de abrir a UI de novo.
+7. **`tar.exe` nativo do Windows corrompe nomes UTF-8:** ao extrair `.tar.gz` com nomes acentuados (Episódio, Guardião, etc.), arquivos ficam com mojibake (`Epis├│dio_01.jpg`) e o Django serve 404. **Fix:** usar `tarfile` do Python (que respeita UTF-8 nativo). Vale lembrar quando implementar import wizard (#21).
+8. **GCP VM com OS Login ativo:** metadata SSH keys e arquivos `authorized_keys` são ignorados — auth força conta Google. Pra rodar `gcloud` com permissão de owner, fazer `gcloud auth login --no-launch-browser` na VM. Browser SSH funciona sempre.
+9. **Browser SSH ⚙️ Download File** é uma flaky — popup pode fechar instantâneo sem erro visível, JSON abre inline em vez de baixar. Mais confiável: `gcloud storage cp` pra bucket descartável + download pelo Console UI.
+10. **`/media/` em desktop mode com `DEBUG=False`:** Django não anexa rota automaticamente. Precisa de `django.views.static.serve` explícito em `urls.py` (commit `e013ed6`).
 
 ---
 
-## Como retomar Fase 4 — passo a passo do download
+## Como ficou o fluxo de import (referência pro futuro — task #21)
+
+Quando for hora de transformar isso num **fluxo automático no launcher** (botão "Importar backup" na UI):
+
+1. UI pede um arquivo `.json` (Django dumpdata) e opcionalmente um `.tar.gz` (mídia).
+2. Backup automático do `data.sqlite3` atual pra `data.sqlite3.bak_<timestamp>`.
+3. `migrate` no banco atual (idempotente — só roda se faltar migration).
+4. `loaddata <arquivo.json>` — usa `django.core.management.call_command`.
+5. Extração do tar com **`tarfile` do Python** (não shell `tar.exe`, que corrompe UTF-8).
+6. Mostra resumo (counts por model) e pergunta se manter ou reverter pro backup.
+
+Esse fluxo escapa toda a dança do GCP que fizemos manualmente nesta sessão.
+
+---
+
+## Como retomar Fase 4 (HISTÓRICO — Fase 4 já concluída em 2026-05-15)
+
+Mantido aqui caso precise refazer um import futuro do GCP enquanto a VM ainda existir.
 
 ### 1. Verificar primeiro se os arquivos já estão no PC
 
