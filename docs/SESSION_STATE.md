@@ -1,11 +1,15 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-15 (tarde).
-> **Próxima sessão:** **Fase 4 — importar dump do GCP no SQLite local**. O dump já está sendo gerado no GCP (usuário fazendo agora via Browser SSH); ele vai deixar 2 arquivos em `C:\Users\marco\Downloads\`:
-> - `roll3d6_dump.json` (Django dumpdata, sem contenttypes/permissions/admin.logentry/sessions/rag)
-> - `roll3d6_media.tar.gz` (pasta media/ da VM)
+> **Última sessão:** 2026-05-15 (tarde — pausa).
+> **Próxima sessão:** continuar **Fase 4 — baixar dump do GCP e importar no SQLite local**.
 >
-> Quando voltar, leia este documento primeiro.
+> **Estado real no fim da última sessão:**
+> - Usuário gerou o dumpdata + tar de media na VM via Browser SSH (`/tmp/roll3d6_dump.json` e `/tmp/roll3d6_media.tar.gz`).
+> - **Os arquivos NÃO chegaram a este PC** — confirmado em 2026-05-15: nada em `Downloads\`, `Desktop\`, `Documents\` ou `OneDrive\` com nome `roll3d6*`.
+> - Usuário não passou pelo passo final (⚙️ → Download file no Browser SSH). Sessão pausada.
+> - **Risco:** se a VM tiver sido desligada, `/tmp/` pode ter sido limpo. Verificar primeiro.
+>
+> Quando voltar, leia este documento primeiro e pule pra seção **"Como retomar Fase 4"** abaixo.
 
 ---
 
@@ -150,26 +154,73 @@ Start-Process dist\roll3d6\roll3d6.exe
 
 ---
 
-## Próximo passo concreto (continuar Fase 4)
+## Como retomar Fase 4 — passo a passo do download
 
-**Pré-requisito do usuário (em andamento):** baixar via Browser SSH do GCP os 2 arquivos pra `C:\Users\marco\Downloads\`:
-- `roll3d6_dump.json` — Django dumpdata da VM (já gerado com `--exclude=contenttypes / auth.permission / admin.logentry / sessions / rag`)
-- `roll3d6_media.tar.gz` — pasta `media/` da VM
+### 1. Verificar primeiro se os arquivos já estão no PC
 
-**Quando o Claude retomar:**
+Antes de tudo, Claude deve checar:
+```powershell
+Get-ChildItem "$env:USERPROFILE\Downloads\roll3d6_*"
+```
+Se aparecer `roll3d6_dump.json` e `roll3d6_media.tar.gz` → pula direto pro item 4 (loaddata).
+Se não aparecer → seguir 2 e 3.
 
-1. Verificar se os 2 arquivos existem em `C:\Users\marco\Downloads\`.
-2. **Importar num SQLite limpo de teste primeiro** (não tocar no `%OneDrive%\roll3d6\data.sqlite3` ainda). Caminho sugerido: `%LOCALAPPDATA%\Temp\roll3d6_import_test\`.
-3. Comandos esperados:
+### 2. Reabrir a VM no GCP Console e o Browser SSH
+
+1. **console.cloud.google.com** → ☰ → **Compute Engine** → **VM instances**.
+2. Se a VM `roll3d6rpgvm` estiver **Stopped** (provável, porque usuário desligou pra economizar): marca o checkbox dela → clica **▶ Start / Resume** → espera "Running" (~30s).
+3. Anota o **External IP** atual (pode ter mudado).
+4. Na linha da VM, clica em **SSH** (terceira coluna pela direita) → abre janelinha de Browser SSH.
+
+### 3. Regenerar o dump (caso /tmp tenha sido limpo) e baixar
+
+Cola este bloco no Browser SSH — primeiro confirma se os arquivos ainda existem; se não, refaz:
+
+```bash
+# Se /tmp ainda tem os arquivos da sessão anterior, pula direto pro download.
+ls -lh /tmp/roll3d6_dump.json /tmp/roll3d6_media.tar.gz 2>&1
+
+# Se NÃO encontrou, rode o script abaixo pra regenerar:
+cd /home/marcosvrsdevmail/roll3d6rpgapp
+for d in venv .venv env; do [ -f "$d/bin/activate" ] && source "$d/bin/activate" && break; done
+python manage.py dumpdata \
+  --natural-foreign --natural-primary --indent 2 \
+  --exclude=contenttypes --exclude=auth.permission \
+  --exclude=admin.logentry --exclude=sessions.session \
+  --exclude=rag \
+  > /tmp/roll3d6_dump.json && echo "dump OK"
+[ -d media ] && tar czf /tmp/roll3d6_media.tar.gz media/ && echo "media OK"
+ls -lh /tmp/roll3d6_dump.json /tmp/roll3d6_media.tar.gz
+```
+
+**Download (a parte que ficou pendente!):**
+
+Na janela do Browser SSH, no canto **SUPERIOR DIREITO** tem ícone de **engrenagem (⚙️)**. Sequência:
+
+1. Clica no ⚙️ → escolhe **"Download file"** no menu suspenso
+2. Abre um campo de texto → digita `/tmp/roll3d6_dump.json` → clica **Download**
+3. O browser baixa pro `Downloads\` (padrão do Chrome/Edge)
+4. Repete pro segundo arquivo: ⚙️ → Download file → `/tmp/roll3d6_media.tar.gz` → Download
+
+**Verificação:**
+- Os 2 arquivos devem aparecer em `C:\Users\marco\Downloads\`
+- `roll3d6_dump.json` ~ alguns MB (texto JSON)
+- `roll3d6_media.tar.gz` ~ tamanho variável dependendo do volume de imagens
+
+### 4. Importar no SQLite limpo de teste (Claude executa)
+
+1. **Importar num SQLite limpo de teste primeiro** (não tocar no `%OneDrive%\roll3d6\data.sqlite3` ainda). Caminho sugerido: `%LOCALAPPDATA%\Temp\roll3d6_import_test\`.
+2. Comandos esperados:
    ```powershell
    $env:ROLL3D6_DESKTOP_HOME = "$env:LOCALAPPDATA\Temp\roll3d6_import_test"
    .\.venv\Scripts\python.exe manage.py migrate
    .\.venv\Scripts\python.exe manage.py loaddata $env:USERPROFILE\Downloads\roll3d6_dump.json
    tar -xzf "$env:USERPROFILE\Downloads\roll3d6_media.tar.gz" -C "$env:ROLL3D6_DESKTOP_HOME"
    ```
-4. Validar: subir runserver, abrir admin, conferir que usuários/fichas/campanhas vieram.
-5. Se OK: ou faz o mesmo no `%OneDrive%\roll3d6\` real, ou implementa o fluxo "importar dados" na primeira execução do launcher (task #21).
-6. Documentar o fluxo em `DESKTOP_DISTRIBUTION.md`.
+3. Validar: subir runserver, abrir admin, conferir que usuários/fichas/campanhas vieram.
+4. Se OK: ou faz o mesmo no `%OneDrive%\roll3d6\` real, ou implementa o fluxo "importar dados" na primeira execução do launcher (task #21).
+5. Documentar o fluxo em `DESKTOP_DISTRIBUTION.md`.
+6. Depois disso, **lembrar de pedir o usuário pra desligar a VM no Console** (economia GCP) já que a Fase 4 técnica estará concluída.
 
 **Pontos de atenção previstos:**
 - Conteúdo `contenttypes` foi excluído do dump — IDs no SQLite vão diferir do Postgres. Se algum modelo tem FK direta pra ContentType (raro), pode quebrar. Verificar.
