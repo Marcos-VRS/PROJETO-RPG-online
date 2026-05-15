@@ -20,7 +20,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("rag/", include("rag.urls")),  # consulta RAG de regras
+    # path("rag/", include("rag.urls")),  # hibernado — ver docs/RAG_ARCHITECTURE.md
     path("", include("gurps.urls")),  # inclui URLs do app "gurps"
     path("accounts/", include("allauth.urls")),  # Inclui as URLs do allauth
 ]
