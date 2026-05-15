@@ -1,7 +1,9 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-15 (madrugada).
-> **Próxima sessão:** começar **Fase 3.5 (Inno Setup)** — empacotar a pasta `dist\roll3d6\` num instalador `roll3d6-setup.exe` de dois cliques.
+> **Última sessão:** 2026-05-15 (tarde).
+> **Próxima sessão:** **Fase 4 — importar dump do GCP no SQLite local**. O dump já está sendo gerado no GCP (usuário fazendo agora via Browser SSH); ele vai deixar 2 arquivos em `C:\Users\marco\Downloads\`:
+> - `roll3d6_dump.json` (Django dumpdata, sem contenttypes/permissions/admin.logentry/sessions/rag)
+> - `roll3d6_media.tar.gz` (pasta media/ da VM)
 >
 > Quando voltar, leia este documento primeiro.
 
@@ -28,13 +30,15 @@ O produto deixou de ser SaaS hospedado no GCP e virou **aplicativo desktop com d
 
 | Fase | Descrição | Status |
 |---|---|---|
-| 0 | Reset de documentação | ✅ concluída (2026-05-14) |
-| 1 | venv Windows + Django/SQLite local funcionando | ✅ concluída (2026-05-14, validada pelo usuário no browser) |
-| 2 | Launcher (daphne + cloudflared + UI pywebview) | ✅ concluída (2026-05-15, validada pelo usuário) |
-| 3 | Empacotamento PyInstaller (`dist\roll3d6\roll3d6.exe`) | ✅ concluída (2026-05-15, .exe testado e responde HTTP+statics) |
-| **3.5** | **Inno Setup → `roll3d6-setup.exe` (instalador final)** | **🟡 próximo passo** |
-| 4 | Migração de dados GCP Postgres → SQLite desktop | ⏳ não começado |
-| 5 | Sunset GCP (banner + export + desligar VM) | ⏳ não começado |
+| 0 | Reset de documentação | ✅ concluída |
+| 1 | venv Windows + Django/SQLite local funcionando | ✅ concluída, validada visualmente |
+| 2 | Launcher (daphne + cloudflared + UI pywebview) | ✅ concluída, validada |
+| 3 | Empacotamento PyInstaller (`dist\roll3d6\roll3d6.exe`) | ✅ concluída |
+| 3.5 | Inno Setup → `roll3d6-setup.exe` | ✅ concluída + ícone dos 3 dados |
+| 3.6 | OneDrive sync + lock file (`session.lock`) | ✅ concluída |
+| 3.7 | Commits do trabalho (4 commits limpos em `main`) | ✅ concluída |
+| **4** | **Migração de dados GCP Postgres → SQLite desktop** | **🟡 em progresso (dump sendo gerado pelo usuário)** |
+| 5 | Sunset GCP (banner + export + desligar VM) | ⏳ não começado (sem prazo) |
 
 ---
 
@@ -146,29 +150,32 @@ Start-Process dist\roll3d6\roll3d6.exe
 
 ---
 
-## Próximo passo concreto (Fase 3.5)
+## Próximo passo concreto (continuar Fase 4)
 
-**Objetivo:** transformar `dist\roll3d6\` (pasta de 132 MB) num único `roll3d6-setup.exe` que:
-- Copia tudo pra `%LOCALAPPDATA%\roll3d6\`
-- Cria atalho na área de trabalho + menu iniciar
-- Faz bootstrap do WebView2 Runtime se faltar (Win10)
-- Registra desinstalador
-- Sem CLI, sem UAC além do consentimento de instalação
+**Pré-requisito do usuário (em andamento):** baixar via Browser SSH do GCP os 2 arquivos pra `C:\Users\marco\Downloads\`:
+- `roll3d6_dump.json` — Django dumpdata da VM (já gerado com `--exclude=contenttypes / auth.permission / admin.logentry / sessions / rag`)
+- `roll3d6_media.tar.gz` — pasta `media/` da VM
 
-**Ferramenta:** Inno Setup (gratuito, instalador Windows clássico, sintaxe Pascal-like).
+**Quando o Claude retomar:**
 
-**Passos:**
-1. Baixar e instalar Inno Setup 6 (https://jrsoftware.org/isdl.php) — uma vez só. Tarefa do usuário (admin install).
-2. Criar `desktop\installer.iss` (script Inno Setup) com:
-   - `AppName`, `AppVersion`, `AppPublisher`
-   - `Source: "dist\roll3d6\*"; DestDir: "{localappdata}\roll3d6"; Flags: recursesubdirs`
-   - `Icons` na área de trabalho + menu iniciar
-   - WebView2 bootstrapper (download Microsoft, executa silently se faltar)
-3. Atualizar `desktop\build.ps1` pra rodar `iscc.exe desktop\installer.iss` no final, gerando `dist\roll3d6-setup.exe`.
-4. Testar em conta Windows separada (ou VM) pra simular usuário sem o ambiente de dev.
-5. Documentar o passo a passo de "como compilar pra distribuir" em `DESKTOP_DISTRIBUTION.md`.
+1. Verificar se os 2 arquivos existem em `C:\Users\marco\Downloads\`.
+2. **Importar num SQLite limpo de teste primeiro** (não tocar no `%OneDrive%\roll3d6\data.sqlite3` ainda). Caminho sugerido: `%LOCALAPPDATA%\Temp\roll3d6_import_test\`.
+3. Comandos esperados:
+   ```powershell
+   $env:ROLL3D6_DESKTOP_HOME = "$env:LOCALAPPDATA\Temp\roll3d6_import_test"
+   .\.venv\Scripts\python.exe manage.py migrate
+   .\.venv\Scripts\python.exe manage.py loaddata $env:USERPROFILE\Downloads\roll3d6_dump.json
+   tar -xzf "$env:USERPROFILE\Downloads\roll3d6_media.tar.gz" -C "$env:ROLL3D6_DESKTOP_HOME"
+   ```
+4. Validar: subir runserver, abrir admin, conferir que usuários/fichas/campanhas vieram.
+5. Se OK: ou faz o mesmo no `%OneDrive%\roll3d6\` real, ou implementa o fluxo "importar dados" na primeira execução do launcher (task #21).
+6. Documentar o fluxo em `DESKTOP_DISTRIBUTION.md`.
 
-**Esperado depois disso:** o usuário pode mandar `roll3d6-setup.exe` (~150 MB) pra qualquer pessoa no Windows; ela dá dois cliques, espera, aparece o atalho na área de trabalho, clica e o site fica pronto.
+**Pontos de atenção previstos:**
+- Conteúdo `contenttypes` foi excluído do dump — IDs no SQLite vão diferir do Postgres. Se algum modelo tem FK direta pra ContentType (raro), pode quebrar. Verificar.
+- `AUTH_USER_MODEL = "gurps.RegisterUser"` precisa estar registrado antes do loaddata. O `migrate` garante isso.
+- Senhas dos usuários antigos vêm hasheadas no dump — funcionam direto no SQLite (Django re-hidrata).
+- Mídias com caminho absoluto da VM (`/home/marcosvrsdevmail/...`) precisam ser ajustadas pra `%OneDrive%\roll3d6\media\`. Verificar campos de imagem nos models e ajustar paths se necessário.
 
 ---
 
