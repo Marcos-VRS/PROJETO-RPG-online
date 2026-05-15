@@ -15,8 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path, re_path
+from django.views.static import serve as static_serve
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -24,3 +26,12 @@ urlpatterns = [
     path("", include("gurps.urls")),  # inclui URLs do app "gurps"
     path("accounts/", include("allauth.urls")),  # Inclui as URLs do allauth
 ]
+
+# No modo desktop, daphne é o único processo servindo HTTP — não há nginx
+# pra entregar mídia. Como DEBUG=False, o helper `static()` do Django não
+# funciona; usamos `django.views.static.serve` direto. Em produção GCP,
+# nginx cuida disso, então só ativamos esta rota no modo desktop.
+if getattr(settings, "DESKTOP_HOME", None):
+    urlpatterns.append(
+        re_path(r"^media/(?P<path>.*)$", static_serve, {"document_root": settings.MEDIA_ROOT})
+    )
