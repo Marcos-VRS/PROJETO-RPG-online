@@ -80,6 +80,12 @@ wheels/
 *.egg
 *.manifest
 *.spec
+!desktop/roll3d6.spec
+
+# PyInstaller intermediates
+/build/
+warn-*.txt
+xref-*.html
 
 # Installer logs
 pip-log.txt
