@@ -1,9 +1,11 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-15 (noite).
-> **Fase 4 concluída ✅** — dados de produção GCP estão no OneDrive local, 14 users + 2 campanhas + 16 fichas + 2014 mensagens + 109 arquivos de mídia.
+> **Última sessão:** 2026-05-16 (madrugada).
+> **Redesign visual completo ✅** + **scene control multi-cena ✅** + **quick chars via WebSocket ✅** + **turn tracker ✅**.
 >
-> **Próxima sessão sugerida:** decidir entre (a) **Fase 5 — sunset GCP** (desligar a VM definitivamente, mas sem prazo) ou (b) features novas no app desktop.
+> Site inteiro foi re-skinado pro design system v1 (dark grafite + dourado, tipografia Inter/Cinzel). 19/19 URLs do site retornam 200 no smoke test.
+>
+> **Próxima sessão sugerida:** seu feedback visual depois de jogar uma sessão de teste com o amigo, ou decidir entre **Fase 5 — sunset GCP** ou novas features no jogo (ex: gestão de HP/FP em tempo real, mapa com tokens, etc.).
 >
 > Quando voltar, leia este documento primeiro.
 
@@ -40,7 +42,11 @@ O produto deixou de ser SaaS hospedado no GCP e virou **aplicativo desktop com d
 | 3.8 | Fix `/media/` em desktop mode (commit `e013ed6`) | ✅ concluída |
 | 4 | Migração de dados GCP Postgres → SQLite desktop | ✅ concluída |
 | 4.5 | Deletar bucket descartável `gs://onyx-antler-452215-k1-tmp` | 🟡 pendente (comando preparado, falta usuário rodar) |
+| **R1** | **Design system v1 (tokens, partial, paleta Foundry, Inter/Cinzel)** | ✅ commit `e0bf872` |
+| **R2** | **Game interface redesign (players-bar + scene + turn + chat + quick char)** | ✅ commit `51791b4` |
+| **R3** | **Aplica skin em todas as telas (login/lista/journal/criar/editar/etc)** | ✅ commit `c305189` |
 | 5 | Sunset GCP (banner + export + desligar VM) | ⏳ não começado (sem prazo) |
+| 6 | Polimento visual pós-feedback do usuário | 🟡 próxima sessão |
 
 ---
 
@@ -137,7 +143,37 @@ python -m desktop._e2e_test
 
 # 5. Rodar o .exe bundleado
 Start-Process dist\roll3d6\roll3d6.exe
+
+# 6. Smoke test: bate em 19 URLs autenticadas, valida 200
+python -m desktop._smoke_urls
 ```
+
+---
+
+## Estado da UI no fim desta sessão (2026-05-16)
+
+**Game interface (tela de jogo):**
+- Players-bar fixa no topo: minis com avatar + nome + barra HP vermelha + barra FP azul (25% maior).
+- Toggle dark/light (☀/☾) e esconder avatares (👤). Botão ☰ (GM only) abre menu lateral.
+- Turn controls bar abaixo: "Turno: <nome>" + ◀ Anterior / Próximo ▶ (GM only). Mini do turno atual com borda vermelha + glow. Rotação visual da fila ao avançar.
+- Chat sidebar direita: opaco, 14.94% / mín 286px, 3 partes (header Sair/Journal/GM + lista + input 64px).
+- Janelas internas (Dados/Atributos/etc) centradas, top 115px.
+- Privacidade: GM vê HP/FP de todos; player só das fichas próprias.
+
+**Scene control (menu lateral GM):**
+- Multi-cena cap 10, pills + "+ Nova". Nome editável (Enter salva).
+- Form "Nova ficha rápida" (nome + HP + FP + MOVE + asset opcional pra avatar).
+- Busca, checkboxes pra cena, ordem inicial por Speed desc + ▲▼ reordena (= turno).
+- 🗑 só em fichas quick (importadas do GCP ficam protegidas).
+- Sync tempo real via WebSocket.
+
+**Telas redesenhadas:** login, register, index, lista_campanhas, journal — refator completo.
+**Demais telas:** cobertas pela camada "legacy skin overrides" em design_tokens.css (re-mapeia `--primary-color` etc. pros tokens v1 via !important).
+
+**Tema:** default dark, toggle pra light (pergaminho). Persiste em localStorage('rd6-theme'), aplicado pre-CSS pra evitar flash.
+
+**Dados:** `%OneDrive%\roll3d6\` (sync automático).
+**Bundle:** `dist\roll3d6-setup.exe` (53.2 MB).
 
 ---
 
@@ -153,6 +189,10 @@ Start-Process dist\roll3d6\roll3d6.exe
 8. **GCP VM com OS Login ativo:** metadata SSH keys e arquivos `authorized_keys` são ignorados — auth força conta Google. Pra rodar `gcloud` com permissão de owner, fazer `gcloud auth login --no-launch-browser` na VM. Browser SSH funciona sempre.
 9. **Browser SSH ⚙️ Download File** é uma flaky — popup pode fechar instantâneo sem erro visível, JSON abre inline em vez de baixar. Mais confiável: `gcloud storage cp` pra bucket descartável + download pelo Console UI.
 10. **`/media/` em desktop mode com `DEBUG=False`:** Django não anexa rota automaticamente. Precisa de `django.views.static.serve` explícito em `urls.py` (commit `e013ed6`).
+11. **Django `{# ... #}` é single-line!** Multi-linha vira texto puro renderizado. Qualquer `{% include %}` dentro de um pseudo-comentário multi-linha vira recursão infinita. Use `{% comment %} ... {% endcomment %}` pra multi-linha.
+12. **CSS `backdrop-filter` cria containing block.** Aplicar `backdrop-filter`/`filter`/`transform` num ancestral faz com que `position: fixed` dos descendentes posicione relativo ao ancestral, não ao viewport. Janelas modais saem da tela. Use com cuidado.
+13. **PyInstaller `--noreload` + edição de Python:** runserver com --noreload NÃO recarrega código Python (só templates). Sempre reiniciar o server após mudar views/consumers. Cache de templates Django também pode persistir em alguns cenários — `python manage.py runserver` fresh resolve.
+14. **Daphne deve estar no TOPO de INSTALLED_APPS:** sem `'daphne'` antes de `django.contrib.staticfiles`, runserver inicia em WSGI puro e WebSockets retornam 404. No bundle .exe daphne roda como subprocess separado, mas em dev essa diretriz é obrigatória.
 
 ---
 
