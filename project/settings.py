@@ -252,11 +252,30 @@ MEDIA_ROOT = (DESKTOP_HOME / "media") if DESKTOP_HOME else (BASE_DIR / "media")
 _TUNNEL_URL = os.environ.get("ROLL3D6_TUNNEL_URL", "").strip()
 
 if DESKTOP_HOME:
-    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
+    CSRF_TRUSTED_ORIGINS = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        # Cloudflare Quick Tunnel publica em *.trycloudflare.com (HTTPS). URL
+        # é dinâmica por sessão; aceitamos qualquer subdomínio pra não depender
+        # de injeção de env var no subprocess do daphne (que é spawned ANTES
+        # do tunnel capturar a URL, então env nunca chega lá).
+        "https://*.trycloudflare.com",
+        "https://*.cfargotunnel.com",
+    ]
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://[a-z0-9-]+\.trycloudflare\.com$",
+        r"^https://[a-z0-9-]+\.cfargotunnel\.com$",
+    ]
     CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
+    # Cloudflare termina TLS e nos repassa via X-Forwarded-Proto: https.
+    # Sem isso, Django acha que é HTTP e bloqueia request_is_secure().
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
     if _TUNNEL_URL:
-        CSRF_TRUSTED_ORIGINS.append(_TUNNEL_URL)
-        CORS_ALLOWED_ORIGINS.append(_TUNNEL_URL)
+        if _TUNNEL_URL not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_TUNNEL_URL)
+        if _TUNNEL_URL not in CORS_ALLOWED_ORIGINS:
+            CORS_ALLOWED_ORIGINS.append(_TUNNEL_URL)
 else:
     CSRF_TRUSTED_ORIGINS = [
         "https://roll3d6rpg.com",
