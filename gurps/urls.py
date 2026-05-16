@@ -136,4 +136,11 @@ urlpatterns = [
     path("leave_game/", views.leave_game, name="leave_game"),
     # CHAT
     path("save_message/", views.save_message, name="save_message"),
+    # Ficha rápida (GM cria/deleta NPCs com poucos campos pra usar em cena)
+    path("quick-character/save/", views.save_quick_character, name="save_quick_character"),
+    path(
+        "quick-character/delete/<int:char_id>/",
+        views.delete_quick_character,
+        name="delete_quick_character",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

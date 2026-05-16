@@ -64,6 +64,15 @@ class Campanha(models.Model):
         default=None,  # Evita que Django preencha com string vazia
     )
 
+    # Estado da cena ativa (controlado pelo GM, espelhado aos players via WS).
+    # Estrutura forward-compatible:
+    #   {
+    #     "active": {"name": "...", "present_character_ids": [int, ...], "notes": "..."},
+    #     "presets": [ {"name": ..., "present_character_ids": [...], "notes": ...}, ... ]
+    #   }
+    # Quando vazio (default), todos os personagens da campanha são tratados como presentes.
+    scene_state = models.JSONField(blank=True, null=True, default=dict)
+
     def __str__(self):
         return self.nome
 
@@ -126,6 +135,12 @@ class CharacterSheet(models.Model):
     maneuvers_melee = models.JSONField(blank=True, null=True)
     maneuvers_ranged = models.JSONField(blank=True, null=True)
     maneuvers_defense = models.JSONField(blank=True, null=True)
+
+    # Estado de jogo (HP/FP atuais e outros valores dinâmicos que mudam durante
+    # a sessão). Estrutura esperada: {"hp_atual": int, "fp_atual": int, ...}.
+    # Quando vazio, o front assume hp_atual = sub_attributes.hp (barra cheia).
+    # Adicionar valores novos aqui é seguro — JSONField nunca quebra schema.
+    runtime_stats = models.JSONField(blank=True, null=True, default=dict)
 
     def __str__(self):
         return self.nome_personagem or "Ficha Sem Nome"
