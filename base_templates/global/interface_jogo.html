@@ -1,16 +1,671 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
     <title>Campanha - {{ campanha.nome }}</title>
-    <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}">
+    {# Aplica tema salvo ANTES de carregar CSS pra evitar flash claro→escuro #}
+    <script>
+        (function() {
+            try {
+                var saved = localStorage.getItem('rd6-theme');
+                if (saved === 'light' || saved === 'dark') {
+                    document.documentElement.setAttribute('data-theme', saved);
+                }
+            } catch (e) {}
+        })();
+    </script>
+    {# cache-buster — single-line only #}
+    <link rel="stylesheet" href="{% static 'global/css/design_tokens.css' %}?d={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}?d={% now 'U' %}">
     <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
 </head>
 
-<body>
+<body class="has-players-bar">
+    {# Barra superior fixa: menu (GM-only) + minis dos players (HP vermelho / FP azul) + ações #}
+    <header class="players-bar" id="players-bar">
+        {% if is_gm %}
+        <button class="players-bar-menu-btn" type="button" onclick="rd6OpenMenu()" aria-label="Abrir menu da campanha">☰</button>
+        {% endif %}
+        {% for p in players_minis %}
+            <div class="player-mini{% if not p.is_present %} player-mini--absent{% endif %}" data-character-id="{{ p.id }}" title="{{ p.nome }}">
+                <div class="player-mini-avatar">
+                    {% if p.avatar_url %}
+                        <img src="{{ p.avatar_url }}" alt="{{ p.nome }}">
+                    {% else %}
+                        <span>{{ p.initials }}</span>
+                    {% endif %}
+                </div>
+                <div class="player-mini-info">
+                    <div class="player-mini-name">{{ p.nome }}</div>
+                    <div class="player-mini-bar player-mini-bar-hp">
+                        <div class="player-mini-bar-fill" style="width: {{ p.hp_pct }}%"></div>
+                        {% if p.show_numbers %}
+                            <span class="player-mini-bar-label">HP {{ p.hp_atual }}/{{ p.hp_max }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="player-mini-bar player-mini-bar-fp">
+                        <div class="player-mini-bar-fill" style="width: {{ p.fp_pct }}%"></div>
+                        {% if p.show_numbers %}
+                            <span class="player-mini-bar-label">FP {{ p.fp_atual }}/{{ p.fp_max }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="players-bar-spacer"></div>
+        <button class="avatar-toggle" type="button" onclick="rd6ToggleAvatars()" aria-label="Mostrar/esconder avatares">
+            <svg class="icon-avatar-on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+            </svg>
+            <svg class="icon-avatar-off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+                <line x1="3" y1="3" x2="21" y2="21"/>
+            </svg>
+        </button>
+        <button class="theme-toggle" type="button" onclick="rd6ToggleTheme()" aria-label="Alternar tema">
+            <span class="icon-sun">☀</span>
+            <span class="icon-moon">☾</span>
+        </button>
+    </header>
+
+    {# Controles de turno: barra abaixo da players-bar, só visível quando há cena ativa #}
+    <div class="turn-controls" id="turn-controls">
+        {% if is_gm %}
+            <button class="turn-control-btn" type="button" onclick="rd6TurnPrev()" aria-label="Turno anterior">◀ Anterior</button>
+        {% endif %}
+        <span class="turn-current-label">Turno:</span>
+        <span class="turn-current-name" id="turn-current-name">—</span>
+        {% if is_gm %}
+            <button class="turn-control-btn" type="button" onclick="rd6TurnNext()" aria-label="Próximo turno">Próximo ▶</button>
+        {% endif %}
+    </div>
+
+    {# Menu lateral — GM-only (slide-in da esquerda, começa abaixo do header) #}
+    {% if is_gm %}
+    <div class="menu-modal-backdrop" id="menu-modal-backdrop" onclick="rd6CloseMenu()"></div>
+    <aside class="menu-modal" id="menu-modal" aria-hidden="true">
+        <div class="menu-modal-header">
+            <h2 class="menu-modal-title">{{ campanha.nome }}</h2>
+            <button class="menu-modal-close" type="button" onclick="rd6CloseMenu()" aria-label="Fechar menu">✕</button>
+        </div>
+        <div class="menu-modal-tabs">
+            <button class="menu-modal-tab active" type="button" data-tab="cena">Controle de Cena</button>
+        </div>
+        <div class="menu-modal-body" id="menu-modal-body">
+            <div class="scenes-pills" id="scenes-pills"></div>
+
+            <div class="scene-name-wrap">
+                {% if is_gm %}
+                    <input type="text" class="scene-name-edit" id="scene-name-input" placeholder="Nome da cena" maxlength="80">
+                    <button class="scene-delete-btn" id="scene-delete-btn" type="button" onclick="rd6SceneDelete()" title="Deletar cena">✕</button>
+                {% else %}
+                    <div class="scene-name-readonly" id="scene-name-readonly"></div>
+                {% endif %}
+            </div>
+
+            <details class="quick-char-create" id="quick-char-form">
+                <summary>+ Nova ficha rápida</summary>
+                <div class="quick-char-fields">
+                    <input type="text" id="qc-nome" placeholder="Nome do personagem" maxlength="30">
+                    <div class="quick-char-row">
+                        <input type="number" id="qc-hp" placeholder="HP" min="0" max="9999" value="10">
+                        <input type="number" id="qc-fp" placeholder="FP" min="0" max="9999" value="10">
+                        <input type="number" id="qc-move" placeholder="MOVE" min="0" max="999" value="5">
+                    </div>
+                    <select id="qc-asset">
+                        <option value="">— sem asset linkado —</option>
+                        {% for a in all_assets_for_gm %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                    </select>
+                    <button type="button" class="quick-char-submit" onclick="rd6QuickCharSave()">Criar ficha</button>
+                    <p class="quick-char-error" id="qc-error" style="display:none"></p>
+                </div>
+            </details>
+
+            <div class="menu-modal-search">
+                <input type="text" placeholder="Buscar ficha pelo nome…" oninput="rd6SceneFilter(this.value)" autocomplete="off">
+            </div>
+
+            <p class="scene-control-hint">
+                {% if is_gm %}
+                    Marque pra entrar na cena. Ordem segue Speed; ▲▼ ajusta turno de ação.
+                {% else %}
+                    Personagens em cena (controlado pelo mestre):
+                {% endif %}
+            </p>
+
+            <ul class="scene-control-list" id="scene-control-list"></ul>
+
+            <p class="scene-control-empty-state" id="scene-control-empty-state" style="display:none">
+                Nenhuma cena criada ainda. Clica em <strong>+ Nova</strong> acima.
+            </p>
+        </div>
+    </aside>
+    {% endif %}
+
+    {# Dados injetados via json_script (seguro contra XSS, fácil de parsear no JS) #}
+    {{ scene_state|json_script:"rd6-scene-state" }}
+    {{ all_characters_data|json_script:"rd6-all-characters" }}
+
+    <script>
+        // ---- UI básica (theme/avatars/menu) ----
+        function rd6ToggleTheme() {
+            var html = document.documentElement;
+            var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            try { localStorage.setItem('rd6-theme', next); } catch (e) {}
+        }
+        function rd6ToggleAvatars() {
+            var bar = document.getElementById('players-bar');
+            var hidden = bar.classList.toggle('players-bar--no-avatars');
+            try { localStorage.setItem('rd6-avatars-hidden', hidden ? '1' : '0'); } catch (e) {}
+        }
+        function rd6OpenMenu() {
+            var modal = document.getElementById('menu-modal');
+            var backdrop = document.getElementById('menu-modal-backdrop');
+            if (modal) modal.classList.add('open');
+            if (backdrop) backdrop.classList.add('open');
+        }
+        function rd6CloseMenu() {
+            var modal = document.getElementById('menu-modal');
+            var backdrop = document.getElementById('menu-modal-backdrop');
+            if (modal) modal.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
+        }
+        (function () {
+            try {
+                if (localStorage.getItem('rd6-avatars-hidden') === '1') {
+                    document.getElementById('players-bar').classList.add('players-bar--no-avatars');
+                }
+            } catch (e) {}
+            document.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Escape') rd6CloseMenu();
+            });
+        })();
+
+        // ---- Estado de cena (multi-cena, sincronizado via WS) ----
+        var RD6_CAMPANHA_ID = "{{ campanha.id }}";
+        var RD6_IS_GM = {% if is_gm %}true{% else %}false{% endif %};
+        var RD6_SCENE_STATE = JSON.parse(document.getElementById('rd6-scene-state').textContent);
+        var RD6_ALL_CHARACTERS = JSON.parse(document.getElementById('rd6-all-characters').textContent);
+        var RD6_MAX_SCENES = 10;
+        var rd6GameWS = null;
+
+        function rd6Esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+
+        function rd6GetActiveScene() {
+            var scenes = RD6_SCENE_STATE.scenes || [];
+            var id = RD6_SCENE_STATE.active_scene_id;
+            return scenes.find(function (s) { return s.id === id; }) || scenes[0] || null;
+        }
+
+        function rd6CharById(id) {
+            return RD6_ALL_CHARACTERS.find(function (c) { return c.id === id; });
+        }
+
+        function rd6NormalizeTurn(scene) {
+            // Garante que current_turn_id seja sempre alguém presente na cena;
+            // se não, aponta pro primeiro (ou null se cena vazia).
+            if (!scene) return;
+            var ids = scene.character_ids || [];
+            if (ids.length === 0) {
+                scene.current_turn_id = null;
+                return;
+            }
+            if (scene.current_turn_id == null || ids.indexOf(scene.current_turn_id) < 0) {
+                scene.current_turn_id = ids[0];
+            }
+        }
+
+        // ---- Render ---------------------------------------------------------
+        function rd6RenderAll() {
+            // Normaliza turno antes de qualquer render — defesa em profundidade.
+            (RD6_SCENE_STATE.scenes || []).forEach(rd6NormalizeTurn);
+            rd6RenderPills();
+            rd6RenderSceneName();
+            rd6RenderCharList();
+            rd6ApplySceneStateToBar();
+            rd6RenderTurnControls();
+        }
+
+        function rd6RenderTurnControls() {
+            var controls = document.getElementById('turn-controls');
+            var nameEl = document.getElementById('turn-current-name');
+            if (!controls || !nameEl) return;
+            var active = rd6GetActiveScene();
+            var hasTurn = active && active.character_ids && active.character_ids.length > 0;
+            controls.classList.toggle('is-active', !!hasTurn);
+            document.body.classList.toggle('has-turn-controls', !!hasTurn);
+            if (hasTurn) {
+                var c = rd6CharById(active.current_turn_id);
+                nameEl.textContent = c ? c.nome : '—';
+            } else {
+                nameEl.textContent = '—';
+            }
+        }
+
+        function rd6RenderPills() {
+            var container = document.getElementById('scenes-pills');
+            if (!container) return;
+            var scenes = RD6_SCENE_STATE.scenes || [];
+            var activeId = (rd6GetActiveScene() || {}).id;
+            container.innerHTML = '';
+            scenes.forEach(function (s) {
+                var pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'scene-pill' + (s.id === activeId ? ' is-active' : '');
+                pill.innerHTML = rd6Esc(s.name);
+                pill.title = s.name;
+                pill.onclick = function () {
+                    if (!RD6_IS_GM) return;
+                    RD6_SCENE_STATE.active_scene_id = s.id;
+                    rd6SceneSendState();
+                };
+                container.appendChild(pill);
+            });
+            if (RD6_IS_GM && scenes.length < RD6_MAX_SCENES) {
+                var add = document.createElement('button');
+                add.type = 'button';
+                add.className = 'scene-pill-add';
+                add.textContent = '+ Nova';
+                add.onclick = rd6SceneCreate;
+                container.appendChild(add);
+            }
+        }
+
+        function rd6RenderSceneName() {
+            var active = rd6GetActiveScene();
+            if (RD6_IS_GM) {
+                var input = document.getElementById('scene-name-input');
+                if (input && document.activeElement !== input) {
+                    input.value = active ? active.name : '';
+                }
+                if (input) input.disabled = !active;
+                var del = document.getElementById('scene-delete-btn');
+                if (del) del.style.display = active ? '' : 'none';
+            } else {
+                var ro = document.getElementById('scene-name-readonly');
+                if (ro) ro.textContent = active ? active.name : '(nenhuma cena ativa)';
+            }
+        }
+
+        function rd6RenderCharList() {
+            var list = document.getElementById('scene-control-list');
+            var empty = document.getElementById('scene-control-empty-state');
+            if (!list) return;
+            var active = rd6GetActiveScene();
+            if (!active) {
+                list.innerHTML = '';
+                if (empty) empty.style.display = '';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+
+            var inIds = (active.character_ids || []).slice();
+            var inSet = new Set(inIds);
+            var inOrder = inIds.map(rd6CharById).filter(Boolean);
+            var others = RD6_ALL_CHARACTERS
+                .filter(function (c) { return !inSet.has(c.id); })
+                .sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+
+            var html = '';
+            inOrder.forEach(function (c, idx) {
+                html += rd6CharListItemHtml(c, true, idx + 1);
+            });
+            others.forEach(function (c) {
+                html += rd6CharListItemHtml(c, false, null);
+            });
+            list.innerHTML = html;
+
+            // Re-aplica filtro de busca atual.
+            var search = document.querySelector('.menu-modal-search input');
+            if (search && search.value) rd6SceneFilter(search.value);
+        }
+
+        function rd6CharListItemHtml(c, isIn, orderNum) {
+            var parts = '';
+            if (isIn) parts += '<span class="scene-order-num">' + orderNum + '</span>';
+            if (RD6_IS_GM) {
+                parts += '<input type="checkbox" class="scene-control-check"'
+                    + (isIn ? ' checked' : '')
+                    + ' onchange="rd6SceneToggleChar(' + c.id + ', this.checked)">';
+            }
+            parts += '<span class="scene-control-item-name">' + rd6Esc(c.nome) + '</span>';
+            parts += '<span class="scene-control-item-badge">' + (isIn ? 'em cena' : 'fora') + '</span>';
+            if (RD6_IS_GM && isIn) {
+                parts += '<button type="button" class="scene-control-move" onclick="rd6SceneMove(' + c.id + ', -1)" aria-label="Sobe">▲</button>';
+                parts += '<button type="button" class="scene-control-move" onclick="rd6SceneMove(' + c.id + ', 1)" aria-label="Desce">▼</button>';
+            }
+            // Só fichas criadas via "+ Nova ficha rápida" podem ser deletadas
+            // por aqui — as importadas da produção GCP são intocáveis.
+            if (RD6_IS_GM && c.is_quick_npc) {
+                parts += '<button type="button" class="scene-control-delete" onclick="rd6QuickCharDelete(' + c.id + ')" aria-label="Deletar ficha permanentemente" title="Deletar ficha rápida permanentemente">🗑</button>';
+            }
+            return '<li class="scene-control-item' + (isIn ? ' is-present' : '')
+                + '" data-character-id="' + c.id + '">' + parts + '</li>';
+        }
+
+        function rd6ApplySceneStateToBar() {
+            var active = rd6GetActiveScene();
+            var bar = document.getElementById('players-bar');
+            if (!bar) return;
+            var spacer = bar.querySelector('.players-bar-spacer');
+
+            // Ordem na barra: rotacionada pra começar pelo turno atual.
+            // Quem acabou de jogar vai pro fim da fila visualmente.
+            if (active && active.character_ids && active.character_ids.length && spacer) {
+                var ids = active.character_ids;
+                var currentId = active.current_turn_id;
+                var startIdx = currentId != null ? ids.indexOf(currentId) : 0;
+                if (startIdx < 0) startIdx = 0;
+                var rotated = ids.slice(startIdx).concat(ids.slice(0, startIdx));
+                rotated.forEach(function (id) {
+                    var el = bar.querySelector('.player-mini[data-character-id="' + id + '"]');
+                    if (el) bar.insertBefore(el, spacer);
+                });
+            }
+
+            // Visibilidade + highlight do turno atual.
+            var inScene = active ? new Set((active.character_ids || []).map(Number)) : null;
+            var currentTurnId = active ? active.current_turn_id : null;
+            bar.querySelectorAll('.player-mini').forEach(function (mini) {
+                var id = parseInt(mini.dataset.characterId, 10);
+                var visible = inScene === null || inScene.has(id);
+                mini.classList.toggle('player-mini--absent', !visible);
+                mini.classList.toggle('player-mini--current-turn', visible && id === currentTurnId);
+            });
+        }
+
+        function rd6TurnNext() {
+            if (!RD6_IS_GM) return;
+            var active = rd6GetActiveScene();
+            if (!active || !active.character_ids || active.character_ids.length === 0) return;
+            var ids = active.character_ids;
+            var idx = ids.indexOf(active.current_turn_id);
+            if (idx < 0) idx = -1;
+            active.current_turn_id = ids[(idx + 1 + ids.length) % ids.length];
+            rd6SceneSendState();
+        }
+
+        function rd6TurnPrev() {
+            if (!RD6_IS_GM) return;
+            var active = rd6GetActiveScene();
+            if (!active || !active.character_ids || active.character_ids.length === 0) return;
+            var ids = active.character_ids;
+            var idx = ids.indexOf(active.current_turn_id);
+            if (idx < 0) idx = 0;
+            active.current_turn_id = ids[(idx - 1 + ids.length) % ids.length];
+            rd6SceneSendState();
+        }
+
+        // ---- Ações do GM ----------------------------------------------------
+        function rd6SceneCreate() {
+            if (!RD6_IS_GM) return;
+            var scenes = RD6_SCENE_STATE.scenes || [];
+            if (scenes.length >= RD6_MAX_SCENES) return;
+            var newScene = {
+                id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                name: 'Cena ' + (scenes.length + 1),
+                character_ids: []
+            };
+            RD6_SCENE_STATE.scenes = scenes.concat([newScene]);
+            RD6_SCENE_STATE.active_scene_id = newScene.id;
+            rd6SceneSendState();
+        }
+
+        function rd6SceneDelete() {
+            if (!RD6_IS_GM) return;
+            var active = rd6GetActiveScene();
+            if (!active) return;
+            if (!confirm('Deletar a cena "' + active.name + '"?')) return;
+            RD6_SCENE_STATE.scenes = (RD6_SCENE_STATE.scenes || []).filter(function (s) {
+                return s.id !== active.id;
+            });
+            RD6_SCENE_STATE.active_scene_id = (RD6_SCENE_STATE.scenes[0] || {}).id || null;
+            rd6SceneSendState();
+        }
+
+        function rd6SceneToggleChar(charId, checked) {
+            if (!RD6_IS_GM) return;
+            var active = rd6GetActiveScene();
+            if (!active) {
+                // Auto-cria primeira cena se ainda não houver nenhuma.
+                rd6SceneCreate();
+                active = rd6GetActiveScene();
+                if (!active) return;
+            }
+            if (checked) {
+                if (active.character_ids.indexOf(charId) >= 0) return;
+                // Insere ordenado por Speed (descendente). Mesma Speed → entra após os existentes.
+                var newSpeed = (rd6CharById(charId) || {}).speed || 0;
+                var insertAt = active.character_ids.length;
+                for (var i = 0; i < active.character_ids.length; i++) {
+                    var existingSpeed = (rd6CharById(active.character_ids[i]) || {}).speed || 0;
+                    if (newSpeed > existingSpeed) { insertAt = i; break; }
+                }
+                active.character_ids.splice(insertAt, 0, charId);
+            } else {
+                active.character_ids = active.character_ids.filter(function (id) { return id !== charId; });
+            }
+            rd6SceneSendState();
+        }
+
+        function rd6SceneMove(charId, delta) {
+            if (!RD6_IS_GM) return;
+            var active = rd6GetActiveScene();
+            if (!active) return;
+            var idx = active.character_ids.indexOf(charId);
+            if (idx < 0) return;
+            var newIdx = idx + delta;
+            if (newIdx < 0 || newIdx >= active.character_ids.length) return;
+            active.character_ids.splice(idx, 1);
+            active.character_ids.splice(newIdx, 0, charId);
+            rd6SceneSendState();
+        }
+
+        function rd6SceneFilter(query) {
+            var q = (query || '').trim().toLowerCase();
+            document.querySelectorAll('.scene-control-item').forEach(function (item) {
+                var nameEl = item.querySelector('.scene-control-item-name');
+                if (!nameEl) return;
+                var name = nameEl.textContent.toLowerCase();
+                item.classList.toggle('is-filtered-out', q !== '' && name.indexOf(q) === -1);
+            });
+        }
+
+        function rd6SceneSendState() {
+            // Re-renderiza local pra UX snappy; o broadcast do server vai re-render de novo.
+            rd6RenderAll();
+            if (!RD6_IS_GM || !rd6GameWS || rd6GameWS.readyState !== 1) return;
+            rd6GameWS.send(JSON.stringify({
+                type: 'scene_state_set',
+                scene_state: RD6_SCENE_STATE,
+            }));
+        }
+
+        // Edit do nome da cena ativa pelo GM — salva no change (blur) e no Enter.
+        (function () {
+            var input = document.getElementById('scene-name-input');
+            if (!input) return;
+            function commit() {
+                var active = rd6GetActiveScene();
+                if (!active) return;
+                var newName = (input.value || '').trim() || ('Cena ' + ((RD6_SCENE_STATE.scenes || []).indexOf(active) + 1));
+                if (newName === active.name) return;
+                active.name = newName;
+                rd6SceneSendState();
+            }
+            input.addEventListener('change', commit);
+            input.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    input.blur();
+                }
+            });
+        })();
+
+        // ---- Quick char create/delete via HTTP ------------------------------
+        function rd6GetCsrf() {
+            var m = document.cookie.match(/csrftoken=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        }
+
+        function rd6QuickCharSave() {
+            if (!RD6_IS_GM) return;
+            var nome = (document.getElementById('qc-nome').value || '').trim();
+            var hp = document.getElementById('qc-hp').value || '10';
+            var fp = document.getElementById('qc-fp').value || '10';
+            var move = document.getElementById('qc-move').value || '5';
+            var assetSelect = document.getElementById('qc-asset');
+            var assetId = assetSelect ? assetSelect.value : '';
+            var errEl = document.getElementById('qc-error');
+            errEl.style.display = 'none';
+            if (!nome) {
+                errEl.textContent = 'Nome obrigatório.';
+                errEl.style.display = '';
+                return;
+            }
+            var btn = document.querySelector('.quick-char-submit');
+            if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+            fetch('/quick-character/save/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': rd6GetCsrf() },
+                body: JSON.stringify({
+                    campanha_id: RD6_CAMPANHA_ID,
+                    nome: nome,
+                    hp: hp,
+                    fp: fp,
+                    move: move,
+                    asset_id: assetId || null,
+                }),
+            }).then(function (r) { return r.json().then(function (d) { return {status: r.status, body: d}; }); })
+              .then(function (res) {
+                  if (btn) { btn.disabled = false; btn.textContent = 'Criar ficha'; }
+                  if (res.status !== 200 || !res.body.ok) {
+                      errEl.textContent = (res.body && res.body.error) || 'Erro ao criar.';
+                      errEl.style.display = '';
+                      return;
+                  }
+                  // Limpa form (servidor já fez WS broadcast — UI atualiza via handler).
+                  document.getElementById('qc-nome').value = '';
+                  document.getElementById('qc-hp').value = '10';
+                  document.getElementById('qc-fp').value = '10';
+                  document.getElementById('qc-move').value = '5';
+                  if (assetSelect) assetSelect.value = '';
+                  document.getElementById('quick-char-form').open = false;
+              }).catch(function (e) {
+                  if (btn) { btn.disabled = false; btn.textContent = 'Criar ficha'; }
+                  errEl.textContent = 'Erro de rede.';
+                  errEl.style.display = '';
+              });
+        }
+
+        function rd6QuickCharDelete(charId) {
+            if (!RD6_IS_GM) return;
+            var c = rd6CharById(charId);
+            var nome = c ? c.nome : '(ficha)';
+            if (!confirm('Deletar permanentemente "' + nome + '"?\nEla some de todas as cenas e da lista de fichas.')) return;
+            fetch('/quick-character/delete/' + charId + '/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': rd6GetCsrf() },
+            }).then(function (r) { return r.json(); })
+              .then(function (d) {
+                  if (!d.ok) alert(d.error || 'Erro ao deletar.');
+                  // O resto vai via broadcast WS (character_deleted).
+              })
+              .catch(function () { alert('Erro de rede ao deletar.'); });
+        }
+
+        // ---- DOM helpers pra mini criada/removida dinamicamente -------------
+        function rd6BuildMiniInnerHtml(c) {
+            var avatar = c.avatar_url
+                ? '<img src="' + rd6Esc(c.avatar_url) + '" alt="' + rd6Esc(c.nome) + '">'
+                : '<span>' + rd6Esc(c.initials || '?') + '</span>';
+            // viewer-side privacy: recomputar show_numbers localmente.
+            // c.show_numbers vem true (server otimista), mas decidimos aqui de novo.
+            var showNumbers = RD6_IS_GM; // chars criadas pelo GM têm player_name=GM; players nunca veem números delas
+            var hpLabel = showNumbers
+                ? '<span class="player-mini-bar-label">HP ' + c.hp_atual + '/' + c.hp_max + '</span>' : '';
+            var fpLabel = showNumbers
+                ? '<span class="player-mini-bar-label">FP ' + c.fp_atual + '/' + c.fp_max + '</span>' : '';
+            return ''
+                + '<div class="player-mini-avatar">' + avatar + '</div>'
+                + '<div class="player-mini-info">'
+                +   '<div class="player-mini-name">' + rd6Esc(c.nome) + '</div>'
+                +   '<div class="player-mini-bar player-mini-bar-hp">'
+                +     '<div class="player-mini-bar-fill" style="width:' + c.hp_pct + '%"></div>' + hpLabel
+                +   '</div>'
+                +   '<div class="player-mini-bar player-mini-bar-fp">'
+                +     '<div class="player-mini-bar-fill" style="width:' + c.fp_pct + '%"></div>' + fpLabel
+                +   '</div>'
+                + '</div>';
+        }
+
+        function rd6AddMiniToBar(c) {
+            var bar = document.getElementById('players-bar');
+            var spacer = bar ? bar.querySelector('.players-bar-spacer') : null;
+            if (!bar || !spacer) return;
+            // Se já existe (re-add), não duplica.
+            if (bar.querySelector('.player-mini[data-character-id="' + c.id + '"]')) return;
+            var el = document.createElement('div');
+            el.className = 'player-mini';
+            el.dataset.characterId = c.id;
+            el.title = c.nome;
+            el.innerHTML = rd6BuildMiniInnerHtml(c);
+            bar.insertBefore(el, spacer);
+        }
+
+        function rd6RemoveMiniFromBar(charId) {
+            var el = document.querySelector('.player-mini[data-character-id="' + charId + '"]');
+            if (el) el.remove();
+        }
+
+        // ---- WebSocket ------------------------------------------------------
+        function rd6OpenGameWS() {
+            var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+            var url = proto + location.host + '/ws/chat/' + RD6_CAMPANHA_ID + '/';
+            rd6GameWS = new WebSocket(url);
+            rd6GameWS.onmessage = function (ev) {
+                var data;
+                try { data = JSON.parse(ev.data); } catch (e) { return; }
+                if (data.type === 'scene_state_changed') {
+                    RD6_SCENE_STATE = data.scene_state || RD6_SCENE_STATE;
+                    rd6RenderAll();
+                } else if (data.type === 'character_created' && data.char) {
+                    // Adiciona à lista local + cria mini na barra.
+                    RD6_ALL_CHARACTERS = RD6_ALL_CHARACTERS.filter(function (x) { return x.id !== data.char.id; });
+                    RD6_ALL_CHARACTERS.push({
+                        id: data.char.id, nome: data.char.nome,
+                        speed: data.char.speed || 0,
+                        is_quick_npc: !!data.char.is_quick_npc,
+                    });
+                    rd6AddMiniToBar(data.char);
+                    rd6RenderAll();
+                } else if (data.type === 'character_deleted' && data.char_id) {
+                    RD6_ALL_CHARACTERS = RD6_ALL_CHARACTERS.filter(function (x) { return x.id !== data.char_id; });
+                    rd6RemoveMiniFromBar(data.char_id);
+                    if (data.scene_state) RD6_SCENE_STATE = data.scene_state;
+                    rd6RenderAll();
+                }
+            };
+            rd6GameWS.onclose = function () {
+                setTimeout(rd6OpenGameWS, 2000);
+            };
+        }
+
+        // ---- Boot -----------------------------------------------------------
+        rd6OpenGameWS();
+        rd6RenderAll();
+    </script>
     <div class="image-container" data-room-name="{{ campanha.id }}" data-asset-id="{{ pagina_inicial.id }}">
         {% if pagina_inicial.image %}
         <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"

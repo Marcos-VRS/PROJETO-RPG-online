@@ -616,3 +616,392 @@ a {
     padding-bottom: 0.5rem;
     background-color: var(--faded-black-color);
 }
+/* ========================================================
+   Design system v1 overrides (Foundry-inspired, vazado)
+   Re-skina os componentes legados pra bater com o novo visual.
+   Layout (posicionamento, dimensões) preservado; só troca cores,
+   bordas, tipografia e backgrounds.
+   ======================================================== */
+
+/* ----------------------------------------------------------
+   Posicionamento do chat (sidebar direita) abaixo da barra de turno.
+   --rd6-topbar-offset: empurrão dinâmico (70 sem turn-controls, 108 com).
+   ---------------------------------------------------------- */
+/* Offset: players-bar (60) + turn-controls (38 quando visível) */
+body { --rd6-topbar-offset: 60px; }
+body.has-turn-controls { --rd6-topbar-offset: 98px; }
+
+/* Container do chat: TRANSPARENTE (era a "faixa cinza" extra), só serve
+   pra alinhar os filhos fixed-positioned. Os 3 children abaixo desenham
+   seus próprios backgrounds. */
+.coluna-chat {
+    top: var(--rd6-topbar-offset) !important;
+    height: calc(100vh - var(--rd6-topbar-offset)) !important;
+    width: 14.94% !important;
+    min-width: 272px !important;
+    background: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Cabeçalho do chat (com os botões Sair/Journal/GM) — abaixo da barra de turno */
+.chat-container-menu {
+    top: var(--rd6-topbar-offset) !important;
+    width: 14.94% !important;
+    min-width: 272px !important;
+    height: 48px !important;
+    background: var(--rd6-bg-elevated) !important;
+    border: none !important;
+    border-bottom: 1px solid var(--rd6-border) !important;
+    border-radius: 0 !important;
+    z-index: 99 !important;
+    padding: 4px 8px !important;
+    box-sizing: border-box !important;
+}
+
+.menu-container {
+    background: transparent !important;
+    border: none !important;
+}
+
+.menu-button-options {
+    background: transparent !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-body) !important;
+    font-size: 12px !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 8px 12px !important;
+    margin: 4px !important;
+    transition: all var(--rd6-transition) !important;
+}
+
+.menu-button-options:hover {
+    color: var(--rd6-accent) !important;
+    border-color: var(--rd6-accent) !important;
+    background: var(--rd6-bg-elevated) !important;
+}
+
+/* Lista de mensagens do chat — entre o header (48px) e o submit (64px) */
+.chat-container {
+    top: calc(var(--rd6-topbar-offset) + 48px) !important;
+    width: 14.94% !important;
+    min-width: 272px !important;
+    height: calc(100vh - var(--rd6-topbar-offset) - 48px - 64px) !important;
+    background: var(--rd6-bg-elevated) !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 8px !important;
+    z-index: 99 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+/* Mensagens individuais — quebra palavra/URL longa pra nunca estourar lateralmente */
+.message-single-box,
+.content-message-chat,
+.username-chat {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.message-box {
+    background: transparent !important;
+}
+
+.message-single-box {
+    background: var(--rd6-bg-elevated) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-md) !important;
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    margin: 4px 0 !important;
+    list-style: none !important;
+}
+
+.username-chat {
+    color: var(--rd6-accent) !important;
+    font-family: var(--rd6-font-display) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.04em !important;
+}
+
+.content-message-chat {
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+}
+
+/* Cores especiais de mensagem (dado/teste) — re-skin com tokens */
+.bg-green   { background: rgba(109, 161, 105, 0.18) !important; border-color: rgba(109, 161, 105, 0.4) !important; }
+.bg-orange  { background: rgba(224, 168, 84, 0.18) !important; border-color: rgba(224, 168, 84, 0.4) !important; }
+.bg-purple  { background: rgba(149, 117, 205, 0.18) !important; border-color: rgba(149, 117, 205, 0.4) !important; }
+.bg-gray    { background: rgba(125, 117, 107, 0.18) !important; border-color: rgba(125, 117, 107, 0.4) !important; }
+.bg-red     { background: var(--rd6-hp-bg) !important; border-color: var(--rd6-hp) !important; }
+.bg-blue    { background: var(--rd6-fp-bg) !important; border-color: var(--rd6-fp) !important; }
+
+/* Input de mensagem — colado na base. Altura reduzida pra não invadir lista de msgs. */
+.chat-container-submit {
+    top: auto !important;
+    bottom: 0 !important;
+    width: 14.94% !important;
+    min-width: 272px !important;
+    height: 64px !important;
+    background: var(--rd6-bg-elevated) !important;
+    border: none !important;
+    border-top: 1px solid var(--rd6-border) !important;
+    border-radius: 0 !important;
+    padding: 6px !important;
+    z-index: 99 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* Form do input cabe inteiro em row dentro do submit (textarea + botão) */
+.chat-container-submit form {
+    display: flex !important;
+    width: 100% !important;
+    gap: 6px !important;
+    align-items: stretch !important;
+    margin: 0 !important;
+}
+
+.textarea-chat {
+    background: var(--rd6-bg) !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-body) !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    transition: border-color var(--rd6-transition) !important;
+    flex: 1 !important;
+    height: 52px !important;
+    max-height: 52px !important;
+    resize: none !important;
+    box-sizing: border-box !important;
+}
+
+.textarea-chat:focus {
+    outline: none !important;
+    border-color: var(--rd6-accent) !important;
+}
+
+#button-chat-submit {
+    background: var(--rd6-accent) !important;
+    color: var(--rd6-bg) !important;
+    border: 1px solid var(--rd6-accent) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-display) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 0 10px !important;
+    cursor: pointer !important;
+    transition: background var(--rd6-transition) !important;
+    height: 52px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+#button-chat-submit:hover { background: var(--rd6-accent-bright) !important; }
+
+/* Sidebar direita: personagem-container.
+   IMPORTANTE: NUNCA usar backdrop-filter aqui — ele cria um containing block
+   que captura as `.janela` filhas (position:fixed) e as posiciona relativo a
+   esta sidebar em vez do viewport. As janelas saem de tela. */
+.personagem-container,
+.personagem-container-gm {
+    background: var(--rd6-bg-overlay) !important;
+    border-left: 1px solid var(--rd6-border) !important;
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+}
+
+.nome-personagem {
+    color: var(--rd6-accent) !important;
+    font-family: var(--rd6-font-display) !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    letter-spacing: 0.04em !important;
+    padding: 10px !important;
+}
+
+.titulo-personagem-gm {
+    color: var(--rd6-accent) !important;
+    font-family: var(--rd6-font-display) !important;
+}
+
+.lista-personagens {
+    list-style: none !important;
+    padding: 0 !important;
+}
+
+.menu-button-gm {
+    background: transparent !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    padding: 6px 10px !important;
+    margin: 2px !important;
+    font-family: var(--rd6-font-body) !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    transition: all var(--rd6-transition) !important;
+}
+
+.menu-button-gm:hover {
+    color: var(--rd6-accent) !important;
+    border-color: var(--rd6-accent) !important;
+}
+
+.personagem-primeira-linha,
+.personagem-display {
+    background: transparent !important;
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+}
+
+.personagem-info {
+    background: var(--rd6-bg-elevated) !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+}
+
+.menu-button {
+    background: transparent !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-body) !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    margin: 4px !important;
+    cursor: pointer !important;
+    transition: all var(--rd6-transition) !important;
+    letter-spacing: 0.03em !important;
+}
+
+.menu-button:hover {
+    color: var(--rd6-accent) !important;
+    border-color: var(--rd6-accent) !important;
+    background: var(--rd6-bg-elevated) !important;
+}
+
+/* Janelas/modais internas (atributos, perícias, dados, fichas GM, etc.).
+   Posicionadas ACIMA da caixa "pesquisar personagem" (personagem-container-gm
+   no rodapé). Top fixo logo abaixo das barras superiores, centrado horizontalmente.
+   `inset` zerado pra anular qualquer right/bottom legacy + reset de margin. */
+.janela,
+.janela-ficha-gm {
+    position: fixed !important;
+    top: 115px !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    max-width: 90vw !important;
+    max-height: calc(100vh - 115px - 200px) !important;  /* 200 = altura aprox do personagem-container-gm */
+    overflow-y: auto !important;
+    background: var(--rd6-bg-elevated) !important;
+    border: 1px solid var(--rd6-border) !important;
+    box-shadow: var(--rd6-shadow-md) !important;
+    color: var(--rd6-text) !important;
+    font-family: var(--rd6-font-body) !important;
+    border-radius: var(--rd6-radius-lg) !important;
+    z-index: 1100 !important;  /* acima do chat (99) e personagem-container (1000) */
+}
+
+.fechar {
+    background: transparent !important;
+    color: var(--rd6-text-dim) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all var(--rd6-transition) !important;
+}
+
+.fechar:hover {
+    color: var(--rd6-hp-bright) !important;
+    border-color: var(--rd6-hp-bright) !important;
+}
+
+.ficha-parte-box,
+.ficha-parte-box-journal,
+.li-gm {
+    background: var(--rd6-bg) !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-body) !important;
+}
+
+.input-pesquisa-personagem,
+.input-pesquisa-asset,
+.input-inc {
+    background: var(--rd6-bg) !important;
+    color: var(--rd6-text) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    font-family: var(--rd6-font-body) !important;
+    padding: 6px 8px !important;
+    font-size: 13px !important;
+}
+
+.input-pesquisa-personagem:focus,
+.input-pesquisa-asset:focus,
+.input-inc:focus {
+    outline: none !important;
+    border-color: var(--rd6-accent) !important;
+}
+
+/* Títulos de seções da ficha — Cinzel */
+.titulo-ficha-gm,
+.fredericka-the-great-regular {
+    color: var(--rd6-accent) !important;
+    font-family: var(--rd6-font-display) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* Override do MedievalSharp pelo Inter pra leitura */
+.medievalsharp-mini,
+.medievalsharp-regular {
+    font-family: var(--rd6-font-body) !important;
+}
+
+/* Asset line no chat-menu */
+.asset-line {
+    background: var(--rd6-bg-elevated) !important;
+    border: 1px solid var(--rd6-border) !important;
+    color: var(--rd6-text) !important;
+    border-radius: var(--rd6-radius-sm) !important;
+    padding: 6px 10px !important;
+    margin: 4px 0 !important;
+}
