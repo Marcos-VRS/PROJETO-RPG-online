@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
+    <title>Fichas GM — {{ campanha.nome }}</title>
+    <link rel="stylesheet" href="{% static 'global/css/sheet_v2.css' %}?d={% now 'U' %}">
+</head>
+<body class="v2-list-page">
+<div class="v2-list-wrap">
+    <h1>Fichas (Nova) — GM — {{ campanha.nome }}</h1>
+
+    <ul class="v2-sheet-list">
+        {% for s in sheets %}
+        <li class="v2-sheet-item">
+            <div class="v2-sheet-name">{{ s.nome_personagem }}</div>
+            <div class="v2-sheet-meta">
+                Player: <strong>{{ s.owner.username|default:"—" }}</strong>
+                · {{ s.points.spent|default:0 }}/{{ s.points.available|default:150 }} pts
+                · ST {{ s.primary_attributes.st|default:10 }}
+                · DX {{ s.primary_attributes.dx|default:10 }}
+                · IQ {{ s.primary_attributes.iq|default:10 }}
+                · HT {{ s.primary_attributes.ht|default:10 }}
+            </div>
+            <div class="v2-sheet-actions">
+                <a href="{% url 'gurps:editar_v2' id=s.id %}">Editar</a>
+                <a href="{% url 'gurps:ver_v2' id=s.id %}">Ver</a>
+            </div>
+        </li>
+        {% empty %}
+        <li class="v2-empty">Nenhuma ficha (nova) ainda nesta campanha. Os players ainda vão criar.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'gurps:criar_v2' campanha_id=campanha.id %}" class="v2-cta">+ Criar ficha (NPC ou pra player)</a>
+
+    <hr>
+    <p class="v2-legado-link">
+        Fichas antigas: <a href="{% url 'gurps:lista_gm_fichas' campanha_id=campanha.id %}">Fichas Legado</a>
+    </p>
+</div>
+</body>
+</html>

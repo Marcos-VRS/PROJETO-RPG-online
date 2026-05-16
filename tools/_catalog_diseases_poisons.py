@@ -1,0 +1,62 @@
+"""Sample diseases + poisons + environmental hazards do Basic Set Campaigns cap 14."""
+import json
+from pathlib import Path
+
+TARGET = Path(__file__).resolve().parents[1] / "gurps" / "data" / "diseases_poisons.json"
+
+DISEASES = [
+    {"id":"common_cold","name_en":"Common Cold","vector":"respiratory","resist_roll":"HT","delay":"24 hours","damage":"-1 IQ/DX while sick","cycles":"6 days","contagion":"mildly","page":443},
+    {"id":"influenza","name_en":"Influenza","vector":"respiratory","resist_roll":"HT-2","delay":"24-48 hours","damage":"1 HP/day","cycles":"7-10 days","contagion":"highly","page":443},
+    {"id":"cholera","name_en":"Cholera","vector":"digestive","resist_roll":"HT-3","delay":"1-3 days","damage":"1d HP/day (dehydration)","cycles":"7 days","contagion":"highly (in water)","page":443},
+    {"id":"typhoid","name_en":"Typhoid Fever","vector":"digestive","resist_roll":"HT-4","delay":"1-3 weeks","damage":"1d-2 HP/day","cycles":"2-4 weeks","contagion":"highly (in water/food)","page":443},
+    {"id":"plague","name_en":"Bubonic Plague","vector":"contact (via fleas)","resist_roll":"HT-5","delay":"2-6 days","damage":"1d HP/day","cycles":"5-10 days","contagion":"highly","page":443,"notes":"Sintomas: bubões, fever; sem tratamento ~50% mortality"},
+    {"id":"tetanus","name_en":"Tetanus","vector":"blood (open wound)","resist_roll":"HT-3","delay":"3-21 days","damage":"-1 DX/day cumulative","cycles":"until cure or 10 days","contagion":"none","page":443,"notes":"Espasmos musculares; antitoxina disponível"},
+    {"id":"tuberculosis","name_en":"Tuberculosis","vector":"respiratory","resist_roll":"HT-3","delay":"weeks to months","damage":"-1 HT/month","cycles":"chronic","contagion":"mildly","page":443,"notes":"Crônica; tratamento longo (6-12 meses)"},
+    {"id":"smallpox","name_en":"Smallpox","vector":"contact/respiratory","resist_roll":"HT-5","delay":"10-14 days","damage":"1d HP/day","cycles":"14-21 days","contagion":"highly","page":443,"notes":"Vaccine erradicou em 1980"},
+    {"id":"aids","name_en":"AIDS","vector":"blood/sexual","resist_roll":"HT-7","delay":"months to years","damage":"-1 HT/month cumulative","cycles":"chronic","contagion":"highly (blood/intimate)","page":443,"notes":"Sem cura; antiretrovirais retardam"},
+    {"id":"ebola","name_en":"Ebola","vector":"contact/blood","resist_roll":"HT-10","delay":"2-21 days","damage":"1d HP/day","cycles":"7-14 days","contagion":"highly","page":443,"notes":"Hemorragia interna; ~50% mortality"},
+    {"id":"rabies","name_en":"Rabies","vector":"contact (via bite)","resist_roll":"HT-4","delay":"1-3 months","damage":"-1 IQ/day after onset","cycles":"7-14 days","contagion":"via bite only","page":443,"notes":"Lethal once symptoms appear; vaccine pré-exposição funciona"},
+    {"id":"malaria","name_en":"Malaria","vector":"contact (via mosquito)","resist_roll":"HT-3","delay":"1-2 weeks","damage":"1 HP/day fever cycles","cycles":"chronic recurrence","contagion":"via mosquito only","page":443,"notes":"Recurrent; tropical regions"},
+]
+
+POISONS = [
+    {"id":"curare","name_en":"Curare","vector":"blood (dart/arrow)","resist_roll":"HT-3","delay":"1-10 minutes","damage":"-1 DX/minute cumulative","cycles":"5","page":439,"notes":"Paralysis-inducing; usado em darts"},
+    {"id":"strychnine","name_en":"Strychnine","vector":"digestive","resist_roll":"HT-3","delay":"10-30 minutes","damage":"1d HP/minute","cycles":"3","page":439,"notes":"Convulsões violentas"},
+    {"id":"cobra_venom","name_en":"Cobra Venom","vector":"blood","resist_roll":"HT-5","delay":"5-30 minutes","damage":"2d HP","cycles":"1","page":439,"notes":"Neurotoxic"},
+    {"id":"rattlesnake_venom","name_en":"Rattlesnake Venom","vector":"blood","resist_roll":"HT-3","delay":"30 minutes","damage":"1d HP","cycles":"5 (hemotoxic)","page":439,"notes":"Tissue damage local"},
+    {"id":"hemlock","name_en":"Hemlock","vector":"digestive","resist_roll":"HT-4","delay":"30 min","damage":"1d HP/hour","cycles":"4","page":439,"notes":"Paralisia ascendente"},
+    {"id":"arsenic","name_en":"Arsenic","vector":"digestive","resist_roll":"HT-2","delay":"1-2 hours","damage":"1d-2 HP/hour","cycles":"6","page":439,"notes":"Detectável post-mortem"},
+    {"id":"cyanide","name_en":"Hydrogen Cyanide","vector":"respiratory","resist_roll":"HT-5","delay":"seconds","damage":"3d HP","cycles":"1","page":439,"notes":"Rapidíssimo; almond-bitter smell"},
+    {"id":"sleep_gas","name_en":"Sleep Gas (Knockout)","vector":"respiratory","resist_roll":"HT-3","delay":"3 seconds","damage":"unconsciousness (Affliction)","cycles":"1","page":439,"notes":"Não letal"},
+    {"id":"nerve_gas","name_en":"Nerve Gas (Sarin)","vector":"respiratory/contact","resist_roll":"HT-6","delay":"30 seconds","damage":"2d HP + 2d FP","cycles":"3","page":439,"notes":"Atropina como antídoto"},
+    {"id":"tear_gas","name_en":"Tear Gas","vector":"respiratory","resist_roll":"HT-1","delay":"instant","damage":"-3 IQ/DX (irritation)","cycles":"1 (5 min after exposure ends)","page":439,"notes":"Filter Lungs imune"},
+    {"id":"black_widow","name_en":"Black Widow Spider","vector":"blood (bite)","resist_roll":"HT-2","delay":"15 min","damage":"1d HP","cycles":"3","page":439,"notes":"Muscle cramps, pain"},
+    {"id":"scorpion_venom","name_en":"Scorpion Venom","vector":"blood","resist_roll":"HT-2","delay":"5-30 min","damage":"1d-3 HP","cycles":"3","page":439,"notes":"Varia muito por espécie"},
+]
+
+ENVIRONMENTAL_HAZARDS = [
+    {"id":"heat","name_en":"Heat Exhaustion","trigger":">90°F (32°C)","check":"HT roll per hour","damage":"1 FP per failure","page":434,"notes":"Heat Tolerance protects; perda de água acelera"},
+    {"id":"cold","name_en":"Cold Exposure","trigger":"<35°F (2°C)","check":"HT roll per hour","damage":"1 FP per failure; below 0°F also 1 HP","page":430,"notes":"Temperature Tolerance + roupas protegem"},
+    {"id":"dehydration","name_en":"Dehydration","trigger":"No water 24+ hours","check":"HT roll daily","damage":"1d FP per failure","page":426,"notes":"4-6 days = death"},
+    {"id":"starvation","name_en":"Starvation","trigger":"No food 3+ days","check":"HT roll daily","damage":"1d FP per failure; 1 HP after weeks","page":426,"notes":"Doesn't Eat anula"},
+    {"id":"drowning","name_en":"Drowning","trigger":"Underwater after breath holding limit","check":"HT roll every 30 sec","damage":"1d HP per failure","page":436,"notes":"Doesn't Breathe imune"},
+    {"id":"suffocation","name_en":"Suffocation (no air)","trigger":"No oxygen","check":"Hold breath, then HT roll/30sec","damage":"1d HP per failure","page":436},
+    {"id":"falling","name_en":"Falling","trigger":"Fall from height","check":"DX roll for catfall/acrobatics","damage":"1d-1 cr per yard fallen, max 100d","page":431,"notes":"Catfall subtrai 5 yds"},
+    {"id":"electrical","name_en":"Electrical Shock","trigger":"Contact with current","check":"HT roll","damage":"burn damage + stun","page":432,"notes":"Voltage determines damage"},
+    {"id":"radiation","name_en":"Radiation Exposure","trigger":"Contact with radiation","check":"depends on dose","damage":"rad accumulation, eventually HP loss","page":435,"notes":"Radiation Tolerance divide dose"},
+    {"id":"high_altitude","name_en":"High Altitude","trigger":"Above 10000ft (3000m)","check":"HT roll daily","damage":"1 FP per failure; reduced performance","page":429,"notes":"Acclimatization helps"},
+    {"id":"missed_sleep","name_en":"Missed Sleep","trigger":"Awake 24+ hours","check":"HT roll per day awake","damage":"1 FP per failure cumulative","page":426,"notes":"Less Sleep advantage reduces threshold"},
+    {"id":"acceleration","name_en":"Acceleration (high G)","trigger":">3G sustained","check":"HT roll per minute","damage":"1d FP per failure; blackout","page":434,"notes":"Improved G-Tolerance protege"},
+]
+
+out = {
+    "$schema_version": "1.0",
+    "source": {"book":"GURPS 4e — Basic Set: Campaigns","chapter":14,"pages":"83-109"},
+    "$progress": {"status":"complete","completion_date":"2026-05-16",
+                  "notes_pt":"Sample diseases (12), poisons (12), environmental hazards (12). Cobre core do cap 14. Game-specific diseases podem ser criadas seguindo o schema."},
+    "diseases": DISEASES,
+    "poisons": POISONS,
+    "environmental_hazards": ENVIRONMENTAL_HAZARDS,
+}
+TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=2)+"\n", encoding='utf-8')
+print(f"escritos: {len(DISEASES)} diseases, {len(POISONS)} poisons, {len(ENVIRONMENTAL_HAZARDS)} hazards")

@@ -1,13 +1,147 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-16 (madrugada).
-> **Redesign visual completo ✅** + **scene control multi-cena ✅** + **quick chars via WebSocket ✅** + **turn tracker ✅**.
->
-> Site inteiro foi re-skinado pro design system v1 (dark grafite + dourado, tipografia Inter/Cinzel). 19/19 URLs do site retornam 200 no smoke test.
->
-> **Próxima sessão sugerida:** seu feedback visual depois de jogar uma sessão de teste com o amigo, ou decidir entre **Fase 5 — sunset GCP** ou novas features no jogo (ex: gestão de HP/FP em tempo real, mapa com tokens, etc.).
+> **Última sessão:** 2026-05-16 (sessão estendida, noite).
+> **Status:** pronto pra produção. Build do dist a fazer após o commit dessa sessão.
 >
 > Quando voltar, leia este documento primeiro.
+
+---
+
+## SESSÃO 2026-05-16 (NOITE): UX da tela de jogo + sync em tempo real + bugfixes estruturais
+
+**Player side nav (coluna vertical esquerda):**
+- Substitui o menu inferior antigo (`.personagem-container` oculta via CSS).
+- Ícones: 💪 ATR · 🛠 SKL · ⚔ ATK · 🛡 DEF · 🥋 EQP · 🎲 D6 · ＋ EDIT · 📋 FICHA · 📖 JRNL · 🚪 SAIR.
+- Nome do personagem ativo em `top: 118px` (acima da nav).
+- Botão `→` (próximo personagem) fora do aside, ao lado direito; só aparece com 2+ fichas. Rotaciona via `?character=<id>`.
+- Nav escorrega scroll se ícones excederem altura (`overflow-y: auto`).
+
+**GM side nav:** mesma estrutura, 4 ícones: D6, GM (Fichas), JRNL, SAIR. FICHA/GM e JOURNAL abrem em nova aba.
+
+**Chat:** `.coluna-chat` e `.chat-container` em `top: 116px` — encosta na turn-bar (que vai até ~114px). Sem mais gap no topo após remoção do menu antigo.
+
+**Quickedit (criar/remover cards no jogo):**
+- Botão `+ EDIT` abre `#janela-quickedit` com 3 botões (Melee/Ranged/Defesa) + form inline Nome+Dano+NH.
+- Endpoints: `POST /v2/api/Ficha/<id>/quickadd/<kind>/` e `.../quickremove/<kind>/<index>/`.
+- Suporta V1 (`nome/detalhes`) e V2 (`name/details`) — `_resolve_sheet_any` detecta tipo.
+
+**Vitals editor (GM ajusta HP/FP):**
+- Click num mini abre popover anchored com -5/-1/+1/+5 e input direto.
+- HP pode ir negativo (até -10×hp_max), FP min 0.
+- Endpoint `POST /character/<id>/vitals/` (V1 e V2). Broadcast `character_vitals_changed`.
+
+**HP negativo (barra "morte"):**
+- HP < 0 → classe `.is-negative` na `.player-mini-bar-hp`. Barra degradê roxo (`#6d28d9 → #a855f7`).
+- `_hp_pct_and_negative(hp, max)` em `interface_jogo.py:231`.
+
+**Click fora fecha modal:** listener mousedown em `game_interface.js`.
+
+**Sync em tempo real (save em outra aba reflete no jogo SEM refresh manual):**
+- `_broadcast_character_updated()` em `sheet_v2.py:30+` é chamado após `sheet.save()` no editar_v2.
+- WS event `character_updated` → frontend atualiza mini (HP/FP/nome/avatar). Se a ficha é a ativa do user, dispara `rd6PartialRefreshJanelas`: fetch silencioso da page + DOM-swap das janelas modais. Throttle 1.5s.
+- Consumer handler em `gurps/consumers.py:151`.
+
+**Bugs corrigidos:**
+1. **IDs V1↔V2 colidiam** (V1.id=4 e V2.id=4 simultâneos). Migration `0059_v2_id_offset.py` avança `sqlite_sequence` da V2 pra `max(max(V1.id), max(V2.id)) + 1000`. Próximos V2 nascem em IDs ~1030+.
+2. **Turno marcava 2 minis ao mesmo tempo** (consequência do #1): `rd6CharById` e `rd6ApplySceneStateToBar` agora fazem coerção `Number(...)`.
+3. **Turno mostrava "—"**: consumer normaliza `current_turn_id` pra int (`gurps/consumers.py:88+`). Cai pro primeiro da lista se inválido.
+4. **chat.js:47 TypeError** ao clicar Próximo: chat.js processava broadcasts não-chat. Guard `typeof data.message !== 'string' return`.
+5. **Menu modal abaixo da side-nav**: z-index duplicado em `.menu-modal-backdrop` (1800+200) e `.menu-modal` (1900+201). Remove os antigos, fica só 1800/1900. **Lição registrada:** evitar adicionar declaração sem remover a antiga no mesmo seletor.
+6. **CSS edits em base_static/ não apareciam em desktop dev**: Whitenoise serve do `STATIC_ROOT` quando coletado. Solução: rodar `collectstatic --noinput` após cada edit. Memória `feedback-collectstatic-desktop.md` registrada.
+7. **Template HTML cacheado em desktop dev**: Django usa `cached.Loader` automaticamente em `DEBUG=False`. `project/settings.py:120+` agora condiciona pra `sys.frozen` (só ativa em bundleado).
+
+**Admin Django:** `CharacterSheetV2` registrado em `gurps/admin.py:218+` com JSONEditorWidget. Aparece como "Character sheet v2s".
+
+**Outros:**
+- Editor V2 com preview imediato de foto (`URL.createObjectURL`).
+- Botão "Criar nova ficha" letras pretas (`#000 !important`).
+- Menu carregar campanha: título absolute no topo + botões centralizados.
+
+---
+
+## SESSÃO 2026-05-16: Catalogação GURPS + Ficha V2 (sessão diurna anterior)
+
+### Catálogos GURPS (todos em `gurps/data/*.json`, todos com prefixo `name_en` priorizado)
+
+| Arquivo | Conteúdo | Status |
+|---|---|---|
+| `attributes.json` | ST/DX/IQ/HT + secundárias + damage table + encumbrance | ✅ completo |
+| `advantages.json` | **246 vantagens** (Basic Set cap 2 + Powers cap 2) | ✅ full detail |
+| `disadvantages.json` | **179 desvantagens** (Basic Set cap 3) | ✅ full detail |
+| `modifiers.json` | **100 modifiers** (57 enhancements + 43 limitations + 3 gadget) | ✅ full detail |
+| `skills.json` | **236 perícias curadas** com defaults | ✅ full detail (recurada manualmente — versão regex tinha lixo) |
+| `spells.json` | 63 spells por colégio | metadata only |
+| `equipment.json` | 67 items core (melee/ranged/armor/shields) + cost of living | ✅ |
+| `templates.json` | meta-traits + character + racial templates | samples |
+| `combat_tables.json` | 20 maneuvers + 11 damage types + 11 hit locations + defesas | ✅ |
+| `diseases_poisons.json` | 12 diseases + 12 poisons + 12 hazards | ✅ |
+| `bestiary.json` | 20 animais/monstros stat blocks | samples |
+| `technology.json` | 13 TLs + 20 artifacts | samples |
+| `sample_powers.json` | 40 sample powers do livro Powers cap 3 | ✅ |
+| `reference_tables.json` | Reaction Table, Size/Speed/Range, Fright Check, etc. | ✅ |
+
+**Helper de cálculos:** `gurps/sheet_v2_calc.py` — `compute_secondary(primary, mods)`, `cost_advantage_entry`, `flatten_advantages_for_picker`, `flatten_disadvantages_for_picker`, `flatten_skills_for_picker`, `flatten_modifiers_for_picker`. Todos usados no JS frontend e no model save.
+
+### Ficha V2 (`CharacterSheetV2`) — migration 0058
+
+Modelo novo lado a lado com `CharacterSheet` (V1, legado). **NUNCA destrua V1** (regra inviolável: fichas antigas precisam migrar intactas).
+
+- FK real para `Campanha` + `RegisterUser` (vs strings dentro de JSON em V1)
+- Campos JSON: `primary_attributes`, `secondary_modifiers`, `advantages`, `disadvantages`, `skills`, `equipment_melee/ranged/armor/misc`, `maneuvers_melee/ranged/defense`, `runtime_stats`, `points`
+- `is_quick_npc` BooleanField (igual flag V1)
+- Auto-recalcula `points` no `save()` via `recompute_points`
+- `unique_together` = (`campanha`, `nome_personagem`)
+
+### UI Editor V2 (`base_templates/global/sheet_v2/editar_ficha_v2.html` + `editor.js`)
+
+- Single-page com seções: Identidade · Atributos · Secundárias (auto-calc) · Advantages · Disadvantages · Skills · Equipment · Maneuvers Attack/Defense
+- **Picker dropdown** com autocomplete pra Advantages/Disadvantages/Skills/Modifiers (lê do catálogo via `/v2/api/catalog/<kind>/`)
+- **Variantes do catálogo** (cost.choices) viram entradas separadas no dropdown com subtítulo entre parênteses
+- **Modo manual** (toggle 📖↔✏) — pode escrever vantagem livre + custo manual
+- **Botão MOD** em cada advantage/disadvantage abre drawer com Enhancements/Limitations (mesmo picker, percent fica ali)
+- **MOD em Skills** — coluna pra +/-N somado direto no NH final
+- **Maneuvers Cards** (estilo legado) com nome/damage/NH/details
+- **Auto-cálculo em tempo real** (JS): HP/FP/Will/Per/Speed/Move/Dodge/BL/Thrust/Swing/custo total
+- **NH de skill**: 1pt=base, 2-3pt=+1, 4-7pt=+2, 8-11pt=+3, depois +4pt cada +1 (corrigido em 2026-05-16)
+- **Cache-Control no-store** na response do editor pra evitar cache de navegador
+- **Save feedback**: barra verde "✓ salva" / vermelha com erro específico no topo
+
+### Fase 2: V1→V2 no resto do site
+
+`gurps/views/interface_jogo.py` agora usa wrapper `_wrap_v2_as_legacy(v2)` que adiciona aliases:
+- `atributos.ST/DX/IQ/HT` (em CAPS, como template legado lê)
+- `sub_attributes.hp/fp/will/perception/dodge/basic_lift/parry_unarmed/etc.` (calculadas via `compute_secondary`)
+- `skills[].nome` (=label), `.nh` (=computed_level)
+- `maneuvers_*[].nome` (=name), `.detalhes` (=details)
+- `equipment_*[].nome` (=name)
+- `advantages[].nome` (=label), `.custo` (=computed_cost)
+- `info_campanha` construído de owner/campanha/is_quick_npc
+
+Helpers: `_get_player_sheets_v2_then_v1(campanha, username)`, `_get_all_sheets_for_campanha(campanha)`.
+
+Views/templates atualizados pra usar V2 (com fallback V1 quando V2 não existe):
+- `carregar_fichas` (menu Fichas) → lista V2 do user; Legado em seção colapsada
+- `lista_carregar_ficha.html` → links pra editar_v2
+- `lista_campanhas_nova_campanha.html` → criar_v2 (depois de criar campanha)
+- `interface_jogo.html` botão FICHA (player) → direto pra `lista_v2_player`
+- `editar_fichas_menu` + `menu_fichas_gm` → V2 primário, Legado em `<details>` colapsável
+- `interface_jogo.py game_interface` → V2 (com wrapper) ou V1 fallback
+- `_resolve_avatar_url`, `_serialize_char_for_client`, `get_character_gm`, `journal` → V2 + V1
+- `save_quick_character` → cria V2 (não V1!)
+- `delete_quick_character` → procura V2 primeiro
+
+### Pendências (próxima sessão)
+
+- **Reescrita "nativa" do template `interface_jogo.html`** pra V2 (sem aliases) — opcional, futuro
+- **Player picker funciona via input `id` digitado** — adicionar autocomplete também nos modais da tela de jogo
+- **Quirks list** (Characters p162-165): traits de -1pt; ainda não no catálogo
+- **Skills/Spells expansion**: muitas estão como `list_only`, precisam descrições completas pra autocomplete rico
+- **WebSocket consumer**: scene_state ainda usa IDs V1/V2 misturados — pode dar bugs em edge cases
+- **Migrator V1→V2** opcional pra players preencherem rápido a partir da legado (decidimos NÃO fazer e player redigita)
+
+---
+
+## SESSÕES ANTERIORES (resumo)
 
 ---
 

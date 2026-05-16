@@ -213,6 +213,11 @@ html[data-theme="light"] {
 .player-mini-bar-hp .player-mini-bar-fill {
     background: linear-gradient(90deg, var(--rd6-hp) 0%, var(--rd6-hp-bright) 100%);
 }
+/* HP negativo: barra "morte" roxa enchendo de 0 → -10×hp_max */
+.player-mini-bar-hp.is-negative { background: #2a1238; }
+.player-mini-bar-hp.is-negative .player-mini-bar-fill {
+    background: linear-gradient(90deg, #6d28d9 0%, #a855f7 100%);
+}
 
 .player-mini-bar-fp { background: var(--rd6-fp-bg); }
 .player-mini-bar-fp .player-mini-bar-fill {
@@ -297,7 +302,8 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: inline; }
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.4);
-    z-index: 200;
+    /* Acima da side-nav (1500) e do botão "→" (1501). */
+    z-index: 1800;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--rd6-transition), top var(--rd6-transition);
@@ -317,10 +323,11 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: inline; }
     bottom: 0;
     width: 300px;
     max-width: 88vw;
+    /* Acima da side-nav (1500), do botão "→" (1501) e do backdrop (1800). */
+    z-index: 1900;
     background: var(--rd6-bg);
     border-right: 1px solid var(--rd6-border);
     box-shadow: var(--rd6-shadow-md);
-    z-index: 201;
     transform: translateX(-100%);
     transition: transform var(--rd6-transition), top var(--rd6-transition);
     display: flex;

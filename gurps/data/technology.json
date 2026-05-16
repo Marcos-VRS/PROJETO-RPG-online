@@ -1,0 +1,371 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Campaigns",
+    "chapter": 17,
+    "pages": "127-150"
+  },
+  "$progress": {
+    "status": "core_samples",
+    "completion_date": "2026-05-16",
+    "notes_pt": "Tech Levels completos + sample artifacts. Listas exaustivas em GURPS Low-Tech / High-Tech / Ultra-Tech."
+  },
+  "tech_levels": [
+    {
+      "tl": 0,
+      "name_en": "Stone Age",
+      "period": "Prehistory",
+      "examples": [
+        "stone tools",
+        "fire",
+        "language"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 1,
+      "name_en": "Bronze Age",
+      "period": "3500 BC",
+      "examples": [
+        "bronze",
+        "wheel",
+        "writing",
+        "agriculture"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 2,
+      "name_en": "Iron Age",
+      "period": "1200 BC",
+      "examples": [
+        "iron",
+        "alphabet",
+        "mathematics"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 3,
+      "name_en": "Medieval",
+      "period": "600 AD",
+      "examples": [
+        "plate armor",
+        "longbow",
+        "windmill",
+        "compass"
+      ],
+      "page": 511,
+      "notes": "Default fantasy setting"
+    },
+    {
+      "tl": 4,
+      "name_en": "Age of Sail",
+      "period": "1450",
+      "examples": [
+        "printing press",
+        "sailing ships",
+        "early firearms"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 5,
+      "name_en": "Industrial Revolution",
+      "period": "1730",
+      "examples": [
+        "steam engine",
+        "railroad",
+        "electricity"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 6,
+      "name_en": "Mechanized Age",
+      "period": "1880",
+      "examples": [
+        "telephone",
+        "car",
+        "radio",
+        "airplane (early)"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 7,
+      "name_en": "Nuclear Age",
+      "period": "1940",
+      "examples": [
+        "nuclear power",
+        "jet aircraft",
+        "computers (early)",
+        "television"
+      ],
+      "page": 511,
+      "notes": "WWII era"
+    },
+    {
+      "tl": 8,
+      "name_en": "Digital Age",
+      "period": "1980-now",
+      "examples": [
+        "smartphone",
+        "internet",
+        "biotech",
+        "drone",
+        "stealth aircraft"
+      ],
+      "page": 511,
+      "notes": "Atual"
+    },
+    {
+      "tl": 9,
+      "name_en": "Microtech",
+      "period": "~2050",
+      "examples": [
+        "nanotechnology",
+        "AGI",
+        "biotech transformation",
+        "fusion power"
+      ],
+      "page": 511,
+      "notes": "Near-future SF"
+    },
+    {
+      "tl": 10,
+      "name_en": "Robotics",
+      "period": "~2100",
+      "examples": [
+        "robotic labor",
+        "interplanetary colonization",
+        "cybernetic implants"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 11,
+      "name_en": "Age of Exotic Matter",
+      "period": "~2200",
+      "examples": [
+        "antimatter",
+        "gravity manipulation",
+        "FTL drives"
+      ],
+      "page": 511
+    },
+    {
+      "tl": 12,
+      "name_en": "Singularity",
+      "period": "speculative",
+      "examples": [
+        "transcendence",
+        "reality manipulation",
+        "cosmic engineering"
+      ],
+      "page": 511,
+      "notes": "Sci-fi maxed out"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "radio_personal",
+      "name_en": "Personal Radio",
+      "tl": 7,
+      "category": "communication",
+      "range": "10 miles",
+      "cost": 50,
+      "weight": 0.5,
+      "page": 511
+    },
+    {
+      "id": "cell_phone",
+      "name_en": "Cell Phone",
+      "tl": 8,
+      "category": "communication",
+      "range": "network-based",
+      "cost": 200,
+      "weight": 0.3,
+      "page": 511
+    },
+    {
+      "id": "satellite_phone",
+      "name_en": "Satellite Phone",
+      "tl": 8,
+      "category": "communication",
+      "range": "global",
+      "cost": 1500,
+      "weight": 1,
+      "page": 511
+    },
+    {
+      "id": "binoculars",
+      "name_en": "Binoculars",
+      "tl": 5,
+      "category": "sensor",
+      "effect": "+2 Vision long range",
+      "cost": 80,
+      "weight": 2,
+      "page": 511
+    },
+    {
+      "id": "night_vision_goggles",
+      "name_en": "Night Vision Goggles",
+      "tl": 7,
+      "category": "sensor",
+      "effect": "Night Vision 5",
+      "cost": 2000,
+      "weight": 1.5,
+      "page": 511
+    },
+    {
+      "id": "thermal_imager",
+      "name_en": "Thermal Imager",
+      "tl": 8,
+      "category": "sensor",
+      "effect": "Infravision",
+      "cost": 3500,
+      "weight": 2,
+      "page": 511
+    },
+    {
+      "id": "first_aid_kit",
+      "name_en": "First Aid Kit",
+      "tl": 6,
+      "category": "medical",
+      "effect": "+1 First Aid skill",
+      "cost": 30,
+      "weight": 2,
+      "page": 511
+    },
+    {
+      "id": "medical_kit_advanced",
+      "name_en": "Advanced Medical Kit",
+      "tl": 8,
+      "category": "medical",
+      "effect": "+2 First Aid, treat 3 patients",
+      "cost": 300,
+      "weight": 5,
+      "page": 511
+    },
+    {
+      "id": "horse_wagon",
+      "name_en": "Horse-Drawn Wagon",
+      "tl": 3,
+      "category": "vehicle",
+      "speed": "5 mph",
+      "cost": 300,
+      "weight": 500,
+      "page": 511
+    },
+    {
+      "id": "sedan_car",
+      "name_en": "Sedan Car",
+      "tl": 7,
+      "category": "vehicle",
+      "speed": "80 mph",
+      "cost": 20000,
+      "weight": 3500,
+      "page": 511
+    },
+    {
+      "id": "motorcycle",
+      "name_en": "Motorcycle",
+      "tl": 7,
+      "category": "vehicle",
+      "speed": "100 mph",
+      "cost": 10000,
+      "weight": 400,
+      "page": 511
+    },
+    {
+      "id": "helicopter",
+      "name_en": "Helicopter",
+      "tl": 7,
+      "category": "vehicle",
+      "speed": "150 mph",
+      "cost": 2000000,
+      "weight": 5000,
+      "page": 511
+    },
+    {
+      "id": "jet_fighter",
+      "name_en": "Jet Fighter",
+      "tl": 7,
+      "category": "vehicle",
+      "speed": "1500 mph",
+      "cost": 50000000,
+      "weight": 30000,
+      "page": 511
+    },
+    {
+      "id": "laptop",
+      "name_en": "Laptop Computer",
+      "tl": 8,
+      "category": "computer",
+      "complexity": 4,
+      "cost": 1500,
+      "weight": 3,
+      "page": 511
+    },
+    {
+      "id": "smartphone",
+      "name_en": "Smartphone",
+      "tl": 8,
+      "category": "computer",
+      "complexity": 3,
+      "cost": 600,
+      "weight": 0.3,
+      "page": 511
+    },
+    {
+      "id": "mainframe",
+      "name_en": "Mainframe Computer",
+      "tl": 7,
+      "category": "computer",
+      "complexity": 6,
+      "cost": 1000000,
+      "weight": 2000,
+      "page": 511
+    },
+    {
+      "id": "flashlight",
+      "name_en": "Flashlight",
+      "tl": 6,
+      "category": "misc",
+      "effect": "illumination",
+      "cost": 20,
+      "weight": 1,
+      "page": 511
+    },
+    {
+      "id": "rope_50ft",
+      "name_en": "Rope, 50ft",
+      "tl": 1,
+      "category": "misc",
+      "cost": 10,
+      "weight": 5,
+      "page": 288
+    },
+    {
+      "id": "backpack",
+      "name_en": "Backpack",
+      "tl": 1,
+      "category": "misc",
+      "capacity": "60 lbs",
+      "cost": 30,
+      "weight": 3,
+      "page": 288
+    },
+    {
+      "id": "lockpicks",
+      "name_en": "Lockpicks",
+      "tl": 2,
+      "category": "misc",
+      "effect": "+1 Lockpicking",
+      "cost": 50,
+      "weight": 0.5,
+      "page": 288
+    }
+  ]
+}

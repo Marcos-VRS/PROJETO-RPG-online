@@ -1,0 +1,3064 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Characters",
+    "chapter": 3,
+    "pages": "119-166",
+    "edition": "Fourth Edition"
+  },
+  "$progress": {
+    "status": "complete",
+    "completion_date": "2026-05-16",
+    "entries_in_file": 179,
+    "notes_pt": "Cobre Disadvantage List (pp 122-161). Quirks (p162-165) catalogadas separadamente como '1-pt quirks' — não incluídas aqui pois funcionam diferente. Algumas entries são pointers pra outras seções (Appearance, Wealth, Status, etc.)."
+  },
+  "$schema_notes": {
+    "self_control": "true se a entry tem '*' no livro (mental disad com self-control roll)",
+    "cost_shapes": {
+      "fixed": "{ type: fixed, value: -N }",
+      "per_level": "{ type: per_level, value: -N, level_label?: str }",
+      "options": "{ type: options, choices: [{value: -N, name_pt: str}, ...] }",
+      "variable": "{ type: variable, formula: str }"
+    }
+  },
+  "entries": [
+    {
+      "id": "absent_mindedness",
+      "name_en": "Absent-Mindedness",
+      "name_pt": "Distração",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "-5 em IQ/IQ-based exceto na tarefa em foco. Atenção dispersa em 5 min. Per-5 pra notar eventos. IQ-2 pra lembrar tarefas/itens triviais. Will-5 pra focar em tarefa tediosa.",
+      "page_ref": 122,
+      "detail_level": "full"
+    },
+    {
+      "id": "addiction",
+      "name_en": "Addiction",
+      "name_pt": "Vício",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -40 conforme custo + efeitos + legalidade"
+      },
+      "self_control": false,
+      "description_pt": "Vício diário em droga. Custo: cheap -5, expensive -10, very expensive -20. Efeitos: incapacitante/halucin -10, highly addictive -5, totally addictive -10. Illegal +0, Legal +5.",
+      "page_ref": 122,
+      "detail_level": "full"
+    },
+    {
+      "id": "alcoholism",
+      "name_en": "Alcoholism",
+      "name_pt": "Alcoolismo",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -15,
+            "name_pt": "Legal"
+          },
+          {
+            "value": -20,
+            "name_pt": "Ilegal"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Vício em álcool. Will roll sempre que em presença. Binge 2d horas + ressaca. HT+2/ano: falha = perde 1 atributo. Pós-withdrawal: Will+4. Não pode buy off facilmente.",
+      "page_ref": 122,
+      "detail_level": "full"
+    },
+    {
+      "id": "amnesia",
+      "name_en": "Amnesia",
+      "name_pt": "Amnésia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "Partial — vê ficha mas GM reserva até -30 pts de secrets"
+          },
+          {
+            "value": -25,
+            "name_pt": "Total — GM segura ficha; IQ-2 em IQ-skills"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Perdeu memória. Buy off só se houver causa narrativa (encontro, blow to head). Geralmente associada a Enemy/brainwashing.",
+      "page_ref": 122,
+      "detail_level": "full"
+    },
+    {
+      "id": "appearance_below",
+      "name_en": "Below-Average Appearance",
+      "name_pt": "Aparência Abaixo da Média",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver Appearance p21"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver Appearance p21. Range Horrific -24 a Ugly -8.",
+      "page_ref": 21,
+      "detail_level": "full"
+    },
+    {
+      "id": "bad_back",
+      "name_en": "Bad Back",
+      "name_pt": "Coluna Ruim",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -15,
+            "name_pt": "Mild"
+          },
+          {
+            "value": -25,
+            "name_pt": "Severe"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Coluna problemática. HT roll quando ST roll ou 17/18 em melee/atletismo. Falha = throw back: Mild -3 DX, Severe -3 DX permanente + chance de crippling.",
+      "page_ref": 122,
+      "detail_level": "full"
+    },
+    {
+      "id": "bad_grip",
+      "name_en": "Bad Grip",
+      "name_pt": "Aderência Ruim",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Dificuldade pra segurar coisas. Cada nível -2 em DX rolls relacionados a grip (Climbing, segurar arma).",
+      "page_ref": 123,
+      "detail_level": "full"
+    },
+    {
+      "id": "bad_sight",
+      "name_en": "Bad Sight",
+      "name_pt": "Visão Ruim",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -25,
+        "note": "-10 com Mitigator óculos -60%"
+      },
+      "self_control": false,
+      "description_pt": "Visão fraca. Especifique Nearsighted (longe -6) ou Farsighted (perto -6). Óculos mitigam (-60% = -10 final).",
+      "page_ref": 123,
+      "detail_level": "full"
+    },
+    {
+      "id": "bad_smell",
+      "name_en": "Bad Smell",
+      "name_pt": "Mau Cheiro",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Fede. -2 em reactions de quem está perto. Tracking via cheiro contra você é +4.",
+      "page_ref": 123,
+      "detail_level": "full"
+    },
+    {
+      "id": "bad_temper",
+      "name_en": "Bad Temper",
+      "name_pt": "Mau Humor",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Difícil controlar raiva. Self-control roll quando insultado/frustrado. Falha = ataques verbais/físicos.",
+      "page_ref": 124,
+      "detail_level": "full"
+    },
+    {
+      "id": "berserk",
+      "name_en": "Berserk",
+      "name_pt": "Sanguinário",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control roll quando ferido. Falha = ataca o mais próximo (foe primeiro, depois aliados/objetos) até morrer ou matar todos. +1 melee skill, ignora shock/stun/knockdown.",
+      "page_ref": 124,
+      "detail_level": "full"
+    },
+    {
+      "id": "bestial",
+      "name_en": "Bestial",
+      "name_pt": "Bestial",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "IQ 6+ (sentient mas tendência animal)"
+          },
+          {
+            "value": -15,
+            "name_pt": "IQ ≤5 (não-sapient, comportamento animal)"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Comporta-se como animal. -15 em Influence skills contra; -3 em interactions sociais sutis.",
+      "page_ref": 124,
+      "detail_level": "full"
+    },
+    {
+      "id": "blindness",
+      "name_en": "Blindness",
+      "name_pt": "Cegueira",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -50
+      },
+      "self_control": false,
+      "description_pt": "Cego. Anula visão; combate/atividades visuais -10 ou mais. Mitigador: cão guia (-1), bastão (-1).",
+      "page_ref": 124,
+      "detail_level": "full"
+    },
+    {
+      "id": "bloodlust",
+      "name_en": "Bloodlust",
+      "name_pt": "Sede de Sangue",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Quer matar inimigos. Self-control pra capturar/poupar/fugir. Sempre tenta finish off em combate.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "bully",
+      "name_en": "Bully",
+      "name_pt": "Valentão",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Intimida fracos. Self-control pra resistir oportunidade. -2 em reactions de quem nota.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "callous",
+      "name_en": "Callous",
+      "name_pt": "Insensível",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Indiferente a sofrimento alheio. -1 em reactions sociais; -3 em Diplomacy/Psychology.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "cannot_learn",
+      "name_en": "Cannot Learn",
+      "name_pt": "Não Pode Aprender",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -30
+      },
+      "self_control": false,
+      "description_pt": "Não aprende skills novas em jogo. Pode usar pontos só pra atributos.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "cannot_speak",
+      "name_en": "Cannot Speak",
+      "name_pt": "Não Pode Falar",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -15,
+            "name_pt": "Pode emitir sons inarticulados (animais subhumanos)"
+          },
+          {
+            "value": -25,
+            "name_pt": "Mudo total"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Sem fala. Não pode lançar spells verbais ou usar Performance/Singing.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "charitable",
+      "name_en": "Charitable",
+      "name_pt": "Caridoso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir ajudar alguém em apuros. Pode atrair predadores.",
+      "page_ref": 125,
+      "detail_level": "full"
+    },
+    {
+      "id": "chronic_depression",
+      "name_en": "Chronic Depression",
+      "name_pt": "Depressão Crônica",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control diário ou afunda em apatia. Sem motivação pra fazer nada útil.",
+      "page_ref": 126,
+      "detail_level": "full"
+    },
+    {
+      "id": "chronic_pain",
+      "name_en": "Chronic Pain",
+      "name_pt": "Dor Crônica",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -15 conforme frequência e severidade"
+      },
+      "self_control": false,
+      "description_pt": "Dor constante. Intervalo: 1h -15, 8h -10, 1 dia -5. Severidade: Mild -1 DX/IQ por 30 min, Severe -2, Agonizing -4. HT roll pra resistir.",
+      "page_ref": 126,
+      "detail_level": "full"
+    },
+    {
+      "id": "chummy",
+      "name_en": "Chummy",
+      "name_pt": "Gregário",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Chummy — irritado se sozinho >2 dias"
+          },
+          {
+            "value": -10,
+            "name_pt": "Gregarious — irritado se sozinho 1 dia"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Precisa de companhia. Sozinho = -1 em IQ skills.",
+      "page_ref": 126,
+      "detail_level": "full"
+    },
+    {
+      "id": "clueless",
+      "name_en": "Clueless",
+      "name_pt": "Lerdo Socialmente",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não pega sutilezas sociais. -2 em Acting/Carousing/Detect Lies/Diplomacy/etc.; -2 em reactions sociais.",
+      "page_ref": 126,
+      "detail_level": "full"
+    },
+    {
+      "id": "code_of_honor",
+      "name_en": "Code of Honor",
+      "name_pt": "Código de Honra",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Code privado (pessoal/gang)"
+          },
+          {
+            "value": -10,
+            "name_pt": "Code de profissão (soldado, gentleman)"
+          },
+          {
+            "value": -15,
+            "name_pt": "Code rígido (cavalheiresco, samurai)"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed mental. Segue código rigorosamente. Quebrar = perde a desvantagem (e bônus de Reputation associados). Pode ser usado com Pact.",
+      "page_ref": 127,
+      "detail_level": "full"
+    },
+    {
+      "id": "cold_blooded",
+      "name_en": "Cold-Blooded",
+      "name_pt": "Sangue-Frio",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "<50°F = lento (1/2 Move/DX)"
+          },
+          {
+            "value": -10,
+            "name_pt": "<65°F = lento"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Pterodáctilos, répteis. Em temperatura baixa, metabolismo lento → Move/DX/etc. reduzidos.",
+      "page_ref": 127,
+      "detail_level": "full"
+    },
+    {
+      "id": "colorblindness",
+      "name_en": "Colorblindness",
+      "name_pt": "Daltonismo",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não distingue cores. -1 em skills que dependem (Camouflage, Forensics).",
+      "page_ref": 127,
+      "detail_level": "full"
+    },
+    {
+      "id": "combat_paralysis",
+      "name_en": "Combat Paralysis",
+      "name_pt": "Paralisia em Combate",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "HT roll em qualquer situação combate iminente (não controlável). Falha = stunned 1d-3 seg.",
+      "page_ref": 127,
+      "detail_level": "full"
+    },
+    {
+      "id": "compulsive_behavior",
+      "name_en": "Compulsive Behavior",
+      "name_pt": "Comportamento Compulsivo",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -15 conforme severidade do comportamento"
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra evitar comportamento (jogo, gastos, mentir, etc.). Especifique o comportamento.",
+      "page_ref": 128,
+      "detail_level": "full"
+    },
+    {
+      "id": "confused",
+      "name_en": "Confused",
+      "name_pt": "Confuso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control em situações novas/caóticas ou pra dialogar coerente sem 1 min de calma.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "cowardice",
+      "name_en": "Cowardice",
+      "name_pt": "Covardia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control quando enfrenta perigo. Falha = foge ou se rende.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "curious",
+      "name_en": "Curious",
+      "name_pt": "Curioso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir investigar algo intrigante. Pode levar a perigo.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "cursed",
+      "name_en": "Cursed",
+      "name_pt": "Amaldiçoado",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -75
+      },
+      "self_control": false,
+      "description_pt": "Maldição máxima. GM define detalhes — qualquer roll ruim em momento crítico, etc. Pode ser feature poderosa narrativa.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "deafness",
+      "name_en": "Deafness",
+      "name_pt": "Surdez",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Surdo. Impossível ouvir spells/comunicação verbal. -4 Combat para danger atrás.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "debt",
+      "name_en": "Debt",
+      "name_pt": "Dívida",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 pt por mês de salário devido"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver p26. Vc deve dinheiro. Cada nível -1 pt = 1 mês de salário.",
+      "page_ref": 26,
+      "detail_level": "full"
+    },
+    {
+      "id": "decreased_time_rate",
+      "name_en": "Decreased Time Rate",
+      "name_pt": "Tempo Lento",
+      "type": "exotic",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -100
+      },
+      "self_control": false,
+      "description_pt": "Age 1× a cada 2 turnos. -50% Move, -50% Speed efetivo. Não pode tomar Altered Time Rate.",
+      "page_ref": 129,
+      "detail_level": "full"
+    },
+    {
+      "id": "dependency",
+      "name_en": "Dependency",
+      "name_pt": "Dependência",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia: substância (rarity) × frequência × dano"
+      },
+      "self_control": false,
+      "description_pt": "Sem substância, sofre dano. Substância: Common/Occasional/Rare/Very Rare. Frequência: hourly/daily/weekly/etc. Dano: 1d FP, 1 HP, etc.",
+      "page_ref": 130,
+      "detail_level": "full"
+    },
+    {
+      "id": "dependents",
+      "name_en": "Dependents",
+      "name_pt": "Dependentes",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 a -24 conforme custo + frequência + importância"
+      },
+      "self_control": false,
+      "description_pt": "NPC sob seu cuidado. Custo construído como Ally invertido. Quanto mais aparece e mais importante, mais caro.",
+      "page_ref": 131,
+      "detail_level": "full"
+    },
+    {
+      "id": "destiny_bad",
+      "name_en": "Destiny (Disadvantageous)",
+      "name_pt": "Destino (Desfavorável)",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Minor — pequena tragédia"
+          },
+          {
+            "value": -10,
+            "name_pt": "Major — destino infeliz garantido"
+          },
+          {
+            "value": -15,
+            "name_pt": "Great — fadado a tragédia"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "GM define em segredo. Destino ruim irrevogável (não pode buy off).",
+      "page_ref": 131,
+      "detail_level": "full"
+    },
+    {
+      "id": "disciplines_of_faith",
+      "name_en": "Disciplines of Faith",
+      "name_pt": "Disciplinas de Fé",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Ritualism — orações diárias"
+          },
+          {
+            "value": -10,
+            "name_pt": "Mysticism — práticas meditativas"
+          },
+          {
+            "value": -15,
+            "name_pt": "Asceticism — celibato, pobreza"
+          },
+          {
+            "value": -15,
+            "name_pt": "Monasticism — vida monástica"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Mantém disciplinas religiosas. Quebra = perde a vantagem associada (se houver Pact).",
+      "page_ref": 132,
+      "detail_level": "full"
+    },
+    {
+      "id": "disturbing_voice",
+      "name_en": "Disturbing Voice",
+      "name_pt": "Voz Perturbadora",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Voz é estridente/áspera. -2 em Diplomacy, Performance, Public Speaking, Sex Appeal, Singing.",
+      "page_ref": 132,
+      "detail_level": "full"
+    },
+    {
+      "id": "divine_curse",
+      "name_en": "Divine Curse",
+      "name_pt": "Maldição Divina",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -15 conforme severidade"
+      },
+      "self_control": false,
+      "description_pt": "Maldição específica de divindade. Detalhes com GM.",
+      "page_ref": 132,
+      "detail_level": "full"
+    },
+    {
+      "id": "draining",
+      "name_en": "Draining",
+      "name_pt": "Drenagem Vital",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -20 conforme frequência"
+      },
+      "self_control": false,
+      "description_pt": "Perde HP/FP regularmente. Mensal -5, semanal -10, diário -15, hora -20.",
+      "page_ref": 132,
+      "detail_level": "full"
+    },
+    {
+      "id": "dread",
+      "name_en": "Dread",
+      "name_pt": "Pavor",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 a -20 conforme raridade"
+      },
+      "self_control": false,
+      "description_pt": "Pavor irracional de substância/condição. Não pode aproximar. Detalha rarity (Very Common a Rare).",
+      "page_ref": 132,
+      "detail_level": "full"
+    },
+    {
+      "id": "duty",
+      "name_en": "Duty",
+      "name_pt": "Dever",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-2 a -20 conforme frequência + risco"
+      },
+      "self_control": false,
+      "description_pt": "Lealdade a empregador/causa. Frequency: 6- (-2), 9- (-5), 12- (-10), 15- (-15). Extremely Hazardous +5, Involuntary +5.",
+      "page_ref": 133,
+      "detail_level": "full"
+    },
+    {
+      "id": "dyslexia",
+      "name_en": "Dyslexia",
+      "name_pt": "Dislexia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Dificuldade com texto. Lê/escreve em 5× tempo, ou 2× com Will roll. -3 em skills que requerem leitura técnica.",
+      "page_ref": 134,
+      "detail_level": "full"
+    },
+    {
+      "id": "easy_to_kill",
+      "name_en": "Easy to Kill",
+      "name_pt": "Fácil de Matar",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": -2
+      },
+      "self_control": false,
+      "description_pt": "-1/nível em HT rolls de sobrevivência (-HP+ e morte instantânea). Max 4 níveis.",
+      "page_ref": 134,
+      "detail_level": "full"
+    },
+    {
+      "id": "easy_to_read",
+      "name_en": "Easy to Read",
+      "name_pt": "Fácil de Ler",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Linguagem corporal óbvia. +4 em Detect Lies/Psychology contra você. -4 em Acting/Fast-Talk/Gambling/Poker.",
+      "page_ref": 134,
+      "detail_level": "full"
+    },
+    {
+      "id": "electrical",
+      "name_en": "Electrical",
+      "name_pt": "Elétrico",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Funciona via eletricidade. Vulnerável a EMP, Surge, water. Pode ser desligado por ataques elétricos.",
+      "page_ref": 134,
+      "detail_level": "full"
+    },
+    {
+      "id": "enemies",
+      "name_en": "Enemies",
+      "name_pt": "Inimigos",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme power + frequência + intent"
+      },
+      "self_control": false,
+      "description_pt": "NPC/organização contra você. Negativo de Patron. Mais poderoso e frequente = mais pontos.",
+      "page_ref": 135,
+      "detail_level": "full"
+    },
+    {
+      "id": "epilepsy",
+      "name_en": "Epilepsy",
+      "name_pt": "Epilepsia",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -30
+      },
+      "self_control": false,
+      "description_pt": "Convulsões. HT roll em situações de stress; falha = ataque 2d minutos. Skills médicos podem ajudar.",
+      "page_ref": 136,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_sleep",
+      "name_en": "Extra Sleep",
+      "name_pt": "Sono Extra",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": -2,
+        "level_label": "max 4 níveis"
+      },
+      "self_control": false,
+      "description_pt": "Cada nível adiciona 2h ao sono necessário (humano default 8h).",
+      "page_ref": 136,
+      "detail_level": "full"
+    },
+    {
+      "id": "fanaticism",
+      "name_en": "Fanaticism",
+      "name_pt": "Fanatismo",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Devoto a causa/religião/líder além da razão. Inclui Reputation positiva entre adeptos.",
+      "page_ref": 136,
+      "detail_level": "full"
+    },
+    {
+      "id": "flashbacks",
+      "name_en": "Flashbacks",
+      "name_pt": "Flashbacks",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -20 conforme severidade"
+      },
+      "self_control": false,
+      "description_pt": "Stress causa flashbacks. Severidade: -5 mild (1d turnos confuso), -10 severe (Fright Check), -20 catastrophic (Hallucination).",
+      "page_ref": 136,
+      "detail_level": "full"
+    },
+    {
+      "id": "fragile",
+      "name_en": "Fragile",
+      "name_pt": "Frágil",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme tipo"
+      },
+      "self_control": false,
+      "description_pt": "Tipos: Brittle (mortos perde -10×HP em vez de blow apart), Combustible (queima fácil), Explosive (explode quando matado), Flammable (DR 0 contra fire), Unnatural (dispel mágico mata).",
+      "page_ref": 136,
+      "detail_level": "full"
+    },
+    {
+      "id": "frightens_animals",
+      "name_en": "Frightens Animals",
+      "name_pt": "Aterroriza Animais",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Animais te temem. -3 em Animal Handling/Riding/Veterinary. Cavalos resistem te montar.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "g_intolerance",
+      "name_en": "G-Intolerance",
+      "name_pt": "Intolerância G",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "-1 DX por 0.1G de diferença"
+          },
+          {
+            "value": -20,
+            "name_pt": "-1 DX por 0.05G"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Sofre extra com gravidade diferente da nativa.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "gluttony",
+      "name_en": "Gluttony",
+      "name_pt": "Gula",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control para resistir comida. Pode atrasar group quando refeição disponível.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "greed",
+      "name_en": "Greed",
+      "name_pt": "Ganância",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control quando oferecido dinheiro. -3 em reactions se demonstra ganância.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "guilt_complex",
+      "name_en": "Guilt Complex",
+      "name_pt": "Complexo de Culpa",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Sente-se culpado por qualquer infortúnio próximo. Tenta compensar — frequentemente em prejuízo próprio.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "gullibility",
+      "name_en": "Gullibility",
+      "name_pt": "Credulidade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir mentiras óbvias. -3 em Detect Lies. NPCs com Fast-Talk +4 contra.",
+      "page_ref": 137,
+      "detail_level": "full"
+    },
+    {
+      "id": "ham_fisted",
+      "name_en": "Ham-Fisted",
+      "name_pt": "Mão Pesada",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Ham-Fisted 1 — -3 em tarefas finas"
+          },
+          {
+            "value": -10,
+            "name_pt": "Ham-Fisted 2 — -6 em tarefas finas"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Oposto de High Manual Dexterity. -3 ou -6 em DX-based skills delicadas.",
+      "page_ref": 138,
+      "detail_level": "full"
+    },
+    {
+      "id": "hard_of_hearing",
+      "name_en": "Hard of Hearing",
+      "name_pt": "Ouvido Ruim",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Audição fraca. -4 em Hearing rolls; falha em entender fala distante.",
+      "page_ref": 138,
+      "detail_level": "full"
+    },
+    {
+      "id": "hemophilia",
+      "name_en": "Hemophilia",
+      "name_pt": "Hemofilia",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -30
+      },
+      "self_control": false,
+      "description_pt": "Não coagula. Cada ferimento de cut/imp/pi sangra 1 HP/min até cuidado médico (First Aid -3).",
+      "page_ref": 138,
+      "detail_level": "full"
+    },
+    {
+      "id": "hidebound",
+      "name_en": "Hidebound",
+      "name_pt": "Tradicionalista",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "-2 em rolls de criatividade/Engineer pra novas invenções.",
+      "page_ref": 138,
+      "detail_level": "full"
+    },
+    {
+      "id": "honesty",
+      "name_en": "Honesty",
+      "name_pt": "Honestidade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-imposed. Obedece TODAS leis. Self-control pra mentir/quebrar regra mesmo sob necessidade.",
+      "page_ref": 138,
+      "detail_level": "full"
+    },
+    {
+      "id": "horizontal",
+      "name_en": "Horizontal",
+      "name_pt": "Horizontal",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Corpo horizontal (quadrúpede). Não usa armadura humana, não senta normal. Inclui Quadruped meta-trait.",
+      "page_ref": 139,
+      "detail_level": "full"
+    },
+    {
+      "id": "hunchback",
+      "name_en": "Hunchback",
+      "name_pt": "Corcunda",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Costas corcundas. -1 reactions. -2 em Stealth/Camouflage. Não veste armadura padrão.",
+      "page_ref": 139,
+      "detail_level": "full"
+    },
+    {
+      "id": "impulsiveness",
+      "name_en": "Impulsiveness",
+      "name_pt": "Impulsividade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra parar e pensar antes de agir. Falha = age sem planejar.",
+      "page_ref": 139,
+      "detail_level": "full"
+    },
+    {
+      "id": "increased_consumption",
+      "name_en": "Increased Consumption",
+      "name_pt": "Consumo Aumentado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Cada nível dobra comida/água/fuel necessários. Lvl 1 = 2× normal, etc.",
+      "page_ref": 139,
+      "detail_level": "full"
+    },
+    {
+      "id": "increased_life_support",
+      "name_en": "Increased Life Support",
+      "name_pt": "Suporte Vital Aumentado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme requisitos especiais"
+      },
+      "self_control": false,
+      "description_pt": "Precisa de condições especiais (atmosfera, pressão, etc.) além das humanas.",
+      "page_ref": 139,
+      "detail_level": "full"
+    },
+    {
+      "id": "incurious",
+      "name_en": "Incurious",
+      "name_pt": "Sem Curiosidade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra explorar/investigar. Aceita situação sem questionar.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "indecisive",
+      "name_en": "Indecisive",
+      "name_pt": "Indeciso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra tomar decisão sob pressão. Falha = pede opinião/atrasa.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "infectious_attack",
+      "name_en": "Infectious Attack",
+      "name_pt": "Ataque Infeccioso",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Versão desvantajosa de Dominance. Suas vítimas viram seu tipo (vampire/werewolf) mas SEM Slave Mentality nem controle.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "innumerate",
+      "name_en": "Innumerate",
+      "name_pt": "Mau em Matemática",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5,
+        "note": "em algumas edições"
+      },
+      "self_control": false,
+      "description_pt": "Sem talento pra matemática. -2 em skills numéricos (Accounting, Mathematics, etc.).",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "insomniac",
+      "name_en": "Insomniac",
+      "name_pt": "Insone",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "Mild — sem efeito perigoso, irritável"
+          },
+          {
+            "value": -15,
+            "name_pt": "Severe — perde 1 FP/dia até dormir bem"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Não dorme bem. Mild: -1 a reactions. Severe: 1 FP/dia.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "intolerance",
+      "name_en": "Intolerance",
+      "name_pt": "Intolerância",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 a -10 conforme grupo"
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Despreza grupo específico. -3 reactions com grupo; -1 com quem nota. Vasto (todos não-humanos) -10.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "invertebrate",
+      "name_en": "Invertebrate",
+      "name_pt": "Invertebrado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Sem ossos. Não pode usar armadura rígida; inclui Flexible. Mas é vulnerável a esmagamento.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "jealousy",
+      "name_en": "Jealousy",
+      "name_pt": "Ciúme",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Inveja quem tem mais habilidade/atenção/status. -3 reactions contra rivais; pode sabotar.",
+      "page_ref": 140,
+      "detail_level": "full"
+    },
+    {
+      "id": "killjoy",
+      "name_en": "Killjoy",
+      "name_pt": "Desmancha-Prazeres",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Não pode aproveitar — nem deixa outros. -2 reactions; afasta gente.",
+      "page_ref": 141,
+      "detail_level": "full"
+    },
+    {
+      "id": "kleptomania",
+      "name_en": "Kleptomania",
+      "name_pt": "Cleptomania",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir roubar item bonito que vê.",
+      "page_ref": 141,
+      "detail_level": "full"
+    },
+    {
+      "id": "klutz",
+      "name_en": "Klutz",
+      "name_pt": "Atrapalhado",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Klutz — -1 em DX em tarefas atléticas/dirigir"
+          },
+          {
+            "value": -15,
+            "name_pt": "Total Klutz — acidentes a cada falha 14+"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Desajeitado fisicamente.",
+      "page_ref": 141,
+      "detail_level": "full"
+    },
+    {
+      "id": "lame",
+      "name_en": "Lame",
+      "name_pt": "Manco",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "Crippled Leg — -3 Move, mancando"
+          },
+          {
+            "value": -20,
+            "name_pt": "Missing Leg — -50% Move com prótese"
+          },
+          {
+            "value": -30,
+            "name_pt": "Legless — sem pernas, cadeira de rodas/etc."
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Perna(s) prejudicada(s).",
+      "page_ref": 141,
+      "detail_level": "full"
+    },
+    {
+      "id": "laziness",
+      "name_en": "Laziness",
+      "name_pt": "Preguiça",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não faz esforço extra. Reluta tarefas longas. Procrastinador.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "lecherousness",
+      "name_en": "Lecherousness",
+      "name_pt": "Lascívia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir flertar/aproximar quem acha atraente.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "lifebane",
+      "name_en": "Lifebane",
+      "name_pt": "Praga da Vida",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Plantas/animais sofrem com sua presença. Plantas murcham, leite azeda, animais te evitam.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "light_sleeper",
+      "name_en": "Light Sleeper",
+      "name_pt": "Sono Leve",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Acorda com qualquer ruído. Sono ruim a menos que ambiente silencioso.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "loner",
+      "name_en": "Loner",
+      "name_pt": "Solitário",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra aceitar companhia prolongada. Funciona melhor sozinho.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "low_empathy",
+      "name_en": "Low Empathy",
+      "name_pt": "Pouca Empatia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Não lê emoções. -3 em Detect Lies/Psychology contra outros; -3 em reactions; quem te ouve não nota tom.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "low_pain_threshold",
+      "name_en": "Low Pain Threshold",
+      "name_pt": "Baixo Limiar de Dor",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Dobra shock penalty (até -8). +4 em rolls de knockdown/stunning contra. HT contra tortura -4.",
+      "page_ref": 142,
+      "detail_level": "full"
+    },
+    {
+      "id": "low_self_image",
+      "name_en": "Low Self-Image",
+      "name_pt": "Baixa Autoestima",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "-2 em qualquer task se acabou de falhar uma. -2 em Will quando questionado. Demora 5 min calmando até recuperar.",
+      "page_ref": 143,
+      "detail_level": "full"
+    },
+    {
+      "id": "low_tl",
+      "name_en": "Low TL",
+      "name_pt": "TL Baixo",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver TL p22. Cada nível abaixo do campaign TL = -5 pts. Não conhece skills tech mais avançadas.",
+      "page_ref": 22,
+      "detail_level": "full"
+    },
+    {
+      "id": "lunacy",
+      "name_en": "Lunacy",
+      "name_pt": "Loucura Lunar",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Fases da lua afetam. Lua cheia = enraivecido/Berserk-like. Lua nova = letárgico/depressivo.",
+      "page_ref": 143,
+      "detail_level": "full"
+    },
+    {
+      "id": "magic_susceptibility",
+      "name_en": "Magic Susceptibility",
+      "name_pt": "Suscetibilidade Mágica",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": -3
+      },
+      "self_control": false,
+      "description_pt": "Oposto de Magic Resistance. Cada nível: +1 ao roll do conjurador, -1 ao seu resist. Em magic elixirs, -nível em HT.",
+      "page_ref": 143,
+      "detail_level": "full"
+    },
+    {
+      "id": "maintenance",
+      "name_en": "Maintenance",
+      "name_pt": "Manutenção",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme frequência + dificuldade"
+      },
+      "self_control": false,
+      "description_pt": "Precisa de manutenção regular (limpeza, reparos). Sem manutenção, perde funções.",
+      "page_ref": 143,
+      "detail_level": "full"
+    },
+    {
+      "id": "manic_depressive",
+      "name_en": "Manic-Depressive",
+      "name_pt": "Maníaco-Depressivo",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Ciclos manic/depressive. GM rola período. Manic: super-confiante. Depressive: incapaz.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "megalomania",
+      "name_en": "Megalomania",
+      "name_pt": "Megalomania",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Quer poder/glória. Tem grande plano. Self-control pra resistir oportunidades de glória/dominação.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "miserliness",
+      "name_en": "Miserliness",
+      "name_pt": "Avareza",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra gastar dinheiro além do mínimo necessário.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "missing_digit",
+      "name_en": "Missing Digit",
+      "name_pt": "Dedo Perdido",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -2,
+            "name_pt": "Dedo do pé"
+          },
+          {
+            "value": -5,
+            "name_pt": "Dedo da mão"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Perdeu dedo. -2 em DX-skills relacionadas a manipulação fina (dedo da mão).",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "mistaken_identity",
+      "name_en": "Mistaken Identity",
+      "name_pt": "Identidade Trocada",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver p21"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver p21. Confundido com outro alguém (com Reputation ruim ou similar).",
+      "page_ref": 21,
+      "detail_level": "full"
+    },
+    {
+      "id": "motion_sickness",
+      "name_en": "Motion Sickness",
+      "name_pt": "Enjoo",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Enjoa em veículos. HT roll cada vez; falha = -2 DX/IQ por 1d horas.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "mundane_background",
+      "name_en": "Mundane Background",
+      "name_pt": "Background Mundano",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Em campanha supernatural, você NÃO sabe nada de magia/psi/sobrenatural. Não pode comprar habilidades exóticas.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "neurological_disorder",
+      "name_en": "Neurological Disorder",
+      "name_pt": "Desordem Neurológica",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme tipo + severidade"
+      },
+      "self_control": false,
+      "description_pt": "Tipo: tremores, tics, paralisia parcial, etc. Severidade afeta DX e skills.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "night_blindness",
+      "name_en": "Night Blindness",
+      "name_pt": "Cegueira Noturna",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Penalty de luz fraca dobra pra você.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "nightmares",
+      "name_en": "Nightmares",
+      "name_pt": "Pesadelos",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control. Falha = noite ruim, perde 1d-3 FP no dia seguinte.",
+      "page_ref": 144,
+      "detail_level": "full"
+    },
+    {
+      "id": "no_depth_perception",
+      "name_en": "No Depth Perception",
+      "name_pt": "Sem Percepção de Profundidade",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Sem visão estereoscópica. -3 em ranged attacks; -2 em vehicle/melee em situações exigem julgar distância.",
+      "page_ref": 145,
+      "detail_level": "full"
+    },
+    {
+      "id": "no_legs",
+      "name_en": "No Legs",
+      "name_pt": "Sem Pernas",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "-0 a -50 conforme alternativa de Move"
+      },
+      "self_control": false,
+      "description_pt": "Sem pernas. Aquatic -0, Sessile -50 (não move), Slithers -0, Tracks -0, Wheels -20.",
+      "page_ref": 145,
+      "detail_level": "full"
+    },
+    {
+      "id": "no_sense_of_humor",
+      "name_en": "No Sense of Humor",
+      "name_pt": "Sem Senso de Humor",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não entende piadas. Imune a Rapier Wit. -2 reactions; pode ofender com seriedade.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "no_sense_of_smell_taste",
+      "name_en": "No Sense of Smell/Taste",
+      "name_pt": "Sem Olfato/Paladar",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Sem cheiro nem gosto. -1 reactions (estranha em interações sociais).",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "nocturnal",
+      "name_en": "Nocturnal",
+      "name_pt": "Noturno",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Dorme de dia. Funciona só à noite ou em escuridão. Sob luz = -2 em todos rolls.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "noisy",
+      "name_en": "Noisy",
+      "name_pt": "Barulhento",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": -2,
+        "level_label": "max 5"
+      },
+      "self_control": false,
+      "description_pt": "Faz ruído. Cada nível -1 em Stealth.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "non_iconographic",
+      "name_en": "Non-Iconographic",
+      "name_pt": "Sem Iconografia",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não reconhece imagens 2D como representação. Não lê mapas/fotos/diagramas.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "numb",
+      "name_en": "Numb",
+      "name_pt": "Insensível",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Sem tato. Não sente dor (incl. ferimentos). Sem feedback de manipulação fina. -2 em qualquer DX-based skill com tato.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "oblivious",
+      "name_en": "Oblivious",
+      "name_pt": "Alheio",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Não nota sutilezas sociais ou mudanças em ambiente. -1 em Detect Lies/Carousing/Diplomacy.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "obsession",
+      "name_en": "Obsession",
+      "name_pt": "Obsessão",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Short-term — meta alcançável em meses"
+          },
+          {
+            "value": -10,
+            "name_pt": "Long-term — meta de vida"
+          }
+        ]
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra desviar da meta.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "odious_personal_habits",
+      "name_en": "Odious Personal Habits",
+      "name_pt": "Hábitos Pessoais Asquerosos",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 a -3 reactions"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver p22. Hábito que repele (cuspe, eructar, etc.). -1 a -3 reactions.",
+      "page_ref": 22,
+      "detail_level": "full"
+    },
+    {
+      "id": "on_the_edge",
+      "name_en": "On the Edge",
+      "name_pt": "No Limite",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir tomar risco mortal desnecessário. Adora perigo.",
+      "page_ref": 146,
+      "detail_level": "full"
+    },
+    {
+      "id": "one_arm",
+      "name_en": "One Arm",
+      "name_pt": "Um Braço",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Falta braço. Não usa armas two-handed. -4 em escalada/grapple.",
+      "page_ref": 147,
+      "detail_level": "full"
+    },
+    {
+      "id": "one_eye",
+      "name_en": "One Eye",
+      "name_pt": "Um Olho",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Sem stereo vision. -1 em ranged attacks; -3 em close combat e melee à direita/esquerda do olho ausente.",
+      "page_ref": 147,
+      "detail_level": "full"
+    },
+    {
+      "id": "one_hand",
+      "name_en": "One Hand",
+      "name_pt": "Uma Mão",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Mão ausente. Braço pode segurar peso mas não manipular fino. Não usa armas two-handed.",
+      "page_ref": 147,
+      "detail_level": "full"
+    },
+    {
+      "id": "overconfidence",
+      "name_en": "Overconfidence",
+      "name_pt": "Excesso de Confiança",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra reconhecer perigo real. Subestima foes.",
+      "page_ref": 148,
+      "detail_level": "full"
+    },
+    {
+      "id": "overweight",
+      "name_en": "Overweight",
+      "name_pt": "Acima do Peso",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver Build p19"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver p19 (Build). Variações: Skinny, Overweight -1, Fat -3, Very Fat -5.",
+      "page_ref": 19,
+      "detail_level": "full"
+    },
+    {
+      "id": "pacifism",
+      "name_en": "Pacifism",
+      "name_pt": "Pacifismo",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Reluctant Killer — Will roll pra matar"
+          },
+          {
+            "value": -10,
+            "name_pt": "Cannot Harm Innocents"
+          },
+          {
+            "value": -15,
+            "name_pt": "Self-Defense Only"
+          },
+          {
+            "value": -30,
+            "name_pt": "Total Nonviolence"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Grau de aversão a violência.",
+      "page_ref": 148,
+      "detail_level": "full"
+    },
+    {
+      "id": "paranoia",
+      "name_en": "Paranoia",
+      "name_pt": "Paranoia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Não confia em ninguém. -2 reactions; sempre suspeita complôs. Imune a Fast-Talk de estranhos.",
+      "page_ref": 148,
+      "detail_level": "full"
+    },
+    {
+      "id": "phantom_voices",
+      "name_en": "Phantom Voices",
+      "name_pt": "Vozes Fantasmas",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Annoying — sussurros distantes"
+          },
+          {
+            "value": -10,
+            "name_pt": "Disturbing — Will pra distinguir real/imaginário"
+          },
+          {
+            "value": -15,
+            "name_pt": "Diabolical — vozes dão ordens malignas"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Ouve vozes que não existem.",
+      "page_ref": 148,
+      "detail_level": "full"
+    },
+    {
+      "id": "phobia",
+      "name_en": "Phobia",
+      "name_pt": "Fobia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -20 conforme raridade do estímulo"
+      },
+      "self_control": true,
+      "description_pt": "Self-control quando expõe ao estímulo. Falha = Fright Check. Especifica: cachorros, água, escuro, etc.",
+      "page_ref": 148,
+      "detail_level": "full"
+    },
+    {
+      "id": "post_combat_shakes",
+      "name_en": "Post-Combat Shakes",
+      "name_pt": "Tremor Pós-Combate",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control após combate. Falha = tremores, -2 em tudo por 1 min.",
+      "page_ref": 149,
+      "detail_level": "full"
+    },
+    {
+      "id": "pyromania",
+      "name_en": "Pyromania",
+      "name_pt": "Piromania",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir provocar incêndios.",
+      "page_ref": 149,
+      "detail_level": "full"
+    },
+    {
+      "id": "quadriplegic",
+      "name_en": "Quadriplegic",
+      "name_pt": "Tetraplégico",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -80
+      },
+      "self_control": false,
+      "description_pt": "Sem uso dos 4 membros. Precisa de cuidados constantes. Pode falar/pensar mas não age fisicamente.",
+      "page_ref": 150,
+      "detail_level": "full"
+    },
+    {
+      "id": "reprogrammable",
+      "name_en": "Reprogrammable",
+      "name_pt": "Reprogramável",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Aceita ordens de operador autorizado. Geralmente combinada com Slave Mentality e Digital Mind.",
+      "page_ref": 150,
+      "detail_level": "full"
+    },
+    {
+      "id": "reputation_negative",
+      "name_en": "Negative Reputation",
+      "name_pt": "Reputação Negativa",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver Reputation p26"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver Reputation p26. -1 a -4 reactions por nível, ajustado por frequência de reconhecimento e abrangência.",
+      "page_ref": 26,
+      "detail_level": "full"
+    },
+    {
+      "id": "restricted_diet",
+      "name_en": "Restricted Diet",
+      "name_pt": "Dieta Restrita",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -10,
+            "name_pt": "Common — disponível, mas restrito"
+          },
+          {
+            "value": -20,
+            "name_pt": "Occasional"
+          },
+          {
+            "value": -30,
+            "name_pt": "Rare"
+          },
+          {
+            "value": -40,
+            "name_pt": "Very Rare"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Come só alimento específico. Vampire (sangue), carnívoros estritos, etc.",
+      "page_ref": 151,
+      "detail_level": "full"
+    },
+    {
+      "id": "restricted_vision",
+      "name_en": "Restricted Vision",
+      "name_pt": "Visão Restrita",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -15,
+            "name_pt": "No Peripheral Vision — 60° arc"
+          },
+          {
+            "value": -30,
+            "name_pt": "Tunnel Vision — 30° arc, -4 alvos laterais"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Campo visual reduzido.",
+      "page_ref": 151,
+      "detail_level": "full"
+    },
+    {
+      "id": "revulsion",
+      "name_en": "Revulsion",
+      "name_pt": "Repulsa",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -15 conforme frequência do estímulo"
+      },
+      "self_control": false,
+      "description_pt": "Nauseado por substância/condição. -5 ao tocar; HT roll ou stunned.",
+      "page_ref": 151,
+      "detail_level": "full"
+    },
+    {
+      "id": "sadism",
+      "name_en": "Sadism",
+      "name_pt": "Sadismo",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra resistir causar sofrimento. Tortura quem pode.",
+      "page_ref": 152,
+      "detail_level": "full"
+    },
+    {
+      "id": "secret",
+      "name_en": "Secret",
+      "name_pt": "Segredo",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Serious Embarrassment se descoberto"
+          },
+          {
+            "value": -10,
+            "name_pt": "Utter Rejection — banished"
+          },
+          {
+            "value": -20,
+            "name_pt": "Imprisonment or Exile"
+          },
+          {
+            "value": -30,
+            "name_pt": "Possible Death"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Algo que arruinaria sua vida se descoberto. GM rola chance de exposição.",
+      "page_ref": 152,
+      "detail_level": "full"
+    },
+    {
+      "id": "secret_identity",
+      "name_en": "Secret Identity",
+      "name_pt": "Identidade Secreta",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "-5 a -20"
+      },
+      "self_control": false,
+      "description_pt": "Identidade alternativa que precisa esconder. Exposição = consequências varia (-5 inconveniente a -20 catástrofe).",
+      "page_ref": 152,
+      "detail_level": "full"
+    },
+    {
+      "id": "self_destruct",
+      "name_en": "Self-Destruct",
+      "name_pt": "Autodestruição",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Quando matado, explode (causa cr/burn damage). Dramatic.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "selfless",
+      "name_en": "Selfless",
+      "name_pt": "Altruísta",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra colocar próprias necessidades antes de outros.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "semi_upright",
+      "name_en": "Semi-Upright",
+      "name_pt": "Semi-Ereto",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Quase ereto mas usa membros frontais ao correr (gorila). -10% Move quando 'upright'.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "sense_of_duty",
+      "name_en": "Sense of Duty",
+      "name_pt": "Senso de Dever",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -2,
+            "name_pt": "Indivíduo (close friend)"
+          },
+          {
+            "value": -5,
+            "name_pt": "Pequeno grupo (party adventurer)"
+          },
+          {
+            "value": -10,
+            "name_pt": "Grande grupo (nação, religião)"
+          },
+          {
+            "value": -15,
+            "name_pt": "Toda humanidade"
+          },
+          {
+            "value": -20,
+            "name_pt": "Toda vida"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Defende e protege quem está nesse grupo. Não os abandona.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "shadow_form_disad",
+      "name_en": "Shadow Form (Disadvantage)",
+      "name_pt": "Forma de Sombra (Desvantagem)",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -20
+      },
+      "self_control": false,
+      "description_pt": "Versão sem switch da advantage Shadow Form. Stuck em forma 2D.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "short_attention_span",
+      "name_en": "Short Attention Span",
+      "name_pt": "Pouca Atenção",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control pra manter foco em tarefa tediosa por mais de poucos minutos.",
+      "page_ref": 153,
+      "detail_level": "full"
+    },
+    {
+      "id": "slave_mentality",
+      "name_en": "Slave Mentality",
+      "name_pt": "Mentalidade Escrava",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -40
+      },
+      "self_control": false,
+      "description_pt": "Sem iniciativa. Obedece ordens; não age sem comando. Comum em Allies de Dominance/Possession.",
+      "page_ref": 154,
+      "detail_level": "full"
+    },
+    {
+      "id": "sleepwalker",
+      "name_en": "Sleepwalker",
+      "name_pt": "Sonâmbulo",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-control nightly. Falha = caminha durante sono, age confuso.",
+      "page_ref": 154,
+      "detail_level": "full"
+    },
+    {
+      "id": "sleepy",
+      "name_en": "Sleepy",
+      "name_pt": "Sonolento",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme fração do dia dormindo"
+      },
+      "self_control": false,
+      "description_pt": "Precisa dormir % do dia. 50% (12h) -10, 67% -20, 75% -25, 87.5% -30.",
+      "page_ref": 154,
+      "detail_level": "full"
+    },
+    {
+      "id": "slow_eater",
+      "name_en": "Slow Eater",
+      "name_pt": "Comedor Lento",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Refeição leva 1+ hora. Não pode comer em campo.",
+      "page_ref": 155,
+      "detail_level": "full"
+    },
+    {
+      "id": "slow_healing",
+      "name_en": "Slow Healing",
+      "name_pt": "Cura Lenta",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Recovery time multiplicada: lvl 1 = 2×, lvl 2 = 4×, lvl 3 = 8×.",
+      "page_ref": 155,
+      "detail_level": "full"
+    },
+    {
+      "id": "slow_riser",
+      "name_en": "Slow Riser",
+      "name_pt": "Devagar de Manhã",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Demora 1 hora pra acordar funcional. Sem combat reflexes ao acordar.",
+      "page_ref": 155,
+      "detail_level": "full"
+    },
+    {
+      "id": "social_stigma",
+      "name_en": "Social Stigma",
+      "name_pt": "Estigma Social",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Disowned — sem proteção familiar/clã"
+          },
+          {
+            "value": -10,
+            "name_pt": "Criminal Record"
+          },
+          {
+            "value": -10,
+            "name_pt": "Minority Group — racismo"
+          },
+          {
+            "value": -15,
+            "name_pt": "Excommunicated"
+          },
+          {
+            "value": -20,
+            "name_pt": "Valuable Property — escravo, sem direitos"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Grupo social com tratamento ruim. -1 a -4 reactions de outros grupos.",
+      "page_ref": 155,
+      "detail_level": "full"
+    },
+    {
+      "id": "space_sickness",
+      "name_en": "Space Sickness",
+      "name_pt": "Mal Espacial",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Vomita em zero-g. -2 DX/IQ até adaptar (3d horas).",
+      "page_ref": 156,
+      "detail_level": "full"
+    },
+    {
+      "id": "split_personality",
+      "name_en": "Split Personality",
+      "name_pt": "Dupla Personalidade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control sob stress. Falha = troca personalidade (GM controla outra). Outra pode ter skills/atitudes diferentes.",
+      "page_ref": 156,
+      "detail_level": "full"
+    },
+    {
+      "id": "status_low",
+      "name_en": "Low Status",
+      "name_pt": "Status Baixo",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver p28"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver Status p28. -5 pts/-1 nível. Modificadores sociais.",
+      "page_ref": 28,
+      "detail_level": "full"
+    },
+    {
+      "id": "stress_atavism",
+      "name_en": "Stress Atavism",
+      "name_pt": "Atavismo de Stress",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme severidade"
+      },
+      "self_control": true,
+      "description_pt": "Self-control sob stress. Falha = reverte a estado animal/primitivo.",
+      "page_ref": 156,
+      "detail_level": "full"
+    },
+    {
+      "id": "stubbornness",
+      "name_en": "Stubbornness",
+      "name_pt": "Teimosia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Difícil mudar de ideia. -3 a quem te convencer.",
+      "page_ref": 157,
+      "detail_level": "full"
+    },
+    {
+      "id": "stuttering",
+      "name_en": "Stuttering",
+      "name_pt": "Gagueira",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Gagueja sob stress. -2 em skills sociais; pode falhar em magia verbal.",
+      "page_ref": 157,
+      "detail_level": "full"
+    },
+    {
+      "id": "supernatural_features",
+      "name_en": "Supernatural Features",
+      "name_pt": "Traços Sobrenaturais",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme óbvio o traço é"
+      },
+      "self_control": false,
+      "description_pt": "Visíveis. Olhos vermelhos, sem reflexo, sem sombra, etc. Identificação por experts no sobrenatural. -5 a -20 cada.",
+      "page_ref": 157,
+      "detail_level": "full"
+    },
+    {
+      "id": "supersensitive",
+      "name_en": "Supersensitive",
+      "name_pt": "Hipersensível",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Sente aura de outros constantemente. Multidões = stress. -3 perto de muita gente.",
+      "page_ref": 158,
+      "detail_level": "full"
+    },
+    {
+      "id": "susceptible",
+      "name_en": "Susceptible",
+      "name_pt": "Suscetível",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "-1 a -3 em HT contra item"
+      },
+      "self_control": false,
+      "description_pt": "Penalty em HT contra dano específico (disease, poison, etc.).",
+      "page_ref": 158,
+      "detail_level": "full"
+    },
+    {
+      "id": "terminally_ill",
+      "name_en": "Terminally Ill",
+      "name_pt": "Doente Terminal",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -50,
+            "name_pt": "2 anos pra viver"
+          },
+          {
+            "value": -75,
+            "name_pt": "1 ano"
+          },
+          {
+            "value": -100,
+            "name_pt": "1 mês"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Doença incurável fatal. Pode ser mitigado com tratamento (Mitigator).",
+      "page_ref": 158,
+      "detail_level": "full"
+    },
+    {
+      "id": "timesickness",
+      "name_en": "Timesickness",
+      "name_pt": "Mal Temporal",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "Enjoa após viagem temporal. HT roll; falha = -2 DX/IQ por 1d horas.",
+      "page_ref": 158,
+      "detail_level": "full"
+    },
+    {
+      "id": "trademark",
+      "name_en": "Trademark",
+      "name_pt": "Marca Registrada",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Public — assinatura, símbolo deixado"
+          },
+          {
+            "value": -10,
+            "name_pt": "Distinctive — comportamento único"
+          },
+          {
+            "value": -15,
+            "name_pt": "Elaborate — ritual longo após cada feito"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Sempre deixa marca após ação. Facilita rastreamento por inimigos.",
+      "page_ref": 159,
+      "detail_level": "full"
+    },
+    {
+      "id": "trickster",
+      "name_en": "Trickster",
+      "name_pt": "Trapaceiro",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control. Adora pregar peças, especialmente em alvos perigosos.",
+      "page_ref": 159,
+      "detail_level": "full"
+    },
+    {
+      "id": "truthfulness",
+      "name_en": "Truthfulness",
+      "name_pt": "Veracidade",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": true,
+      "description_pt": "Self-imposed. Self-control pra mentir, mesmo por boa causa.",
+      "page_ref": 159,
+      "detail_level": "full"
+    },
+    {
+      "id": "uncontrollable_appetite",
+      "name_en": "Uncontrollable Appetite",
+      "name_pt": "Apetite Incontrolável",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": true,
+      "description_pt": "Self-control quando o 'alimento' está presente (sangue, almas, carne humana). Vampiros, demônios.",
+      "page_ref": 159,
+      "detail_level": "full"
+    },
+    {
+      "id": "unfit",
+      "name_en": "Unfit",
+      "name_pt": "Fora de Forma",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -5,
+            "name_pt": "Unfit — -1 em HT rolls, perde FP 2× normal"
+          },
+          {
+            "value": -15,
+            "name_pt": "Very Unfit — -2 em HT rolls, perde FP 2×, recupera ½"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Sedentário. Oposto de Fit.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "unique",
+      "name_en": "Unique",
+      "name_pt": "Único",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Sem cópias possíveis (oposto de Extra Life via Copy). Se morto, não há backup.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "unhealing",
+      "name_en": "Unhealing",
+      "name_pt": "Não-cura",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -20,
+            "name_pt": "Partial — cura só com magia/poderes"
+          },
+          {
+            "value": -30,
+            "name_pt": "Total — não cura nunca"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Não recupera HP/FP naturalmente.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "unluckiness",
+      "name_en": "Unluckiness",
+      "name_pt": "Azar",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": false,
+      "description_pt": "1×/sessão GM faz qualquer roll seu falhar de modo dramático.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "unnatural_features",
+      "name_en": "Unnatural Features",
+      "name_pt": "Traços Não-Naturais",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver p22"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver p22. -1 a -5 reactions conforme estranheza visível.",
+      "page_ref": 22,
+      "detail_level": "full"
+    },
+    {
+      "id": "unusual_biochemistry",
+      "name_en": "Unusual Biochemistry",
+      "name_pt": "Bioquímica Incomum",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Médico/farmacêutico tem dificuldade. Drogas comuns -3 em efeito; tratamento First Aid -3.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "vow",
+      "name_en": "Vow",
+      "name_pt": "Voto",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": -1,
+            "name_pt": "Trivial — não comer carne"
+          },
+          {
+            "value": -5,
+            "name_pt": "Minor — celibato"
+          },
+          {
+            "value": -10,
+            "name_pt": "Major — vegetarianismo total + sem álcool"
+          },
+          {
+            "value": -15,
+            "name_pt": "Great — silêncio perpétuo, asceticismo"
+          }
+        ]
+      },
+      "self_control": false,
+      "description_pt": "Self-imposed. Promessa formal. Quebrar = perda da disvantage + consequências morais.",
+      "page_ref": 160,
+      "detail_level": "full"
+    },
+    {
+      "id": "vulnerability",
+      "name_en": "Vulnerability",
+      "name_pt": "Vulnerabilidade",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia: rarity × multiplier (×2 a ×4)"
+      },
+      "self_control": false,
+      "description_pt": "Multiplicador de dano contra item específico. Categories como Limited Defenses (p46). ×2 -10 a -40, ×3 -15 a -60, ×4 -20 a -80.",
+      "page_ref": 161,
+      "detail_level": "full"
+    },
+    {
+      "id": "weak_bite",
+      "name_en": "Weak Bite",
+      "name_pt": "Mordida Fraca",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": -2
+      },
+      "self_control": false,
+      "description_pt": "Mordida = thrust-2 cr em vez de thrust-1.",
+      "page_ref": 161,
+      "detail_level": "full"
+    },
+    {
+      "id": "weakness",
+      "name_en": "Weakness",
+      "name_pt": "Fraqueza",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme rarity + damage"
+      },
+      "self_control": false,
+      "description_pt": "Sofre dano por exposição a substância/condição. Rarity Common a Rare; dmg 1d/min, 1d/30min, 1d/hour.",
+      "page_ref": 161,
+      "detail_level": "full"
+    },
+    {
+      "id": "wealth_below",
+      "name_en": "Below-Average Wealth",
+      "name_pt": "Riqueza Abaixo da Média",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "ver p25"
+      },
+      "self_control": false,
+      "description_pt": "Pointer: ver Wealth p25. Dead Broke -25, Poor -15, Struggling -10.",
+      "page_ref": 25,
+      "detail_level": "full"
+    },
+    {
+      "id": "weirdness_magnet",
+      "name_en": "Weirdness Magnet",
+      "name_pt": "Imã de Coisas Estranhas",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": -15
+      },
+      "self_control": false,
+      "description_pt": "Coisas estranhas/sobrenaturais te encontram. GM põe encontros bizarros regularmente.",
+      "page_ref": 161,
+      "detail_level": "full"
+    },
+    {
+      "id": "workaholic",
+      "name_en": "Workaholic",
+      "name_pt": "Workaholic",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Trabalha 1.5× horas normais. Self-control pra resistir trabalho extra.",
+      "page_ref": 162,
+      "detail_level": "full"
+    },
+    {
+      "id": "wounded",
+      "name_en": "Wounded",
+      "name_pt": "Ferido",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -5
+      },
+      "self_control": false,
+      "description_pt": "Ferimento permanente. -1 HP fora do max.",
+      "page_ref": 162,
+      "detail_level": "full"
+    },
+    {
+      "id": "xenophilia",
+      "name_en": "Xenophilia",
+      "name_pt": "Xenofilia",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": -10
+      },
+      "self_control": true,
+      "description_pt": "Self-control. Confia em estranhos/alienígenas mais do que devia.",
+      "page_ref": 162,
+      "detail_level": "full"
+    }
+  ]
+}

@@ -31,4 +31,19 @@ document.addEventListener('keydown', function (event) {
     }
 });
 
+// Fechar ao clicar fora de qualquer .janela ativa.
+// Ignora cliques na própria janela e nos botões da side nav / barra antiga
+// que abrem janelas (senão fecha imediatamente após abrir).
+document.addEventListener('mousedown', function (event) {
+    const ativa = document.querySelector('.janela.ativa');
+    if (!ativa) return;
+    const t = event.target;
+    if (!(t instanceof Element)) return;
+    // Clique dentro da janela aberta → não faz nada
+    if (t.closest('.janela.ativa')) return;
+    // Clique em algo que abre janela → deixa o handler dela cuidar
+    if (t.closest('.player-side-icon, .menu-button, .menu-button-gm, [onclick*="abrirJanela"], [onclick*="abrirJanelaSecundario"]')) return;
+    fecharJanela();
+});
+
 

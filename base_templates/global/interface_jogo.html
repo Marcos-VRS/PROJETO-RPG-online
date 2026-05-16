@@ -28,10 +28,15 @@
     {# Barra superior fixa: menu (GM-only) + minis dos players (HP vermelho / FP azul) + ações #}
     <header class="players-bar" id="players-bar">
         {% if is_gm %}
-        <button class="players-bar-menu-btn" type="button" onclick="rd6OpenMenu()" aria-label="Abrir menu da campanha">☰</button>
+        <button class="players-bar-menu-btn" type="button" onclick="rd6ToggleMenu()" aria-label="Abrir/fechar menu da campanha">☰</button>
         {% endif %}
         {% for p in players_minis %}
-            <div class="player-mini{% if not p.is_present %} player-mini--absent{% endif %}" data-character-id="{{ p.id }}" title="{{ p.nome }}">
+            <div class="player-mini{% if not p.is_present %} player-mini--absent{% endif %}"
+                 data-character-id="{{ p.id }}"
+                 data-character-name="{{ p.nome }}"
+                 data-hp-atual="{{ p.hp_atual }}" data-hp-max="{{ p.hp_max }}"
+                 data-fp-atual="{{ p.fp_atual }}" data-fp-max="{{ p.fp_max }}"
+                 title="{{ p.nome }}">
                 <div class="player-mini-avatar">
                     {% if p.avatar_url %}
                         <img src="{{ p.avatar_url }}" alt="{{ p.nome }}">
@@ -41,7 +46,7 @@
                 </div>
                 <div class="player-mini-info">
                     <div class="player-mini-name">{{ p.nome }}</div>
-                    <div class="player-mini-bar player-mini-bar-hp">
+                    <div class="player-mini-bar player-mini-bar-hp{% if p.hp_is_negative %} is-negative{% endif %}">
                         <div class="player-mini-bar-fill" style="width: {{ p.hp_pct }}%"></div>
                         {% if p.show_numbers %}
                             <span class="player-mini-bar-label">HP {{ p.hp_atual }}/{{ p.hp_max }}</span>
@@ -73,6 +78,31 @@
             <span class="icon-moon">☾</span>
         </button>
     </header>
+
+    {# Popover GM-only pra ajustar HP/FP de um personagem (clic na mini) #}
+    {% if is_gm %}
+    <div id="vitals-editor" class="vitals-editor" hidden>
+        <div class="vitals-editor-title" id="vitals-editor-name">—</div>
+        <div class="vitals-editor-row">
+            <span class="vitals-editor-label">HP</span>
+            <button type="button" data-vitals-delta="hp" data-amount="-5">-5</button>
+            <button type="button" data-vitals-delta="hp" data-amount="-1">-1</button>
+            <input type="number" id="vitals-hp-atual">
+            <span class="vitals-editor-max">/ <span id="vitals-hp-max">-</span></span>
+            <button type="button" data-vitals-delta="hp" data-amount="1">+1</button>
+            <button type="button" data-vitals-delta="hp" data-amount="5">+5</button>
+        </div>
+        <div class="vitals-editor-row">
+            <span class="vitals-editor-label">FP</span>
+            <button type="button" data-vitals-delta="fp" data-amount="-5">-5</button>
+            <button type="button" data-vitals-delta="fp" data-amount="-1">-1</button>
+            <input type="number" id="vitals-fp-atual" min="0">
+            <span class="vitals-editor-max">/ <span id="vitals-fp-max">-</span></span>
+            <button type="button" data-vitals-delta="fp" data-amount="1">+1</button>
+            <button type="button" data-vitals-delta="fp" data-amount="5">+5</button>
+        </div>
+    </div>
+    {% endif %}
 
     {# Controles de turno: barra abaixo da players-bar, só visível quando há cena ativa #}
     <div class="turn-controls" id="turn-controls">
@@ -177,6 +207,14 @@
             if (modal) modal.classList.remove('open');
             if (backdrop) backdrop.classList.remove('open');
         }
+        function rd6ToggleMenu() {
+            var modal = document.getElementById('menu-modal');
+            if (modal && modal.classList.contains('open')) {
+                rd6CloseMenu();
+            } else {
+                rd6OpenMenu();
+            }
+        }
         (function () {
             try {
                 if (localStorage.getItem('rd6-avatars-hidden') === '1') {
@@ -191,6 +229,9 @@
         // ---- Estado de cena (multi-cena, sincronizado via WS) ----
         var RD6_CAMPANHA_ID = "{{ campanha.id }}";
         var RD6_IS_GM = {% if is_gm %}true{% else %}false{% endif %};
+        // ID da ficha do user ativo nesta aba do jogo. Usado pra decidir se um
+        // character_updated vindo via WS deve atualizar as janelas modais.
+        var RD6_ACTIVE_CHAR_ID = {% if personagem %}{{ personagem.id }}{% else %}null{% endif %};
         var RD6_SCENE_STATE = JSON.parse(document.getElementById('rd6-scene-state').textContent);
         var RD6_ALL_CHARACTERS = JSON.parse(document.getElementById('rd6-all-characters').textContent);
         var RD6_MAX_SCENES = 10;
@@ -209,7 +250,11 @@
         }
 
         function rd6CharById(id) {
-            return RD6_ALL_CHARACTERS.find(function (c) { return c.id === id; });
+            // Coerção: ids podem vir como string do server (JSON tolerante)
+            // ou int após normalize. Compara como Number pra evitar mismatch.
+            var n = Number(id);
+            if (isNaN(n)) return undefined;
+            return RD6_ALL_CHARACTERS.find(function (c) { return Number(c.id) === n; });
         }
 
         function rd6NormalizeTurn(scene) {
@@ -376,12 +421,16 @@
 
             // Visibilidade + highlight do turno atual.
             var inScene = active ? new Set((active.character_ids || []).map(Number)) : null;
-            var currentTurnId = active ? active.current_turn_id : null;
+            var currentTurnId = active && active.current_turn_id != null
+                ? Number(active.current_turn_id) : null;
             bar.querySelectorAll('.player-mini').forEach(function (mini) {
                 var id = parseInt(mini.dataset.characterId, 10);
                 var visible = inScene === null || inScene.has(id);
                 mini.classList.toggle('player-mini--absent', !visible);
-                mini.classList.toggle('player-mini--current-turn', visible && id === currentTurnId);
+                mini.classList.toggle(
+                    'player-mini--current-turn',
+                    visible && currentTurnId !== null && id === currentTurnId
+                );
             });
         }
 
@@ -597,11 +646,12 @@
                 ? '<span class="player-mini-bar-label">HP ' + c.hp_atual + '/' + c.hp_max + '</span>' : '';
             var fpLabel = showNumbers
                 ? '<span class="player-mini-bar-label">FP ' + c.fp_atual + '/' + c.fp_max + '</span>' : '';
+            var hpNegClass = c.hp_is_negative ? ' is-negative' : '';
             return ''
                 + '<div class="player-mini-avatar">' + avatar + '</div>'
                 + '<div class="player-mini-info">'
                 +   '<div class="player-mini-name">' + rd6Esc(c.nome) + '</div>'
-                +   '<div class="player-mini-bar player-mini-bar-hp">'
+                +   '<div class="player-mini-bar player-mini-bar-hp' + hpNegClass + '">'
                 +     '<div class="player-mini-bar-fill" style="width:' + c.hp_pct + '%"></div>' + hpLabel
                 +   '</div>'
                 +   '<div class="player-mini-bar player-mini-bar-fp">'
@@ -619,6 +669,11 @@
             var el = document.createElement('div');
             el.className = 'player-mini';
             el.dataset.characterId = c.id;
+            el.dataset.characterName = c.nome;
+            el.dataset.hpAtual = c.hp_atual;
+            el.dataset.hpMax = c.hp_max;
+            el.dataset.fpAtual = c.fp_atual;
+            el.dataset.fpMax = c.fp_max;
             el.title = c.nome;
             el.innerHTML = rd6BuildMiniInnerHtml(c);
             bar.insertBefore(el, spacer);
@@ -627,6 +682,84 @@
         function rd6RemoveMiniFromBar(charId) {
             var el = document.querySelector('.player-mini[data-character-id="' + charId + '"]');
             if (el) el.remove();
+        }
+
+        // Lida com "character_updated" do WS: atualiza mini sempre; se for a
+        // ficha ativa do user, faz partial refresh das janelas modais sem
+        // recarregar a página inteira.
+        var RD6_LAST_PARTIAL_REFRESH = 0;
+        function rd6OnCharacterUpdated(c) {
+            // Sempre atualiza mini (HP/FP/nome/avatar)
+            rd6UpdateMiniVitals({
+                char_id: c.id,
+                hp_atual: c.hp_atual, hp_max: c.hp_max, hp_pct: c.hp_pct,
+                fp_atual: c.fp_atual, fp_max: c.fp_max, fp_pct: c.fp_pct,
+            });
+            var mini = document.querySelector('.player-mini[data-character-id="' + c.id + '"]');
+            if (mini) {
+                var nameEl = mini.querySelector('.player-mini-name');
+                if (nameEl && c.nome) nameEl.textContent = c.nome;
+                if (c.nome) mini.dataset.characterName = c.nome;
+                var img = mini.querySelector('.player-mini-avatar img');
+                if (img && c.avatar_url) img.src = c.avatar_url;
+            }
+            // Side nav nome (se for a ativa)
+            if (RD6_ACTIVE_CHAR_ID && String(c.id) === String(RD6_ACTIVE_CHAR_ID)) {
+                var sideName = document.querySelector('.player-side-name');
+                if (sideName && c.nome) {
+                    sideName.textContent = c.nome;
+                    sideName.title = c.nome;
+                }
+                rd6PartialRefreshJanelas();
+            }
+        }
+
+        // Fetch da página atual e DOM-swap das janelas modais. Throttle 1.5s.
+        async function rd6PartialRefreshJanelas() {
+            var now = Date.now();
+            if (now - RD6_LAST_PARTIAL_REFRESH < 1500) return;
+            RD6_LAST_PARTIAL_REFRESH = now;
+            try {
+                var resp = await fetch(window.location.href, {credentials: 'same-origin'});
+                if (!resp.ok) return;
+                var html = await resp.text();
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                ['janela-atributos', 'janela-pericias', 'janela-ataque',
+                 'janela-defesa', 'janela-equipamento', 'janela-quickedit']
+                .forEach(function (id) {
+                    var cur = document.getElementById(id);
+                    var nxt = doc.getElementById(id);
+                    if (cur && nxt) {
+                        var wasOpen = cur.classList.contains('ativa');
+                        cur.innerHTML = nxt.innerHTML;
+                        if (wasOpen) cur.classList.add('ativa');
+                    }
+                });
+            } catch (e) {
+                console.error('partial refresh falhou', e);
+            }
+        }
+
+        // Update parcial: só HP/FP. Não re-renderiza o mini inteiro pra evitar
+        // perder o avatar / nome / event listeners.
+        function rd6UpdateMiniVitals(data) {
+            var mini = document.querySelector('.player-mini[data-character-id="' + data.char_id + '"]');
+            if (!mini) return;
+            var hpBar = mini.querySelector('.player-mini-bar-hp');
+            var hpFill = mini.querySelector('.player-mini-bar-hp .player-mini-bar-fill');
+            var fpFill = mini.querySelector('.player-mini-bar-fp .player-mini-bar-fill');
+            if (hpFill) hpFill.style.width = data.hp_pct + '%';
+            if (fpFill) fpFill.style.width = data.fp_pct + '%';
+            if (hpBar) hpBar.classList.toggle('is-negative', !!data.hp_is_negative);
+            var hpLabel = mini.querySelector('.player-mini-bar-hp .player-mini-bar-label');
+            var fpLabel = mini.querySelector('.player-mini-bar-fp .player-mini-bar-label');
+            if (hpLabel) hpLabel.textContent = 'HP ' + data.hp_atual + '/' + data.hp_max;
+            if (fpLabel) fpLabel.textContent = 'FP ' + data.fp_atual + '/' + data.fp_max;
+            // Atualiza também o cache local pra próximos ajustes do popover
+            mini.dataset.hpAtual = data.hp_atual;
+            mini.dataset.hpMax = data.hp_max;
+            mini.dataset.fpAtual = data.fp_atual;
+            mini.dataset.fpMax = data.fp_max;
         }
 
         // ---- WebSocket ------------------------------------------------------
@@ -655,6 +788,10 @@
                     rd6RemoveMiniFromBar(data.char_id);
                     if (data.scene_state) RD6_SCENE_STATE = data.scene_state;
                     rd6RenderAll();
+                } else if (data.type === 'character_vitals_changed' && data.char_id) {
+                    rd6UpdateMiniVitals(data);
+                } else if (data.type === 'character_updated' && data.char) {
+                    rd6OnCharacterUpdated(data.char);
                 }
             };
             rd6GameWS.onclose = function () {
@@ -676,23 +813,7 @@
 
 
     <div class="coluna-chat">
-        <div class="chat-container-menu">
-            <div class="menu-container">
-
-                {% if username == campanha.dono.username %}
-                    <a class="menu-button-options" href="{% url 'gurps:menu_fichas_gm' campanha.id %}">GM</a>
-                    <a class="menu-button-options" href="{% url 'gurps:journal' campanha.id %}">JOURNAL</a>
-
-                {% else %}
-                    <a class="menu-button-options" href="{% url 'gurps:editar_fichas_menu' campanha.id %}">FICHA</a>
-                    <a class="menu-button-options" href="{% url 'gurps:journal' campanha.id %}">JOURNAL</a>
-
-                {% endif %} 
-                
-
-                <a class="menu-button-options" href="{% url 'gurps:leave_game' %}">SAIR</a>
-            </div>
-        </div>
+        {# Menu topo removido: FICHA/GM/JOURNAL/SAIR migraram para a side nav esquerda. #}
 
         <div id="chat-container-id" class="chat-container" data-room-name="{{ campanha.id }}"
             data-username="{{ user.username }}">
@@ -725,7 +846,57 @@
 
     {% if username != campanha.dono.username %}
     <div style="display:none;" id="owner-status" data-is-owner="False"></div>
-    <!-- Ficha do personagem -->
+
+    <!-- Side nav vertical do player: substitui o menu inferior antigo. -->
+    {% if personagem %}
+    <div class="player-side-name" title="{{ personagem.nome_personagem }}">{{ personagem.nome_personagem }}</div>
+    {% endif %}
+    <aside class="player-side-nav" aria-label="Menu do personagem">
+        <button class="player-side-icon" title="Atributos" onclick="abrirJanela('atributos')">
+            <span class="psi-glyph">💪</span><span class="psi-label">ATR</span>
+        </button>
+        <button class="player-side-icon" title="Perícias" onclick="abrirJanela('pericias')">
+            <span class="psi-glyph">🛠️</span><span class="psi-label">SKL</span>
+        </button>
+        <button class="player-side-icon" title="Ataques" onclick="abrirJanela('ataque')">
+            <span class="psi-glyph">⚔️</span><span class="psi-label">ATK</span>
+        </button>
+        <button class="player-side-icon" title="Defesas" onclick="abrirJanela('defesa')">
+            <span class="psi-glyph">🛡️</span><span class="psi-label">DEF</span>
+        </button>
+        <button class="player-side-icon" title="Equipamento" onclick="abrirJanela('equipamento')">
+            <span class="psi-glyph">🥋</span><span class="psi-label">EQP</span>
+        </button>
+        <button class="player-side-icon" title="Dados" onclick="abrirJanela('dados')">
+            <span class="psi-glyph">🎲</span><span class="psi-label">D6</span>
+        </button>
+        <button class="player-side-icon psi-add" title="Criar / remover cards"
+                onclick="abrirJanela('quickedit')"
+                data-sheet-id="{{ personagem.id }}">
+            <span class="psi-glyph">＋</span><span class="psi-label">EDIT</span>
+        </button>
+
+        <a class="player-side-icon" title="Minhas fichas (abre em nova aba)"
+           href="{% url 'gurps:lista_v2_player' campanha_id=campanha.id %}" target="_blank" rel="noopener">
+            <span class="psi-glyph">📋</span><span class="psi-label">FICHA</span>
+        </a>
+        <a class="player-side-icon" title="Journal (abre em nova aba)"
+           href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
+            <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
+        </a>
+        <a class="player-side-icon" title="Sair da campanha"
+           href="{% url 'gurps:leave_game' %}">
+            <span class="psi-glyph">🚪</span><span class="psi-label">SAIR</span>
+        </a>
+    </aside>
+
+    {% if next_character_id %}
+    <a class="player-side-next"
+       title="Próximo personagem"
+       href="?character={{ next_character_id }}">→</a>
+    {% endif %}
+
+    <!-- Ficha do personagem (barra inferior antiga — oculta via CSS, mantida pra fallback) -->
         <div class="personagem-container">
             <span id="personagem-nome" data-nome="{{ personagem.nome_personagem }}" class="nome-personagem fredericka-the-great-regular">{{ personagem.nome_personagem }}</span>
             <ul class="lista-personagens medievalsharp-regular">
@@ -845,6 +1016,39 @@
                         <input class="input-inc" type="number" id="redutor-PERC" value="0">
                         <button  class="menu-button" onclick="rollAttribute({{personagem.sub_attributes.perception}}, 'PERC')">Rolar</button><br><br>
                     </li>
+                </div>
+
+                <!-- Stats agregadas (movidas da barra inferior antiga) -->
+                <div class="ficha-parte-box personagem-display medievalsharp-mini">
+                    <h3 class="titulo-ficha-gm fredericka-the-great-regular">SECUNDÁRIAS</h3>
+                    <div class="personagem-info">
+                        <span>HP: {{ personagem.sub_attributes.hp }}</span>
+                        <span>FP: {{ personagem.sub_attributes.fp }}</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>SPEED: {{ personagem.sub_attributes.speed }}</span>
+                        <span>MOVE: {{ personagem.sub_attributes.move }}m/s</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>B. LIFT: {{ personagem.sub_attributes.basic_lift }}kg</span>
+                        <span>Dodge: {{ personagem.sub_attributes.dodge }}</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>SWING: {{ personagem.sub_attributes.swing }}</span>
+                        <span>THRUST: {{ personagem.sub_attributes.thrust }}</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>SWING W: {{ personagem.sub_attributes.swing_weapon }}</span>
+                        <span>THRUST W: {{ personagem.sub_attributes.thrust_weapon }}</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>PARRY: {{ personagem.sub_attributes.parry_unarmed }}</span>
+                        <span>PARRY W: {{ personagem.sub_attributes.parry_weapon }}</span>
+                    </div>
+                    <div class="personagem-info">
+                        <span>STRESS: {{ personagem.sub_attributes.stress }}</span>
+                        <span>JUMP: {{ personagem.sub_attributes.Jump }}m</span>
+                    </div>
                 </div>
             </ul>
         </div>
@@ -1049,6 +1253,64 @@
             </div>
         </div>
 
+        <!-- Quick edit: criar/remover cards sem sair do jogo -->
+        <div id="janela-quickedit" class="janela" data-sheet-id="{{ personagem.id }}">
+            <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+            <div class="ficha-parte-box medievalsharp-mini">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">CRIAR / REMOVER CARDS</h3>
+
+                <div class="quickedit-add-row">
+                    <button class="menu-button" data-quick-add="maneuvers_melee">+ Ataque Melee</button>
+                    <button class="menu-button" data-quick-add="maneuvers_ranged">+ Ataque Ranged</button>
+                    <button class="menu-button" data-quick-add="maneuvers_defense">+ Defesa</button>
+                </div>
+
+                <!-- Form inline (escondido até clicar em + algo) -->
+                <div id="quickedit-form" class="quickedit-form" hidden>
+                    <div class="quickedit-form-title">Novo card: <span id="qf-tipo-label"></span></div>
+                    <label>Nome <input type="text" id="qf-name" placeholder="Soco / Mordida / Esquiva..."></label>
+                    <label id="qf-damage-wrap">Dano <input type="text" id="qf-damage" placeholder="1d6 / thr+1 / sw cor..."></label>
+                    <label>NH <input type="number" id="qf-nh" value="10"></label>
+                    <div class="quickedit-form-actions">
+                        <button class="menu-button" id="qf-confirm">Confirmar</button>
+                        <button class="menu-button" id="qf-cancel">Cancelar</button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="quickedit-list-section">
+                    <strong>Ataques Melee</strong>
+                    {% for m in personagem.maneuvers_melee %}
+                        <div class="quickedit-row">
+                            <span>{{ m.name|default:m.nome|default:"(sem nome)" }} · NH {{ m.nh|default:"-" }} · DANO {{ m.damage|default:"-" }}</span>
+                            <button class="menu-button" data-quick-remove="maneuvers_melee" data-index="{{ forloop.counter0 }}">🗑</button>
+                        </div>
+                    {% empty %}<em>nenhum</em>{% endfor %}
+                </div>
+
+                <div class="quickedit-list-section">
+                    <strong>Ataques Ranged</strong>
+                    {% for m in personagem.maneuvers_ranged %}
+                        <div class="quickedit-row">
+                            <span>{{ m.name|default:m.nome|default:"(sem nome)" }} · NH {{ m.nh|default:"-" }} · DANO {{ m.damage|default:"-" }}</span>
+                            <button class="menu-button" data-quick-remove="maneuvers_ranged" data-index="{{ forloop.counter0 }}">🗑</button>
+                        </div>
+                    {% empty %}<em>nenhum</em>{% endfor %}
+                </div>
+
+                <div class="quickedit-list-section">
+                    <strong>Defesas</strong>
+                    {% for m in personagem.maneuvers_defense %}
+                        <div class="quickedit-row">
+                            <span>{{ m.name|default:m.nome|default:"(sem nome)" }} · NH {{ m.nh|default:"-" }}</span>
+                            <button class="menu-button" data-quick-remove="maneuvers_defense" data-index="{{ forloop.counter0 }}">🗑</button>
+                        </div>
+                    {% empty %}<em>nenhum</em>{% endfor %}
+                </div>
+            </div>
+        </div>
+
 
         <!--Journal Player-->
         <div id="janela-journal-player" class="janela">
@@ -1091,30 +1353,30 @@
 
 
     {% else %}
-        <!-- Ficha dos personagens do GM -->
+        <!-- Bloco GM: side nav esquerda (substitui a barra inferior antiga). -->
         <div style="display:none;" id="owner-status" data-is-owner="True"></div>
 
+        <aside class="player-side-nav gm-side-nav" aria-label="Menu do GM">
+            <button class="player-side-icon" title="Dados" onclick="abrirJanela('dados')">
+                <span class="psi-glyph">🎲</span><span class="psi-label">D6</span>
+            </button>
+            <a class="player-side-icon" title="Fichas (abre em nova aba)"
+               href="{% url 'gurps:menu_fichas_gm' campanha.id %}" target="_blank" rel="noopener">
+                <span class="psi-glyph">📋</span><span class="psi-label">GM</span>
+            </a>
+            <a class="player-side-icon" title="Journal (abre em nova aba)"
+               href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
+                <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
+            </a>
+            <a class="player-side-icon" title="Sair da campanha"
+               href="{% url 'gurps:leave_game' %}">
+                <span class="psi-glyph">🚪</span><span class="psi-label">SAIR</span>
+            </a>
+        </aside>
+
+        <!-- Barra inferior antiga oculta via CSS, mantida pro fallback. -->
         <div class="personagem-container-gm">
-            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR PERSONAGEM:</label>
-            <input class="input-pesquisa-personagem medievalsharp-mini" 
-                   type="text" 
-                   id="search-personagem" 
-                   placeholder="Pesquisar personagem"
-                   onkeyup="filtrarPersonagens()"> <!-- Chama a função ao digitar -->
-        
-            <br>
-            
-            <div id="lista-personagens">
-                <button class="menu-button-gm medievalsharp-mini" onclick="abrirJanela('dados')">DADOS</button>
-                {% for personagem in personagens_gm %}
-                    <button class="menu-button-gm medievalsharp-mini" 
-                            onclick="abrirJanela('personagem_gm')">
-                        {{ personagem.nome_personagem }}
-                    </button>
-                {% empty %}
-                    <p>Nenhum personagem encontrado.</p>
-                {% endfor %}
-            </div>
+            <div id="lista-personagens"></div>
         </div>
 
         
@@ -1199,18 +1461,22 @@
 
     <div class="ferramentas-container"></div>
 
-    <script src="{% static 'global/js/mapas/zoom.js' %}"></script>
+    <script src="{% static 'global/js/mapas/zoom.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/mapas/drag.js' %}"></script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_ataque.js' %}"></script>
     <script src="{% static 'global/js/game_interface/game_interface.js' %}"></script>
+    <script src="{% static 'global/js/game_interface/quickedit.js' %}?d={% now 'U' %}"></script>
+    {% if is_gm %}
+    <script src="{% static 'global/js/game_interface/vitals_editor.js' %}?d={% now 'U' %}"></script>
+    {% endif %}
     <script src="{% static 'global/js/game_interface/roll_dice.js' %}"></script>
     <script src="{% static 'global/js/game_interface/assets_img.js' %}"></script>
     <script src="{% static 'global/js/game_interface/window_gm_characters.js' %}"></script>
     <script src="{% static 'global/js/game_interface/window_player_characters.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filtro_personagens_gm.js' %}"></script>
-    <script src="{% static 'global/js/game_interface/filter_journal.js' %}"></script>
+    <script src="{% static 'global/js/menu/filter_journal.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filter_attack_player.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filter_defense_player.js' %}"></script>
     <script src="{% static 'global/js/game_interface/filter_skill_player.js' %}"></script>

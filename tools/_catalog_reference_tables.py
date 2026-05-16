@@ -1,0 +1,130 @@
+"""Reference tables consolidadas (Campaigns Apêndice, pp 212-227)."""
+import json
+from pathlib import Path
+
+TARGET = Path(__file__).resolve().parents[1] / "gurps" / "data" / "reference_tables.json"
+
+out = {
+    "$schema_version": "1.0",
+    "source": {"book":"GURPS 4e — Basic Set: Campaigns","appendix":"Tables","pages":"212-227"},
+    "$progress": {"status":"complete","completion_date":"2026-05-16"},
+
+    # ===== REACTION TABLE (p560) =====
+    "reaction_table": [
+        {"min":3,"max":6,"reaction":"Hostile","description":"Hostile or violent"},
+        {"min":7,"max":9,"reaction":"Bad","description":"Bad or suspicious"},
+        {"min":10,"max":12,"reaction":"Neutral","description":"Neutral — no special help or hindrance"},
+        {"min":13,"max":15,"reaction":"Good","description":"Good — friendly and cooperative"},
+        {"min":16,"max":18,"reaction":"Very Good","description":"Very good — generous, helpful, loyal"},
+        {"min":19,"max":99,"reaction":"Excellent","description":"Excellent — ardent supporter, will go to extremes"}
+    ],
+
+    # ===== SIZE AND SPEED/RANGE TABLE (p550) =====
+    "size_speed_range_table": [
+        {"distance_yards":2,"sm_or_speed":-9,"penalty_to_hit":0,"size_bonus":0},
+        {"distance_yards":3,"sm_or_speed":-8,"penalty_to_hit":-1,"size_bonus":1},
+        {"distance_yards":5,"sm_or_speed":-7,"penalty_to_hit":-2,"size_bonus":2},
+        {"distance_yards":7,"sm_or_speed":-6,"penalty_to_hit":-3,"size_bonus":3},
+        {"distance_yards":10,"sm_or_speed":-5,"penalty_to_hit":-4,"size_bonus":4},
+        {"distance_yards":15,"sm_or_speed":-4,"penalty_to_hit":-5,"size_bonus":5},
+        {"distance_yards":20,"sm_or_speed":-3,"penalty_to_hit":-6,"size_bonus":6},
+        {"distance_yards":30,"sm_or_speed":-2,"penalty_to_hit":-7,"size_bonus":7},
+        {"distance_yards":50,"sm_or_speed":-1,"penalty_to_hit":-8,"size_bonus":8},
+        {"distance_yards":70,"sm_or_speed":0,"penalty_to_hit":-9,"size_bonus":9},
+        {"distance_yards":100,"sm_or_speed":1,"penalty_to_hit":-10,"size_bonus":10},
+        {"distance_yards":150,"sm_or_speed":2,"penalty_to_hit":-11,"size_bonus":11},
+        {"distance_yards":200,"sm_or_speed":3,"penalty_to_hit":-12,"size_bonus":12},
+        {"distance_yards":300,"sm_or_speed":4,"penalty_to_hit":-13,"size_bonus":13},
+        {"distance_yards":500,"sm_or_speed":5,"penalty_to_hit":-14,"size_bonus":14},
+        {"distance_yards":700,"sm_or_speed":6,"penalty_to_hit":-15,"size_bonus":15},
+        {"distance_yards":1000,"sm_or_speed":7,"penalty_to_hit":-16,"size_bonus":16}
+    ],
+    "size_speed_range_notes": "Combined speed+range modifier: sum target speed (yards/sec) + distance (yards) and find row. For SM modifier, larger target = bonus to hit (or harder to spot via Stealth).",
+
+    # ===== FRIGHT CHECK TABLE (p360) =====
+    "fright_check_table": [
+        {"margin_of_failure":1,"result":"Stunned for 1 turn"},
+        {"margin_of_failure":2,"result":"Stunned for 1d turns"},
+        {"margin_of_failure":3,"result":"Stunned for 2d turns; -2 IQ/DX for next minute"},
+        {"margin_of_failure":4,"result":"Mental stun + 1d-3 minutes after recovery still stunned"},
+        {"margin_of_failure":5,"result":"Faint for 1d minutes"},
+        {"margin_of_failure":6,"result":"Faint + nightmares tonight"},
+        {"margin_of_failure":7,"result":"Faint + Mild Phobia"},
+        {"margin_of_failure":8,"result":"Faint + Severe Phobia (until therapy)"},
+        {"margin_of_failure":9,"result":"Permanent Mild Disadvantage (Paranoia, Phobia, etc.)"},
+        {"margin_of_failure":10,"result":"Permanent Severe Disadvantage"},
+        {"margin_of_failure":11,"result":"Permanent insanity + age 1d years"},
+        {"margin_of_failure":12,"result":"Heart Attack — HT roll or die"},
+        {"margin_of_failure":13,"result":"Mortally afraid; may attack the source"},
+        {"margin_of_failure":14,"result":"Catatonic for 1d hours"},
+        {"margin_of_failure":15,"result":"Stricken — temporarily blinded by horror, total system shock"},
+        {"margin_of_failure":16,"result":"Multiple severe disadvantages + age years"},
+        {"margin_of_failure":99,"result":"Roll Heart Attack; if survive, multiple Insanity"}
+    ],
+
+    # ===== ENCUMBRANCE TABLE (p17 Characters) - já em attributes.json mas duplicate aqui =====
+    "encumbrance_table": [
+        {"level":0,"name":"None","max_weight_in_BL":1.0,"move_mult":1.0,"dodge_penalty":0},
+        {"level":1,"name":"Light","max_weight_in_BL":2.0,"move_mult":0.8,"dodge_penalty":-1},
+        {"level":2,"name":"Medium","max_weight_in_BL":3.0,"move_mult":0.6,"dodge_penalty":-2},
+        {"level":3,"name":"Heavy","max_weight_in_BL":6.0,"move_mult":0.4,"dodge_penalty":-3},
+        {"level":4,"name":"Extra-Heavy","max_weight_in_BL":10.0,"move_mult":0.2,"dodge_penalty":-4}
+    ],
+
+    # ===== STANDARD MODIFIERS =====
+    "standard_modifiers": {
+        "task_difficulty": [
+            {"name":"Trivial","mod":5},
+            {"name":"Very Easy","mod":4},
+            {"name":"Easy","mod":2},
+            {"name":"Average","mod":0},
+            {"name":"Tough","mod":-2},
+            {"name":"Hard","mod":-4},
+            {"name":"Very Hard","mod":-6},
+            {"name":"Dangerous","mod":-8},
+            {"name":"Impossible","mod":-10}
+        ],
+        "equipment": [
+            {"name":"Best possible","mod":2},
+            {"name":"Good","mod":1},
+            {"name":"Standard","mod":0},
+            {"name":"Improvised","mod":-2},
+            {"name":"Heavily damaged","mod":-5},
+            {"name":"None","mod":-5}
+        ],
+        "time": [
+            {"name":"Hasty (half time)","mod":-1},
+            {"name":"Very hasty","mod":-3},
+            {"name":"Extreme rush","mod":-6},
+            {"name":"Extra time (×2)","mod":1},
+            {"name":"Extra time (×4)","mod":2},
+            {"name":"Extra time (×8)","mod":3},
+            {"name":"Extra time (×16)","mod":4}
+        ],
+        "darkness": [
+            {"name":"Bright daylight","mod":0},
+            {"name":"Hazy/overcast","mod":-1},
+            {"name":"Twilight","mod":-3},
+            {"name":"Moonlit night","mod":-5},
+            {"name":"Starlit night","mod":-7},
+            {"name":"Cave/total darkness","mod":-10}
+        ]
+    },
+
+    # ===== AGING TABLE (p444) =====
+    "aging_thresholds": [
+        {"age":50,"effect":"Aging rolls every year"},
+        {"age":70,"effect":"Aging rolls every 6 months"},
+        {"age":90,"effect":"Aging rolls every 3 months"}
+    ],
+    "aging_roll": "HT roll: failure = lose 1 attribute (random); critical failure = lose 2",
+    "aging_modifiers": {
+        "longevity":"Failure only on 17-18 (18 if HT≥17)",
+        "fit":"+1 to aging rolls",
+        "very_fit":"+2",
+        "unaging":"No aging rolls at all"
+    }
+}
+
+TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=2)+"\n", encoding='utf-8')
+print(f"reference_tables.json: reaction + size/speed/range + fright check + encumbrance + standard modifiers + aging")

@@ -13,20 +13,32 @@
 
 <body>
     <h1 style="font-size: 3rem;" class="titulo-pagina medievalsharp-regular">Menu do GM</h1>
-    
-    
-    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:criar_ficha_campanha" campanha_id %}">
+
+    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url 'gurps:criar_v2' campanha_id=campanha_id %}">
         <h1>CRIAR NOVA FICHA</h1>
     </a>
-    
-    
-    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:lista_gm_fichas" campanha_id %}">
+
+    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url 'gurps:lista_v2_gm' campanha_id=campanha_id %}">
         <h1>EDITAR FICHA</h1>
     </a>
 
-    <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:delete_sheet_menu" campanha_id %}">
-        <h1>REMOVER FICHA</h1>
-    </a>
+    <details style="margin-top: 30px; opacity: 0.6;">
+        <summary class="medievalsharp-regular" style="text-align:center; cursor: pointer; color: var(--rd6-text-dim); padding: 10px;">Fichas Legado (acesso pra migração)</summary>
+
+        <a class="item-lista medievalsharp-regular" style="font-size: 0.9rem;" href="{% url "gurps:criar_ficha_campanha" campanha_id %}">
+            <h1>CRIAR FICHA (LEGADO)</h1>
+        </a>
+
+        <a class="item-lista medievalsharp-regular" style="font-size: 0.9rem;" href="{% url "gurps:lista_gm_fichas" campanha_id %}">
+            <h1>EDITAR FICHA (LEGADO)</h1>
+        </a>
+
+        <a class="item-lista medievalsharp-regular" style="font-size: 0.9rem;" href="{% url "gurps:delete_sheet_menu" campanha_id %}">
+            <h1>REMOVER FICHA (LEGADO)</h1>
+        </a>
+    </details>
+
+    <h2 class="medievalsharp-regular" style="text-align:center; margin-top: 30px; color: var(--rd6-text-dim);">Assets</h2>
 
     <a class="item-lista medievalsharp-regular" style="font-size: 1rem;" href="{% url "gurps:add_asset" campanha_id %}">
         <h1>ADICIONAR ASSET</h1>

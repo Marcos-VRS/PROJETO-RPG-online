@@ -86,6 +86,23 @@ def main():
     marcos.set_password("smoketest123")
     marcos.save()
 
+    # Garante restauração mesmo se Ctrl+C / crash externo.
+    import atexit, signal
+
+    def _restore_password():
+        try:
+            User.objects.filter(pk=marcos.pk).update(password=original_hash)
+            print(f"senha do {marcos.username} restaurada (atexit)")
+        except Exception as e:
+            print(f"FALHA ao restaurar senha: {e}")
+
+    atexit.register(_restore_password)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(sig, lambda *_: sys.exit(130))
+        except (ValueError, OSError):
+            pass
+
     try:
         opener = make_session()
         status, final = login(opener, "Marcos", "smoketest123")

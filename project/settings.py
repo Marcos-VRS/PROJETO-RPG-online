@@ -117,12 +117,27 @@ ROOT_URLCONF = "project.urls"
 
 SITE_ID = 1
 
+# Em DEBUG=False (modo desktop, GCP), Django auto-aplica cached.Loader sobre
+# os loaders default. Isso cacheia template em memória — bom em produção
+# bundleada (PyInstaller), MAU em modo desktop dev onde editamos templates
+# e esperamos que reflita sem restart. Solução: detectar modo bundleado
+# (sys.frozen) e usar cache só nele.
+_TEMPLATE_LOADERS = [
+    "django.template.loaders.filesystem.Loader",
+    "django.template.loaders.app_directories.Loader",
+]
+if getattr(sys, "frozen", False):
+    # Modo bundleado: cache de template OK (não há edits após build).
+    _TEMPLATE_LOADERS = [("django.template.loaders.cached.Loader", _TEMPLATE_LOADERS)]
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "base_templates"],
-        "APP_DIRS": True,
+        # APP_DIRS=False quando setamos loaders manualmente (Django exige).
+        "APP_DIRS": False,
         "OPTIONS": {
+            "loaders": _TEMPLATE_LOADERS,
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",

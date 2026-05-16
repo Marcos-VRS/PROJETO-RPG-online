@@ -1,0 +1,550 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Campaigns",
+    "chapters": [
+      11,
+      12,
+      13,
+      14
+    ],
+    "pages": "27-109"
+  },
+  "$progress": {
+    "status": "complete",
+    "completion_date": "2026-05-16"
+  },
+  "maneuvers": [
+    {
+      "id": "do_nothing",
+      "name_en": "Do Nothing",
+      "move": 0,
+      "active_defense": "any if not stunned",
+      "page": 363
+    },
+    {
+      "id": "move",
+      "name_en": "Move",
+      "move": "full",
+      "active_defense": "any",
+      "page": 363
+    },
+    {
+      "id": "change_posture",
+      "name_en": "Change Posture",
+      "move": 0,
+      "active_defense": "any",
+      "page": 364,
+      "notes": "standing↔crouching↔kneeling↔sitting↔lying"
+    },
+    {
+      "id": "aim",
+      "name_en": "Aim",
+      "move": "step",
+      "active_defense": "any",
+      "page": 364,
+      "notes": "+Acc; +1/seg após o 1º (max +2). Brace +1."
+    },
+    {
+      "id": "evaluate",
+      "name_en": "Evaluate",
+      "move": "step",
+      "active_defense": "any",
+      "page": 364,
+      "notes": "melee. +1/seg em próxima attack/parry roll, max +3."
+    },
+    {
+      "id": "attack",
+      "name_en": "Attack",
+      "move": "step",
+      "active_defense": "any",
+      "page": 365
+    },
+    {
+      "id": "feint",
+      "name_en": "Feint",
+      "move": "step",
+      "active_defense": "any",
+      "page": 365,
+      "notes": "Quick Contest weapon skill; vitória = penalty na defesa do alvo"
+    },
+    {
+      "id": "aoa_determined",
+      "name_en": "All-Out Attack (Determined)",
+      "move": "half",
+      "active_defense": "none",
+      "page": 365,
+      "notes": "+4 hit OR +2 to feint"
+    },
+    {
+      "id": "aoa_double",
+      "name_en": "All-Out Attack (Double)",
+      "move": "half",
+      "active_defense": "none",
+      "page": 365,
+      "notes": "2 ataques (precisa 2 mãos/armas)"
+    },
+    {
+      "id": "aoa_feint",
+      "name_en": "All-Out Attack (Feint)",
+      "move": "half",
+      "active_defense": "none",
+      "page": 365
+    },
+    {
+      "id": "aoa_strong",
+      "name_en": "All-Out Attack (Strong)",
+      "move": "half",
+      "active_defense": "none",
+      "page": 365,
+      "notes": "+2 melee damage OU thrust+1/swing+2; -1 hit"
+    },
+    {
+      "id": "aoa_suppression",
+      "name_en": "All-Out Attack (Suppressing Fire)",
+      "move": "step",
+      "active_defense": "none",
+      "page": 365,
+      "notes": "ranged RoF 5+ pra cobrir área"
+    },
+    {
+      "id": "aod_dodge",
+      "name_en": "All-Out Defense (Dodge)",
+      "move": "step",
+      "active_defense": "+2 Dodge",
+      "page": 366
+    },
+    {
+      "id": "aod_parry",
+      "name_en": "All-Out Defense (Parry)",
+      "move": "step",
+      "active_defense": "+2 Parry",
+      "page": 366
+    },
+    {
+      "id": "aod_block",
+      "name_en": "All-Out Defense (Block)",
+      "move": "step",
+      "active_defense": "+2 Block",
+      "page": 366
+    },
+    {
+      "id": "aod_double",
+      "name_en": "All-Out Defense (Double)",
+      "move": "step",
+      "active_defense": "2 different defenses",
+      "page": 366
+    },
+    {
+      "id": "move_attack",
+      "name_en": "Move and Attack",
+      "move": "full",
+      "active_defense": "Dodge only",
+      "page": 365,
+      "notes": "melee -4 hit; ranged max +2 bulk penalty"
+    },
+    {
+      "id": "ready",
+      "name_en": "Ready",
+      "move": "step",
+      "active_defense": "any",
+      "page": 366,
+      "notes": "saca/recarrega/troca arma"
+    },
+    {
+      "id": "concentrate",
+      "name_en": "Concentrate",
+      "move": "step",
+      "active_defense": "any",
+      "page": 366,
+      "notes": "magic/psi/mental abilities"
+    },
+    {
+      "id": "wait",
+      "name_en": "Wait",
+      "move": "step",
+      "active_defense": "any",
+      "page": 366,
+      "notes": "reage; declarar trigger"
+    }
+  ],
+  "damage_types": [
+    {
+      "code": "cr",
+      "name_en": "Crushing",
+      "mult_flesh": 1.0,
+      "mult_unliving": 1.0,
+      "mult_homogenous": 1.0,
+      "mult_diffuse": 1.0,
+      "causes_knockback": true,
+      "notes": "blunt trauma 1HP/5pts atrás de armadura flexível"
+    },
+    {
+      "code": "cut",
+      "name_en": "Cutting",
+      "mult_flesh": 1.5,
+      "mult_unliving": 1.0,
+      "mult_homogenous": 1.0,
+      "mult_diffuse": 2.0,
+      "causes_knockback": true
+    },
+    {
+      "code": "imp",
+      "name_en": "Impaling",
+      "mult_flesh": 2.0,
+      "mult_unliving": 1.0,
+      "mult_homogenous": 0.5,
+      "mult_diffuse": 1.0
+    },
+    {
+      "code": "pi-",
+      "name_en": "Small Piercing",
+      "mult_flesh": 0.5,
+      "mult_unliving": 0.5,
+      "mult_homogenous": 0.333,
+      "mult_diffuse": 0.0,
+      "notes": "max 1 HP em Diffuse"
+    },
+    {
+      "code": "pi",
+      "name_en": "Piercing",
+      "mult_flesh": 1.0,
+      "mult_unliving": 0.5,
+      "mult_homogenous": 0.333,
+      "mult_diffuse": 0.0
+    },
+    {
+      "code": "pi+",
+      "name_en": "Large Piercing",
+      "mult_flesh": 1.5,
+      "mult_unliving": 0.5,
+      "mult_homogenous": 0.333,
+      "mult_diffuse": 0.0
+    },
+    {
+      "code": "pi++",
+      "name_en": "Huge Piercing",
+      "mult_flesh": 2.0,
+      "mult_unliving": 0.5,
+      "mult_homogenous": 0.333,
+      "mult_diffuse": 0.0
+    },
+    {
+      "code": "burn",
+      "name_en": "Burning",
+      "mult_flesh": 1.0,
+      "mult_unliving": 1.0,
+      "mult_homogenous": 1.0,
+      "mult_diffuse": 1.0,
+      "notes": "+1HP injury por 10pts em area sobre flexivel armor (Double Blunt Trauma)"
+    },
+    {
+      "code": "cor",
+      "name_en": "Corrosion",
+      "mult_flesh": 1.0,
+      "mult_unliving": 1.0,
+      "mult_homogenous": 1.0,
+      "mult_diffuse": 1.0,
+      "notes": "reduz DR alvo em 1 por 5 pts"
+    },
+    {
+      "code": "tox",
+      "name_en": "Toxic",
+      "mult_flesh": 1.0,
+      "mult_unliving": 0.0,
+      "mult_homogenous": 0.0,
+      "mult_diffuse": 1.0,
+      "notes": "não afeta máquinas"
+    },
+    {
+      "code": "fat",
+      "name_en": "Fatigue",
+      "mult_flesh": 1.0,
+      "mult_unliving": 0.0,
+      "mult_homogenous": 0.0,
+      "mult_diffuse": 1.0,
+      "notes": "FP em vez de HP"
+    }
+  ],
+  "hit_locations": [
+    {
+      "id": "torso",
+      "name_en": "Torso",
+      "penalty": 0,
+      "wound_mult": 1.0,
+      "max_wound": null,
+      "page": 398
+    },
+    {
+      "id": "vitals",
+      "name_en": "Vitals",
+      "penalty": -3,
+      "wound_mult": 3.0,
+      "applies_only_to": [
+        "imp",
+        "pi",
+        "pi+",
+        "pi++"
+      ],
+      "max_wound": null,
+      "page": 398,
+      "notes": "cr não multiplica"
+    },
+    {
+      "id": "skull",
+      "name_en": "Skull",
+      "penalty": -7,
+      "wound_mult": 4.0,
+      "natural_dr": 2,
+      "max_wound_per_blow": "10×HP/n_heads",
+      "page": 398,
+      "notes": "applies a tudo exceto tox"
+    },
+    {
+      "id": "eye",
+      "name_en": "Eye",
+      "penalty": -9,
+      "wound_mult": 4.0,
+      "max_wound_per_blow": "HP/10",
+      "page": 398,
+      "notes": "bypassa head DR exceto visor"
+    },
+    {
+      "id": "face",
+      "name_en": "Face",
+      "penalty": -5,
+      "wound_mult": 1.5,
+      "applies_only_to": [
+        "cut"
+      ],
+      "max_wound": null,
+      "page": 399,
+      "notes": "outros tipos ×1; major wound força HT vs knockdown"
+    },
+    {
+      "id": "neck",
+      "name_en": "Neck",
+      "penalty": -5,
+      "wound_mult": 1.5,
+      "applies_to_cr_cor": true,
+      "wound_mult_cut_imp_pi": 2.0,
+      "page": 399,
+      "notes": "cutting pode decapitar"
+    },
+    {
+      "id": "arm",
+      "name_en": "Arm",
+      "penalty": -2,
+      "wound_mult": 1.0,
+      "max_wound": "HP/2",
+      "page": 399,
+      "notes": "> HP/2 = crippling; > HP = destroyed"
+    },
+    {
+      "id": "leg",
+      "name_en": "Leg",
+      "penalty": -2,
+      "wound_mult": 1.0,
+      "max_wound": "HP/2",
+      "page": 399
+    },
+    {
+      "id": "hand",
+      "name_en": "Hand",
+      "penalty": -4,
+      "wound_mult": 1.0,
+      "max_wound": "HP/3",
+      "page": 399
+    },
+    {
+      "id": "foot",
+      "name_en": "Foot",
+      "penalty": -4,
+      "wound_mult": 1.0,
+      "max_wound": "HP/3",
+      "page": 399
+    },
+    {
+      "id": "groin",
+      "name_en": "Groin",
+      "penalty": -3,
+      "wound_mult": 1.0,
+      "wound_mult_cr": 2.0,
+      "page": 399,
+      "notes": "HT-5 ou stunned (homens)"
+    }
+  ],
+  "posture_modifiers": [
+    {
+      "posture": "standing",
+      "move": "full",
+      "ranged_hit_penalty": 0,
+      "melee_atk": 0,
+      "melee_defense": 0,
+      "ranged_to_be_hit": 0
+    },
+    {
+      "posture": "crouching",
+      "move": "2/3",
+      "ranged_hit_penalty": 0,
+      "melee_atk": -2,
+      "melee_defense": -2,
+      "ranged_to_be_hit": -2
+    },
+    {
+      "posture": "kneeling",
+      "move": "1/3",
+      "ranged_hit_penalty": -2,
+      "melee_atk": -2,
+      "melee_defense": -2,
+      "ranged_to_be_hit": -2
+    },
+    {
+      "posture": "sitting",
+      "move": 0,
+      "ranged_hit_penalty": -2,
+      "melee_atk": -2,
+      "melee_defense": -2,
+      "ranged_to_be_hit": -2
+    },
+    {
+      "posture": "lying",
+      "move": "1 (crawl)",
+      "ranged_hit_penalty": -4,
+      "melee_atk": -4,
+      "melee_defense": -3,
+      "ranged_to_be_hit": 2
+    }
+  ],
+  "encumbrance_levels": [
+    {
+      "level": 0,
+      "name": "None",
+      "max_weight": "BL",
+      "move_mult": 1.0,
+      "dodge_penalty": 0
+    },
+    {
+      "level": 1,
+      "name": "Light",
+      "max_weight": "2×BL",
+      "move_mult": 0.8,
+      "dodge_penalty": -1
+    },
+    {
+      "level": 2,
+      "name": "Medium",
+      "max_weight": "3×BL",
+      "move_mult": 0.6,
+      "dodge_penalty": -2
+    },
+    {
+      "level": 3,
+      "name": "Heavy",
+      "max_weight": "6×BL",
+      "move_mult": 0.4,
+      "dodge_penalty": -3
+    },
+    {
+      "level": 4,
+      "name": "Extra-Heavy",
+      "max_weight": "10×BL",
+      "move_mult": 0.2,
+      "dodge_penalty": -4
+    }
+  ],
+  "active_defenses": {
+    "dodge": {
+      "formula": "floor(Basic Speed + 3) - encumbrance_penalty"
+    },
+    "parry_weapon": {
+      "formula": "floor(skill/2) + 3"
+    },
+    "parry_karate": {
+      "formula": "floor(Karate/2) + 3"
+    },
+    "parry_unarmed": {
+      "formula": "floor(DX/2) + 3"
+    },
+    "block": {
+      "formula": "floor(Shield/2) + 3 + shield_DB"
+    },
+    "modifiers_common": {
+      "combat_reflexes": "+1 to all",
+      "retreat_dodge": "+1 (or +3 Acrobatics)",
+      "retreat_parry": "+1 weapon, +2 Boxing parry, +3 Cloak/Judo/Karate parry",
+      "from_side": -2,
+      "from_back": "Dodge only, no retreat",
+      "stunned_or_surprised": "no defense"
+    },
+    "multiple_defenses": {
+      "parry_penalty": "-4 cumulative per defense",
+      "block_limit": "1 per turn",
+      "dodge_no_penalty": true
+    }
+  },
+  "knockback": {
+    "trigger_types": [
+      "cr",
+      "cut"
+    ],
+    "yards": "(basic_damage - 2) per yard, rounded down",
+    "knockdown_check": "HT roll with -1 per yard beyond 1st"
+  },
+  "shock_penalty": {
+    "value": "HP lost (max -4)",
+    "applies_to": "IQ/DX/skills on next turn",
+    "negated_by": "High Pain Threshold",
+    "doubled_by": "Low Pain Threshold (max -8)"
+  },
+  "major_wound": {
+    "triggers": [
+      "damage_in_one_hit >= HP/2",
+      "hit_to_skull_face_vitals_groin"
+    ],
+    "save_roll": "HT (with modifiers)",
+    "outcomes": {
+      "success": "continues",
+      "fail_by_lt5": "stunned 1 turn",
+      "fail_by_gte5": "stunned + knocked down",
+      "critical_fail": "knockout"
+    },
+    "modifiers": {
+      "high_pain_threshold": "+3",
+      "hard_to_subdue": "+1/level",
+      "low_pain_threshold": -4
+    }
+  },
+  "death_thresholds": [
+    {
+      "hp_threshold": "-HP",
+      "effect": "HT to avoid instant death; -1/threshold"
+    },
+    {
+      "hp_threshold": "-2×HP",
+      "effect": "HT (cumulative)"
+    },
+    {
+      "hp_threshold": "-3×HP",
+      "effect": "HT (cumulative)"
+    },
+    {
+      "hp_threshold": "-4×HP",
+      "effect": "HT (cumulative)"
+    },
+    {
+      "hp_threshold": "-5×HP",
+      "effect": "automatic death"
+    },
+    {
+      "hp_threshold": "-10×HP",
+      "effect": "body destroyed"
+    }
+  ],
+  "recovery": {
+    "hp_per_day_rest": "1 HP (HT roll: fail=0, crit=2)",
+    "fp_resting": "1 FP per 10 min resting; 1 FP per minute if fully still",
+    "stunning_recovery": "HT or IQ roll each turn",
+    "bleeding": "HT roll/min after cut/imp/pi penetrating; fail=1 extra HP"
+  }
+}

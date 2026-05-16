@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
+    <title>{{ sheet.nome_personagem }} — Ficha</title>
+    <link rel="stylesheet" href="{% static 'global/css/sheet_v2.css' %}?d={% now 'U' %}">
+</head>
+<body class="v2-viewer">
+
+<header class="v2-topbar">
+    {% if is_gm %}
+        <a href="{% url 'gurps:lista_v2_gm' campanha_id=campanha.id %}" class="v2-back">← Fichas (GM)</a>
+    {% else %}
+        <a href="{% url 'gurps:lista_v2_player' campanha_id=campanha.id %}" class="v2-back">← Minhas Fichas</a>
+    {% endif %}
+    <h1>{{ sheet.nome_personagem }}</h1>
+    <span class="v2-campanha">{{ campanha.nome }}</span>
+    <div class="v2-points-summary">
+        <span class="v2-pt-spent">{{ points.spent|default:0 }}</span> / <span class="v2-pt-available">{{ points.available|default:150 }}</span> pts
+    </div>
+    <a href="{% url 'gurps:editar_v2' id=sheet.id %}" class="v2-edit-link">Editar</a>
+</header>
+
+<div class="v2-grid v2-readonly">
+    <section class="v2-section">
+        <h2>Identidade</h2>
+        {% if sheet.photo %}<img src="{{ sheet.photo.url }}" class="v2-photo">{% endif %}
+        <p><strong>Idade:</strong> {{ sheet.idade|default:"—" }}</p>
+        <p><strong>Dinheiro:</strong> {{ sheet.money|default:"—" }}</p>
+        <p><strong>Aparência:</strong> {{ sheet.aparencia|default:"—" }}</p>
+        {% if sheet.background %}<p><strong>Background:</strong></p><pre>{{ sheet.background }}</pre>{% endif %}
+    </section>
+
+    <section class="v2-section">
+        <h2>Atributos</h2>
+        <div class="v2-attrs-grid">
+            <div class="v2-attr"><span class="v2-attr-name">ST</span><span class="v2-attr-input">{{ primary.st|default:10 }}</span></div>
+            <div class="v2-attr"><span class="v2-attr-name">DX</span><span class="v2-attr-input">{{ primary.dx|default:10 }}</span></div>
+            <div class="v2-attr"><span class="v2-attr-name">IQ</span><span class="v2-attr-input">{{ primary.iq|default:10 }}</span></div>
+            <div class="v2-attr"><span class="v2-attr-name">HT</span><span class="v2-attr-input">{{ primary.ht|default:10 }}</span></div>
+        </div>
+        <h3>Secundárias</h3>
+        <div class="v2-sec-grid">
+            <div class="v2-sec"><span class="v2-sec-label">HP</span><span class="v2-sec-value">{{ secondary.hp }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">FP</span><span class="v2-sec-value">{{ secondary.fp }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Will</span><span class="v2-sec-value">{{ secondary.will }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Per</span><span class="v2-sec-value">{{ secondary.per }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Speed</span><span class="v2-sec-value">{{ secondary.basic_speed }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Move</span><span class="v2-sec-value">{{ secondary.basic_move }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Dodge</span><span class="v2-sec-value">{{ secondary.dodge }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">BL</span><span class="v2-sec-value">{{ secondary.basic_lift }} lbs</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Thrust</span><span class="v2-sec-value">{{ secondary.thrust }}</span></div>
+            <div class="v2-sec"><span class="v2-sec-label">Swing</span><span class="v2-sec-value">{{ secondary.swing }}</span></div>
+        </div>
+    </section>
+
+    <section class="v2-section">
+        <h2>Vantagens</h2>
+        <ul class="v2-list">
+            {% for adv in sheet.advantages %}
+                <li>{{ adv.id }}{% if adv.level %} ×{{ adv.level }}{% endif %}{% if adv.notes %} — {{ adv.notes }}{% endif %}</li>
+            {% empty %}
+                <li class="v2-empty">Nenhuma.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="v2-section">
+        <h2>Desvantagens</h2>
+        <ul class="v2-list">
+            {% for d in sheet.disadvantages %}
+                <li>{{ d.id }}{% if d.self_control %} (SC {{ d.self_control }}){% endif %}{% if d.notes %} — {{ d.notes }}{% endif %}</li>
+            {% empty %}
+                <li class="v2-empty">Nenhuma.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="v2-section">
+        <h2>Perícias</h2>
+        <ul class="v2-list">
+            {% for s in sheet.skills %}
+                <li>{{ s.id }} — {{ s.points }} pts{% if s.specialty %} ({{ s.specialty }}){% endif %}</li>
+            {% empty %}
+                <li class="v2-empty">Nenhuma.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="v2-section">
+        <h2>Equipamento</h2>
+        <h3>Armas Corpo-a-Corpo</h3>
+        <ul class="v2-list">{% for it in sheet.equipment_melee %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <h3>Armas à Distância</h3>
+        <ul class="v2-list">{% for it in sheet.equipment_ranged %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <h3>Armaduras</h3>
+        <ul class="v2-list">{% for it in sheet.equipment_armor %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <h3>Itens diversos</h3>
+        <ul class="v2-list">{% for it in sheet.equipment_misc %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+    </section>
+</div>
+
+</body>
+</html>

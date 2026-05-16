@@ -1,0 +1,192 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Characters",
+    "chapter": 7,
+    "pages": "258-263"
+  },
+  "$progress": {
+    "status": "core_samples",
+    "notes_pt": "Meta-traits completas; templates de personagem e raciais como samples — design custom por campanha."
+  },
+  "meta_traits": [
+    {
+      "id": "automaton",
+      "name_en": "Automaton",
+      "cost": -85,
+      "page": 263,
+      "components": [
+        "Hidebound",
+        "Incurious",
+        "Low Empathy",
+        "No Sense of Humor",
+        "Reprogrammable",
+        "Slave Mentality",
+        "Indomitable"
+      ],
+      "notes": "Robôs simples, autônomos sem iniciativa."
+    },
+    {
+      "id": "machine",
+      "name_en": "Machine",
+      "cost": 25,
+      "page": 263,
+      "components": [
+        "Doesn't Eat or Drink",
+        "Doesn't Sleep",
+        "Doesn't Breathe",
+        "Immunity to Metabolic Hazards",
+        "Injury Tolerance (No Blood, No Brain, No Vitals)",
+        "Unaging"
+      ],
+      "notes": "Construto/máquina. Não tem necessidades biológicas."
+    },
+    {
+      "id": "spirit",
+      "name_en": "Spirit",
+      "cost": 261,
+      "page": 263,
+      "components": [
+        "Doesn't Breathe",
+        "Doesn't Eat or Drink",
+        "Doesn't Sleep",
+        "Immunity to Metabolic Hazards",
+        "Insubstantiality (Always On, -50%)",
+        "Invisibility (with Switchable, +10%)",
+        "Unaging",
+        "Unkillable 2"
+      ],
+      "notes": "Espíritos não-físicos."
+    },
+    {
+      "id": "quadruped",
+      "name_en": "Quadruped",
+      "cost": -35,
+      "page": 263,
+      "components": [
+        "Extra Legs (Four Legs, 5 pts)",
+        "Horizontal (-10)",
+        "No Fine Manipulators (-30 ST)"
+      ],
+      "notes": "4 patas, andar horizontal."
+    },
+    {
+      "id": "aquatic",
+      "name_en": "Aquatic",
+      "cost": -25,
+      "page": 145,
+      "components": [
+        "Doesn't Breathe (Gills, -50%)",
+        "Restricted Diet (raras)",
+        "Vulnerability (depending on env)"
+      ],
+      "notes": "Vive na água."
+    },
+    {
+      "id": "ice_creature",
+      "name_en": "Ice Creature",
+      "cost": -5,
+      "page": 263,
+      "components": [
+        "Doesn't Breathe (Oxygen Combustion, -50%)",
+        "Temperature Tolerance (cold)",
+        "Vulnerability (Fire)"
+      ],
+      "notes": "Adaptado a frio extremo."
+    }
+  ],
+  "character_templates": [
+    {
+      "id": "soldier",
+      "name_en": "Soldier",
+      "cost_base": 50,
+      "type": "character",
+      "page": 259,
+      "notes": "Template típico: ST 11, DX 12, IQ 10, HT 11, Combat Reflexes, Guns 12, Soldier 12, Tactics 11, etc."
+    },
+    {
+      "id": "wizard",
+      "name_en": "Wizard",
+      "cost_base": 75,
+      "type": "character",
+      "page": 259,
+      "notes": "IQ 12+, Magery 1+, Alchemy/Thaumatology, escolha de spells."
+    },
+    {
+      "id": "thief",
+      "name_en": "Thief",
+      "cost_base": 50,
+      "type": "character",
+      "page": 259,
+      "notes": "DX 12, Stealth, Lockpicking, Pickpocket, Climbing, Acrobatics."
+    }
+  ],
+  "racial_templates": [
+    {
+      "id": "human",
+      "name_en": "Human",
+      "cost": 0,
+      "page": 261,
+      "notes": "Default. Base de comparação."
+    },
+    {
+      "id": "dwarf",
+      "name_en": "Dwarf",
+      "cost": 35,
+      "page": 261,
+      "modifiers": [
+        "ST +1",
+        "HT +1",
+        "Hard to Kill 2",
+        "Resistant to Poison +3",
+        "Dependency (Mana, occasional, no -10)",
+        "Lifting ST +2"
+      ],
+      "notes": "Robusto, baixo, longevo."
+    },
+    {
+      "id": "elf",
+      "name_en": "Elf",
+      "cost": 35,
+      "page": 261,
+      "modifiers": [
+        "DX +1",
+        "Per +2",
+        "Magery 0",
+        "Acute Vision 2",
+        "Extended Lifespan 2",
+        "Unaging",
+        "Code of Honor"
+      ],
+      "notes": "Ágil, sentidos, ligação mágica."
+    },
+    {
+      "id": "halfling",
+      "name_en": "Halfling",
+      "cost": 0,
+      "page": 261,
+      "modifiers": [
+        "ST -2",
+        "Size Modifier -1",
+        "DX +1",
+        "Per +1",
+        "Silence 1"
+      ],
+      "notes": "Pequenos, ágeis, furtivos."
+    },
+    {
+      "id": "orc",
+      "name_en": "Orc",
+      "cost": -10,
+      "page": 261,
+      "modifiers": [
+        "ST +1",
+        "HT +1",
+        "Bad Temper",
+        "Bully",
+        "Social Stigma (Savage)"
+      ],
+      "notes": "Forte, agressivo, marginalizado socialmente."
+    }
+  ]
+}

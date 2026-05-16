@@ -146,6 +146,94 @@ class CharacterSheet(models.Model):
         return self.nome_personagem or "Ficha Sem Nome"
 
 
+class CharacterSheetV2(models.Model):
+    """Nova ficha (2026-05-16).
+
+    Diferença vs CharacterSheet (V1, legado):
+    - ForeignKey real para Campanha + RegisterUser (dono)
+    - Secundárias (HP/FP/Will/Per/Speed/Move/Dodge/BL) sempre calculadas via
+      sheet_v2_calc.compute_secondary() — não armazenadas redundantemente
+    - Vantagens/Desvantagens/Skills referenciam ids do catálogo em gurps/data/
+    - Pontos auto-calculados (points_spent) com breakdown
+    """
+
+    campanha = models.ForeignKey(
+        Campanha, on_delete=models.CASCADE, related_name="sheets_v2"
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        related_name="sheets_v2", blank=True, null=True,
+    )
+
+    nome_personagem = models.CharField(max_length=60, blank=True)
+    aparencia = models.TextField(blank=True)
+    idade = models.CharField(max_length=20, blank=True)
+    background = models.TextField(blank=True)
+    photo = models.ImageField(upload_to="character_photos_v2/", blank=True, null=True)
+    money = models.CharField(max_length=40, blank=True)
+
+    # Atributos primários: {"st": 10, "dx": 10, "iq": 10, "ht": 10}
+    primary_attributes = models.JSONField(default=dict, blank=True)
+
+    # Modificadores opcionais nas secundárias (jogador pode comprar HP extra etc.)
+    # Ex: {"hp": +2, "will": -1, "basic_speed": 0.25}
+    secondary_modifiers = models.JSONField(default=dict, blank=True)
+
+    # Vantagens: [{"id": "combat_reflexes", "level": 1, "modifiers": [], "custom_cost": null, "notes": ""}, ...]
+    advantages = models.JSONField(default=list, blank=True)
+    disadvantages = models.JSONField(default=list, blank=True)
+
+    # Skills: [{"id": "broadsword", "points": 4, "specialty": "", "notes": ""}, ...]
+    skills = models.JSONField(default=list, blank=True)
+    spells = models.JSONField(default=list, blank=True)
+
+    # Equipamento estruturado por categoria
+    equipment_melee = models.JSONField(default=list, blank=True)
+    equipment_ranged = models.JSONField(default=list, blank=True)
+    equipment_armor = models.JSONField(default=list, blank=True)
+    equipment_misc = models.JSONField(default=list, blank=True)
+
+    # Maneuvers (cards): cada categoria é uma lista de manobras.
+    # Melee/Ranged: {name, damage, nh, details}; Defense: {name, nh, details}.
+    maneuvers_melee = models.JSONField(default=list, blank=True)
+    maneuvers_ranged = models.JSONField(default=list, blank=True)
+    maneuvers_defense = models.JSONField(default=list, blank=True)
+
+    # Pontos: {"available": 150, "spent": 142, "breakdown": {"attributes": 50, "advantages": 30, "disadvantages": -20, "skills": 40, "secondary": 0}}
+    points = models.JSONField(default=dict, blank=True)
+
+    # Estado dinâmico em jogo (HP/FP atuais etc.) — mesmo padrão de V1
+    runtime_stats = models.JSONField(default=dict, blank=True)
+
+    # Flag pro GM marcar NPC rápido (mesmo conceito do V1)
+    is_quick_npc = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["campanha", "nome_personagem"],
+                name="unique_sheet_name_per_campanha_v2",
+            )
+        ]
+
+    def __str__(self):
+        return self.nome_personagem or f"Ficha V2 #{self.pk}"
+
+    def save(self, *args, **kwargs):
+        # Recalcula points.spent antes de salvar; secundárias derivadas são
+        # computadas on-demand pelas views, não armazenadas.
+        try:
+            from gurps.sheet_v2_calc import recompute_points
+            self.points = recompute_points(self)
+        except Exception:
+            # Em migrations e fixtures sem catálogo carregado, só mantém o que já está
+            pass
+        super().save(*args, **kwargs)
+
+
 class Message(models.Model):
     user = models.ForeignKey(RegisterUser, on_delete=models.CASCADE)
     campanha = models.ForeignKey(

@@ -1,0 +1,659 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Characters",
+    "chapter": 5,
+    "pages": "234-253",
+    "edition": "Fourth Edition"
+  },
+  "$progress": {
+    "status": "list_extracted",
+    "completion_date": "2026-05-16",
+    "entries_in_file": 63,
+    "notes_pt": "93 spells do Basic Set por colégio. Metadata: name/college/class/difficulty/page. Description/duration/cost/time/prereqs serão preenchidos sob demanda. Sistema completo em GURPS Magic supplement."
+  },
+  "$schema_notes": {
+    "class_values": [
+      "Regular",
+      "Area",
+      "Missile",
+      "Information",
+      "Special",
+      "Blocking",
+      "Resisted"
+    ],
+    "default_difficulty": "Hard (IQ/Hard) — (VH) marca Very Hard"
+  },
+  "entries": [
+    {
+      "id": "armor",
+      "name_en": "Armor",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "aura",
+      "name_en": "Aura",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "awaken",
+      "name_en": "Awaken",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "blur",
+      "name_en": "Blur",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 250,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "breathe_water",
+      "name_en": "Breathe Water",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "cold",
+      "name_en": "Cold",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "continual_light",
+      "name_en": "Continual Light",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "create_air",
+      "name_en": "Create Air",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "create_earth",
+      "name_en": "Create Earth",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "create_fire",
+      "name_en": "Create Fire",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "create_water",
+      "name_en": "Create Water",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "darkness",
+      "name_en": "Darkness",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 250,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "death_vision",
+      "name_en": "Death Vision",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 251,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "deflect_energy",
+      "name_en": "Deflect Energy",
+      "college": "Unknown",
+      "class": "Blocking",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "deflect_missile",
+      "name_en": "Deflect Missile",
+      "college": "Unknown",
+      "class": "Blocking",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 251,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "destroy_water",
+      "name_en": "Destroy Water",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "detect_magic",
+      "name_en": "Detect Magic",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "earth_to_air",
+      "name_en": "Earth to Air",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "earth_to_stone",
+      "name_en": "Earth to Stone",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 245,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "explosive_fireball",
+      "name_en": "Explosive Fireball",
+      "college": "Unknown",
+      "class": "Missile",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "extinguish_fire",
+      "name_en": "Extinguish Fire",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "fireball",
+      "name_en": "Fireball",
+      "college": "Unknown",
+      "class": "Missile",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "fog",
+      "name_en": "Fog",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "great_haste_vh",
+      "name_en": "Great Haste (VH)",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 251,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "great_healing_vh",
+      "name_en": "Great Healing (VH)",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "haste",
+      "name_en": "Haste",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 251,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "heat",
+      "name_en": "Heat",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "hide_thoughts",
+      "name_en": "Hide Thoughts",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 245,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "icy_weapon",
+      "name_en": "Icy Weapon",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "identify_spell",
+      "name_en": "Identify Spell",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "ignite_fire",
+      "name_en": "Ignite Fire",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "lend_energy",
+      "name_en": "Lend Energy",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "lend_vitality",
+      "name_en": "Lend Vitality",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "light",
+      "name_en": "Light",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "lightning",
+      "name_en": "Lightning",
+      "college": "Unknown",
+      "class": "Missile",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 244,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "major_healing_vh",
+      "name_en": "Major Healing (VH)",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "minor_healing",
+      "name_en": "Minor Healing",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "no_smell",
+      "name_en": "No-Smell",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "planar_summons",
+      "name_en": "Planar Summons",
+      "college": "Unknown",
+      "class": "Special",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "plane_shift_vh",
+      "name_en": "Plane Shift (VH)",
+      "college": "Unknown",
+      "class": "Special",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "predict_weather",
+      "name_en": "Predict Weather",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "purify_air",
+      "name_en": "Purify Air",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "purify_water",
+      "name_en": "Purify Water",
+      "college": "Unknown",
+      "class": "Special",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "recover_energy",
+      "name_en": "Recover Energy",
+      "college": "Unknown",
+      "class": "Special",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 248,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "resist_cold",
+      "name_en": "Resist Cold",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "resist_fire",
+      "name_en": "Resist Fire",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 247,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "seek_earth",
+      "name_en": "Seek Earth",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 245,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "seek_water",
+      "name_en": "Seek Water",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "seeker",
+      "name_en": "Seeker",
+      "college": "Unknown",
+      "class": "Information",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "sense_emotion",
+      "name_en": "Sense Emotion",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 245,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "shape_air",
+      "name_en": "Shape Air",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "shape_earth",
+      "name_en": "Shape Earth",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 245,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "shape_fire",
+      "name_en": "Shape Fire",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "shape_water",
+      "name_en": "Shape Water",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 253,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "shield",
+      "name_en": "Shield",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 252,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "stench",
+      "name_en": "Stench",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 244,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "stone_to_earth",
+      "name_en": "Stone to Earth",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "stone_to_flesh",
+      "name_en": "Stone to Flesh",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 246,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "summon_demon",
+      "name_en": "Summon Demon",
+      "college": "Unknown",
+      "class": "Special",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 252,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "trace",
+      "name_en": "Trace",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 249,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "turn_zombie",
+      "name_en": "Turn Zombie",
+      "college": "Unknown",
+      "class": "Area",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 252,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "walk_on_air",
+      "name_en": "Walk on Air",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 243,
+      "detail_level": "list_only"
+    },
+    {
+      "id": "zombie",
+      "name_en": "Zombie",
+      "college": "Unknown",
+      "class": "Regular",
+      "difficulty": "Hard",
+      "controlling_attribute": "IQ",
+      "page_ref": 252,
+      "detail_level": "list_only"
+    }
+  ]
+}

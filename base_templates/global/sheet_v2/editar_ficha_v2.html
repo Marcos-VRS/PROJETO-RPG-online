@@ -1,0 +1,272 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
+    <title>{{ sheet.nome_personagem|default:"Ficha V2" }}</title>
+    <link rel="stylesheet" href="{% static 'global/css/sheet_v2.css' %}?d={% now 'U' %}">
+</head>
+<body class="v2-editor">
+
+<header class="v2-topbar">
+    <a href="{% url 'gurps:lista_v2_player' campanha_id=campanha.id %}" class="v2-back">← Fichas</a>
+    <h1>{{ sheet.nome_personagem|default:"Sem nome" }}</h1>
+    <span class="v2-campanha">{{ campanha.nome }}</span>
+    <div class="v2-points-summary">
+        <span class="v2-pt-label">Pontos:</span>
+        <span class="v2-pt-spent" id="pt-spent">{{ points.spent|default:0 }}</span> /
+        <span class="v2-pt-available" id="pt-available">{{ points.available|default:150 }}</span>
+        <span class="v2-pt-remaining" id="pt-remaining">({{ points.remaining|default:150 }} restantes)</span>
+    </div>
+</header>
+
+{% if save_success %}
+<div class="v2-flash v2-flash-ok">✓ Ficha salva.</div>
+{% endif %}
+{% if save_error %}
+<div class="v2-flash v2-flash-err">
+    <strong>⚠ {{ save_error }}</strong>
+    {% if save_field_errors %}
+    <ul>
+        {% for e in save_field_errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" id="v2-form" class="v2-grid">
+    {% csrf_token %}
+
+    <!-- IDENTIDADE -->
+    <section class="v2-section v2-identidade">
+        <h2>Identidade</h2>
+        <div class="v2-field">
+            <label>Nome do personagem</label>
+            <input type="text" name="nome_personagem" value="{{ sheet.nome_personagem }}" maxlength="60">
+        </div>
+        <div class="v2-row">
+            <div class="v2-field">
+                <label>Idade</label>
+                <input type="text" name="idade" value="{{ sheet.idade }}" maxlength="20">
+            </div>
+            <div class="v2-field">
+                <label>Dinheiro</label>
+                <input type="text" name="money" value="{{ sheet.money }}" maxlength="40">
+            </div>
+        </div>
+        <div class="v2-field">
+            <label>Aparência</label>
+            <textarea name="aparencia" rows="2">{{ sheet.aparencia }}</textarea>
+        </div>
+        <div class="v2-field">
+            <label>Background / História</label>
+            <textarea name="background" rows="4">{{ sheet.background }}</textarea>
+        </div>
+        <div class="v2-field">
+            <label>Foto</label>
+            <input type="file" name="photo" id="photo-input" accept="image/*">
+            <img id="photo-preview"
+                 src="{% if sheet.photo %}{{ sheet.photo.url }}{% endif %}"
+                 alt=""
+                 class="v2-photo-preview"
+                 {% if not sheet.photo %}style="display:none"{% endif %}>
+        </div>
+        {% if is_gm %}
+        <div class="v2-field v2-gm-only">
+            <label>Pontos disponíveis (GM)</label>
+            <input type="number" name="points_available" value="{{ points.available|default:150 }}" min="0">
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ATRIBUTOS -->
+    <section class="v2-section v2-atributos">
+        <h2>Atributos Primários</h2>
+        <div class="v2-attrs-grid">
+            {% for attr_id, attr_name in primary_attr_labels %}{% endfor %}
+            <label class="v2-attr">
+                <span class="v2-attr-name">ST <small>(Força)</small></span>
+                <input type="number" name="attr_st" id="attr-st" value="{{ primary.st|default:10 }}" min="1" max="30" class="v2-attr-input">
+                <small class="v2-attr-cost">Custo: <span id="cost-st">0</span></small>
+            </label>
+            <label class="v2-attr">
+                <span class="v2-attr-name">DX <small>(Destreza)</small></span>
+                <input type="number" name="attr_dx" id="attr-dx" value="{{ primary.dx|default:10 }}" min="1" max="30" class="v2-attr-input">
+                <small class="v2-attr-cost">Custo: <span id="cost-dx">0</span></small>
+            </label>
+            <label class="v2-attr">
+                <span class="v2-attr-name">IQ <small>(Inteligência)</small></span>
+                <input type="number" name="attr_iq" id="attr-iq" value="{{ primary.iq|default:10 }}" min="1" max="30" class="v2-attr-input">
+                <small class="v2-attr-cost">Custo: <span id="cost-iq">0</span></small>
+            </label>
+            <label class="v2-attr">
+                <span class="v2-attr-name">HT <small>(Vigor)</small></span>
+                <input type="number" name="attr_ht" id="attr-ht" value="{{ primary.ht|default:10 }}" min="1" max="30" class="v2-attr-input">
+                <small class="v2-attr-cost">Custo: <span id="cost-ht">0</span></small>
+            </label>
+        </div>
+
+        <h2>Características Secundárias <small>(calculadas + modificadores opcionais)</small></h2>
+        <div class="v2-sec-grid">
+            <div class="v2-sec">
+                <span class="v2-sec-label">HP</span>
+                <span class="v2-sec-value" id="sec-hp">{{ secondary.hp }}</span>
+                <input type="number" name="secmod_hp" value="{{ sheet.secondary_modifiers.hp|default:0 }}" class="v2-sec-mod" data-key="hp" title="Modificador">
+            </div>
+            <div class="v2-sec">
+                <span class="v2-sec-label">FP</span>
+                <span class="v2-sec-value" id="sec-fp">{{ secondary.fp }}</span>
+                <input type="number" name="secmod_fp" value="{{ sheet.secondary_modifiers.fp|default:0 }}" class="v2-sec-mod" data-key="fp" title="Modificador">
+            </div>
+            <div class="v2-sec">
+                <span class="v2-sec-label">Will</span>
+                <span class="v2-sec-value" id="sec-will">{{ secondary.will }}</span>
+                <input type="number" name="secmod_will" value="{{ sheet.secondary_modifiers.will|default:0 }}" class="v2-sec-mod" data-key="will" title="Modificador">
+            </div>
+            <div class="v2-sec">
+                <span class="v2-sec-label">Per</span>
+                <span class="v2-sec-value" id="sec-per">{{ secondary.per }}</span>
+                <input type="number" name="secmod_per" value="{{ sheet.secondary_modifiers.per|default:0 }}" class="v2-sec-mod" data-key="per" title="Modificador">
+            </div>
+            <div class="v2-sec">
+                <span class="v2-sec-label">Basic Speed</span>
+                <span class="v2-sec-value" id="sec-speed">{{ secondary.basic_speed }}</span>
+                <input type="number" step="0.25" name="secmod_basic_speed" value="{{ sheet.secondary_modifiers.basic_speed|default:0 }}" class="v2-sec-mod" data-key="basic_speed" title="Modificador">
+            </div>
+            <div class="v2-sec">
+                <span class="v2-sec-label">Basic Move</span>
+                <span class="v2-sec-value" id="sec-move">{{ secondary.basic_move }}</span>
+                <input type="number" name="secmod_basic_move" value="{{ sheet.secondary_modifiers.basic_move|default:0 }}" class="v2-sec-mod" data-key="basic_move" title="Modificador">
+            </div>
+            <div class="v2-sec v2-sec-readonly">
+                <span class="v2-sec-label">Dodge</span>
+                <span class="v2-sec-value" id="sec-dodge">{{ secondary.dodge }}</span>
+            </div>
+            <div class="v2-sec v2-sec-readonly">
+                <span class="v2-sec-label">Basic Lift</span>
+                <span class="v2-sec-value" id="sec-bl">{{ secondary.basic_lift }}</span>
+                <small>lbs</small>
+            </div>
+            <div class="v2-sec v2-sec-readonly">
+                <span class="v2-sec-label">Thrust</span>
+                <span class="v2-sec-value" id="sec-thrust">{{ secondary.thrust }}</span>
+            </div>
+            <div class="v2-sec v2-sec-readonly">
+                <span class="v2-sec-label">Swing</span>
+                <span class="v2-sec-value" id="sec-swing">{{ secondary.swing }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- VANTAGENS -->
+    <section class="v2-section">
+        <h2>Advantages <small>(<span id="adv-cost-display">0</span> pts)</small></h2>
+        <div class="v2-list-header v2-adv-row">
+            <span>Advantage</span>
+            <span>Levels</span>
+            <span>Cost (pts)</span>
+            <span title="Toggle catalog / manual">Mode</span>
+            <span title="Enhancements / Limitations">Mod</span>
+            <span>Notes</span>
+            <span></span>
+        </div>
+        <div id="adv-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="advantages">+ Add advantage</button>
+        <input type="hidden" name="advantages" id="advantages-input" value='{{ advantages_json|safe }}'>
+    </section>
+
+    <!-- DESVANTAGENS -->
+    <section class="v2-section">
+        <h2>Disadvantages <small>(<span id="disad-cost-display">0</span> pts)</small></h2>
+        <div class="v2-list-header v2-adv-row">
+            <span>Disadvantage</span>
+            <span>Levels</span>
+            <span>Cost (pts)</span>
+            <span title="Toggle catalog / manual">Mode</span>
+            <span title="Enhancements / Limitations">Mod</span>
+            <span>Notes</span>
+            <span></span>
+        </div>
+        <div id="disad-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="disadvantages">+ Add disadvantage</button>
+        <input type="hidden" name="disadvantages" id="disadvantages-input" value='{{ disadvantages_json|safe }}'>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="v2-section">
+        <h2>Skills <small>(<span id="skill-cost-display">0</span> pts)</small></h2>
+        <div class="v2-list-header v2-skill-row">
+            <span>Skill</span>
+            <span>Default</span>
+            <span title="Attribute / Difficulty">Attr/Diff</span>
+            <span>Points</span>
+            <span title="Modifier added to final level">MOD</span>
+            <span title="Effective level">Level</span>
+            <span>Specialty</span>
+            <span title="Toggle catalog / manual">Mode</span>
+            <span>Notes</span>
+            <span></span>
+        </div>
+        <div id="skill-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="skills">+ Add skill</button>
+        <input type="hidden" name="skills" id="skills-input" value='{{ skills_json|safe }}'>
+    </section>
+
+    <!-- EQUIPAMENTO -->
+    <section class="v2-section">
+        <h2>Equipamento</h2>
+        <h3>Armas Corpo-a-Corpo</h3>
+        <div id="eq-melee-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="equipment_melee">+ Arma melee</button>
+        <input type="hidden" name="equipment_melee" id="equipment_melee-input" value='{{ equipment_melee_json|safe }}'>
+
+        <h3>Armas à Distância</h3>
+        <div id="eq-ranged-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="equipment_ranged">+ Arma ranged</button>
+        <input type="hidden" name="equipment_ranged" id="equipment_ranged-input" value='{{ equipment_ranged_json|safe }}'>
+
+        <h3>Armaduras</h3>
+        <div id="eq-armor-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="equipment_armor">+ Armadura</button>
+        <input type="hidden" name="equipment_armor" id="equipment_armor-input" value='{{ equipment_armor_json|safe }}'>
+
+        <h3>Itens diversos</h3>
+        <div id="eq-misc-list" class="v2-list-container"></div>
+        <button type="button" class="v2-add-btn" data-target="equipment_misc">+ Item</button>
+        <input type="hidden" name="equipment_misc" id="equipment_misc-input" value='{{ equipment_misc_json|safe }}'>
+    </section>
+
+    <!-- MANEUVERS (Cards de Ataque e Defesa) -->
+    <section class="v2-section">
+        <h2>Maneuvers — Attack</h2>
+
+        <h3>Melee</h3>
+        <div id="man-melee-cards" class="v2-maneuver-cards"></div>
+        <button type="button" class="v2-add-btn" data-target="maneuvers_melee">+ Add melee maneuver</button>
+        <input type="hidden" name="maneuvers_melee" id="maneuvers_melee-input" value='{{ maneuvers_melee_json|safe }}'>
+
+        <h3>Ranged</h3>
+        <div id="man-ranged-cards" class="v2-maneuver-cards"></div>
+        <button type="button" class="v2-add-btn" data-target="maneuvers_ranged">+ Add ranged maneuver</button>
+        <input type="hidden" name="maneuvers_ranged" id="maneuvers_ranged-input" value='{{ maneuvers_ranged_json|safe }}'>
+    </section>
+
+    <section class="v2-section">
+        <h2>Maneuvers — Defense</h2>
+        <div id="man-defense-cards" class="v2-maneuver-cards"></div>
+        <button type="button" class="v2-add-btn" data-target="maneuvers_defense">+ Add defense maneuver</button>
+        <input type="hidden" name="maneuvers_defense" id="maneuvers_defense-input" value='{{ maneuvers_defense_json|safe }}'>
+    </section>
+
+    <!-- SUBMIT -->
+    <section class="v2-actions">
+        <button type="submit" class="v2-save-btn">Salvar ficha</button>
+        <a href="{% url 'gurps:ver_v2' id=sheet.id %}" class="v2-view-link">Ver ficha (read-only)</a>
+    </section>
+</form>
+
+<script src="{% static 'global/js/sheet_v2/editor.js' %}?d={% now 'U' %}"></script>
+</body>
+</html>

@@ -13,9 +13,33 @@ O produto migra de **SaaS hospedado no GCP** para **aplicativo desktop com dois 
 - [Arquitetura de distribuição desktop — instalador, launcher, túnel, empacotamento](docs/DESKTOP_DISTRIBUTION.md)
 - [Arquitetura RAG — em hibernação até voltar com vector store SQLite-friendly](docs/RAG_ARCHITECTURE.md)
 - [Base de conhecimento GURPS 4e — visão geral + plano de catalogação](docs/GURPS_KNOWLEDGE.md)
-  - [Atributos e características secundárias](docs/gurps/attributes.md) — dados em `gurps/data/attributes.json`
+  - **Catálogos JSON estruturados** em `gurps/data/`:
+    - `attributes.json` — ST/DX/IQ/HT + características secundárias + tabela de dano + encumbrance
+    - `advantages.json` — 246 vantagens (Basic Set + Powers cap 2)
+    - `disadvantages.json` — 179 desvantagens
+    - `modifiers.json` — 100 modifiers (57 enhancements + 43 limitations, Basic Set + Powers)
+    - `skills.json` — 223 perícias (metadata, descrições sob demanda)
+    - `spells.json` — 63 spells por colégio (metadata)
+    - `equipment.json` — 67 items core (melee/ranged/armaduras/escudos) + cost of living
+    - `templates.json` — meta-traits + character/racial templates samples
+    - `combat_tables.json` — 20 maneuvers + 11 damage types + 11 hit locations + defenses/posture/encumbrance/morte/recuperação
+    - `diseases_poisons.json` — 12 diseases + 12 poisons + 12 environmental hazards (cap 14 Campaigns)
+    - `bestiary.json` — 20 animais/monstros com stat blocks (cap 16 Campaigns)
+    - `technology.json` — 13 Tech Levels + 20 artifacts samples (cap 17 Campaigns)
+    - `sample_powers.json` — 40 sample powers do livro Powers cap 3
+    - `reference_tables.json` — Reaction Table, Size/Speed/Range, Fright Check, Standard Modifiers, Aging
+  - **Documentos de regras** em `docs/gurps/`:
+    - [Atributos](docs/gurps/attributes.md), [Combate](docs/gurps/combat.md), [Combate tático](docs/gurps/combat_tactical.md), [Injuries/Diseases](docs/gurps/injuries.md)
+    - [Success Rolls](docs/gurps/success_rolls.md), [GM Tools / Game Worlds](docs/gurps/gm_tools.md), [Template Creation](docs/gurps/template_creation.md), [Infinite Worlds (setting)](docs/gurps/infinite_worlds.md)
+    - [Psionics](docs/gurps/psionics.md), [Character Development](docs/gurps/character_development.md)
+    - [Powers — overview](docs/gurps/powers_overview.md), [Building Powers (cap 1)](docs/gurps/powers_building.md), [Powers in Play (caps 4-6)](docs/gurps/powers_in_play.md)
 
-Novos documentos (arquitetura, roadmap, decisões, catálogos específicos em `docs/gurps/`) serão criados sob demanda e indexados aqui.
+**Cobertura final dos 3 livros (2026-05-16):**
+- **Basic Set: Characters** (338 pp): Caps 1-9 + apêndices catalogados. Skills/Spells em `list_only`. Quirks pendentes.
+- **Basic Set: Campaigns** (242 pp): Caps 10-20 + Tables. Bestiary/Tech samples; expansion futura para listas completas.
+- **Powers** (243 pp): 6 capítulos resumidos; new advantages + modifiers + sample powers em JSON. Examples cap 3 completos.
+
+Pendências menores documentadas em `docs/GURPS_KNOWLEDGE.md`. Catalogação executada em sessão única.
 
 ## Regras invioláveis
 

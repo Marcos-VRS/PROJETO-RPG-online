@@ -1,5 +1,6 @@
 # Reference material (large + copyrighted — never commit) #
 books/
+docs/gurps/*.pdf
 
 # Django #
 *.log

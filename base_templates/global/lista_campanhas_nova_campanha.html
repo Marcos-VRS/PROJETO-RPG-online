@@ -22,7 +22,7 @@
     <ul class="ul-lista">
         {% for campanha in campanhas %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <a href="{% url 'gurps:criar_ficha_campanha' campanha.id %}">
+            <a href="{% url 'gurps:criar_v2' campanha_id=campanha.id %}">
                 <h2 class="campanha-nome">{{ campanha.nome }}</h2>
                 <h2>GM: {{ campanha.dono }}</h2>
                 <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />

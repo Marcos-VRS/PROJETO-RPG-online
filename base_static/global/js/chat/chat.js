@@ -44,6 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.type === "pong") return; // Ignora respostas de ping
 
+            // O grupo WS é compartilhado entre chat e tela de jogo. Mensagens
+            // de scene/character (scene_state_changed, character_updated, etc.)
+            // não têm .message — ignora silenciosamente pra não quebrar
+            // o handler com TypeError.
+            if (typeof data.message !== "string") return;
+
             let formattedMessage = data.message.replace(/\n/g, '<br>');
 
             let bgColorClass = "";

@@ -1,0 +1,1245 @@
+{
+  "$schema_version": "1.0",
+  "source": {
+    "book": "GURPS 4e — Basic Set: Characters",
+    "chapter": 2,
+    "pages": "101-117",
+    "edition": "Fourth Edition"
+  },
+  "$progress": {
+    "status": "complete",
+    "completion_date": "2026-05-16",
+    "notes_pt": "Cobre Enhancements gerais (pp 102-109), Limitations (pp 110-116), Gadget Limitations (pp 116-117). Special modifiers de vantagens individuais ficam dentro das próprias entries em advantages.json."
+  },
+  "$schema_notes": {
+    "cost_format": "string com modificador percentual: '+X%', '-X%', '+X%/nível', 'variável'",
+    "applies_to_values": [
+      "any",
+      "attack",
+      "ranged",
+      "Innate Attack",
+      "Affliction",
+      "Binding",
+      "Area Effect",
+      "Cone",
+      "Persistent",
+      "Aura",
+      "Wall",
+      "Ranged",
+      "Mobile",
+      "Delay",
+      "Malediction",
+      "abilities ignoring DR",
+      "switchable abilities",
+      "abilities with activation time",
+      "abilities that cost FP",
+      "disadvantage",
+      "gadgets",
+      "Breakable",
+      "Can Be Stolen",
+      "Uncontrollable",
+      "abilities with resistance roll",
+      "abilities requiring skill",
+      "touch/proximity advantages",
+      "body weaponry",
+      "Innate Attack: tox/fat",
+      "Innate Attack: cr/cut",
+      "Innate Attack: burn/cor/cut/imp/pi",
+      "insubstantial_only_abilities",
+      "abilities granted by Higher Power",
+      "abilities with other enhancements",
+      "Rapid Fire"
+    ]
+  },
+  "enhancements": [
+    {
+      "id": "accurate",
+      "name_en": "Accurate",
+      "name_pt": "Preciso",
+      "cost": "+5%/nível",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Cada +1 em Accuracy = +5%.",
+      "page_ref": 102
+    },
+    {
+      "id": "affects_insubstantial",
+      "name_en": "Affects Insubstantial",
+      "name_pt": "Afeta Insubstancial",
+      "cost": "+20%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Afeta alvos insubstanciais além dos substanciais. Poderosíssimo; GM pode restringir/forçar Affects Substantial em foes.",
+      "page_ref": 102
+    },
+    {
+      "id": "affects_substantial",
+      "name_en": "Affects Substantial",
+      "name_pt": "Afeta Substancial",
+      "cost": "+40%",
+      "applies_to": [
+        "insubstantial_only_abilities"
+      ],
+      "description_pt": "Insubstancial pode afetar alvos substanciais. NÃO se aplica a magia/psi (já podem com -3).",
+      "page_ref": 102
+    },
+    {
+      "id": "area_effect",
+      "name_en": "Area Effect",
+      "name_pt": "Área de Efeito",
+      "cost": "+50%/nível",
+      "applies_to": [
+        "attack",
+        "any"
+      ],
+      "description_pt": "Afeta área em vez de alvo único. Raios: lvl 1 = 2 jds, lvl 2 = 4 jds, dobra por nível. Active defenses não protegem; vítimas podem dive/dodge. Pré-req para Mobile, Persistent, Selective Area, Bombardment, Emanation.",
+      "page_ref": 102
+    },
+    {
+      "id": "armor_divisor_enh",
+      "name_en": "Armor Divisor (Enhancement)",
+      "name_pt": "Divisor de Armadura (Enhancement)",
+      "cost": "+50% a +200%",
+      "applies_to": [
+        "Innate Attack",
+        "Affliction"
+      ],
+      "description_pt": "Atravessa mais DR: (2) +50%, (3) +100%, (5) +150%, (10) +200%. Penetration modifier — não combina com outros (Contact Agent, Follow-Up).",
+      "page_ref": 102
+    },
+    {
+      "id": "aura",
+      "name_en": "Aura",
+      "name_pt": "Aura",
+      "cost": "+80%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Ataque vira aura malífica reach C. Afeta quem te toca ou cuja arma te acerta. Switchable no início do turno (senão Always On). Exige Melee Attack reach C; não pode reclamar -5% 'cannot parry'.",
+      "page_ref": 102
+    },
+    {
+      "id": "based_on_different_attribute",
+      "name_en": "Based on (Different Attribute)",
+      "name_pt": "Baseado em (Outro Atributo)",
+      "cost": "+20%",
+      "applies_to": [
+        "abilities with resistance roll"
+      ],
+      "description_pt": "Resistance roll usa atributo escolhido em vez do default. Útil contra alvos com fraqueza específica.",
+      "page_ref": 102
+    },
+    {
+      "id": "blood_agent_enh",
+      "name_en": "Blood Agent (Enhancement)",
+      "name_pt": "Agente Sanguíneo (Enhancement)",
+      "cost": "+100%",
+      "applies_to": [
+        "Area Effect",
+        "Cone"
+      ],
+      "description_pt": "Em ataques Area/Cone, vira enhancement: também inalado, ignora DR. Só Sealed/Doesn't Breathe+Filter Lungs+Nictitating/Protected Vision imunes.",
+      "page_ref": 102
+    },
+    {
+      "id": "cone",
+      "name_en": "Cone",
+      "name_pt": "Cone",
+      "cost": "+50% + 10%/jd largura max",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Cone de área (special rules em Spreading Attacks p413). Especifique largura max no max range. Incompatível com Area Effect, Aura, Jet, Melee Attack, Rapid Fire, Emanation.",
+      "page_ref": 103
+    },
+    {
+      "id": "contact_agent_enh",
+      "name_en": "Contact Agent (Enhancement)",
+      "name_pt": "Agente de Contato (Enhancement)",
+      "cost": "+150%",
+      "applies_to": [
+        "Area Effect",
+        "Cone"
+      ],
+      "description_pt": "Em ataques Area/Cone, vira enhancement: ignora DR. Só Sealed imune.",
+      "page_ref": 103
+    },
+    {
+      "id": "cosmic",
+      "name_en": "Cosmic",
+      "name_pt": "Cósmico",
+      "cost": "+50% a +300%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Habilidade opera em 'nível superior'. (a) Ability outra que ataque/defesa: ignora restrições built-in. +50%. (b) Defesa: protege contra ataques Cosmic. +50%. (c) Ataque com efeito persistente que só Cosmic anula. +100%. (d) Ataque irresistível (ignora protection). +300% (não combina com outros penetration mods).",
+      "page_ref": 103
+    },
+    {
+      "id": "cyclic",
+      "name_en": "Cyclic",
+      "name_pt": "Cíclico",
+      "cost": "+10% a +100% × ciclos extras",
+      "applies_to": [
+        "Innate Attack: burn/cor/fat/tox"
+      ],
+      "description_pt": "Dano recorrente. Intervalo: 1seg +100%, 10seg +50%, 1min +40%, 1h +20%, 1d +10%. Multiplica por ciclos após o 1º. Vítima não cura HP/FP até ataque parar. Especifique como parar (lavar, drogas). Halve se Resistible. Contagious: +20% mild / +50% highly.",
+      "page_ref": 103
+    },
+    {
+      "id": "double_blunt_trauma",
+      "name_en": "Double Blunt Trauma",
+      "name_pt": "Trauma Contuso Duplo",
+      "cost": "+20%",
+      "applies_to": [
+        "Innate Attack: burn/cor/cut/imp/pi"
+      ],
+      "description_pt": "burn/cor: 1 HP blunt trauma por 10 pts resistido por flexible armor. cut/imp/pi: igual crushing (1/5 pts resistidos).",
+      "page_ref": 104
+    },
+    {
+      "id": "fragmentation",
+      "name_en": "Fragmentation",
+      "name_pt": "Fragmentação",
+      "cost": "+15%/dado de fragmentação",
+      "applies_to": [
+        "Innate Attack"
+      ],
+      "description_pt": "Espalha fragmentos cortantes em raio 5 jds × dado de frag. Effective skill 15. Max dado [12d] ou damage básico. Hot Fragments: burn com Cyclic 6×10s + Armor Divisor 0.2 (mesmo custo).",
+      "page_ref": 104
+    },
+    {
+      "id": "double_knockback",
+      "name_en": "Double Knockback",
+      "name_pt": "Knockback Duplo",
+      "cost": "+20%",
+      "applies_to": [
+        "Innate Attack: cr/cut"
+      ],
+      "description_pt": "Crushing/cutting com 2× knockback usual.",
+      "page_ref": 104
+    },
+    {
+      "id": "explosion",
+      "name_en": "Explosion",
+      "name_pt": "Explosão",
+      "cost": "+50%/nível (máx 3)",
+      "applies_to": [
+        "Innate Attack: usualmente cr/burn"
+      ],
+      "description_pt": "Explode no ponto de impacto. Collateral damage = basic/(3×distância em jds). Lvl 2 +100%: divide por 2×distância. Lvl 3 +150%: divide pela distância. Armor Divisor NÃO se aplica ao collateral damage.",
+      "page_ref": 104
+    },
+    {
+      "id": "hazard",
+      "name_en": "Hazard",
+      "name_pt": "Perigo (Hazard)",
+      "cost": "+0% a +50%",
+      "applies_to": [
+        "Innate Attack: fat"
+      ],
+      "description_pt": "FP perdido = FP perdido pelo hazard real. Dehydration +20%, Drowning +0%, Freezing +20%, Missed Sleep +50%, Starvation +40%, Suffocation +0%. Traits que protegem do hazard também protegem do ataque.",
+      "page_ref": 104
+    },
+    {
+      "id": "incendiary",
+      "name_en": "Incendiary",
+      "name_pt": "Incendiário",
+      "cost": "+10%",
+      "applies_to": [
+        "Innate Attack: não-burning"
+      ],
+      "description_pt": "Efeito secundário de chama; igniza material volátil (fuel, dry tinder).",
+      "page_ref": 105
+    },
+    {
+      "id": "radiation_mod",
+      "name_en": "Radiation",
+      "name_pt": "Radiação",
+      "cost": "+25% (tox) ou +100% (burn)",
+      "applies_to": [
+        "Innate Attack: tox/burn"
+      ],
+      "description_pt": "Irradia alvo: 1 rad/pt de basic damage rolled (penetrando DR ou não). Tox: rad em vez de damage normal, +25%. Burn: rad + damage normal (particle beam), +100%.",
+      "page_ref": 105
+    },
+    {
+      "id": "surge",
+      "name_en": "Surge",
+      "name_pt": "Surto Elétrico",
+      "cost": "+20%",
+      "applies_to": [
+        "Innate Attack"
+      ],
+      "description_pt": "Surto elétrico/EMP que desativa eletrônicos ou criaturas com Electrical (-25 pts).",
+      "page_ref": 105
+    },
+    {
+      "id": "delay",
+      "name_en": "Delay",
+      "name_pt": "Atraso",
+      "cost": "+0% fixed / +10% var ≤10s / +20% var longer / +50% Triggered",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Atrasa efeito após hit. Fixed +0%; Variable até 10s +10%; Variable mais longo +20%; Triggered (radio, touch, pressão) +50%. Especifique como neutralizar antes.",
+      "page_ref": 105
+    },
+    {
+      "id": "drifting",
+      "name_en": "Drifting",
+      "name_pt": "Deriva",
+      "cost": "+20%",
+      "applies_to": [
+        "Delay",
+        "Persistent"
+      ],
+      "description_pt": "Efeito flutua com vento/corrente após initial attack roll. Gás venenoso, ball lightning, minas flutuantes.",
+      "page_ref": 105
+    },
+    {
+      "id": "extended_duration",
+      "name_en": "Extended Duration",
+      "name_pt": "Duração Estendida",
+      "cost": "+20% a +300%",
+      "applies_to": [
+        "Aura",
+        "Persistent",
+        "Wall",
+        "Ranged"
+      ],
+      "description_pt": "3× +20%, 10× +40%, 30× +60%, 100× +80%, 300× +100%, 1000× +120%, Permanent +150% (especifique como dispelar) ou +300% (sem fim).",
+      "page_ref": 105
+    },
+    {
+      "id": "follow_up",
+      "name_en": "Follow-Up",
+      "name_pt": "Carregado",
+      "cost": "variável",
+      "applies_to": [
+        "Innate Attack",
+        "body weaponry"
+      ],
+      "description_pt": "Efeitos entregues por carrier attack (poison no dart). Só ativa se carrier acerta + penetra DR. Em natural weapon (Claws, Teeth): +0%. Em Innate Attack carrier: soma dos custos de Always On/Aura/Cone/Drifting/etc. do carrier. Penetration modifier.",
+      "page_ref": 105
+    },
+    {
+      "id": "guided",
+      "name_en": "Guided",
+      "name_pt": "Guiado",
+      "cost": "+50%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Você dirige ataque com sua skill — ignora range penalties pra hit. Concentrate maneuver/turno. Perder vista = miss automático.",
+      "page_ref": 105
+    },
+    {
+      "id": "homing",
+      "name_en": "Homing",
+      "name_pt": "Auto-direcionado",
+      "cost": "+50% base + 1%/pt do sense",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Ataque se direciona. Escolha sensor (vision, IR, Scanning Sense). Aim pra lock-on + skill roll. Attack usa skill 10 + Acc. Ignora range penalties. Ex: Homing(Infravision) = +60%.",
+      "page_ref": 106
+    },
+    {
+      "id": "increased_range",
+      "name_en": "Increased Range",
+      "name_pt": "Alcance Aumentado",
+      "cost": "+10%/nível",
+      "applies_to": [
+        "ranged"
+      ],
+      "description_pt": "2× +10%, 5× +20%, 10× +30%, 20× +40%, 50× +50%, 100× +60%. Individual: 'Increased 1/2D' ou 'Increased Max' = ½ custo (+5%/nível).",
+      "page_ref": 106
+    },
+    {
+      "id": "jet",
+      "name_en": "Jet",
+      "name_pt": "Jato",
+      "cost": "+0%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Stream contínuo (lança-chamas). Melee com reach longo, sem penalty range/speed. Acc 0, 1/2D 5, Max 10. Increased Range: +100%/nível. Incompatível com Area Effect, Aura, Cone, Follow-Up, Melee Attack, Rapid Fire.",
+      "page_ref": 106
+    },
+    {
+      "id": "link",
+      "name_en": "Link",
+      "name_pt": "Vinculado",
+      "cost": "+10% ou +20%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "+10%: várias vantagens linkadas permanentemente como uma. +20%: pode usar separadas também. Aplique a todas. Se dois ataques com mesmos Malf/range/Acc/RoF/Shots/Recoil, treat como um attack roll + separate damage rolls.",
+      "page_ref": 106
+    },
+    {
+      "id": "low_no_signature",
+      "name_en": "Low/No Signature",
+      "name_pt": "Assinatura Baixa/Nula",
+      "cost": "+10% (Low) / +20% (No)",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Low: pop de champagne (silenced gun). No: blowgun dart, ou trace mágico/psi mas indetectável normal.",
+      "page_ref": 106
+    },
+    {
+      "id": "malediction",
+      "name_en": "Malediction",
+      "name_pt": "Maldição",
+      "cost": "+100% a +200%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Vira tipo Regular spell. Sem Malf/range stats; DR não afeta. Concentrate maneuver; alcança quem você percebe. Quick Contest Will vs Will. Em Affliction, substitui resistance roll por Will vs HT. -1/jd: +100%. Tabela Size/Speed/Range: +150%. Long-Distance Modifiers: +200%. Penetration modifier.",
+      "page_ref": 106
+    },
+    {
+      "id": "mobile",
+      "name_en": "Mobile",
+      "name_pt": "Móvel",
+      "cost": "+40%/nível",
+      "applies_to": [
+        "Area Effect + Persistent"
+      ],
+      "description_pt": "Área move-se sob controle. Move = nível (lvl 1 = Move 1...). Max Move = attack Max range. Concentrate pra mover. Homing + Selective Area = autônomo. Incompatível com Drifting.",
+      "page_ref": 107
+    },
+    {
+      "id": "overhead",
+      "name_en": "Overhead",
+      "name_pt": "Por Cima",
+      "cost": "+30%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Acerta por ângulo diferente (geralmente de cima). Ignora cover sem proteção overhead, anula penalty contra alvos crouching/prone.",
+      "page_ref": 107
+    },
+    {
+      "id": "persistent",
+      "name_en": "Persistent",
+      "name_pt": "Persistente",
+      "cost": "+40%",
+      "applies_to": [
+        "Area Effect"
+      ],
+      "description_pt": "Área permanece 10 seg (use Extended Duration p/ mais), atacando/danificando quem entra/passa.",
+      "page_ref": 107
+    },
+    {
+      "id": "ranged_enh",
+      "name_en": "Ranged",
+      "name_pt": "À Distância",
+      "cost": "+40%",
+      "applies_to": [
+        "touch/proximity advantages"
+      ],
+      "description_pt": "Dá range a vantagem que normalmente afeta área imediata/toque. Default: 1/2D 10, Max 100, Acc 3, RoF 1, Recoil 1. Duração 10 seg ou listada/instantânea. Restrito a Healing, Mana Damper/Enhancer, Neutralize, Possession, Psi Static (default; GM pode permitir outras).",
+      "page_ref": 107
+    },
+    {
+      "id": "rapid_fire",
+      "name_en": "Rapid Fire",
+      "name_pt": "Fogo Rápido",
+      "cost": "+40% a +300%",
+      "applies_to": [
+        "Innate Attack"
+      ],
+      "description_pt": "RoF 2 +40%, 3 +50%, 4-7 +70%, 8-15 +100%, 16-30 +150%, 31-70 +200%, 71-150 +250%, 151-300 +300%. Multiple Projectile: RoF NxM (shotgun). Selective Fire (RoF 5+): +10% extra (alterna 1-3/full).",
+      "page_ref": 108
+    },
+    {
+      "id": "reduced_fatigue_cost",
+      "name_en": "Reduced Fatigue Cost",
+      "name_pt": "Custo de Fadiga Reduzido",
+      "cost": "+20%/nível",
+      "applies_to": [
+        "abilities that cost FP"
+      ],
+      "description_pt": "Cada nível -1 FP por uso. Tb -1 FP maintenance. Incompatível com 'Usually On'.",
+      "page_ref": 108
+    },
+    {
+      "id": "reduced_time",
+      "name_en": "Reduced Time",
+      "name_pt": "Tempo Reduzido",
+      "cost": "+20%/nível",
+      "applies_to": [
+        "abilities with activation time"
+      ],
+      "description_pt": "Cada nível halve activation time (round up). Em 1 seg, próximo nível = instantâneo (free action). NÃO aplicável a attack powers, abilities com modifier de timing, ou Magery.",
+      "page_ref": 108
+    },
+    {
+      "id": "respiratory_agent",
+      "name_en": "Respiratory Agent",
+      "name_pt": "Agente Respiratório",
+      "cost": "+50%",
+      "applies_to": [
+        "Affliction",
+        "Innate Attack: tox/fat"
+      ],
+      "description_pt": "Inalado, ignora DR. Só Doesn't Breathe + Filter Lungs protegem totalmente. Sense roll pra holding breath. Exige Area Effect, Cone ou Jet. Penetration modifier.",
+      "page_ref": 108
+    },
+    {
+      "id": "selective_area",
+      "name_en": "Selective Area",
+      "name_pt": "Área Seletiva",
+      "cost": "+20%",
+      "applies_to": [
+        "Area Effect",
+        "Cone"
+      ],
+      "description_pt": "Escolhe quais alvos na área são afetados.",
+      "page_ref": 108
+    },
+    {
+      "id": "selectivity",
+      "name_en": "Selectivity",
+      "name_pt": "Seletividade",
+      "cost": "+10%",
+      "applies_to": [
+        "abilities with other enhancements"
+      ],
+      "description_pt": "Liga/desliga outros enhancements à vontade. Múltiplas versões da mesma ability sem comprar várias.",
+      "page_ref": 108
+    },
+    {
+      "id": "sense_based_enh",
+      "name_en": "Sense-Based (Enhancement)",
+      "name_pt": "Baseado em Sentido (Enhancement)",
+      "cost": "+150% + 50%/sentido após o 1º",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Canalizado por sentido(s) do alvo — ignora DR. Não afeta quem não usa o sentido (cego, mute, gas mask). Protected Sense anula. Penetration modifier (exceto com Malediction = vira limitation).",
+      "page_ref": 109
+    },
+    {
+      "id": "side_effect",
+      "name_en": "Side Effect",
+      "name_pt": "Efeito Colateral",
+      "cost": "+50% base + Affliction cost",
+      "applies_to": [
+        "Innate Attack"
+      ],
+      "description_pt": "Se penetra DR, HT roll (-1 por 2 pts penetrating). Falha = efeito tipo Affliction (stun, Attribute Penalty, Disadvantage, Incapacitation). Stunning +50%, Disadvantage(Blindness) +100% etc. Stunning wears off normal; outros (20-HT) min, min 1 min.",
+      "page_ref": 109
+    },
+    {
+      "id": "symptoms",
+      "name_en": "Symptoms",
+      "name_pt": "Sintomas",
+      "cost": "variável",
+      "applies_to": [
+        "Innate Attack ≤1d"
+      ],
+      "description_pt": "Efeitos quando damage cumulativo excede fração de HP/FP. Sem HT roll. Threshold 2/3 HP: custo Affliction. 1/2 HP: 2×. 1/3 HP: 3×. Cessa quando damage cura.",
+      "page_ref": 109
+    },
+    {
+      "id": "underwater",
+      "name_en": "Underwater",
+      "name_pt": "Subaquático",
+      "cost": "+20%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Funciona em líquido a 1/10 range. Default attacks só em ar/vácuo.",
+      "page_ref": 109
+    },
+    {
+      "id": "variable",
+      "name_en": "Variable",
+      "name_pt": "Variável",
+      "cost": "+5%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Pode reduzir level do ataque (ex: 3d → 1d ou 2d). Declare antes do attack roll.",
+      "page_ref": 109
+    },
+    {
+      "id": "wall",
+      "name_en": "Wall",
+      "name_pt": "Parede",
+      "cost": "+30% (linear) ou +60% (qualquer forma)",
+      "applies_to": [
+        "Area Effect + Persistent"
+      ],
+      "description_pt": "Parede 3 jds × 1 jd por jd de radius. Permeable: liquid/gas/energy/amorfo; atravessável mas inflinge damage. Rigid (só cr/cut/imp/pi): material; DR 3 e 1/2 HP/dado por jd.",
+      "page_ref": 109
+    },
+    {
+      "id": "erosive",
+      "name_en": "Erosive",
+      "name_pt": "Erosivo",
+      "cost": "+10%",
+      "applies_to": [
+        "Innate Attack",
+        "attack"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Cada acerto bem-sucedido remove 1 ponto de DR (cumulativo) da armadura/cobertura atingida, mesmo se não penetrar. DR perdida não regenera; conserto exige reparos físicos.",
+      "page_ref": 109
+    },
+    {
+      "id": "force_field",
+      "name_en": "Force Field",
+      "name_pt": "Campo de Força",
+      "cost": "+20%",
+      "applies_to": [
+        "DR"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Já existe para DR no Basic Set (p47). Reforço aqui: força protetora projetada cobrindo corpo + carregados. Reduz dano antes de armor DR.",
+      "page_ref": 109
+    },
+    {
+      "id": "game_time",
+      "name_en": "Game Time",
+      "cost": "+0%",
+      "name_pt": "Tempo de Jogo",
+      "applies_to": [
+        "Extended Duration"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Variante Extended Duration: usa tempo real fora do jogo (sessões). Não afeta cost.",
+      "page_ref": 109
+    },
+    {
+      "id": "independent",
+      "name_en": "Independent",
+      "name_pt": "Independente",
+      "cost": "+40%",
+      "applies_to": [
+        "attack with duration",
+        "Affliction",
+        "Innate Attack"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Habilidade continua funcionando independente de concentração depois de ativada. Pode usar outras abilities enquanto esta opera.",
+      "page_ref": 110
+    },
+    {
+      "id": "long_range",
+      "name_en": "Long-Range",
+      "name_pt": "Longo Alcance",
+      "cost": "+50%/nível",
+      "applies_to": [
+        "ranged",
+        "Telecommunication"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Cada nível usa próxima coluna da Long-Distance Modifiers table (p241 Magic) em vez da Size/Speed/Range table. Permite alcance enorme (km, planetário).",
+      "page_ref": 110
+    },
+    {
+      "id": "reflexive",
+      "name_en": "Reflexive",
+      "name_pt": "Reflexivo",
+      "cost": "+40%",
+      "applies_to": [
+        "any"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Ativa automaticamente quando relevante; não exige ação. Comum em defesas (Damage Resistance, Magic Resistance), poderes de aviso (Danger Sense), e habilidades passivas.",
+      "page_ref": 110
+    },
+    {
+      "id": "reliable_enh",
+      "name_en": "Reliable",
+      "name_pt": "Confiável",
+      "cost": "+5%/+1, max +10",
+      "applies_to": [
+        "abilities with skill rolls (Warp, etc.)"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "+1/nível ao IQ roll de ativação. Já no Basic Set para Warp p98.",
+      "page_ref": 110
+    },
+    {
+      "id": "ricochet",
+      "name_en": "Ricochet",
+      "name_pt": "Ricochete",
+      "cost": "+10%",
+      "applies_to": [
+        "ranged Innate Attack"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Pode ricochetear de superfície dura (parede, chão) pra acertar alvo atrás de cover. Skill -2 por ricochete.",
+      "page_ref": 110
+    },
+    {
+      "id": "switchable",
+      "name_en": "Switchable",
+      "name_pt": "Alternável",
+      "cost": "+10%",
+      "applies_to": [
+        "Always On abilities"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Ability normalmente Always On pode ser desligada à vontade. Action-free no início do turno.",
+      "page_ref": 110
+    },
+    {
+      "id": "world_spanning",
+      "name_en": "World-Spanning",
+      "name_pt": "Inter-Mundos",
+      "cost": "+50%",
+      "applies_to": [
+        "range-based abilities",
+        "Mindlink",
+        "Telecommunication"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Funciona entre planos/dimensões/timelines paralelas. Default abilities ranged não atravessam barreiras dimensionais.",
+      "page_ref": 111
+    }
+  ],
+  "limitations": [
+    {
+      "id": "accessibility",
+      "name_en": "Accessibility",
+      "name_pt": "Acessibilidade",
+      "cost": "variável",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Catchall. Por target: 'Só mulheres' -20%, 'Só máquinas' -20%, 'Só sea creatures' -10/-30%, 'Só aliens' -30/-40%, 'Só psis' -50%. Por situação: 'Só de dia/noite' -20%, 'Só direct sunlight' -30%, 'Só na água' -30% (Earth), 'Só lua cheia' -40%, 'Useless under stress' -60%. Action-linked: 'Em forma alterada' -10%, 'Tocando trumpet' -20%, 'Voando/swimming/transe' -30%, 'Personalidade dividida lado X' -40%. Halve se 'half power' em vez de useless.",
+      "page_ref": 110
+    },
+    {
+      "id": "always_on",
+      "name_en": "Always On",
+      "name_pt": "Sempre Ativo",
+      "cost": "-10% / -20% / -40%",
+      "applies_to": [
+        "switchable abilities"
+      ],
+      "description_pt": "Não pode desligar. Social/cosmetic -10%, fisicamente inconveniente -20%, perigoso (pra você!) -40%.",
+      "page_ref": 110
+    },
+    {
+      "id": "armor_divisor_lim",
+      "name_en": "Armor Divisor (Limitation)",
+      "name_pt": "Divisor de Armadura (Limitation)",
+      "cost": "-30% / -50% / -70%",
+      "applies_to": [
+        "Innate Attack",
+        "Affliction"
+      ],
+      "description_pt": "Penetra menos DR. (0.5) -30%, (0.2) -50%, (0.1) -70%. Targets com DR 0 (bare flesh) ganham DR 1 contra. Penetration modifier.",
+      "page_ref": 110
+    },
+    {
+      "id": "blood_agent_lim",
+      "name_en": "Blood Agent (Limitation)",
+      "name_pt": "Agente Sanguíneo (Limitation)",
+      "cost": "-40%",
+      "applies_to": [
+        "Affliction",
+        "Innate Attack: fat/tox"
+      ],
+      "description_pt": "Atinge só membrana mucosa ou ferida aberta. DR sempre para. Penetration modifier.",
+      "page_ref": 110
+    },
+    {
+      "id": "bombardment",
+      "name_en": "Bombardment",
+      "name_pt": "Bombardeio",
+      "cost": "-5% a -20%",
+      "applies_to": [
+        "Area Effect",
+        "Cone"
+      ],
+      "description_pt": "Não acerta automaticamente todos na área. Cada alvo atacado com effective skill. Skill 14 -5%, 12 -10%, 10 -15%, 8 -20%. Modifica skill só por target size.",
+      "page_ref": 111
+    },
+    {
+      "id": "contact_agent_lim",
+      "name_en": "Contact Agent (Limitation)",
+      "name_pt": "Agente de Contato (Limitation)",
+      "cost": "-30%",
+      "applies_to": [
+        "Affliction",
+        "Innate Attack: fat/tox"
+      ],
+      "description_pt": "Atinge pele nua ou tecido poroso. DR sempre para. Penetration modifier.",
+      "page_ref": 111
+    },
+    {
+      "id": "costs_fatigue",
+      "name_en": "Costs Fatigue",
+      "name_pt": "Custa Fadiga",
+      "cost": "-5%/FP",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "-5% por FP por uso. Em ataque/instantâneo: paga toda vez. Em continuous: paga pra ativar 1 min, depois ½ pra manter (round up). Se duração 1 seg + cost/seg, dobra valor (-10%/FP).",
+      "page_ref": 111
+    },
+    {
+      "id": "no_blunt_trauma",
+      "name_en": "No Blunt Trauma",
+      "name_pt": "Sem Trauma Contuso",
+      "cost": "-20%",
+      "applies_to": [
+        "Innate Attack: cr/cut/imp/pi"
+      ],
+      "description_pt": "Não inflige blunt trauma normal.",
+      "page_ref": 111
+    },
+    {
+      "id": "no_knockback",
+      "name_en": "No Knockback",
+      "name_pt": "Sem Knockback",
+      "cost": "-10%",
+      "applies_to": [
+        "Innate Attack: cr/cut"
+      ],
+      "description_pt": "Não inflige knockback normal.",
+      "page_ref": 111
+    },
+    {
+      "id": "no_wounding",
+      "name_en": "No Wounding",
+      "name_pt": "Sem Ferimento",
+      "cost": "-50%",
+      "applies_to": [
+        "Innate Attack"
+      ],
+      "description_pt": "Inflige basic damage (knockback + blunt trauma), mas dano penetrante sem wounding (HP/FP). Wind, jato d'água, dardo carrier de Follow-Up.",
+      "page_ref": 111
+    },
+    {
+      "id": "dissipation",
+      "name_en": "Dissipation",
+      "name_pt": "Dissipação",
+      "cost": "-50%",
+      "applies_to": [
+        "Area Effect",
+        "Cone"
+      ],
+      "description_pt": "Quanto mais longe do centro/ápice, menos efetivo.",
+      "page_ref": 112
+    },
+    {
+      "id": "emanation",
+      "name_en": "Emanation",
+      "name_pt": "Emanação",
+      "cost": "-20%",
+      "applies_to": [
+        "Area Effect"
+      ],
+      "description_pt": "Sem range nem Accuracy, irradia do corpo (sem afetar você). Incompatível com Melee Attack e ranged modifiers.",
+      "page_ref": 112
+    },
+    {
+      "id": "emergencies_only",
+      "name_en": "Emergencies Only",
+      "name_pt": "Só Emergências",
+      "cost": "-30%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Triggerada por medo/excitação; não funciona em rotina. GM decide. Variant: Full Power in Emergencies Only (half power em rotina, full sob stress) -20%.",
+      "page_ref": 112
+    },
+    {
+      "id": "extra_recoil",
+      "name_en": "Extra Recoil",
+      "name_pt": "Recoil Extra",
+      "cost": "-10%/+1 Rcl",
+      "applies_to": [
+        "Rapid Fire"
+      ],
+      "description_pt": "Aumenta Rcl além do default 1.",
+      "page_ref": 112
+    },
+    {
+      "id": "inaccurate",
+      "name_en": "Inaccurate",
+      "name_pt": "Impreciso",
+      "cost": "-5%/nível",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Cada -1 em Accuracy = -5%. Acc não desce abaixo de 0.",
+      "page_ref": 112
+    },
+    {
+      "id": "limited_use",
+      "name_en": "Limited Use",
+      "name_pt": "Uso Limitado",
+      "cost": "-10% a -40%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Usos/dia: 1 -40%, 2 -30%, 3-4 -20%, 5-10 -10%. Fast Reload (3-5 seg): halve valor. Slow Reload (3+ seg/shot): -5% a mais.",
+      "page_ref": 112
+    },
+    {
+      "id": "melee_attack",
+      "name_en": "Melee Attack",
+      "name_pt": "Ataque Melee",
+      "cost": "-15% a -30%",
+      "applies_to": [
+        "attack"
+      ],
+      "description_pt": "Funciona como melee weapon (parry, Rapid Strike, Feint). Sem range stats; usa Reach. Reach C: -30%, 1 ou 2: -25%, C-1-2: -20%, 1-4 (chicote): -15%. -5% extra se 'cannot parry'.",
+      "page_ref": 112
+    },
+    {
+      "id": "mitigator",
+      "name_en": "Mitigator",
+      "name_pt": "Mitigador",
+      "cost": "-60% a -70%",
+      "applies_to": [
+        "disadvantage"
+      ],
+      "description_pt": "Item/substância negate temporariamente disadvantage. Vulnerável (óculos): -60%. Drug daily: -60%. Weekly: -65%. Monthly: -70%. +5% se requer prescrição; +10% se única fonte (programa experimental).",
+      "page_ref": 112
+    },
+    {
+      "id": "nuisance_effect",
+      "name_en": "Nuisance Effect",
+      "name_pt": "Efeito Inconveniente",
+      "cost": "-5%/nível",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Side effect inconveniente. -5%/-1 reaction (max -4); -5% torna você óbvio; -5% inconveniente fisicamente (atrai insetos, ferruga, fome). GM aprova; não permite poder valioso como nuisance ('mata todos no raio').",
+      "page_ref": 112
+    },
+    {
+      "id": "onset",
+      "name_en": "Onset",
+      "name_pt": "Início Demorado",
+      "cost": "-10% a -40%",
+      "applies_to": [
+        "Affliction",
+        "Innate Attack"
+      ],
+      "description_pt": "Efeito atrasado: 1 min -10%, 1 h -20%, 1 dia -30%, 1 sem+ -40%. Use Delay (p105) se controla onset. Variant Exposure Time (em Aura/Persistent): vítima precisa ficar exposta o período todo. +20% extra (1 min = -30%).",
+      "page_ref": 113
+    },
+    {
+      "id": "pact",
+      "name_en": "Pact",
+      "name_pt": "Pacto",
+      "cost": "variável (= pts dos Self-Imposed Mental Disad)",
+      "applies_to": [
+        "abilities granted by Higher Power"
+      ],
+      "description_pt": "Higher Power exige código moral (Self-Imposed Mental Disad). Disad dá pts normais; mesma % vira limitation. Quebrar pacto = ability para até arrepender.",
+      "page_ref": 113
+    },
+    {
+      "id": "preparation_required",
+      "name_en": "Preparation Required",
+      "name_pt": "Preparação Necessária",
+      "cost": "-20% a -60%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Concentrate por: 1 min -20%, 10 min -30%, 1 h -50%, 8 h -60%. Uma ability prepared por vez. Unprep após uso. Variant: Weakened Without Preparation (funciona sem prep mas half) = ½ valor.",
+      "page_ref": 114
+    },
+    {
+      "id": "reduced_range",
+      "name_en": "Reduced Range",
+      "name_pt": "Alcance Reduzido",
+      "cost": "-10% a -30%",
+      "applies_to": [
+        "ranged"
+      ],
+      "description_pt": "Divisor: 2 -10%, 5 -20%, 10 -30%. Em ranged attack reduz 1/2D e Max. 'Reduced 1/2D' = ½ valor (-5%/nível). Max só não-individualmente.",
+      "page_ref": 115
+    },
+    {
+      "id": "resistible",
+      "name_en": "Resistible",
+      "name_pt": "Resistível",
+      "cost": "-5% a -50%",
+      "applies_to": [
+        "Innate Attack: fat/tox"
+      ],
+      "description_pt": "Vítima HT roll pra evitar. HT-5 -5%, cada +1 = -5% extra (HT-4 -10%, HT+4 -50%). Em Cyclic, roll antes de cada ciclo. Combinar com Blood/Contact/Follow-Up/Respiratory/Sense-Based.",
+      "page_ref": 115
+    },
+    {
+      "id": "sense_based_lim",
+      "name_en": "Sense-Based (Limitation)",
+      "name_pt": "Baseado em Sentido (Limitation)",
+      "cost": "-10% a -20%",
+      "applies_to": [
+        "Malediction",
+        "abilities ignoring DR"
+      ],
+      "description_pt": "Em Malediction ou ability que ignora DR (Mind Control), Sense-Based vira limitation: -20% (1 sentido), -15% (2), -10% (3). >3 não conta.",
+      "page_ref": 115
+    },
+    {
+      "id": "takes_extra_time",
+      "name_en": "Takes Extra Time",
+      "name_pt": "Demora Extra",
+      "cost": "-10%/nível",
+      "applies_to": [
+        "abilities with activation time"
+      ],
+      "description_pt": "Cada nível dobra time. Pra abilities Ready/Concentrate. Pra ataques, primeiro nível = Ready 1 seg antes do Attack; níveis seguintes dobram.",
+      "page_ref": 115
+    },
+    {
+      "id": "takes_recharge",
+      "name_en": "Takes Recharge",
+      "name_pt": "Precisa Recarregar",
+      "cost": "-10% a -30%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "5 seg (ou 2× tempo de uso): -10%. 15 seg (5×): -20%. 1 hora (10×): -30%. Recharges maiores não valem (use Limited Use).",
+      "page_ref": 115
+    },
+    {
+      "id": "temporary_disadvantage",
+      "name_en": "Temporary Disadvantage",
+      "name_pt": "Desvantagem Temporária",
+      "cost": "variável",
+      "applies_to": [
+        "switchable advantages"
+      ],
+      "description_pt": "Quando ability on, sofre disadvantage(s). -1%/pt do disad (max -80%). Limit ≤ 80% do disad value. Tb pode usar pra remover advantage temporariamente.",
+      "page_ref": 115
+    },
+    {
+      "id": "trigger",
+      "name_en": "Trigger",
+      "name_pt": "Gatilho",
+      "cost": "-10% a -40%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Exige substância/condição (droga, ritual) por 'use' de 1 min. Very Common -10%, Common -20%, Occasional -30%, Rare -40%. ×1.5 se illegal/addictive/perigoso.",
+      "page_ref": 115
+    },
+    {
+      "id": "unconscious_only",
+      "name_en": "Unconscious Only",
+      "name_pt": "Inconsciente Apenas",
+      "cost": "-20%",
+      "applies_to": [
+        "Uncontrollable"
+      ],
+      "description_pt": "Pré-req Uncontrollable. Não pode ativar conscientemente; só sob GM control em stress. Pode comprar off depois.",
+      "page_ref": 115
+    },
+    {
+      "id": "uncontrollable",
+      "name_en": "Uncontrollable",
+      "name_pt": "Incontrolável",
+      "cost": "-10% ou -30%",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Manifesta em momentos errados. Will roll em situação stress (14+ sempre falha). Falha = GM controla a ability (prankish/hostile). Cada uncontrolled act = novo roll. -10% se inofensivo (Flight ativa errado). -30% se destrutivo (ataques que nunca te ferem mas atingem outros). Pode comprar off depois.",
+      "page_ref": 116
+    },
+    {
+      "id": "unreliable",
+      "name_en": "Unreliable",
+      "name_pt": "Não Confiável",
+      "cost": "variável",
+      "applies_to": [
+        "any"
+      ],
+      "description_pt": "Activation number em 3d: 5 -80%, 8 -40%, 11 -20%, 14 -10%. Tenta cada seg (1 FP/repetição após o 1º). Em gadgets/firearms: Malf number 12 -25%, 13 -20%, 14 -15%, 15 -10%, 16 -5%.",
+      "page_ref": 116
+    },
+    {
+      "id": "untrainable",
+      "name_en": "Untrainable",
+      "name_pt": "Intreinável",
+      "cost": "-40%",
+      "applies_to": [
+        "abilities requiring skill"
+      ],
+      "description_pt": "Não pode controlar bem. Skills relacionados aprendidos como se atributo fosse 8 (ou -1 do usual). Max skill 10.",
+      "page_ref": 116
+    },
+    {
+      "id": "all_out",
+      "name_en": "All-Out",
+      "name_pt": "Tudo-ou-Nada",
+      "cost": "-25%",
+      "applies_to": [
+        "any"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Usar a habilidade impede defesas ativas até início do próximo turno. Sem Dodge/Parry/Block enquanto cooldown.",
+      "page_ref": 112
+    },
+    {
+      "id": "aspected",
+      "name_en": "Aspected",
+      "name_pt": "Aspectado",
+      "cost": "-20%",
+      "applies_to": [
+        "any"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Funciona só em circunstâncias temáticas específicas (somente de noite, somente em batalha, etc.). Mais restrito que Accessibility.",
+      "page_ref": 112
+    },
+    {
+      "id": "blockable",
+      "name_en": "Blockable",
+      "name_pt": "Bloqueável",
+      "cost": "-5%",
+      "applies_to": [
+        "any with line-of-sight"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Material comum mas específico bloqueia (chumbo bloqueia X-ray vision; espelho bloqueia gaze; etc.).",
+      "page_ref": 112
+    },
+    {
+      "id": "fickle",
+      "name_en": "Fickle",
+      "name_pt": "Volúvel",
+      "cost": "-20%",
+      "applies_to": [
+        "any"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Roll 3d cada vez que ativa: 17-18 falha (independente de outros rolls). Power 'desliga' sozinho às vezes.",
+      "page_ref": 112
+    },
+    {
+      "id": "insubstantial_only",
+      "name_en": "Insubstantial Only",
+      "name_pt": "Só Insubstancial",
+      "cost": "-30%",
+      "applies_to": [
+        "abilities"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Só funciona quando você está insubstancial (Insubstantiality, Spirit meta-trait). Útil para spirit powers.",
+      "page_ref": 113
+    },
+    {
+      "id": "greater_than_one_month",
+      "name_en": "Greater than One Month",
+      "name_pt": "Mais de Um Mês",
+      "cost": "-30%",
+      "applies_to": [
+        "Extended Duration"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Variante para Extended Duration acima de 1 mês — efeitos podem ser desfeitos via tratamento longo.",
+      "page_ref": 113
+    },
+    {
+      "id": "minimum_range",
+      "name_en": "Minimum Range",
+      "name_pt": "Alcance Mínimo",
+      "cost": "-5%",
+      "applies_to": [
+        "ranged"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Não pode usar abaixo de range mínimo (5 jds típico). Em close combat, ability inútil.",
+      "page_ref": 113
+    },
+    {
+      "id": "requires_concentrate_ready",
+      "name_en": "Requires Concentrate or Ready",
+      "name_pt": "Requer Concentrate/Ready",
+      "cost": "-15%",
+      "applies_to": [
+        "abilities normally instant"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Reflexive abilities precisam Concentrate/Ready maneuver para ativar — não funcionam reflexivamente.",
+      "page_ref": 113
+    },
+    {
+      "id": "short_range",
+      "name_en": "Short-Range",
+      "name_pt": "Curto Alcance",
+      "cost": "-10%/nível",
+      "applies_to": [
+        "ranged"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Range reduzido drasticamente. Cada nível usa coluna anterior da Long-Distance table. Oposto de Long-Range.",
+      "page_ref": 113
+    },
+    {
+      "id": "visible",
+      "name_en": "Visible",
+      "name_pt": "Visível",
+      "cost": "-10%",
+      "applies_to": [
+        "abilities normally invisible"
+      ],
+      "source_book": "GURPS Powers",
+      "description_pt": "Manifestação visível óbvia (mão fantasma, luz brilhante, ondas distorcidas). Compromete stealth e secrecy.",
+      "page_ref": 114
+    }
+  ],
+  "gadget_limitations": [
+    {
+      "id": "breakable",
+      "name_en": "Breakable",
+      "name_pt": "Quebrável",
+      "cost": "variável",
+      "applies_to": [
+        "gadgets"
+      ],
+      "description_pt": "Inimigos podem destruir item. Soma componentes: Durability por DR (DR 2- -20%, 3-5 -15%, 6-15 -10%, 16-25 -5%, 26+ 0%); Machine (-5% se pode quebrar). Reparability (-15% se irreparável). Size (SM -9- 0%, -7 -5%, -5 -10%, -3 -15%, -1 -20%, 0+ -25%).",
+      "page_ref": 116
+    },
+    {
+      "id": "can_be_stolen",
+      "name_en": "Can Be Stolen",
+      "name_pt": "Pode ser Roubado",
+      "cost": "-10% a -40%",
+      "applies_to": [
+        "gadgets"
+      ],
+      "description_pt": "Snatched DX unopposed (chapéu): -40%. Quick Contest DX/ST (pulseira/wand): -30%. Stealth/trick (moeda no bolso): -20%. Forcefully removed (armadura): -10%. Halve se item não trabalha imediatamente pro thief.",
+      "page_ref": 116
+    },
+    {
+      "id": "unique",
+      "name_en": "Unique",
+      "name_pt": "Único",
+      "cost": "-25%",
+      "applies_to": [
+        "Breakable",
+        "Can Be Stolen"
+      ],
+      "description_pt": "Não pode ser reposto. Pts perdidos pra sempre se broken/stolen.",
+      "page_ref": 117
+    }
+  ],
+  "$expansion": {
+    "GURPS Powers Cap 2": {
+      "enhancements_added": 10,
+      "limitations_added": 10,
+      "completion_date": "2026-05-16"
+    }
+  }
+}

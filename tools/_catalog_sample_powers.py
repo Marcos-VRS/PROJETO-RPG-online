@@ -1,0 +1,192 @@
+"""Lista de Sample Powers do livro Powers cap 3 — em formato JSON catalog."""
+import json
+from pathlib import Path
+
+TARGET = Path(__file__).resolve().parents[1] / "gurps" / "data" / "sample_powers.json"
+
+# Cada sample power tem: name, sources, focus, talent_cost, abilities (lista de advantages típicos), power_modifier_value
+# Extraído de Powers cap 3 (pp 122-153)
+SAMPLE_POWERS = [
+    {"id":"anti_magic","name_en":"Anti-Magic","sources":["Divine","Spirit","Anti-Magic"],"focus":"Blocking magic energy","talent_cost":5,
+     "key_abilities":["Damage Resistance (Limited Magic)","Detect (magic)","Magic Resistance","Mana Damper","Mind Shield (Magic)","Neutralize (Magic)","See Invisible (Magical)","Static (Magic)"],
+     "power_modifier":"Anti-Magic (+0% or -10% Divine or -25% Spirit)","page":124},
+
+    {"id":"animal_control","name_en":"Animal Control","sources":["Biological","Chi","Magical","Nature","Psionic","Spirit","Super"],"focus":"Influence/communicate with animals","talent_cost":5,
+     "key_abilities":["Animal Empathy","Mind Control (Animals)","Mind Reading (Animals)","Speak With Animals","Detect (animals)"],
+     "power_modifier":"Animal varies -10% to -25%","page":123},
+
+    {"id":"antipsi","name_en":"Antipsi","sources":["Antipsi","Biological","Chi","Super"],"focus":"Blocking psi","talent_cost":5,
+     "key_abilities":["Damage Resistance (Limited Psi)","Detect (psi)","Mind Shield (Psionic)","Neutralize (Psi)","Static (Psi)","Resistant (Psi)"],
+     "power_modifier":"Antipsi +0% or -10% via source","page":124},
+
+    {"id":"astral_projection","name_en":"Astral Projection","sources":["Chi","Divine","Magical","Psionic","Spirit"],"focus":"Mental travel out-of-body","talent_cost":10,
+     "key_abilities":["Insubstantiality","Detect (Astral)","See Invisible (Astral)","Clairsentience","Possession (Spirit)","Telesend"],
+     "power_modifier":"Spiritual -10%","page":125},
+
+    {"id":"bioenergy","name_en":"Bioenergy","sources":["Biological","Chi","Cosmic","Psionic","Super"],"focus":"Manipulating life force","talent_cost":10,
+     "key_abilities":["Healing","Innate Attack (fatigue or tox)","Leech","Regeneration","Resistant to disease/poison","Doesn't Eat/Drink"],
+     "power_modifier":"Bioenergy -10%","page":125},
+
+    {"id":"body_alteration","name_en":"Body Alteration","sources":["Biological","Chi","Magical","Super"],"focus":"Reshaping own body","talent_cost":10,
+     "key_abilities":["Alternate Form","Morph","Elastic Skin","Shapeshifting","Stretching","Growth","Shrinking"],
+     "power_modifier":"Body Alteration -10%","page":126},
+
+    {"id":"body_control","name_en":"Body Control","sources":["Chi","Biological","Magical"],"focus":"Mastering autonomic functions","talent_cost":5,
+     "key_abilities":["Metabolism Control","Pressure Support","Sealed","Temperature Tolerance","Vacuum Support","Resistant"],
+     "power_modifier":"Body Control -10%","page":126},
+
+    {"id":"chaos","name_en":"Chaos","sources":["Cosmic","Magical","Spirit"],"focus":"Randomness, entropy","talent_cost":10,
+     "key_abilities":["Luck (Chaotic)","Unluckiness on others","Innate Attack (random effects)","Probability Alteration"],
+     "power_modifier":"Chaos -10%","page":127},
+
+    {"id":"cosmic_generic","name_en":"Cosmic (Generic)","sources":["Cosmic"],"focus":"Fundamental forces","talent_cost":20,
+     "key_abilities":["Almost anything — universal scope"],
+     "power_modifier":"Cosmic +50% to +300%","page":127,"notes":"Deus-tier; usually NPCs only"},
+
+    {"id":"darkness","name_en":"Darkness","sources":["Magical","Nature","Spirit","Super"],"focus":"Shadow and absence of light","talent_cost":5,
+     "key_abilities":["Dark Vision","Obscure (Vision)","Innate Attack (cold/burning negative)","Insubstantiality (Always On)","Shadow Form"],
+     "power_modifier":"Darkness -10%","page":128},
+
+    {"id":"death","name_en":"Death","sources":["Magical","Spirit","Cosmic"],"focus":"Death, undead, life-draining","talent_cost":10,
+     "key_abilities":["Channeling","Medium","Leech","Affliction (Heart Attack)","Innate Attack (tox)","Speak With Dead (Medium)","Possession (Spirit)"],
+     "power_modifier":"Necromantic -10%","page":129},
+
+    {"id":"dimension_travel","name_en":"Dimension Travel","sources":["Magical","Psionic","Spirit","Cosmic"],"focus":"Travel between worlds","talent_cost":10,
+     "key_abilities":["Jumper (World)","Warp (World-Spanning)","Insubstantiality","Permeation"],
+     "power_modifier":"Dimensional -10%","page":130},
+
+    {"id":"divine","name_en":"Divine","sources":["Divine"],"focus":"God's will","talent_cost":15,
+     "key_abilities":["Blessed","Power Investiture","True Faith","Healing (Faith)","Luck","Wild Talent"],
+     "power_modifier":"Divine -10% (with Pact)","page":130},
+
+    {"id":"earth","name_en":"Earth","sources":["Magical","Nature","Spirit","Super"],"focus":"Soil, rock, stone","talent_cost":10,
+     "key_abilities":["Control (Earth)","Create (Earth)","Permeation (Earth)","Innate Attack (cr)","Walk on Liquid (lava)"],
+     "power_modifier":"Earth-Aspected -10%","page":131},
+
+    {"id":"electricity","name_en":"Electricity","sources":["Magical","Nature","Spirit","Super","Technological"],"focus":"Electric current","talent_cost":10,
+     "key_abilities":["Control (Electricity)","Innate Attack (burn, Surge)","DR vs Electricity","Detect (electricity)"],
+     "power_modifier":"Electrical -10%","page":132},
+
+    {"id":"electrokinesis","name_en":"Electrokinesis","sources":["Psionic","Super"],"focus":"Mental control of electricity","talent_cost":10,
+     "key_abilities":["Telekinesis (electric)","Innate Attack (burn)","Telesend (Radio)"],
+     "power_modifier":"Psionic Electrokinetic -10%","page":133},
+
+    {"id":"evil","name_en":"Evil","sources":["Divine (dark)","Spirit","Cosmic"],"focus":"Malevolence personified","talent_cost":10,
+     "key_abilities":["Charisma (Negative)","Affliction (curse)","Static (Good)","Innate Attack (tox)","Fanaticism"],
+     "power_modifier":"Evil -10%","page":133},
+
+    {"id":"force_constructs","name_en":"Force Constructs","sources":["Magical","Super","Cosmic"],"focus":"Solidified energy","talent_cost":10,
+     "key_abilities":["Create (Force)","Damage Resistance (Force Field)","Innate Attack (cr)","Binding","Walk on Air"],
+     "power_modifier":"Force -10%","page":134},
+
+    {"id":"good","name_en":"Good","sources":["Divine","Spirit","Cosmic"],"focus":"Benevolence","talent_cost":10,
+     "key_abilities":["Blessed","Healing","Charisma","Static (Evil)","True Faith"],
+     "power_modifier":"Good -10%","page":135},
+
+    {"id":"gravity","name_en":"Gravity","sources":["Cosmic","Super"],"focus":"Gravitational force","talent_cost":15,
+     "key_abilities":["Control (Gravity)","Flight","Walk on Air","Innate Attack (cr)","Insubstantiality"],
+     "power_modifier":"Gravitational -10%","page":136},
+
+    {"id":"healing_power","name_en":"Healing","sources":["Chi","Divine","Magical","Psionic","Spirit","Super"],"focus":"Curing wounds","talent_cost":10,
+     "key_abilities":["Healing","Regeneration","Recovery","Resistant (Disease/Poison)","Cure Disease (Healing variant)"],
+     "power_modifier":"Healing -10%","page":136},
+
+    {"id":"illusion_power","name_en":"Illusion","sources":["Magical","Psionic","Super","Cosmic"],"focus":"Deception via false images","talent_cost":5,
+     "key_abilities":["Illusion","Invisibility","Elastic Skin","Mimicry","Obscure (Vision)"],
+     "power_modifier":"Illusory -10%","page":137},
+
+    {"id":"kinetic_energy","name_en":"Kinetic Energy","sources":["Cosmic","Super","Psionic"],"focus":"Movement and impact force","talent_cost":10,
+     "key_abilities":["Telekinesis","Innate Attack (cr)","Damage Resistance (Force Field)","Super Jump"],
+     "power_modifier":"Kinetic -10%","page":138},
+
+    {"id":"life_power","name_en":"Life","sources":["Cosmic","Divine","Nature","Spirit"],"focus":"Life force","talent_cost":10,
+     "key_abilities":["Healing","Resurrection (Extra Life or similar)","Create (Organic)","Leech"],
+     "power_modifier":"Life-Aspected -10%","page":138},
+
+    {"id":"light","name_en":"Light","sources":["Magical","Nature","Spirit","Super","Technological"],"focus":"Visible/EM radiation","talent_cost":10,
+     "key_abilities":["Control (Light)","Hyperspectral Vision","Innate Attack (burn, laser)","Obscure (Vision, glare)","Telecommunication (Laser)"],
+     "power_modifier":"Light -10%","page":139},
+
+    {"id":"machine_telepathy","name_en":"Machine Telepathy","sources":["Psionic","Technological"],"focus":"Communication with machines","talent_cost":10,
+     "key_abilities":["Mind Control (Cybernetic)","Mind Reading (Cybernetic)","Possession (Digital)","Telesend (Cybernetic)"],
+     "power_modifier":"Cybernetic Telepathy -10%","page":140},
+
+    {"id":"magic_power","name_en":"Magic (general)","sources":["Magical"],"focus":"Arcane manipulation","talent_cost":10,
+     "key_abilities":["Magery","Magic Resistance","See Invisible (Magical)","Wild Talent (Magic)","Detect (magic)"],
+     "power_modifier":"Magical -10%","page":140},
+
+    {"id":"magnetism","name_en":"Magnetism","sources":["Super","Technological"],"focus":"Magnetic forces","talent_cost":10,
+     "key_abilities":["Telekinesis (Magnetic)","Innate Attack (Surge)","DR (Magnetic Field)"],
+     "power_modifier":"Magnetic -10%","page":141},
+
+    {"id":"matter_control","name_en":"Matter Control","sources":["Cosmic","Super","Magical"],"focus":"Manipulating matter at all scales","talent_cost":15,
+     "key_abilities":["Control (Matter)","Create (Matter)","Innate Attack (cor)","Telekinesis"],
+     "power_modifier":"Matter Manipulation -10%","page":142},
+
+    {"id":"order","name_en":"Order","sources":["Cosmic","Divine"],"focus":"Pattern, structure, predictability","talent_cost":10,
+     "key_abilities":["Damage Resistance (predictable attacks)","Resistant","Anti-Chaos abilities","Detect (Chaos)"],
+     "power_modifier":"Order -10%","page":143},
+
+    {"id":"plant_control","name_en":"Plant Control","sources":["Biological","Chi","Magical","Nature","Psionic"],"focus":"Plants and growing things","talent_cost":5,
+     "key_abilities":["Plant Empathy","Mind Control (Plants)","Speak With Plants","Detect (Plants)","Control (Wood)"],
+     "power_modifier":"Plant-Aspected -10%","page":144},
+
+    {"id":"probability_alteration","name_en":"Probability Alteration","sources":["Cosmic","Magical","Psionic","Super"],"focus":"Chance, fortune","talent_cost":15,
+     "key_abilities":["Luck","Super Luck","Serendipity","Daredevil","Unluckiness (on others)"],
+     "power_modifier":"Probability -10%","page":144},
+
+    {"id":"psychokinesis","name_en":"Psychokinesis","sources":["Psionic"],"focus":"Mental control of matter/energy","talent_cost":10,
+     "key_abilities":["Telekinesis","Temperature Control","Innate Attack","Walk on Liquid"],
+     "power_modifier":"Psychokinetic -10%","page":145},
+
+    {"id":"radiation","name_en":"Radiation","sources":["Super","Technological","Cosmic"],"focus":"Ionizing radiation","talent_cost":10,
+     "key_abilities":["Innate Attack (burn, Radiation)","Detect (Radiation)","Resistant (Radiation)","DR (vs Radiation)","Radiation Tolerance"],
+     "power_modifier":"Radioactive -10%","page":146},
+
+    {"id":"vibration","name_en":"Vibration","sources":["Super","Cosmic"],"focus":"Sonic/vibratory energy","talent_cost":10,
+     "key_abilities":["Subsonic/Ultrasonic Hearing","Innate Attack (cr or burn)","Vibration Sense","Obscure (Hearing)"],
+     "power_modifier":"Vibration -10%","page":147},
+
+    {"id":"spirit_control","name_en":"Spirit Control","sources":["Spirit","Magical","Divine"],"focus":"Controlling spirits and ghosts","talent_cost":10,
+     "key_abilities":["Medium","Spirit Empathy","Mind Control (Spirit)","See Invisible (Spirit)","Static (Spirit)"],
+     "power_modifier":"Spirit Control -10%","page":148},
+
+    {"id":"telepathy_power","name_en":"Telepathy","sources":["Psionic","Magical","Divine"],"focus":"Mind-to-mind contact","talent_cost":10,
+     "key_abilities":["Empathy","Mind Control","Mind Reading","Mind Shield","Mindlink","Telesend"],
+     "power_modifier":"Telepathic -10%","page":134},
+
+    {"id":"teleportation_power","name_en":"Teleportation","sources":["Psionic","Magical","Cosmic"],"focus":"Instantaneous travel","talent_cost":10,
+     "key_abilities":["Warp","Jumper"],
+     "power_modifier":"Teleportation -10%","page":150},
+
+    {"id":"time_mastery","name_en":"Time Mastery","sources":["Cosmic","Magical","Divine"],"focus":"Manipulating time","talent_cost":15,
+     "key_abilities":["Altered Time Rate","Decreased Time Rate (on enemies)","Jumper (Time)","Precognition","Temporal Inertia"],
+     "power_modifier":"Temporal -10%","page":151},
+
+    {"id":"vampirism","name_en":"Vampirism","sources":["Magical","Spirit"],"focus":"Stealing life force","talent_cost":5,
+     "key_abilities":["Vampiric Bite","Leech","Dependency (blood)","Unkillable","Doesn't Eat/Drink (blood substitute)"],
+     "power_modifier":"Vampiric -10%","page":152},
+]
+
+
+def main():
+    out = {
+        "$schema_version": "1.0",
+        "source": {"book":"GURPS 4e — Powers","chapter":3,"pages":"122-153"},
+        "$progress": {"status":"complete","entries":len(SAMPLE_POWERS),"completion_date":"2026-05-16",
+                      "notes_pt":"Cobre Sample Powers do livro Powers cap 3. Cada power lista source, focus, talent cost, key abilities, power modifier. Detalhes específicos por ability remetidos a advantages.json + modifiers.json."},
+        "$schema_notes": {
+            "sources": "lista de sources (origins) válidas pra esse power",
+            "focus": "tema/conceito que o power manipula",
+            "talent_cost": "pts/nível pra Talent associado",
+            "key_abilities": "lista de advantages que tipicamente fazem parte do power",
+            "power_modifier": "nome+valor do modifier que marca uma ability como parte deste power"
+        },
+        "entries": SAMPLE_POWERS,
+    }
+    TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=2)+"\n", encoding='utf-8')
+    print(f"TOTAL: {len(SAMPLE_POWERS)} sample powers em sample_powers.json")
+
+
+if __name__ == "__main__":
+    main()

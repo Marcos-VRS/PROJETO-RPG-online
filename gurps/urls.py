@@ -143,4 +143,28 @@ urlpatterns = [
         views.delete_quick_character,
         name="delete_quick_character",
     ),
+    path(
+        "character/<int:char_id>/vitals/",
+        views.adjust_character_vitals,
+        name="adjust_character_vitals",
+    ),
+
+    # =========================================================================
+    # CharacterSheetV2 (ficha nova, 2026-05-16)
+    # =========================================================================
+    path("v2/Campanha/<int:campanha_id>/Criar_Ficha/", views.criar_v2, name="criar_v2"),
+    path("v2/Ficha/<int:id>/Editar/", views.editar_v2, name="editar_v2"),
+    path("v2/Ficha/<int:id>/Ver/", views.ver_v2, name="ver_v2"),
+    path("v2/Ficha/<int:id>/Delete/", views.delete_v2, name="delete_v2"),
+    path("v2/Campanha/<int:campanha_id>/Fichas/GM/", views.lista_v2_gm, name="lista_v2_gm"),
+    path("v2/Campanha/<int:campanha_id>/Fichas/Player/", views.lista_v2_player, name="lista_v2_player"),
+    path("v2/api/compute-secondary/", views.api_compute_secondary, name="api_compute_secondary_v2"),
+    path("v2/api/catalog/advantages/", views.api_catalog_advantages, name="api_catalog_advantages_v2"),
+    path("v2/api/catalog/disadvantages/", views.api_catalog_disadvantages, name="api_catalog_disadvantages_v2"),
+    path("v2/api/catalog/modifiers/", views.api_catalog_modifiers, name="api_catalog_modifiers_v2"),
+    path("v2/api/catalog/skills/", views.api_catalog_skills, name="api_catalog_skills_v2"),
+    path("v2/api/Ficha/<int:id>/quickadd/<str:kind>/",
+         views.api_quick_add, name="api_quick_add_v2"),
+    path("v2/api/Ficha/<int:id>/quickremove/<str:kind>/<int:index>/",
+         views.api_quick_remove, name="api_quick_remove_v2"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

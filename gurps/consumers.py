@@ -85,12 +85,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not self._valid_scene_state(new_state):
             return
 
-        # Normaliza character_ids pra int.
+        # Normaliza character_ids E current_turn_id pra int. Se current_turn_id
+        # não está mais na lista (ou é inválido), aponta pro primeiro.
         for s in new_state.get("scenes", []):
             try:
                 s["character_ids"] = [int(x) for x in s.get("character_ids", [])]
             except (TypeError, ValueError):
                 return
+            cur = s.get("current_turn_id")
+            try:
+                cur_int = int(cur) if cur is not None else None
+            except (TypeError, ValueError):
+                cur_int = None
+            if cur_int is None or cur_int not in s["character_ids"]:
+                cur_int = s["character_ids"][0] if s["character_ids"] else None
+            s["current_turn_id"] = cur_int
 
         new_state["version"] = 2
         saved = await self._save_state(new_state)
@@ -163,3 +172,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if "scene_state" in event:
             payload["scene_state"] = event["scene_state"]
         await self.send(text_data=json.dumps(payload))
+
+    async def character_updated(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "character_updated",
+            "char": event["char"],
+        }))
+
+    async def character_vitals_changed(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "character_vitals_changed",
+            "char_id": event["char_id"],
+            "hp_atual": event["hp_atual"],
+            "hp_max": event["hp_max"],
+            "hp_pct": event["hp_pct"],
+            "hp_is_negative": event.get("hp_is_negative", False),
+            "fp_atual": event["fp_atual"],
+            "fp_max": event["fp_max"],
+            "fp_pct": event["fp_pct"],
+        }))

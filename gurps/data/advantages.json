@@ -7,16 +7,27 @@
     "edition": "Fourth Edition"
   },
   "$progress": {
-    "status": "partial",
-    "batch": "A-C (primeiro lote)",
-    "entries_in_file": 30,
-    "total_estimated_in_book": 155,
-    "next_letters": "D-F",
-    "notes_pt": "Catálogo incremental. Entradas nesta versão têm detalhe mecânico essencial (custo, categoria, descrição resumida, variantes, modificadores especiais mencionados). Descrições completas e todas as enhancements/limitations por vantagem serão preenchidas em iterações futuras. Entradas marcadas com `detail_level: 'summary'` estão prontas para validação de nomes/custos mas precisam expansão; as com `detail_level: 'full'` estão completas."
+    "status": "complete_advantages",
+    "batch": "A-Z + Talents + Perks (Chapter 2 do Basic Set Characters)",
+    "entries_in_file": 240,
+    "total_estimated_in_book": 200,
+    "completion_date": "2026-05-16",
+    "notes_pt": "Catálogo de Vantagens fechado. Cobre Advantage List (pp 34-100), Talents standard (pp 89-91), Perks listados (pp 100-101). Todas entries com detail_level=full. Modificadores gerais (Enhancements/Limitations pp 101-116) na próxima etapa."
   },
   "$schema_notes": {
-    "type_values": ["mental", "physical", "social", "mental/physical", "mental/social"],
-    "origin_values": ["mundane", "exotic", "supernatural", "exotic/supernatural"],
+    "type_values": [
+      "mental",
+      "physical",
+      "social",
+      "mental/physical",
+      "mental/social"
+    ],
+    "origin_values": [
+      "mundane",
+      "exotic",
+      "supernatural",
+      "exotic/supernatural"
+    ],
     "cost_shapes": {
       "fixed": "{ \"type\": \"fixed\", \"value\": N }",
       "per_level": "{ \"type\": \"per_level\", \"value\": N, \"min_levels\": 1, \"max_levels\": N_or_null }",
@@ -32,10 +43,17 @@
       "name_pt": "Visão 360°",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "fixed", "value": 25 },
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
       "description_pt": "Campo de visão de 360°. Sem penalidades de defesa para ataques laterais ou de retaguarda; ataques nessas direções sem penalidade de Wild Swing mas -2 por ângulo. +5 para detectar tentativas de Shadowing; nunca surpreso por ameaças visíveis vindas por trás. Olhos extras são efeito especial.",
       "special_limitations": [
-        { "id": "easy_to_hit", "value_percent": -20, "notes_pt": "Olhos salientes: alvo a -6 em vez de -9 para mirar neles." }
+        {
+          "id": "easy_to_hit",
+          "value_percent": -20,
+          "notes_pt": "Olhos salientes: alvo a -6 em vez de -9 para mirar neles."
+        }
       ],
       "page_ref": 34,
       "detail_level": "full"
@@ -46,7 +64,10 @@
       "name_pt": "Sentido Espacial 3D",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 10 },
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
       "description_pt": "Variante de Absolute Direction que funciona em três dimensões. Útil em espaço profundo (não ajuda em viagem dimensional). Bônus de skill de Absolute Direction + +1 em Piloting, +2 em Aerobatics, Free Fall e Navigation (Hyperspace ou Space).",
       "related_to": "absolute_direction",
       "page_ref": 34,
@@ -58,13 +79,23 @@
       "name_pt": "Direção Absoluta",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 5 },
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
       "description_pt": "Sempre sabe onde fica o norte e consegue refazer qualquer caminho percorrido no último mês. Não funciona em espaço interestelar nem no plano astral, mas funciona embaixo d'água e em outros planetas. +3 em Body Sense e em Navigation (Air, Land ou Sea).",
       "variants": [
-        { "id": "three_d_spatial_sense", "notes_pt": "Variante 3D: +5 pontos, ver entrada própria." }
+        {
+          "id": "three_d_spatial_sense",
+          "notes_pt": "Variante 3D: +5 pontos, ver entrada própria."
+        }
       ],
       "special_limitations": [
-        { "id": "requires_signal", "value_percent": -20, "notes_pt": "Depende de sistema tipo GPS; pode ser jammed." }
+        {
+          "id": "requires_signal",
+          "value_percent": -20,
+          "notes_pt": "Depende de sistema tipo GPS; pode ser jammed."
+        }
       ],
       "page_ref": 34,
       "detail_level": "full"
@@ -75,24 +106,36 @@
       "name_pt": "Tempo Absoluto",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 2 },
+      "cost": {
+        "type": "fixed",
+        "value": 2
+      },
       "description_pt": "Relógio mental preciso (melhor precisão que relógios pessoais da cultura, nunca melhor que poucos segundos). Mede tempo decorrido com igual precisão; acorda em hora programada. Inconsciência e hipnose podem inibir; viagem no tempo confunde até descobrir a 'nova' data.",
       "variants": [
-        { "id": "chronolocation", "name_en": "Chronolocation", "name_pt": "Cronolocalização", "value": 5, "notes_pt": "Como acima mas viagem no tempo não confunde; sempre sabe a data absoluta." }
+        {
+          "id": "chronolocation",
+          "name_en": "Chronolocation",
+          "name_pt": "Cronolocalização",
+          "value": 5,
+          "notes_pt": "Como acima mas viagem no tempo não confunde; sempre sabe a data absoluta."
+        }
       ],
       "page_ref": 35,
       "detail_level": "full"
     },
     {
       "id": "accessory",
-      "name_en": "Accessory",
-      "name_pt": "Acessório",
+      "name_en": "Perk: Accessory",
+      "name_pt": "Perk: Acessório",
       "type": "physical",
-      "origin": "exotic",
-      "cost": { "type": "per_level", "value": 1 },
-      "description_pt": "Tem incorporado ao corpo um item útil mas não-armamentista (bússola embutida, câmera, etc.). Cada nível é um item de TL máximo = TL da campanha, valor de gadget baixo.",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Corpo incorpora ferramenta/gadget útil (sirene, vacuum cleaner) que dá benefício menor não-combate.",
       "page_ref": 100,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "acute_hearing",
@@ -100,7 +143,10 @@
       "name_pt": "Audição Aguçada",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "+1 por nível em todas as Sense rolls de audição.",
       "acute_sense_group": true,
       "page_ref": 35,
@@ -112,7 +158,10 @@
       "name_pt": "Paladar e Olfato Aguçados",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "+1 por nível em Sense rolls de paladar/olfato (p.ex. detectar veneno em bebida).",
       "acute_sense_group": true,
       "page_ref": 35,
@@ -124,7 +173,10 @@
       "name_pt": "Tato Aguçado",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "+1 por nível em Sense rolls de tato (p.ex. detectar arma escondida ao revistar suspeito).",
       "acute_sense_group": true,
       "page_ref": 35,
@@ -136,7 +188,10 @@
       "name_pt": "Visão Aguçada",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "+1 por nível para enxergar detalhes e em buscas visuais (armadilhas, pegadas).",
       "acute_sense_group": true,
       "page_ref": 35,
@@ -145,14 +200,17 @@
     {
       "id": "administrative_rank",
       "name_en": "Administrative Rank",
-      "name_pt": "Patente Administrativa",
+      "name_pt": "Rank Administrativo",
       "type": "social",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 5, "notes_pt": "Variante de Rank — ver entrada Rank (p. 29)." },
-      "description_pt": "Posição formal em hierarquia administrativa civil/corporativa. Detalhes idênticos aos de Rank.",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Hierarquia formal em organização (civil/govt). Pré-req Status apropriado. Cada nível: +1 reaction de subordinados, autoridade na esfera. Ver Rank p29.",
       "see_also": "rank",
       "page_ref": 29,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "affliction",
@@ -160,46 +218,121 @@
       "name_pt": "Aflição",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "per_level", "value": 10 },
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
       "description_pt": "Ataque que causa efeito não-dano (cegueira, paralisia, etc.). Padrão: ranged 1/2D 10, Max 100, Acc 3, RoF 1, Recoil 1. Vítima faz HT+1 com penalidade = nível; DR some ao roll exceto com Blood/Contact/Cosmic/Follow-Up/Malediction/Respiratory/Sense-Based. Default é stunning; efeitos alternativos são special enhancements.",
       "special_enhancements": [
-        { "id": "advantage", "notes_pt": "Concede um advantage específico ao alvo por tempo. Custo +1%/ponto do advantage (switchable = +10%/pt)." },
-        { "id": "attribute_penalty", "notes_pt": "+5% por -1 em ST/HT; +10% por -1 em DX/IQ." },
-        { "id": "disadvantage", "notes_pt": "Impõe disadvantage temporário; custo +1%/-ponto." },
-        { "id": "incapacitation_daze", "value_percent": 50 },
-        { "id": "incapacitation_hallucinating", "value_percent": 50 },
-        { "id": "incapacitation_retching", "value_percent": 50 },
-        { "id": "incapacitation_agony", "value_percent": 100 },
-        { "id": "incapacitation_choking", "value_percent": 100 },
-        { "id": "incapacitation_ecstasy", "value_percent": 100 },
-        { "id": "incapacitation_seizure", "value_percent": 100 },
-        { "id": "incapacitation_paralysis", "value_percent": 150 },
-        { "id": "incapacitation_sleep", "value_percent": 150 },
-        { "id": "incapacitation_unconsciousness", "value_percent": 200 },
-        { "id": "irritant_tipsy", "value_percent": 10 },
-        { "id": "irritant_coughing", "value_percent": 20 },
-        { "id": "irritant_drunk", "value_percent": 20 },
-        { "id": "irritant_moderate_pain", "value_percent": 20 },
-        { "id": "irritant_euphoria", "value_percent": 30 },
-        { "id": "irritant_nauseated", "value_percent": 30 },
-        { "id": "irritant_severe_pain", "value_percent": 40 },
-        { "id": "irritant_terrible_pain", "value_percent": 60 },
-        { "id": "negated_advantage", "notes_pt": "+1% por ponto do advantage negado." },
-        { "id": "stunning", "value_percent": 10 }
+        {
+          "id": "advantage",
+          "notes_pt": "Concede um advantage específico ao alvo por tempo. Custo +1%/ponto do advantage (switchable = +10%/pt)."
+        },
+        {
+          "id": "attribute_penalty",
+          "notes_pt": "+5% por -1 em ST/HT; +10% por -1 em DX/IQ."
+        },
+        {
+          "id": "disadvantage",
+          "notes_pt": "Impõe disadvantage temporário; custo +1%/-ponto."
+        },
+        {
+          "id": "incapacitation_daze",
+          "value_percent": 50
+        },
+        {
+          "id": "incapacitation_hallucinating",
+          "value_percent": 50
+        },
+        {
+          "id": "incapacitation_retching",
+          "value_percent": 50
+        },
+        {
+          "id": "incapacitation_agony",
+          "value_percent": 100
+        },
+        {
+          "id": "incapacitation_choking",
+          "value_percent": 100
+        },
+        {
+          "id": "incapacitation_ecstasy",
+          "value_percent": 100
+        },
+        {
+          "id": "incapacitation_seizure",
+          "value_percent": 100
+        },
+        {
+          "id": "incapacitation_paralysis",
+          "value_percent": 150
+        },
+        {
+          "id": "incapacitation_sleep",
+          "value_percent": 150
+        },
+        {
+          "id": "incapacitation_unconsciousness",
+          "value_percent": 200
+        },
+        {
+          "id": "irritant_tipsy",
+          "value_percent": 10
+        },
+        {
+          "id": "irritant_coughing",
+          "value_percent": 20
+        },
+        {
+          "id": "irritant_drunk",
+          "value_percent": 20
+        },
+        {
+          "id": "irritant_moderate_pain",
+          "value_percent": 20
+        },
+        {
+          "id": "irritant_euphoria",
+          "value_percent": 30
+        },
+        {
+          "id": "irritant_nauseated",
+          "value_percent": 30
+        },
+        {
+          "id": "irritant_severe_pain",
+          "value_percent": 40
+        },
+        {
+          "id": "irritant_terrible_pain",
+          "value_percent": 60
+        },
+        {
+          "id": "negated_advantage",
+          "notes_pt": "+1% por ponto do advantage negado."
+        },
+        {
+          "id": "stunning",
+          "value_percent": 10
+        }
       ],
       "page_ref": 35,
       "detail_level": "full"
     },
     {
       "id": "alcohol_tolerance",
-      "name_en": "Alcohol Tolerance",
-      "name_pt": "Tolerância ao Álcool",
+      "name_en": "Perk: Alcohol Tolerance",
+      "name_pt": "Perk: Tolerância ao Álcool",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 1 },
-      "description_pt": "HT+4 para resistir aos efeitos do álcool. Aparenta sobriedade independente de quanto bebeu (mas ainda fica tonto suficiente para perder coordenação fina).",
-      "page_ref": 35,
-      "detail_level": "summary"
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Metaboliza álcool eficientemente. Pode beber continuamente sem efeitos maiores. Binging afeta normalmente. +2 em HT rolls relacionados a bebida.",
+      "page_ref": 100,
+      "detail_level": "full"
     },
     {
       "id": "allies",
@@ -213,13 +346,33 @@
       },
       "description_pt": "Um ou mais NPCs leais que acompanham o PC em aventuras. Diferente dos outros PCs, o Ally tem lealdade incondicional (ou negociável via modifiers). Familiars (animais/espíritos ligados magicamente) são categoria especial de Ally.",
       "special_enhancements": [
-        { "id": "minion", "value_percent": 0, "notes_pt": "Com IQ 0 ou Slave Mentality: +0%. Outros casos: +50%." },
-        { "id": "special_abilities", "value_percent": 50, "notes_pt": "Ally tem poder desproporcional ao point total." },
-        { "id": "summonable", "value_percent": 100, "notes_pt": "Invoca via Concentrate maneuver." }
+        {
+          "id": "minion",
+          "value_percent": 0,
+          "notes_pt": "Com IQ 0 ou Slave Mentality: +0%. Outros casos: +50%."
+        },
+        {
+          "id": "special_abilities",
+          "value_percent": 50,
+          "notes_pt": "Ally tem poder desproporcional ao point total."
+        },
+        {
+          "id": "summonable",
+          "value_percent": 100,
+          "notes_pt": "Invoca via Concentrate maneuver."
+        }
       ],
       "special_limitations": [
-        { "id": "sympathy", "value_percent": -25, "notes_pt": "Morte de um reduz outro a 0 HP. -50% se morte de um mata o outro. -5%/-10% se unidirecional." },
-        { "id": "unwilling", "value_percent": -50, "notes_pt": "Ally obtido por coerção; pode se rebelar." }
+        {
+          "id": "sympathy",
+          "value_percent": -25,
+          "notes_pt": "Morte de um reduz outro a 0 HP. -50% se morte de um mata o outro. -5%/-10% se unidirecional."
+        },
+        {
+          "id": "unwilling",
+          "value_percent": -50,
+          "notes_pt": "Ally obtido por coerção; pode se rebelar."
+        }
       ],
       "page_ref": 36,
       "detail_level": "full"
@@ -230,7 +383,10 @@
       "name_pt": "Taxa Temporal Alterada",
       "type": "mental",
       "origin": "exotic",
-      "cost": { "type": "per_level", "value": 100 },
+      "cost": {
+        "type": "per_level",
+        "value": 100
+      },
       "description_pt": "Experimenta o tempo mais rapidamente (nível 1 = 2× subjetivo). Cada nível permite uma maneuver extra por turno em combate. Não melhora iniciativa, só velocidade de ação depois. Fora de combate, permite planejamento 'em câmera lenta'.",
       "page_ref": 38,
       "detail_level": "full"
@@ -241,10 +397,13 @@
       "name_pt": "Forma Alternativa",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "variable", "notes_pt": "Custo baseado no diferencial de pontos entre forma base e alternativa, com modificadores. Ver descrição completa na p. 83." },
-      "description_pt": "Capacidade de se transformar em outra forma física. Cada forma alternativa é compradas separadamente com point total fixo.",
+      "cost": {
+        "type": "variable",
+        "formula": "15 + 0.9×(form_cost - native_form_cost)"
+      },
+      "description_pt": "Switch on/off entre formas. Forma desenhada como racial template. 10 seg pra mudar. Fatigue/injury carregam entre formas (escalam). 1 forma: 15 pts (se ≤ nativa) ou 15 + 90% diferença. Formas adicionais: 15 pts cada (ou full se for a mais cara). Especifique influência externa que força reversão.",
       "page_ref": 83,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "alternate_identity",
@@ -255,8 +414,18 @@
       "cost": {
         "type": "options",
         "choices": [
-          { "id": "legal", "value": 5, "name_pt": "Legal", "notes_pt": "Identidade registrada oficialmente; requer pelo menos 10 pts em Legal Enforcement Powers/Immunity/Police Rank/Security Clearance." },
-          { "id": "illegal", "value": 15, "name_pt": "Ilegal", "notes_pt": "Identidade clandestina; vantagem de ser desconhecida, mas descoberta acarreta multa/prisão/execução." }
+          {
+            "id": "legal",
+            "value": 5,
+            "name_pt": "Legal",
+            "notes_pt": "Identidade registrada oficialmente; requer pelo menos 10 pts em Legal Enforcement Powers/Immunity/Police Rank/Security Clearance."
+          },
+          {
+            "id": "illegal",
+            "value": 15,
+            "name_pt": "Ilegal",
+            "notes_pt": "Identidade clandestina; vantagem de ser desconhecida, mas descoberta acarreta multa/prisão/execução."
+          }
         ],
         "unit_pt": "por identidade"
       },
@@ -270,7 +439,10 @@
       "name_pt": "Ambidestria",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 5 },
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
       "description_pt": "Age igualmente bem com qualquer mão; nunca sofre -4 por usar a 'off-hand'. Não concede ações extras — isso é Extra Attack (p. 53). Em caso de dano a um membro, assume-se que é o esquerdo.",
       "page_ref": 39,
       "detail_level": "full"
@@ -281,7 +453,10 @@
       "name_pt": "Anfíbio",
       "type": "physical",
       "origin": "mundane",
-      "cost": { "type": "fixed", "value": 10 },
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
       "description_pt": "Adaptado à água: sem penalidades de skill embaixo d'água; pode nadar em Basic Move completo. Ainda precisa de ar (ver Doesn't Breathe). Características típicas: pele lisa, membrana interdigital. Se só se move na água, pegar Aquatic (p. 145) como desvantagem.",
       "page_ref": 40,
       "detail_level": "full"
@@ -292,22 +467,28 @@
       "name_pt": "Empatia com Animais",
       "type": "mental",
       "origin": "supernatural",
-      "cost": { "type": "fixed", "value": 5 },
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
       "description_pt": "Lê estados emocionais de animais (amigável, amedrontado, hostil, faminto) e detecta controle sobrenatural sobre eles. Permite usar Influence skills em animais como em sapientes. Frequente com Animal Friend talent e Sense of Duty (Animals).",
       "page_ref": 40,
       "detail_level": "full"
     },
     {
       "id": "animal_friend",
-      "name_en": "Animal Friend",
-      "name_pt": "Amigo dos Animais",
+      "name_en": "Talent: Animal Friend",
+      "name_pt": "Talento: Amigo dos Animais",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 5, "notes_pt": "É um Talent (p. 89). Bônus em skills relacionadas a animais." },
-      "description_pt": "Talent que agrupa bônus para skills relacionadas a animais: Animal Handling, Falconry, Mimicry (Animal Sounds), Packing, Riding, Teamster, Veterinary. Bônus +N por nível.",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "DUPLICATE de talent_animal_friend; mantido por compat. Skills: Animal Handling, Falconry, Packing, Riding, Teamster, Veterinary. Reaction bonus: animais.",
       "is_talent": true,
       "page_ref": 89,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "appearance",
@@ -318,17 +499,68 @@
       "cost": {
         "type": "options",
         "choices": [
-          { "id": "attractive", "value": 4, "name_pt": "Atraente", "reaction_modifier": 1 },
-          { "id": "handsome_beautiful", "value": 12, "name_pt": "Bonito(a)/Bela(o)", "reaction_modifier_same_sex_attracted": 4, "reaction_modifier_others": 2 },
-          { "id": "very_handsome_beautiful", "value": 16, "name_pt": "Muito Bonito(a)/Belíssimo(a)", "reaction_modifier_same_sex_attracted": 6, "reaction_modifier_others": 2, "notes_pt": "Mesmo sexo com razão pra antipatia (>-4) reage a -2 em vez do bônus; atrai parasitas sociais." },
-          { "id": "transcendent", "value": 20, "name_pt": "Transcendente", "reaction_modifier_same_sex_attracted": 8, "reaction_modifier_others": 2, "notes_pt": "Ideal; GM pode reservar para anjos/divindades." }
+          {
+            "id": "attractive",
+            "value": 4,
+            "name_pt": "Atraente",
+            "reaction_modifier": 1
+          },
+          {
+            "id": "handsome_beautiful",
+            "value": 12,
+            "name_pt": "Bonito(a)/Bela(o)",
+            "reaction_modifier_same_sex_attracted": 4,
+            "reaction_modifier_others": 2
+          },
+          {
+            "id": "very_handsome_beautiful",
+            "value": 16,
+            "name_pt": "Muito Bonito(a)/Belíssimo(a)",
+            "reaction_modifier_same_sex_attracted": 6,
+            "reaction_modifier_others": 2,
+            "notes_pt": "Mesmo sexo com razão pra antipatia (>-4) reage a -2 em vez do bônus; atrai parasitas sociais."
+          },
+          {
+            "id": "transcendent",
+            "value": 20,
+            "name_pt": "Transcendente",
+            "reaction_modifier_same_sex_attracted": 8,
+            "reaction_modifier_others": 2,
+            "notes_pt": "Ideal; GM pode reservar para anjos/divindades."
+          }
         ],
         "disadvantage_tiers": [
-          { "id": "unattractive", "value": -4, "name_pt": "Desinteressante", "reaction_modifier": -1 },
-          { "id": "ugly", "value": -8, "name_pt": "Feio(a)", "reaction_modifier": -2 },
-          { "id": "hideous", "value": -16, "name_pt": "Horrendo(a)", "reaction_modifier": -4 },
-          { "id": "monstrous", "value": -20, "name_pt": "Monstruoso(a)", "reaction_modifier": -5 },
-          { "id": "horrific", "value": -24, "name_pt": "Aterrador(a)", "reaction_modifier": -6, "notes_pt": "Não pode interagir com mortais normais." }
+          {
+            "id": "unattractive",
+            "value": -4,
+            "name_pt": "Desinteressante",
+            "reaction_modifier": -1
+          },
+          {
+            "id": "ugly",
+            "value": -8,
+            "name_pt": "Feio(a)",
+            "reaction_modifier": -2
+          },
+          {
+            "id": "hideous",
+            "value": -16,
+            "name_pt": "Horrendo(a)",
+            "reaction_modifier": -4
+          },
+          {
+            "id": "monstrous",
+            "value": -20,
+            "name_pt": "Monstruoso(a)",
+            "reaction_modifier": -5
+          },
+          {
+            "id": "horrific",
+            "value": -24,
+            "name_pt": "Aterrador(a)",
+            "reaction_modifier": -6,
+            "notes_pt": "Não pode interagir com mortais normais."
+          }
         ]
       },
       "description_pt": "Aparência física afeta reaction rolls de quem pode ver o personagem e é de raça similar. Opções: Androgynous (bônus igual a ambos os sexos), Impressive (presença não-sexual), Universal (+25%: vale para qualquer raça), Off-the-Shelf Looks (-50%: rosto padronizado, bônus reduzido para mesma cultura).",
@@ -345,8 +577,16 @@
       "cost": {
         "type": "options",
         "choices": [
-          { "id": "one_arm", "value": 12, "unit_pt": "por +1 DX em um braço" },
-          { "id": "two_arms", "value": 16, "unit_pt": "por +1 DX em dois braços" }
+          {
+            "id": "one_arm",
+            "value": 12,
+            "unit_pt": "por +1 DX em um braço"
+          },
+          {
+            "id": "two_arms",
+            "value": 16,
+            "unit_pt": "por +1 DX em dois braços"
+          }
         ],
         "notes_pt": "Para 3+ braços, comprar DX geral."
       },
@@ -363,9 +603,21 @@
       "cost": {
         "type": "options",
         "choices": [
-          { "id": "one_arm", "value": 3, "unit_pt": "por +1 ST em um braço" },
-          { "id": "two_arms", "value": 5, "unit_pt": "por +1 ST em dois braços" },
-          { "id": "three_arms", "value": 8, "unit_pt": "por +1 ST em três braços" }
+          {
+            "id": "one_arm",
+            "value": 3,
+            "unit_pt": "por +1 ST em um braço"
+          },
+          {
+            "id": "two_arms",
+            "value": 5,
+            "unit_pt": "por +1 ST em dois braços"
+          },
+          {
+            "id": "three_arms",
+            "value": 8,
+            "unit_pt": "por +1 ST em três braços"
+          }
         ],
         "notes_pt": "Para 4+ braços, comprar ST geral."
       },
@@ -375,26 +627,32 @@
     },
     {
       "id": "artificer",
-      "name_en": "Artificer",
-      "name_pt": "Artífice",
+      "name_en": "Talent: Artificer",
+      "name_pt": "Talento: Artífice",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 10, "notes_pt": "Talent." },
-      "description_pt": "Talent que agrupa bônus em skills de criação/reparo mecânico: Armoury, Electrician, Electronics Repair, Engineer, Machinist, Mechanic, Smith etc.",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "DUPLICATE; mantido. Skills: Armoury, Carpentry, Electrician, Electronics Repair, Engineer, Machinist, Masonry, Mechanic, Smith.",
       "is_talent": true,
       "page_ref": 89,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "autotrance",
-      "name_en": "Autotrance",
-      "name_pt": "Auto-transe",
+      "name_en": "Perk: Autotrance",
+      "name_pt": "Perk: Autotranse",
       "type": "mental",
-      "origin": "mundane",
-      "cost": { "type": "fixed", "value": 1 },
-      "description_pt": "Consegue entrar em transe voluntariamente com facilidade. +2 em rolls de Will para entrar em transe (e.g. Channeling, Medium, Oracle).",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Entra em transe à vontade. 1 min concentração + Will roll (-1 por tentativa adicional/hora). Transe dá +2 em rolls de contatar espíritos. Will pra sair (1 tentativa cada 5 min).",
       "page_ref": 101,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "binding",
@@ -402,17 +660,42 @@
       "name_pt": "Aprisionamento",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "Ataque que prende o alvo (vinhas, teias, gelo, areia movediça). Ranged, 1/2D-, Max 100, Acc 3, RoF 1, Recoil 1. Em hit: alvo grappled, sem Move/Change Posture, -4 DX. ST do efeito = nível. Vítima pode tentar quebrar via Quick Contest de ST ou Escape skill. Binding tem DR = ⅓ do nível; 1 dano = -1 ST, destruído em ST 0.",
       "special_enhancements": [
-        { "id": "engulfing", "value_percent": 60, "notes_pt": "Imobiliza totalmente; só ações mentais, Innate Attack na Binding ou ST (não Escape)." },
-        { "id": "only_damaged_by_x", "value_percent": 30, "notes_pt": "+30% para 1 tipo de dano (burn/corr/cr/cut); +20% para 2; +10% para 3." },
-        { "id": "sticky", "value_percent": 20, "notes_pt": "Afeta quem toca o alvo inicial." },
-        { "id": "unbreakable", "value_percent": 40 }
+        {
+          "id": "engulfing",
+          "value_percent": 60,
+          "notes_pt": "Imobiliza totalmente; só ações mentais, Innate Attack na Binding ou ST (não Escape)."
+        },
+        {
+          "id": "only_damaged_by_x",
+          "value_percent": 30,
+          "notes_pt": "+30% para 1 tipo de dano (burn/corr/cr/cut); +20% para 2; +10% para 3."
+        },
+        {
+          "id": "sticky",
+          "value_percent": 20,
+          "notes_pt": "Afeta quem toca o alvo inicial."
+        },
+        {
+          "id": "unbreakable",
+          "value_percent": 40
+        }
       ],
       "special_limitations": [
-        { "id": "environmental", "value_percent": -20, "notes_pt": "-20% a -40% dependendo do ambiente exigido." },
-        { "id": "one_shot", "value_percent": -10 }
+        {
+          "id": "environmental",
+          "value_percent": -20,
+          "notes_pt": "-20% a -40% dependendo do ambiente exigido."
+        },
+        {
+          "id": "one_shot",
+          "value_percent": -10
+        }
       ],
       "page_ref": 40,
       "detail_level": "full"
@@ -423,12 +706,29 @@
       "name_pt": "Abençoado",
       "type": "mental",
       "origin": "supernatural",
-      "cost": { "type": "variable", "notes_pt": "Mínimo 10 pts (Blessed básico). Very Blessed 20 pts. Heroic Feats 10 pts por feito. Outros bênçãos a critério do GM." },
+      "cost": {
+        "type": "variable",
+        "notes_pt": "Mínimo 10 pts (Blessed básico). Very Blessed 20 pts. Heroic Feats 10 pts por feito. Outros bênçãos a critério do GM."
+      },
       "description_pt": "Conexão com deidade/poder cósmico. Perde a vantagem se violar preceitos. Basic Blessed: após 1h de meditação/oração, GM rola contra IQ secretamente para revelar visões/prenúncios; ritual custa 10 FP.",
       "variants": [
-        { "id": "blessed_basic", "value": 10, "name_pt": "Abençoado Básico" },
-        { "id": "very_blessed", "value": 20, "name_pt": "Muito Abençoado", "notes_pt": "+5 no IQ roll de interpretação; +2 de reação dos devotos." },
-        { "id": "heroic_feats", "value": 10, "name_pt": "Feitos Heroicos", "notes_pt": "1×/sessão +1d a ST, DX ou HT; dura 3d segundos." }
+        {
+          "id": "blessed_basic",
+          "value": 10,
+          "name_pt": "Abençoado Básico"
+        },
+        {
+          "id": "very_blessed",
+          "value": 20,
+          "name_pt": "Muito Abençoado",
+          "notes_pt": "+5 no IQ roll de interpretação; +2 de reação dos devotos."
+        },
+        {
+          "id": "heroic_feats",
+          "value": 10,
+          "name_pt": "Feitos Heroicos",
+          "notes_pt": "1×/sessão +1d a ST, DX ou HT; dura 3d segundos."
+        }
       ],
       "page_ref": 40,
       "detail_level": "full"
@@ -439,7 +739,10 @@
       "name_pt": "Braquiador",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "fixed", "value": 5 },
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
       "description_pt": "Pode se deslocar balançando em vinhas, galhos, cordas, lustres. +2 em Climbing skill; move-se em metade do Basic Move ao braquiar.",
       "page_ref": 41,
       "detail_level": "full"
@@ -450,22 +753,28 @@
       "name_pt": "Prender a Respiração",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "per_level", "value": 2 },
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
       "description_pt": "Cada nível dobra o tempo que consegue prender o fôlego (ver Holding Your Breath, p. 351). Humanos normais não podem comprar — para ser mergulhador recordista use Breath Control skill. Não-humanos e supers podem combinar com Breath Control.",
       "page_ref": 41,
       "detail_level": "full"
     },
     {
       "id": "business_acumen",
-      "name_en": "Business Acumen",
-      "name_pt": "Acuidade Empresarial",
+      "name_en": "Talent: Business Acumen",
+      "name_pt": "Talento: Visão de Negócios",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 10, "notes_pt": "Talent." },
-      "description_pt": "Talent que dá bônus em skills de negócio: Accounting, Administration, Economics, Finance, Market Analysis, Merchant.",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "DUPLICATE; mantido. Skills: Accounting, Administration, Economics, Finance, Gambling, Market Analysis, Merchant, Propaganda.",
       "is_talent": true,
       "page_ref": 89,
-      "detail_level": "summary"
+      "detail_level": "full"
     },
     {
       "id": "catfall",
@@ -473,7 +782,10 @@
       "name_pt": "Queda Felina",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "fixed", "value": 10 },
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
       "description_pt": "Subtrai 5 yards de qualquer queda automaticamente (como sucesso em Acrobatics). DX roll adicional bem-sucedido reduz dano à metade. Membros precisam estar livres e corpo desimpedido.",
       "page_ref": 41,
       "detail_level": "full"
@@ -484,13 +796,24 @@
       "name_pt": "Camaleão",
       "type": "physical",
       "origin": "exotic",
-      "cost": { "type": "per_level", "value": 5 },
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
       "description_pt": "Muda padrão da pele para se fundir com o ambiente. +2/nível em Stealth quando parado; +1/nível em movimento. Roupa reduz para +1 parado / 0 em movimento (exceto se camuflada). Não ajuda no escuro nem contra sentidos não-visuais.",
       "special_enhancements": [
-        { "id": "extended", "value_percent": 20, "unit_pt": "por sentido adicional alcançado (ex.: Infravision, Radar)." }
+        {
+          "id": "extended",
+          "value_percent": 20,
+          "unit_pt": "por sentido adicional alcançado (ex.: Infravision, Radar)."
+        }
       ],
       "special_limitations": [
-        { "id": "always_on", "value_percent": -10, "notes_pt": "Não pode desligar; estranhos reagem -1." }
+        {
+          "id": "always_on",
+          "value_percent": -10,
+          "notes_pt": "Não pode desligar; estranhos reagem -1."
+        }
       ],
       "page_ref": 41,
       "detail_level": "full"
@@ -501,7 +824,10 @@
       "name_pt": "Canalização",
       "type": "mental",
       "origin": "supernatural",
-      "cost": { "type": "fixed", "value": 10 },
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
       "description_pt": "Corpo serve de conduto para espíritos falarem. Entra em transe (1 min concentração + Will roll, +2 com Autotrance). Espíritos próximos podem usar o corpo para comunicar; GM controla. Se o espírito tiver Possession, tentativa de posse completa com +5 para resistir.",
       "page_ref": 41,
       "detail_level": "full"
@@ -512,7 +838,10 @@
       "name_pt": "Carisma",
       "type": "mental",
       "origin": "mundane",
-      "cost": { "type": "per_level", "value": 5 },
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
       "description_pt": "Capacidade natural de impressionar. +1/nível em reaction rolls de seres sapientes com quem interage ativamente; +1/nível em Influence rolls; +1/nível em Fortune-Telling, Leadership, Panhandling, Public Speaking. GM pode limitar contra raças muito alienígenas.",
       "page_ref": 41,
       "detail_level": "full"
@@ -526,15 +855,3718 @@
       "cost": {
         "type": "options",
         "choices": [
-          { "value": 1, "name_pt": "1 amigo com casa em outra cidade" },
-          { "value": 2, "name_pt": "Família pequena" },
-          { "value": 5, "name_pt": "Sociedade de mercadores em rota importante" },
-          { "value": 10, "name_pt": "Aliança vasta de figuras ricas" }
+          {
+            "value": 1,
+            "name_pt": "1 amigo com casa em outra cidade"
+          },
+          {
+            "value": 2,
+            "name_pt": "Família pequena"
+          },
+          {
+            "value": 5,
+            "name_pt": "Sociedade de mercadores em rota importante"
+          },
+          {
+            "value": 10,
+            "name_pt": "Aliança vasta de figuras ricas"
+          }
         ]
       },
       "description_pt": "Pertence a grupo social que oferece ajuda mútua fora de casa. Em situação apropriada, encontra membro em 14 ou menos após 1d-1 horas; chance de 6- de encontrar um por acaso em multidão.",
       "page_ref": 41,
       "detail_level": "full"
+    },
+    {
+      "id": "clairsentience",
+      "name_en": "Clairsentience",
+      "name_pt": "Clarissentiência",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 50
+      },
+      "description_pt": "Desloca sentidos à distância (visão/audição/olfato) para um ponto até 10 jds (ampliável). 1 min de concentração + IQ roll (-5 se viewpoint fora de visão). Não vê através de sólidos mas funciona em escuridão. Variantes via limitações: Clairaudience (só ouvido, -30%), Clairvoyance (só visão, -10%), Clairosmia (só olfato, -60%), ESP -10%, Visible -10%.",
+      "page_ref": 42,
+      "detail_level": "full"
+    },
+    {
+      "id": "claws",
+      "name_en": "Claws",
+      "name_pt": "Garras",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 3,
+            "name_pt": "Blunt Claws — garras curtas tipo cão; +1/dado em soco/chute"
+          },
+          {
+            "value": 3,
+            "name_pt": "Hooves — cascos; +1/dado em chute, +1 DR só nos pés"
+          },
+          {
+            "value": 5,
+            "name_pt": "Sharp Claws — garras curtas tipo gato; muda dano de esmagamento para cortante"
+          },
+          {
+            "value": 8,
+            "name_pt": "Talons — garras longas; muda dano para cortante ou perfurante (escolha antes do roll)"
+          },
+          {
+            "value": 11,
+            "name_pt": "Long Talons — garras enormes; como Talons mas +1/dado"
+          }
+        ]
+      },
+      "description_pt": "Modifica todas as mãos e pés (sem desconto para garras só em alguns membros). Escolha uma variante; combina-se com Striking ST etc.",
+      "page_ref": 42,
+      "detail_level": "full"
+    },
+    {
+      "id": "clerical_investment",
+      "name_en": "Clerical Investment",
+      "name_pt": "Investidura Clerical",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Sacerdote ordenado de religião reconhecida. Pode realizar casamentos, funerais e cerimônias; +1 em reaction rolls de co-religionários; uso de título (Padre, Irmã, Rabino). Inclui Religious Rank 0. Não confere poder divino — para isso, ver Blessed, Power Investiture ou True Faith.",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "clinging",
+      "name_en": "Clinging",
+      "name_pt": "Aderência",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Anda/escala em paredes e tetos sem Climbing roll. Move ao aderir = ½ Basic Move. Para parar queda: DX roll para tocar superfície + ST roll com -1 por 5 jds já caídos; falha reduz a altura da queda em 5 jds. Limitação Specific: só substância específica (comum -40%, incomum -60%, absurdo -80%).",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "combat_reflexes",
+      "name_en": "Combat Reflexes",
+      "name_pt": "Reflexos de Combate",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "+1 em todas defesas ativas, +1 em Fast-Draw, +2 em Fright Checks. Nunca 'congela' em surpresa, +6 para acordar/recuperar de stun. Lado tem +1 (ou +2 se você é líder) em rolls de initiative contra ataque-surpresa. Já incluído em Enhanced Time Sense — incompatível.",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "common_sense",
+      "name_en": "Common Sense",
+      "name_pt": "Bom Senso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Quando o jogador planeja algo que o GM considera idiota, o GM rola contra IQ secretamente. Em sucesso o GM avisa 'Tem certeza?'. Permite a um jogador impulsivo interpretar personagem ponderado.",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "compartmentalized_mind",
+      "name_en": "Compartmentalized Mind",
+      "name_pt": "Mente Compartimentalizada",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 50
+      },
+      "description_pt": "Múltiplas mentes independentes. Cada compartimento adicional dá UM extra mental maneuver por turno (Concentrate em spell etc.), mas nunca mais que UM physical maneuver. Hipnose/magia/psi afetam compartimentos separadamente. Variantes pra veículos: Controls (25 pts/nível) e Dedicated Controls (10 pts/nível).",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "constriction_attack",
+      "name_en": "Constriction Attack",
+      "name_pt": "Ataque de Constrição",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Esmaga oponentes 'abraçando'. Após grapple bem-sucedido (SM da vítima ≤ seu), Quick Contest: seu ST vs ST ou HT (maior) da vítima a cada turno. Margem de vitória = dano. Vítima precisa ter SM ≤ seu.",
+      "page_ref": 43,
+      "detail_level": "full"
+    },
+    {
+      "id": "contact_group",
+      "name_en": "Contact Group",
+      "name_pt": "Grupo de Contatos",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "Cost(Contact) × 5"
+      },
+      "description_pt": "Rede de contatos numa organização ou estrato social (corporação, sindicato, polícia, militares de uma cidade). Funciona como Contact mas com 'efetiva skill' que cobre uma categoria inteira (ex: 'business skills'). Custo: calcula como Contact e multiplica por 5.",
+      "page_ref": 44,
+      "detail_level": "full"
+    },
+    {
+      "id": "contacts",
+      "name_en": "Contacts",
+      "name_pt": "Contatos",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "base × frequency_mult × reliability_mult",
+        "details": {
+          "effective_skill_base": {
+            "12": 1,
+            "15": 2,
+            "18": 3,
+            "21": 4,
+            "supernatural": "+1"
+          },
+          "reliability_mult": {
+            "completely_reliable": 3,
+            "usually_reliable": 2,
+            "somewhat_reliable": 1,
+            "unreliable": 0.5
+          }
+        }
+      },
+      "description_pt": "Associado que fornece informação ou favores pequenos (rápidos, não-perigosos, baratos — escolha 2). Custo depende de: (1) efetiva skill 12/15/18/21 = base 1/2/3/4; (2) frequency of appearance (multiplicador, ver Frequency, p36); (3) reliability x0.5 a x3. GM rola contra freq quando você chama; em sucesso, rola skill. Bribery sobe reliability.",
+      "page_ref": 44,
+      "detail_level": "full"
+    },
+    {
+      "id": "cultural_adaptability",
+      "name_en": "Cultural Adaptability",
+      "name_pt": "Adaptabilidade Cultural",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 10,
+            "name_pt": "Todas culturas da sua raça"
+          },
+          {
+            "value": 20,
+            "name_pt": "Xeno-Adaptability — todas culturas do mundo, qualquer raça"
+          }
+        ]
+      },
+      "description_pt": "Imune ao -3 'cultural unfamiliarity' (ver Culture, p23). Cinematic.",
+      "page_ref": 46,
+      "detail_level": "full"
+    },
+    {
+      "id": "cybernetics",
+      "name_en": "Cybernetics",
+      "name_pt": "Cibernética",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "varia conforme implante"
+      },
+      "description_pt": "Trata implantes ciber como vantagens equivalentes: olho biônico = Infravision, armadura dérmica = DR, etc. Alguns implantes podem ter Temporary Disadvantage (Electrical p134, Maintenance p143) aplicada ao implante específico.",
+      "page_ref": 46,
+      "detail_level": "full"
+    },
+    {
+      "id": "damage_resistance",
+      "name_en": "Damage Resistance",
+      "name_pt": "Resistência a Dano (DR)",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "DR natural do corpo — subtraído do dano após armadura mas antes do multiplicador de tipo. Humanos comuns não compram; criaturas com armadura natural compram DR 1-5; robôs/supers/supernaturais sem teto. Default não protege olhos nem contra ataques mentais. Diversos modificadores: Absorption (+80/+100%), Force Field (+20%), Hardened (+20%/nível), Reflection (+100%); limitations: Ablative -80%, Can't Wear Armor -40%, Directional -20 a -40%, Flexible -20%, Limited (var), Partial (por hit location), Semi-Ablative -20%, Tough Skin -40%. Pode ter 'layered defenses'.",
+      "page_ref": 46,
+      "detail_level": "full"
+    },
+    {
+      "id": "danger_sense",
+      "name_en": "Danger Sense",
+      "name_pt": "Sentido de Perigo",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "GM rola contra Per secretamente em situações de emboscada/desastre/risco. Em sucesso, você é avisado a tempo de agir. Roll 3-4 dá mais detalhe sobre a natureza do perigo. Incluído em Precognition (não pode ter ambos). Limitação ESP -10%.",
+      "page_ref": 47,
+      "detail_level": "full"
+    },
+    {
+      "id": "daredevil",
+      "name_en": "Daredevil",
+      "name_pt": "Aventureiro Imprudente",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Quando assume risco desnecessário (GM julga), +1 em todos skill rolls e pode re-rolar qualquer falha crítica nessa situação. Recompensa comportamento ousado.",
+      "page_ref": 47,
+      "detail_level": "full"
+    },
+    {
+      "id": "dark_vision",
+      "name_en": "Dark Vision",
+      "name_pt": "Visão Escura",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Vê em escuridão absoluta sem luz, radar ou sônar. Sem penalidade de visão por escuridão (qualquer origem). Não vê cores no escuro por default. Enhancement Color Vision +20% permite cores.",
+      "page_ref": 47,
+      "detail_level": "full"
+    },
+    {
+      "id": "destiny",
+      "name_en": "Destiny",
+      "name_pt": "Destino",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Minor — uma vitória significativa garantida"
+          },
+          {
+            "value": 10,
+            "name_pt": "Major — destinado a feito notável ou morte específica"
+          },
+          {
+            "value": 15,
+            "name_pt": "Great — grandeza na vida; nome conhecido"
+          }
+        ]
+      },
+      "description_pt": "Destino preordenado (forma vantajosa). GM determina natureza em segredo conforme valor. Pode ser inconveniente. Versão de desvantagem em p131. Após cumprido, pontos podem virar Reputation positiva.",
+      "page_ref": 48,
+      "detail_level": "full"
+    },
+    {
+      "id": "detect",
+      "name_en": "Detect",
+      "name_pt": "Detectar",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Rare — ex: fire magic, zombies, gold"
+          },
+          {
+            "value": 10,
+            "name_pt": "Occasional — ex: spellcasters, magic, undead"
+          },
+          {
+            "value": 20,
+            "name_pt": "Common — ex: humans, metal, fields"
+          },
+          {
+            "value": 30,
+            "name_pt": "Very Common — ex: all life, all energy"
+          }
+        ]
+      },
+      "description_pt": "Detecta substância/condição mesmo blindada. 1 seg concentração + Sense roll (GM rola). Em sucesso, direção e quantidade aproximada. IQ roll para análise (tipo, pureza). Acute Sense melhora. Modifiers: Precise +100%, Signal Detection +0%, Vague -50%.",
+      "page_ref": 48,
+      "detail_level": "full"
+    },
+    {
+      "id": "digital_mind",
+      "name_en": "Digital Mind",
+      "name_pt": "Mente Digital",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Mente é programa sapiente (IA, upload). Imune a 'Telepathic' e magia que afeta mentes vivas. Vulnerável a vírus, hacking. Pode ser desligado ou armazenado. Geralmente vem com Machine meta-trait e Reprogrammable.",
+      "page_ref": 48,
+      "detail_level": "full"
+    },
+    {
+      "id": "discriminatory_hearing",
+      "name_en": "Discriminatory Hearing",
+      "name_pt": "Audição Discriminatória",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Identifica pessoas por voz e máquinas por 'sound signature'. Memoriza som: 1 min ouvindo + IQ roll (falha = espera 1 dia). +4 em qualquer tarefa que usa audição (além de Acute Hearing), +4 em Shadowing contra alvo barulhento. Limitation 'Only underwater' -30% simula sonar passivo.",
+      "page_ref": 49,
+      "detail_level": "full"
+    },
+    {
+      "id": "discriminatory_smell",
+      "name_en": "Discriminatory Smell",
+      "name_pt": "Olfato Discriminatório",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Olfato sobre-humano. Reconhece pessoas/lugares/coisas por cheiro. Memoriza odor: 1 min cheirando + IQ roll (falha = espera 1 dia). +4 em tarefas de olfato, +4 em Tracking. Enhancement Emotion Sense +50% (Empathy por odor a até 2 jds).",
+      "page_ref": 49,
+      "detail_level": "full"
+    },
+    {
+      "id": "discriminatory_taste",
+      "name_en": "Discriminatory Taste",
+      "name_pt": "Paladar Discriminatório",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Como Discriminatory Smell mas com paladar. Precisa ingerir pequena quantidade. IQ roll para reconhecer, skill apropriada (Chemistry, Cooking, Pharmacy, Poisons) para análise detalhada. +4 em tarefas de paladar. Não permite tracking.",
+      "page_ref": 49,
+      "detail_level": "full"
+    },
+    {
+      "id": "doesnt_breathe",
+      "name_en": "Doesn't Breathe",
+      "name_pt": "Não Respira",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Não precisa de oxigênio. Imune a estrangulamento, toxinas inaladas. Ainda afetado por venenos de contato, pressão, vácuo (precisa Sealed, Pressure Support, Vacuum Support). Limitations: Gills -50% (só água c/ O₂), Oxygen Absorption -25% (precisa O₂ no meio), Oxygen Combustion -50% (sem O₂ → sufoca), Oxygen Storage de -50% a -10% (limitado por tempo).",
+      "page_ref": 49,
+      "detail_level": "full"
+    },
+    {
+      "id": "doesnt_eat_or_drink",
+      "name_en": "Doesn't Eat or Drink",
+      "name_pt": "Não Come ou Bebe",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Não precisa de comida, água ou combustível. Corpo é alimentado por outro meio (solar, magia ambiente). Fonte rara pode justificar Dependency p130.",
+      "page_ref": 50,
+      "detail_level": "full"
+    },
+    {
+      "id": "doesnt_sleep",
+      "name_en": "Doesn't Sleep",
+      "name_pt": "Não Dorme",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Não precisa dormir. Ignora qualquer efeito ruim de noites perdidas.",
+      "page_ref": 50,
+      "detail_level": "full"
+    },
+    {
+      "id": "dominance",
+      "name_en": "Dominance",
+      "name_pt": "Dominância",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Infecta vítimas com condição sobrenatural (vampirismo, lycanthropy) e exerce controle absoluto. Especifica um ataque natural (Claws, Vampiric Bite etc.) que entrega infecção. Vítima rola 3d vs HP de injury; sob = infectado, vira mesma raça em 2d dias com Slave Mentality. Cada vítima precisa de pontos não-gastos para virar Ally.",
+      "page_ref": 50,
+      "detail_level": "full"
+    },
+    {
+      "id": "duplication",
+      "name_en": "Duplication",
+      "name_pt": "Duplicação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 35,
+        "level_label": "por cópia"
+      },
+      "description_pt": "Divide-se em múltiplos corpos ('Dupes'), cada um com todo conhecimento e poderes. 1 seg + Concentrate para separar/mergir. Ao mergir, FP/HP é média. Se um Dupe morre, todos sofrem 2d + stunados, e perde os pontos. Sem Telesend não há coordenação especial. Enhancements: Duplicated Gear +100%, No Sympathetic Injury +20%. Limitations: Digital -60%, Shared Resources -40%.",
+      "page_ref": 50,
+      "detail_level": "full"
+    },
+    {
+      "id": "eidetic_memory",
+      "name_en": "Eidetic Memory",
+      "name_pt": "Memória Eidética",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Eidetic Memory — automático lembra geral; IQ roll para detalhes"
+          },
+          {
+            "value": 10,
+            "name_pt": "Photographic Memory — automático lembra todos detalhes"
+          }
+        ]
+      },
+      "description_pt": "Não afeta compreensão, mas dá bônus em IQ rolls para aprendizado: +5 para Eidetic, +10 para Photographic.",
+      "page_ref": 51,
+      "detail_level": "full"
+    },
+    {
+      "id": "elastic_skin",
+      "name_en": "Elastic Skin",
+      "name_pt": "Pele Elástica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Altera pele e feições para duplicar outro da sua raça ou similar. 10 seg para mudar, 3 seg para voltar. Disguise roll para imitar indivíduo específico. +4 em todos Disguise rolls.",
+      "page_ref": 51,
+      "detail_level": "full"
+    },
+    {
+      "id": "empathy",
+      "name_en": "Empathy",
+      "name_pt": "Empatia",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Sensitive — IQ -3; +1 em Detect Lies, Fortune-Telling, Psychology"
+          },
+          {
+            "value": 15,
+            "name_pt": "Empathy — IQ cheio; +3 nos mesmos skills"
+          }
+        ]
+      },
+      "description_pt": "Em primeiro encontro/reencontro, GM rola contra IQ secretamente e diz o que você 'sente' (em falha, mente). Só funciona em seres sapientes (IQ 6+). Para animais/plantas/espíritos use Animal Empathy, Plant Empathy, Spirit Empathy.",
+      "page_ref": 51,
+      "detail_level": "full"
+    },
+    {
+      "id": "enhanced_defenses",
+      "name_en": "Enhanced Defenses",
+      "name_pt": "Defesas Aprimoradas",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Enhanced Block — +1 Block com Cloak ou Shield (especialize)"
+          },
+          {
+            "value": 5,
+            "name_pt": "Enhanced Parry (bare hands) — +1 Parry"
+          },
+          {
+            "value": 5,
+            "name_pt": "Enhanced Parry (Melee Weapon skill) — +1 Parry numa skill específica"
+          },
+          {
+            "value": 10,
+            "name_pt": "Enhanced Parry (all parries) — +1 em todos parries"
+          },
+          {
+            "value": 15,
+            "name_pt": "Enhanced Dodge — +1 Dodge"
+          }
+        ]
+      },
+      "description_pt": "Cinematic. GM pode exigir Trained By A Master ou Weapon Master como pré-requisito. Múltiplos níveis podem ser permitidos por GM (custo por +1). Bônus >+3 quase sempre quebra o jogo.",
+      "page_ref": 51,
+      "detail_level": "full"
+    },
+    {
+      "id": "enhanced_move",
+      "name_en": "Enhanced Move",
+      "name_pt": "Movimento Aprimorado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 20,
+        "half_level_cost": 10
+      },
+      "description_pt": "Cada nível dobra top speed num ambiente: Air, Ground, Space ou Water. Meio-nível (10 pts) multiplica por 1.5. Pré-requisitos: (Air) requer Flight; (Space) requer Flight com Space Flight; (Water) requer Amphibious ou Aquatic. Não afeta Basic Speed/Move/Dodge. Modifiers: Handling Bonus +5%/+1 (max +5), Handling Penalty -5%/-1, Newtonian -50% (delta-v), Road-Bound -50%.",
+      "page_ref": 52,
+      "detail_level": "full"
+    },
+    {
+      "id": "enhanced_time_sense",
+      "name_en": "Enhanced Time Sense",
+      "name_pt": "Senso Temporal Aprimorado",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 45
+      },
+      "description_pt": "Inclui Combat Reflexes (incompatível com este). Age sempre primeiro em combate (antes dos sem ETS); entre ETSs ordena por Basic Speed. Percebe coisas rápidas (frames de filme, burst transmissions, balas em voo a critério GM). Nunca tem penalty por rush mental. GM raramente pode forçar resposta imediata.",
+      "page_ref": 52,
+      "detail_level": "full"
+    },
+    {
+      "id": "enhanced_tracking",
+      "name_en": "Enhanced Tracking",
+      "name_pt": "Rastreamento Aprimorado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Cada nível permite Aim ou Evaluate aplicar a UM alvo adicional. Só rastreia alvos detectáveis; não pode Aim em mais alvos do que armas prontas.",
+      "page_ref": 53,
+      "detail_level": "full"
+    },
+    {
+      "id": "extended_lifespan",
+      "name_en": "Extended Lifespan",
+      "name_pt": "Longevidade Aumentada",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "Cada nível dobra: idade de maturidade (default 18), início de aging (50), aceleração de aging (70, 90). Acima de 7 níveis, prefira Unaging.",
+      "page_ref": 53,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_arms",
+      "name_en": "Extra Arms",
+      "name_pt": "Braços Extras",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 10,
+        "level_label": "por braço extra"
+      },
+      "description_pt": "Cada braço extra além de 2: 10 pts. Permite multitarefa não-combate. Em combate: sem Extra Attack você só ataca 1x/turno mesmo com vários braços, mas pode usar todos pra grapple (+2 por braço extra; +3 contra pin se tem mais braços). Modifiers: Extra-Flexible +50%, Long +100%/SM, Foot Manipulators -30%, No Physical Attack -50%, Short -50%, Weak -25%/-50%, Weapon Mount -80%.",
+      "page_ref": 53,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_attack",
+      "name_en": "Extra Attack",
+      "name_pt": "Ataque Extra",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 25,
+        "level_label": "por ataque extra"
+      },
+      "description_pt": "Cada nível = 1 ataque adicional por turno. Limitado pelo número de membros/armas naturais/poderes de ataque. Humano normal pode comprar até 1 (representa coordenação superior). Não elimina -4 da off hand. Pode usar para Feint. Em All-Out Attack todos seus ataques pegam o mesmo bônus.",
+      "page_ref": 53,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_head",
+      "name_en": "Extra Head",
+      "name_pt": "Cabeça Extra",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 15,
+        "level_label": "por cabeça"
+      },
+      "description_pt": "Cada cabeça extra é funcional (ears, eyes, mouth) e inclui 1 Extra Mouth + 1 nível de Enhanced Tracking sem custo. Cada uma tem brain backup com cópia de memória/personalidade/skills (não dá mental maneuvers extra — pra isso, Compartmentalized Mind). Dano em uma cabeça limita a 2×(HP/n_cabeças). Decapitação só mata aquela cabeça. Limitation Extraneous -20% (sem backup brain).",
+      "page_ref": 54,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_legs",
+      "name_en": "Extra Legs",
+      "name_pt": "Pernas Extras",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "3-4 pernas — perde 1 = ½ Move"
+          },
+          {
+            "value": 10,
+            "name_pt": "5-6 pernas — cada perda -20% Move"
+          },
+          {
+            "value": 15,
+            "name_pt": "7+ pernas — cada perda -10% Move"
+          }
+        ]
+      },
+      "description_pt": "Pernas servem pra andar; se manipulam objetos use Extra Arms. Cada perna pode chutar (thrust/cr no reach normal). Modifiers: Long +100%/SM, Cannot Kick -50%. Beings c/ 2 pernas podem usar mods (1/10 do percent).",
+      "page_ref": 54,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_life",
+      "name_en": "Extra Life",
+      "name_pt": "Vida Extra",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 25,
+        "level_label": "por vida extra"
+      },
+      "description_pt": "Volta dos mortos. Cada uso consome 1 Extra Life e -25 pts. Limitations: Copy -20% (backup periódico em local específico), Requires Body -20%/-40% (volta desencarnado, precisa novo corpo).",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "extra_mouth",
+      "name_en": "Extra Mouth",
+      "name_pt": "Boca Extra",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "por boca extra"
+      },
+      "description_pt": "Bocas adicionais funcionais (respiram, comem, falam). Permite mordidas extras se tiver Extra Attack. Com Compartmentalized Mind, pode lançar 2 spells verbais ou conversar em paralelo. Difícil de silenciar/sufocar.",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "favor",
+      "name_en": "Favor",
+      "name_pt": "Favor",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "Cost(Ally|Contact|Patron) / 5 (round up)"
+      },
+      "description_pt": "Ally/Contact/Patron one-shot. NPC ajuda UMA vez e descarrega. GM rola contra freq do parent advantage. Em sucesso, ajuda e some o Favor. Em 3-4 no roll, NPC ainda se sente em débito (Favor permanece).",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "fearlessness",
+      "name_en": "Fearlessness",
+      "name_pt": "Destemor",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "Adiciona nível ao Will em Fright Checks, resistência a Intimidation e fear sobrenatural. Subtrai nível de Intimidation rolls feitos contra você.",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "filter_lungs",
+      "name_en": "Filter Lungs",
+      "name_pt": "Pulmões Filtrantes",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Filtra contaminantes ordinários (poeira, pólen, fumaça, gás lacrimogêneo). NÃO filtra gás nervoso ou contact agents. Não necessário se tem Doesn't Breathe.",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "fit",
+      "name_en": "Fit",
+      "name_pt": "Em Forma",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Fit — +1 em HT rolls; recupera FP em 2× normal"
+          },
+          {
+            "value": 15,
+            "name_pt": "Very Fit — +2 em HT rolls; perde FP em ½ normal, recupera em 2×"
+          }
+        ]
+      },
+      "description_pt": "Não melhora HT nem HT-based skills. FP só afeta perda por exertion/heat — não FP gasto em psi/magia.",
+      "page_ref": 55,
+      "detail_level": "full"
+    },
+    {
+      "id": "flexibility",
+      "name_en": "Flexibility",
+      "name_pt": "Flexibilidade",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Flexibility — +3 em Climbing/Escape/Erotic Art/break free; ignora -3 close-quarters"
+          },
+          {
+            "value": 15,
+            "name_pt": "Double-Jointed — +5 nesses skills; ignora -5 close-quarters"
+          }
+        ]
+      },
+      "description_pt": "Corpo flexível. Double-Jointed não estica/comprime mas dobra qualquer membro em qualquer direção.",
+      "page_ref": 56,
+      "detail_level": "full"
+    },
+    {
+      "id": "flight",
+      "name_en": "Flight",
+      "name_pt": "Voo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 40
+      },
+      "description_pt": "Voo auto-propelido sem asas (default). Move = Basic Speed × 2 (sem fração); ajustável ±2pts/yd/s. Pode hover (Move 0). Sem mods especiais, também 'voa' meia-velocidade subaquático. Modifiers: Newtonian Space Flight +25%, Space Flight +50%. Limitations: Cannot Hover -15%, Controlled Gliding -45%, Gliding -50%, Lighter Than Air -10%, Low Ceiling -10/-20/-25%, Small Wings -10%, Space Flight Only -75%, Winged -25%.",
+      "page_ref": 56,
+      "detail_level": "full"
+    },
+    {
+      "id": "gadgeteer",
+      "name_en": "Gadgeteer",
+      "name_pt": "Inventor",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 25,
+            "name_pt": "Gadgeteer — cinematic, mas leva dias/meses + dinheiro"
+          },
+          {
+            "value": 50,
+            "name_pt": "Quick Gadgeteer — minutos/horas, peças sucateadas"
+          }
+        ]
+      },
+      "description_pt": "Inventor nato. Modifica e cria gadgets conforme regras de Gadgeteering p475. Quick é unsuitable para campanhas realistas.",
+      "page_ref": 56,
+      "detail_level": "full"
+    },
+    {
+      "id": "g_experience",
+      "name_en": "G-Experience",
+      "name_pt": "Experiência G",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 1,
+            "name_pt": "1 gravidade específica"
+          },
+          {
+            "value": 10,
+            "name_pt": "G-Experience (All) — todas gravidades"
+          }
+        ]
+      },
+      "description_pt": "Sofre apenas ½ DX penalty pra gravidade diferente. Em gravidade baixa que ajude, ainda ganha +1 extra além do bônus normal. Custo: 1 pt por gravidade individual ou 10 pts pra todas.",
+      "page_ref": 57,
+      "detail_level": "full"
+    },
+    {
+      "id": "gizmos",
+      "name_en": "Gizmos",
+      "name_pt": "Geringonças",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "por gizmo (max 3)"
+      },
+      "description_pt": "Uma vez por sessão, saca item pequeno que 'estava no bolso' não-declarado anteriormente. Critérios: item que você possui mas não declarou; item que provavelmente possui dado seu conceito; gadget barato comum no seu TL. Item entra em jogo só no momento (não pode ser confiscado antes). Não-realista; GM pode limitar/proibir.",
+      "page_ref": 57,
+      "detail_level": "full"
+    },
+    {
+      "id": "growth",
+      "name_en": "Growth",
+      "name_pt": "Crescimento",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Cada nível aumenta Size Modifier em +1. Altura via tabela SM (p19). +1 SM/segundo. Equipamento não muda de tamanho. Precisa comprar ST suficiente (5×altura em jds); pode usar Size limitation. Pode romper paredes se thrust damage > DR. Modifier: Maximum Size Only +0%.",
+      "page_ref": 58,
+      "detail_level": "full"
+    },
+    {
+      "id": "gunslinger",
+      "name_en": "Gunslinger",
+      "name_pt": "Atirador de Elite",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Tiros precisos sem Aim. Funciona com Beam Weapons, Gunner, Guns, Liquid Projector (NÃO em armas muscle-powered). One-handed RoF 1-3: ganha Acc full sem Aim; two-handed ou automático: ½ Acc (round up). Com Aim, ganha tudo + scopes/brace. Cinematic — GM pode proibir em realista.",
+      "page_ref": 58,
+      "detail_level": "full"
+    },
+    {
+      "id": "hard_to_kill",
+      "name_en": "Hard to Kill",
+      "name_pt": "Difícil de Matar",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "+1/nível em HT rolls de sobrevivência a -HP ou pior, e em HT rolls de morte instantânea (cardíaca, veneno). Se o bônus salvar, colapsa parecendo morto mas acorda no tempo normal (Recovering from Unconsciousness, p423). Diagnosis revela verdade. Realista: GM pode limitar a 1-2 níveis.",
+      "page_ref": 58,
+      "detail_level": "full"
+    },
+    {
+      "id": "hard_to_subdue",
+      "name_en": "Hard to Subdue",
+      "name_pt": "Difícil de Subjugar",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "+1/nível em HT rolls para evitar unconsciousness (ferimento, drogas, ultra-tech) e resistir poderes sobrenaturais que causam unconsciousness. Realista: GM pode limitar a 1-2.",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "healing",
+      "name_en": "Healing",
+      "name_pt": "Cura",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 30
+      },
+      "description_pt": "Cura outros via contato físico. 1 seg concentração + IQ roll (-2 se subject inconsciente). Heal Injuries: 1 FP por 2 HP curados (round up); falha = 1d FP; crítica = +1d dano no subject. Sangramento para com 1 HP. Curar membro paralisado: IQ-6, cura todos HP da lesão (1 tentativa por curador). Não restaura membros perdidos nem ressuscita. Cure Disease: IQ com modificador (+1 cold até -15 AIDS); FP = 2× penalty. Penalty cumulativo -3 por cura sucessiva no mesmo subject. Enhancements: Faith Healing +20%, Xenohealing +20% a +100%. Limitations: Disease Only -40%, Injuries Only -20%, Own Race Only -20%, Psychic Healing -10%.",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "hermaphromorph",
+      "name_en": "Hermaphromorph",
+      "name_pt": "Hermafromorfo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Alterna entre formas neutra, masculina e feminina funcionais. 10 seg. Comuns: Preparation Required, Takes Extra Time, Takes Recharge.",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "high_manual_dexterity",
+      "name_en": "High Manual Dexterity",
+      "name_pt": "Alta Destreza Manual",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "máx 4 níveis"
+      },
+      "description_pt": "+1/nível em DX para tarefas delicadas. Aplica em DX-based: Artist, Jeweler, Knot-Tying, Leatherworking, Lockpicking, Pickpocket, Sewing, Sleight of Hand, Surgery + Machinist/Mechanic em trabalho fino. NÃO afeta combate nem tarefas IQ-based.",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "high_pain_threshold",
+      "name_en": "High Pain Threshold",
+      "name_pt": "Alto Limiar de Dor",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Nunca sofre shock penalty quando ferido. +3 em HT rolls contra knockdown/stunning, +3 para resistir tortura física. GM pode permitir Will+3 em outras situações. Incluído em Supernatural Durability (incompatível).",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "higher_purpose",
+      "name_en": "Higher Purpose",
+      "name_pt": "Propósito Maior",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Conduzido a exceder limites num pursuit específico (declarado como Code of Honor: 'Defender mulheres', 'Matar demônios'). +1 em todos rolls relacionados ao pursuit. Desvio = perde bônus + GM pode penalizar. Deve ser específico, com risco/inconveniência genuínos. GM aprova.",
+      "page_ref": 59,
+      "detail_level": "full"
+    },
+    {
+      "id": "hyperspectral_vision",
+      "name_en": "Hyperspectral Vision",
+      "name_pt": "Visão Hiperespectral",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Visão integrada IR + visível + UV. Visão noturna quase perfeita; em escuridão total funciona como Infravision. +3 em Vision rolls, Forensics, Observation, Search, Tracking. Incompatível com Infravision e Ultravision (substitui ambos). Modifiers cinematic: Extended Low-Band +30% (radio/radar), Extended High-Band +30% (X-ray/gamma).",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "illuminated",
+      "name_en": "Illuminated",
+      "name_pt": "Iluminado",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "'Iluminatus' no sentido original — sabe das conspirações intuitivamente. Reconhece outros Illuminati à vista (infalível). Em rolls de Current Affairs/Hidden Lore/Intelligence Analysis para distinguir coincidência de conspiração, rola contra o maior de IQ ou skill. Percebe e fala com seres sobrenaturais ligados a conspirações Iluminadas; +3 reaction deles. Outros Illuminati também identificam você. Setting místico/fantástico.",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "improved_g_tolerance",
+      "name_en": "Improved G-Tolerance",
+      "name_pt": "Tolerância G Aprimorada",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "0.3G de incremento"
+          },
+          {
+            "value": 10,
+            "name_pt": "0.5G de incremento"
+          },
+          {
+            "value": 15,
+            "name_pt": "1G de incremento"
+          },
+          {
+            "value": 20,
+            "name_pt": "5G de incremento"
+          },
+          {
+            "value": 25,
+            "name_pt": "10G de incremento"
+          }
+        ]
+      },
+      "description_pt": "Funciona sob ampla gama de gravidades. Default humano sofre penalty a cada 0.2G. Maior incremento = menos penalty. Humanos normais limitados a 10 pts (1G).",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "indomitable",
+      "name_en": "Indomitable",
+      "name_pt": "Indomável",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Impossível de ser influenciado por palavras/ações ordinárias. Skills de Influence falham automaticamente, exceto contra quem tem Empathy (ou Animal Empathy/Plant Empathy/Spirit Empathy conforme natureza). Frequentemente acompanha Unfazeable.",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "infravision",
+      "name_en": "Infravision",
+      "name_pt": "Infravisão",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só Infravision sempre (limitações permanentes)"
+          },
+          {
+            "value": 10,
+            "name_pt": "Pode alternar com visão normal"
+          }
+        ]
+      },
+      "description_pt": "Vê IR (calor). Combate sem penalty em escuridão absoluta contra alvos quentes. +2 em Vision rolls contra alvos quentes; +3 em Tracking via trilha de calor (até 1h). Não distingue cores. -4 para distinguir objetos de tamanho/forma similar. -4 Vision para ler por calor refletido. Pode ser ofuscado por flashes IR.",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "injury_tolerance",
+      "name_en": "Injury Tolerance",
+      "name_pt": "Tolerância a Ferimentos",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 100,
+            "name_pt": "Diffuse — corpo fluido/enxame/energia; imune a crippling; reduz dano físico drasticamente. Inclui No Blood, No Brain, No Vitals."
+          },
+          {
+            "value": 40,
+            "name_pt": "Homogenous — sem órgãos internos vulneráveis. Reduz piercing/impaling. Inclui No Brain, No Vitals."
+          },
+          {
+            "value": 5,
+            "name_pt": "No Blood — sem fluido vital; não sangra; imune a toxinas hematogênicas"
+          },
+          {
+            "value": 5,
+            "name_pt": "No Brain — cérebro distribuído; sem extra damage por crânio/face"
+          },
+          {
+            "value": 5,
+            "name_pt": "No Eyes — sem olhos; imune a blinding attacks"
+          },
+          {
+            "value": 7,
+            "name_pt": "No Head — sem cabeça; inclui No Brain. Sem skull/face hit locations."
+          },
+          {
+            "value": 5,
+            "name_pt": "No Neck — sem pescoço; imune a decapitação, estrangulamento"
+          },
+          {
+            "value": 5,
+            "name_pt": "No Vitals — sem órgãos vitais; vitals/groin tratados como torso"
+          },
+          {
+            "value": 20,
+            "name_pt": "Unliving — corpo não-vivo (máquinas, mortos-vivos corporais); reduz piercing/impaling"
+          }
+        ]
+      },
+      "description_pt": "Diffuse/Homogenous/Unliving são mutuamente incompatíveis. Diversas formas podem ser combinadas. Ver p380 para detalhes sobre injury para targets unliving/homogenous/diffuse.",
+      "page_ref": 60,
+      "detail_level": "full"
+    },
+    {
+      "id": "innate_attack",
+      "name_en": "Innate Attack",
+      "name_pt": "Ataque Inato",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Burning (burn) — 5 pts/dado; igniza fogos"
+          },
+          {
+            "value": 10,
+            "name_pt": "Corrosion (cor) — 10 pts/dado; reduz DR alvo em 1 a cada 5 pts dano"
+          },
+          {
+            "value": 5,
+            "name_pt": "Crushing (cr) — 5 pts/dado; knockback; mais eficaz em blunt trauma"
+          },
+          {
+            "value": 7,
+            "name_pt": "Cutting (cut) — 7 pts/dado; ×1.5 dano penetrante; knockback"
+          },
+          {
+            "value": 10,
+            "name_pt": "Fatigue (fat) — 10 pts/dado; reduz FP não HP; não afeta máquinas"
+          },
+          {
+            "value": 8,
+            "name_pt": "Impaling (imp) — 8 pts/dado; ×2 dano em carne; pode mirar vitais/olhos"
+          },
+          {
+            "value": 3,
+            "name_pt": "Small Piercing (pi-) — 3 pts/dado; ½ dano em carne"
+          },
+          {
+            "value": 5,
+            "name_pt": "Piercing (pi) — 5 pts/dado; rifle/pistol padrão"
+          },
+          {
+            "value": 6,
+            "name_pt": "Large Piercing (pi+) — 6 pts/dado; ×1.5 em carne"
+          },
+          {
+            "value": 8,
+            "name_pt": "Huge Piercing (pi++) — 8 pts/dado; ×2 em carne"
+          },
+          {
+            "value": 4,
+            "name_pt": "Toxic (tox) — 4 pts/dado; dano celular; não afeta máquinas"
+          }
+        ]
+      },
+      "description_pt": "Ataque natural built-in. Default: ranged, 1/2D 10, Max 100, Acc 3, RoF 1, Recoil 1, Shots N/A. Inflige 1d/nível. Modificadores p101-116 permitem criar quase qualquer ataque. Partial dice: ±1 dano = ±0.3 dado, 1pt = 0.25 dado. Alternative Attacks: ataques múltiplos como mesmo ability — full price no mais caro, 1/5 nos outros (não simultâneos).",
+      "page_ref": 61,
+      "detail_level": "full"
+    },
+    {
+      "id": "insubstantiality",
+      "name_en": "Insubstantiality",
+      "name_pt": "Insubstancialidade",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 80
+      },
+      "description_pt": "Intangível, passa por sólidos. Gravidade não afeta — move-se em qualquer direção a Move full, silenciosamente. Percebe e fala com mundo tangível mas não pega objetos. Ataques físicos/energia mútuos não funcionam. Psi e magia funcionam mas a -3. Não pode materializar dentro de sólido. Atravessar sólido = suffocation como nadar. Enhancements: Affect Substantial +100%, Can Carry Objects +10% a +100%, Partial Change +20%/+100%. Limitations: Always On -50%, Usually On -40%.",
+      "page_ref": 62,
+      "detail_level": "full"
+    },
+    {
+      "id": "intuition",
+      "name_en": "Intuition",
+      "name_pt": "Intuição",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Diante de alternativas sem lógica clara, pede pra usar Intuition. GM rola IQ secretamente: bônus = boas escolhas, penalty = más. Sucesso → guia para boa; crítico → melhor; falha → nada; falha crítica → guia para má. 1 roll por pergunta. GM nunca permite curto-circuitar aventura.",
+      "page_ref": 63,
+      "detail_level": "full"
+    },
+    {
+      "id": "invisibility",
+      "name_en": "Invisibility",
+      "name_pt": "Invisibilidade",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 40
+      },
+      "description_pt": "Sempre on (sem enhancement). Ainda faz barulho, pegadas, cheiro; equipamento permanece visível. Sem carregar nada: +9 em Stealth quando ser visto importa. Remote viewing paranormal segue não vendo. Default: invisível a UM tipo de visão. Tipos: eletromagnético (visão normal/IR/UV/radar), sonar, magnetic, etc. Invisível a EM = sem sombra, sem reflexo. Enhancements: Affects Machines +50%, Can Carry Objects +10/+100%, Extended +20%/tipo, Switchable +10%, Usually On +5%. Limitations: Machines Only -50%, Substantial Only -10%, Visible Reflection -10%, Visible Shadow -10%.",
+      "page_ref": 63,
+      "detail_level": "full"
+    },
+    {
+      "id": "jumper",
+      "name_en": "Jumper",
+      "name_pt": "Saltador (Tempo/Mundos)",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 100,
+        "note": "Jumper(Time) e Jumper(World) compram separados"
+      },
+      "description_pt": "Viaja no tempo OU entre mundos paralelos pela vontade. Visualizar destino + 10 seg concentração + IQ roll (-1/seg omitido, max -10 sem prep; 14+ sempre falha). Sucesso → destino. Falha crítica → destino errado escolhido pelo GM. Aparece no mesmo local. Sem 'safe location' a até 100 jds → falha conhecida. Custa ≥1 FP. Carrega até Basic Lift. Múltiplos Jumpers em contato podem 'pegar carona'. Enhancements: Extra Carrying Capacity +10/+20/+30/+50%, New Worlds +50%, Omni-Jump +10%, Tracking +20%, Tunnel +40%, Warp Jump +10%. Limitations: Cannot Escort -10%, Cannot Follow -20%, Drift -15%, Limited Jump -10%, Maximum Range (GM), Naked -30%, Stunning -10%.",
+      "page_ref": 64,
+      "detail_level": "full"
+    },
+    {
+      "id": "language_talent",
+      "name_en": "Language Talent",
+      "name_pt": "Talento Linguístico",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Ao aprender idioma acima de None, automaticamente sobe um nível: 2 pts por Accented, 4 pts por Native (vs 4/6 normais). Ver Language (p23).",
+      "page_ref": 65,
+      "detail_level": "full"
+    },
+    {
+      "id": "legal_enforcement_powers",
+      "name_en": "Legal Enforcement Powers",
+      "name_pt": "Poderes Legais de Aplicação",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Local — prender suspeitos, busca com mandado, talvez porte oculto. Ex: policial moderno, bobby vitoriano."
+          },
+          {
+            "value": 10,
+            "name_pt": "Nacional/internacional OU sem respeito a civil rights OU investigação coberta OU matar com impunidade. Ex: FBI, Royal Guard medieval."
+          },
+          {
+            "value": 15,
+            "name_pt": "Três ou mais do nível anterior. Ex: Gestapo, KGB, Stasi."
+          }
+        ]
+      },
+      "description_pt": "Quase sempre exige Duty. Pode exigir Reputation. Inclui Police Rank 0 — compre mais Rank para hierarquia.",
+      "page_ref": 65,
+      "detail_level": "full"
+    },
+    {
+      "id": "legal_immunity",
+      "name_en": "Legal Immunity",
+      "name_pt": "Imunidade Legal",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Sujeito a regras paralelas tão estritas. Ex: abade medieval, observador UN."
+          },
+          {
+            "value": 10,
+            "name_pt": "Regras paralelas menos estritas. Ex: Bardic Immunity."
+          },
+          {
+            "value": 15,
+            "name_pt": "Quase qualquer coisa se não fere quem concedeu. Ex: duque medieval."
+          },
+          {
+            "value": 20,
+            "name_pt": "Diplomatic Immunity — ignora leis estrangeiras; só persona non grata."
+          }
+        ]
+      },
+      "description_pt": "+5 pts opcional: 'diplomatic pouch' (objetos invioláveis). Bardic Immunity exige 1+ pt em Performance/Poetry/Singing. Diplomatic geralmente requer Administrative Rank + Duty.",
+      "page_ref": 65,
+      "detail_level": "full"
+    },
+    {
+      "id": "less_sleep",
+      "name_en": "Less Sleep",
+      "name_pt": "Menos Sono",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 2,
+        "level_label": "máx 4 níveis"
+      },
+      "description_pt": "Humano default precisa 8h sono. Cada nível reduz em 1h (até 4h em level 4).",
+      "page_ref": 65,
+      "detail_level": "full"
+    },
+    {
+      "id": "lifting_st",
+      "name_en": "Lifting ST",
+      "name_pt": "ST de Levantamento",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 3,
+        "level_label": "por +1 Lifting ST"
+      },
+      "description_pt": "ST extra para carregar/levantar/empurrar/puxar. Adiciona ao ST normal para Basic Lift e força de pressão lenta (grapple/choke). NÃO afeta HP, throwing distance, dano em melee ou thrown. Se ST normal tem Size limitation, aplica em Lifting ST também (mas No Fine Manipulators não dá desconto).",
+      "page_ref": 65,
+      "detail_level": "full"
+    },
+    {
+      "id": "lightning_calculator",
+      "name_en": "Lightning Calculator",
+      "name_pt": "Calculadora Mental",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 2,
+            "name_pt": "Lightning Calculator — aritmética instantânea; jogador pode usar calculadora real a qualquer momento"
+          },
+          {
+            "value": 5,
+            "name_pt": "Intuitive Mathematician — astrogation, engenharia, equações diferenciais sem computador"
+          }
+        ]
+      },
+      "description_pt": "Math em segundos. Verdadeiros gênios pegam ambos níveis + Mathematical Ability (Talent).",
+      "page_ref": 66,
+      "detail_level": "full"
+    },
+    {
+      "id": "longevity",
+      "name_en": "Longevity",
+      "name_pt": "Longevidade",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 2
+      },
+      "description_pt": "Falha aging rolls (p444) só em 17 ou 18 (ou só 18 se HT modificado ≥17).",
+      "page_ref": 66,
+      "detail_level": "full"
+    },
+    {
+      "id": "luck",
+      "name_en": "Luck",
+      "name_pt": "Sorte",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 15,
+            "name_pt": "Luck — re-rola um die roll ruim 2× e pega melhor, 1×/hora de jogo"
+          },
+          {
+            "value": 30,
+            "name_pt": "Extraordinary Luck — mesmo mas 1×/30min"
+          },
+          {
+            "value": 60,
+            "name_pt": "Ridiculous Luck — mesmo mas 1×/10min"
+          }
+        ]
+      },
+      "description_pt": "Declara IMEDIATAMENTE após roll (outras rolagens depois = tarde demais). Se GM rolando em segredo, avisa antes e GM rola 3× pegando melhor. Aplica em seus success/damage/reaction rolls ou eventos que afetam você/party. Em ataque contra você, força atacante rolar 3× pegando pior. Não compartilha. Wait real time entre usos. Limitations: Active -40%, Aspected -20%, Defensive -20%.",
+      "page_ref": 66,
+      "detail_level": "full"
+    },
+    {
+      "id": "magery",
+      "name_en": "Magery",
+      "name_pt": "Aptidão Mágica",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "tiered",
+        "tiers": [
+          {
+            "level": 0,
+            "value": 5
+          },
+          {
+            "level": "1+",
+            "value": "10 pts/nível adicional"
+          }
+        ]
+      },
+      "description_pt": "Magery 0 (5 pts): consciência mágica básica, pré-req para aprender magia. Sense roll ao ver/tocar item mágico. 1+: Soma Magery ao IQ para aprender spells; +Magery em Per para sense magic items; +Magery em IQ para Thaumatology. Reduz tempo de aprendizado em -10%/nível (mín 60%). Spells poderosos exigem Magery mínima como pré-req. Magery 3 é padrão para 'fantasy clássica'. Limitations: Dance -40%, Dark-Aspected -50%, Day-Aspected -40%, Night-Aspected -40%, Musical -50%, Song -40%, One College Only -40%, Solitary -40%.",
+      "page_ref": 66,
+      "detail_level": "full"
+    },
+    {
+      "id": "magic_resistance",
+      "name_en": "Magic Resistance",
+      "name_pt": "Resistência Mágica",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "Subtrai nível do skill do conjurador, soma ao seu roll de resistência. Aplica em magic elixirs (HT + Magic Resistance). NÃO pode 'desligar' — bloqueia até magia amiga. Só afeta spells lançados diretamente em você (não Missile spells, magic weapons, info spells). Não afeta outros poderes sobrenaturais (milagres, psi, espíritos). Incompatível com Magery (qualquer nível impede cast). Enhancement Improved +150% (permite Magery + Magic Resistance).",
+      "page_ref": 67,
+      "detail_level": "full"
+    },
+    {
+      "id": "mana_damper",
+      "name_en": "Mana Damper",
+      "name_pt": "Amortecedor de Mana",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 10,
+        "level_label": "máx 3 níveis"
+      },
+      "description_pt": "Cada nível reduz mana local em 1 step (apenas para você e itens carregados). Wizards têm dificuldade de afetar você diretamente. Nunca pode cast spells nem ter Magery. Enhancements: Area Effect +50%/nível, Switchable +100%.",
+      "page_ref": 67,
+      "detail_level": "full"
+    },
+    {
+      "id": "mana_enhancer",
+      "name_en": "Mana Enhancer",
+      "name_pt": "Amplificador de Mana",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 50,
+        "level_label": "máx 2 níveis"
+      },
+      "description_pt": "Cada nível aumenta mana local em 1 step (só você e carregados). Não dá power de cast (precisa Magery), mas em mana 'high+' pode cast vários spells sem Magery. Incompatível com Magic Resistance. Mages detectam via IQ+Magery roll. Enhancements: Area Effect +50%/nível, Switchable +100%.",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "medium",
+      "name_en": "Medium",
+      "name_pt": "Médium",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Percebe e fala com espíritos (especialmente mortos). Não vê visualmente mas sabe quando próximo. Pode falar (mesma língua). Pode invocar (sem garantia de resposta). NÃO dá reaction bonus nem controle.",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "metabolism_control",
+      "name_en": "Metabolism Control",
+      "name_pt": "Controle Metabólico",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Controla funções involuntárias (pulso, fluxo sanguíneo, digestão, respiração). +1/nível em HT rolls beneficiados, incluindo bleeding e recovery de disease/poison. Pode entrar em transe de morte aparente — Diagnosis vs HT+Metabolism Control para detectar. Cada nível reduz O₂ necessário em 10% (lvl 10 = não respira) e dobra tempo sem comida/água. Incompatível com Machine meta-trait. Limitation Hibernation -60% (só transe + entra hibernação involuntária em condições extremas).",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "microscopic_vision",
+      "name_en": "Microscopic Vision",
+      "name_pt": "Visão Microscópica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Cada nível ×10 ampliação: lvl 1 = 10× (perícia forense), lvl 3 = 1000× (microscópio óptico), lvl 5 = 100k× (eletrônico, vê vírus), lvl 6 = 1M× (estrutura atômica). Só para objetos a ≤1 pé.",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "mimicry",
+      "name_en": "Mimicry",
+      "name_pt": "Mímica Sonora",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Duplica som simples (alarme, tiro) após 1 seg + IQ roll. Imita vozes após ≥10 seg + IQ roll. NÃO dá poder de stun/deafen nem cast verbal de magia.",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "mind_control",
+      "name_en": "Mind Control",
+      "name_pt": "Controle Mental",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 50
+      },
+      "description_pt": "Domina mentalmente alvo visto/tocado. 1 seg concentração + Quick Contest: seu IQ vs Will alvo. Modifiers: range penalties; -1/escravo já controlado; +2 (1 min concentração) ou +4 (1 hora). Vitória → vítima vira Reprogrammable até liberar. Controle dura enquanto Concentra; depois ainda 1 min/ponto de margem. Forçar contra princípios = novo Quick Contest. Falha crítica = perde todos sob controle. Enhancements: Conditioning +50%, No Memory +10%. Limitations: Conditioning Only -50%, Puppet -40%, Telepathic -10%.",
+      "page_ref": 68,
+      "detail_level": "full"
+    },
+    {
+      "id": "mind_probe",
+      "name_en": "Mind Probe",
+      "name_pt": "Sondagem Mental",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Força alvo responder uma pergunta específica (resposta em sentença breve). Pré-requisito: tocar OU ter Mind Reading bem-sucedido. Precisam compartilhar língua. 1 seg + Quick Contest: IQ (ou Interrogation maior) vs Will. Vitória = arranca resposta crida pelo alvo. Penalty cumulativo -2 por repetição na mesma pergunta/hora. Falha crítica = 24h sem probe. Modifiers iguais aos de Mind Reading.",
+      "page_ref": 69,
+      "detail_level": "full"
+    },
+    {
+      "id": "mind_reading",
+      "name_en": "Mind Reading",
+      "name_pt": "Leitura Mental",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 30
+      },
+      "description_pt": "Escuta pensamentos de superfície. Vê ou toca alvo. 1 seg + Quick Contest: IQ vs Will (com range penalties). Vitória = ouve fala/subvocalização/pensamento ativo em velocidade de fala. Sem língua comum ou não-sapiente = só sentimentos/imagens/intent. Mantém indefinidamente sem reconcentrar. Trocar alvo = parar + Quick Contest com novo. Múltiplos simultâneos = Compartmentalized Mind. Falha crítica = 24h sem leitura nesse alvo. Comum: Sense-Based limitation (Touch, Hearing). Enhancements: Cybernetic +50%, Sensory +20%, Universal +50%. Limitations: Cybernetic Only -50%, Racial -20%, Sensory Only -20%, Telecommunication -20%, Telepathic -10%.",
+      "page_ref": 69,
+      "detail_level": "full"
+    },
+    {
+      "id": "mind_shield",
+      "name_en": "Mind Shield",
+      "name_pt": "Escudo Mental",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 4
+      },
+      "description_pt": "Avisa e defende contra ataques mentais. Soma nível ao IQ/Will contra Telepathic-limited advantages e Communication/Empathy/Mind Control spells. Bloqueia localização mental (Quick Contest Will+Mind Shield). Pode baixar voluntariamente (free action no início do turno). Protege durante sono/inconsciência (a menos que tenha sido baixado conscientemente antes). Limitations: Cybernetic -50% (vs computer attacks, requer Digital Mind), Telepathic -10%.",
+      "page_ref": 70,
+      "detail_level": "full"
+    },
+    {
+      "id": "mindlink",
+      "name_en": "Mindlink",
+      "name_pt": "Vínculo Mental",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "1 pessoa"
+          },
+          {
+            "value": 10,
+            "name_pt": "2-9 pessoas"
+          },
+          {
+            "value": 20,
+            "name_pt": "10-99 pessoas"
+          },
+          {
+            "value": 30,
+            "name_pt": "100-999 pessoas"
+          }
+        ]
+      },
+      "description_pt": "Rapport telepático permanente com alguém (gêmeo, amor, hive member). Sucesso automático em Telesend e Mind Reading (se alvo não resiste ou tem Slave Mentality). Não funciona a mais de 0.1 ano-luz nem entre dimensões. +10 pts por aumento decuplo no número (1k = 40, 10k = 50…).",
+      "page_ref": 70,
+      "detail_level": "full"
+    },
+    {
+      "id": "modular_abilities",
+      "name_en": "Modular Abilities",
+      "name_pt": "Habilidades Modulares",
+      "type": "mental",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "base_per_slot + N×pts_per_pt; varia por tipo"
+      },
+      "description_pt": "Pool de pontos realocáveis em skills/spells/vantagens mentais sob condições. Slots: Computer Brain (6+4 pts/pt), Chip Slots (5+3), Super-Memorization (5+3), Cosmic Power (10/pt, slot único, qualquer config). Enhancements: Physical +50%/+100%. Limitations: Spells Only -20%, Virtual -50%.",
+      "page_ref": 71,
+      "detail_level": "full"
+    },
+    {
+      "id": "neutralize",
+      "name_en": "Neutralize",
+      "name_pt": "Neutralizar",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 50
+      },
+      "description_pt": "Cancela poderes psi de UM alvo. Atacante (touch + Attack maneuver) + Quick Contest Will. Vitória → todos psionic powers do alvo neutralizados por (margem) minutos. NÃO afeta Talents. 1 uso por alvo até recuperar. Falha crítica = 1d horas crippled. Enhancement: Power Theft +200% (rouba poderes). Limitation: One Power -50%.",
+      "page_ref": 71,
+      "detail_level": "full"
+    },
+    {
+      "id": "nictitating_membrane",
+      "name_en": "Nictitating Membrane",
+      "name_pt": "Membrana Nictante",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 1
+      },
+      "description_pt": "Pálpebra transparente. Vê normalmente subaquático; protege olhos de areia/irritantes. Cada nível: DR 1 nos olhos + +1 em HT rolls relacionados a dano nos olhos.",
+      "page_ref": 71,
+      "detail_level": "full"
+    },
+    {
+      "id": "night_vision",
+      "name_en": "Night Vision",
+      "name_pt": "Visão Noturna",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 1,
+        "level_label": "máx 9 níveis"
+      },
+      "description_pt": "Cada nível ignora -1 de penalty por escuridão (combate e visão) — DESDE que haja alguma luz. Não funciona em escuridão total (-10 fixo; precisa Dark Vision).",
+      "page_ref": 71,
+      "detail_level": "full"
+    },
+    {
+      "id": "obscure",
+      "name_en": "Obscure",
+      "name_pt": "Obscurecer",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 2
+      },
+      "description_pt": "Bloqueia UM sentido em raio 2 jds em torno de você. Especifica sentido (Vision, Hearing, Radar, Detect específico). -1/nível para detectar no raio; 10 níveis = bloqueio total. Bordas detectáveis em +1/nível. Enhancements: Defensive +50%, Extended +20%/sentido, Ranged +50%, Stealthy +100% (silencioso). Limitation: Always On -50%.",
+      "page_ref": 72,
+      "detail_level": "full"
+    },
+    {
+      "id": "oracle",
+      "name_en": "Oracle",
+      "name_pt": "Oráculo",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Sensível a presságios. 1×/dia checa omens (≥1 hora). GM rola 2× em segredo: Discovery (Sense roll) + Interpretation (IQ roll). Crítico em Discovery = +5 em Interpretation. Crítico em Interpretation = info específica. Falha crítica = GM mente. Diferente de Precognition (que não exige interpretação).",
+      "page_ref": 72,
+      "detail_level": "full"
+    },
+    {
+      "id": "parabolic_hearing",
+      "name_en": "Parabolic Hearing",
+      "name_pt": "Audição Parabólica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 4
+      },
+      "description_pt": "'Zoom' auditivo em som/área específica, filtra ruído de fundo. Cada nível dobra distância de audição clara (ver Hearing p358).",
+      "page_ref": 72,
+      "detail_level": "full"
+    },
+    {
+      "id": "patrons",
+      "name_en": "Patrons",
+      "name_pt": "Patronos",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 10,
+            "name_pt": "Indivíduo 150% PCs OU organização 1k× wealth (ex: dep. polícia pequeno)"
+          },
+          {
+            "value": 15,
+            "name_pt": "Indivíduo 2× PCs OU org 10k× wealth (ex: deus menor, bilionário)"
+          },
+          {
+            "value": 20,
+            "name_pt": "Ultra-poderoso indivíduo OU org 100k× wealth (super, deus maior, cidade grande)"
+          },
+          {
+            "value": 25,
+            "name_pt": "Org extremamente poderosa (1M× wealth: corporação grande, nação pequena)"
+          },
+          {
+            "value": 30,
+            "name_pt": "Governo nacional/multinacional OU verdadeiro deus pessoal"
+          }
+        ]
+      },
+      "description_pt": "NPC ou organização que serve de mentor/empregador/protetor. Custo × frequency multiplier. Deus exige Special Abilities enhancement. PC pode contatar 1×/aventura. Em party-shared, todos pagam full. Enhancements: Equipment +50%/+100%, Highly Accessible +50%, Special Abilities +50%/+100%. Limitations: Minimal Intervention -50%, Secret -50%, Unwilling -50%.",
+      "page_ref": 72,
+      "detail_level": "full"
+    },
+    {
+      "id": "payload",
+      "name_en": "Payload",
+      "name_pt": "Capacidade de Carga",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 1
+      },
+      "description_pt": "Carrega cargo/ocupantes DENTRO do corpo. Cada nível = Basic Lift/10 lbs. internos. Cargo: 20 lbs ~ 1 ft³. Occupants: humano ~200 lbs (×10 se cabin). >5 níveis sem Injury Tolerance(Homogenous)/Machine = GM approves. Limitation Exposed -50% (motos).",
+      "page_ref": 74,
+      "detail_level": "full"
+    },
+    {
+      "id": "penetrating_vision",
+      "name_en": "Penetrating Vision",
+      "name_pt": "Visão Penetrante",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "'X-ray vision'. Cada nível enxerga até 6\" de matéria normal. Funciona com outras vision advantages. Limitations: Blockable -10 a -30%, Specific -40 a -80%.",
+      "page_ref": 74,
+      "detail_level": "full"
+    },
+    {
+      "id": "perfect_balance",
+      "name_en": "Perfect Balance",
+      "name_pt": "Equilíbrio Perfeito",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Equilíbrio em qualquer superfície estreita (corda, beira, galho) sem die roll. +6 em rolls de equilíbrio em superfícies escorregadias. Em combate: +4 em DX/skills para se manter em pé / evitar knockdown. +1 em Acrobatics, Climbing, Piloting.",
+      "page_ref": 74,
+      "detail_level": "full"
+    },
+    {
+      "id": "peripheral_vision",
+      "name_en": "Peripheral Vision",
+      "name_pt": "Visão Periférica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Arco visual 240° (180° frontal + 30° cada lado). Em battle map: ataques melee nos hexes laterais (-Wild Swing se mão oposta). Defesas em side hex sem penalty; defesa contra ataques pelas costas só -2. +3 contra Shadowing/ambush. GM rola Vision pra perigos atrás. Limitation Easy to Hit -20% (olhos em hastes/vulneráveis).",
+      "page_ref": 74,
+      "detail_level": "full"
+    },
+    {
+      "id": "permeation",
+      "name_en": "Permeation",
+      "name_pt": "Permeação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 40,
+            "name_pt": "Very Common (terra, metal, pedra, madeira)"
+          },
+          {
+            "value": 20,
+            "name_pt": "Common (concreto, plástico, aço)"
+          },
+          {
+            "value": 10,
+            "name_pt": "Occasional (vidro, gelo, areia, alumínio)"
+          },
+          {
+            "value": 5,
+            "name_pt": "Rare (osso, carne, papel)"
+          }
+        ]
+      },
+      "description_pt": "Atravessa material sólido específico. Não abre passagem — 'derrete' nele. Precisa Penetrating Vision pra navegar. Ainda precisa respirar (limita a holding breath). Gravidade afeta. Vulnerável a ataques no interior. Enhancements: Can Carry Objects +10/+100%, Tunnel +40%.",
+      "page_ref": 75,
+      "detail_level": "full"
+    },
+    {
+      "id": "plant_empathy",
+      "name_en": "Plant Empathy",
+      "name_pt": "Empatia com Plantas",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Rapport com plantas. GM rola IQ ao encontrar planta — sucesso = sente saúde + natureza (natural/sobrenatural). Funciona como Empathy com plantas sapientes. Permite Influence skills em plantas sapientes. Acompanha Green Thumb (Talent), Sense of Duty (Plants), ou Vow.",
+      "page_ref": 75,
+      "detail_level": "full"
+    },
+    {
+      "id": "possession",
+      "name_en": "Possession",
+      "name_pt": "Possessão",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 100
+      },
+      "description_pt": "Move consciência entre corpos. Toca + 1 seg concentração + Quick Contest IQ vs Will (alvo wary = +5). Vitória = toma corpo, suprime personalidade do alvo (acorda em 1d seg sem memória). Ganha ST/DX/HT/secundários e vantagens físicas do host; mantém IQ/Per/Will/mentais. Skills mantêm relative level. Memória limitada (IQ -1/h desde takeover). Enhancements: Telecontrol +50%, Assimilation +10%, Chronic +20%, Mind Swap +10%. Limitations: Digital -40%, Magical -10%, Mindlink Required -40%, No Memory Access -10%, Parasitic -60%, Puppet Only -30%, Spiritual -20%, Telepathic -10% (mutuamente exclusivas).",
+      "page_ref": 75,
+      "detail_level": "full"
+    },
+    {
+      "id": "power_investiture",
+      "name_en": "Power Investiture",
+      "name_pt": "Investidura de Poder",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Divindade empoderou para cast spells clericais. +Nível em IQ para aprender spells daquela divindade. Lista fixa de spells; sem pré-requisitos (canaliza vontade divina, não estuda magia). Limitação intrínseca: Pact (não aplique de novo). Pode ter Magery + Power Investiture mas não se sobrepõem. Setting: priestos como divinely-inspired wizards.",
+      "page_ref": 77,
+      "detail_level": "full"
+    },
+    {
+      "id": "precognition",
+      "name_en": "Precognition",
+      "name_pt": "Precognição",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Visões de futuro (incontroláveis). Só info que seu 'futuro you' aprenderia e importaria. Vision vívida pode exigir Fright Check. Uso deliberado: 10 min + 2 FP + IQ-8. Tipicamente até ~1 semana futuro. Inclui Danger Sense (não pegue ambos). Limitations: Can't See Own Death -60%, ESP -10%, One Event -40%.",
+      "page_ref": 77,
+      "detail_level": "full"
+    },
+    {
+      "id": "pressure_support",
+      "name_en": "Pressure Support",
+      "name_pt": "Suporte a Pressão",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "PS 1 — até 10× pressão nativa (humano: shelf continental)"
+          },
+          {
+            "value": 10,
+            "name_pt": "PS 2 — até 100× (humano: oceanos exceto trincheiras)"
+          },
+          {
+            "value": 15,
+            "name_pt": "PS 3 — imune a alta pressão"
+          }
+        ]
+      },
+      "description_pt": "Pressão interna constante vs externa. NÃO protege contra crushing/explosions (localizadas/transientes). Frequentemente acompanha Sealed mas não requer.",
+      "page_ref": 77,
+      "detail_level": "full"
+    },
+    {
+      "id": "protected_sense",
+      "name_en": "Protected Sense",
+      "name_pt": "Sentido Protegido",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "por sentido"
+      },
+      "description_pt": "Sentido ranged adapta a sobrecarga em ≤2 seg. Sem dano permanente por overload. +5 contra dano temporário e Sense-Based attacks daquele sentido. Tipos: Protected Vision, Hearing, Taste/Smell — GM pode permitir outros.",
+      "page_ref": 78,
+      "detail_level": "full"
+    },
+    {
+      "id": "psi_static",
+      "name_en": "Psi Static",
+      "name_pt": "Estática Psiônica",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 30
+      },
+      "description_pt": "'Null' psi. Habilidades psi não afetam você nem que carrega. Telekinético arremessa rocha sim, mas não te levita. Enhancements: Area Effect +50%/nível, Switchable +100%. Limitation: Resistible -50% (Quick Contest de Will).",
+      "page_ref": 78,
+      "detail_level": "full"
+    },
+    {
+      "id": "psychometry",
+      "name_en": "Psychometry",
+      "name_pt": "Psicometria",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Sente história de objeto/local. Toca + 1 seg + IQ roll (penalty por idade: same day 0, 10d -1, 100d -2, 3y -3, 30y -4, 300y -5…). Sucesso = sensações de eventos carregados. Crítico = visão real. Falha crítica = 24h sem leitura. Limitation ESP -10%.",
+      "page_ref": 78,
+      "detail_level": "full"
+    },
+    {
+      "id": "puppet",
+      "name_en": "Puppet",
+      "name_pt": "Marionete",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Um Puppet"
+          },
+          {
+            "value": 10,
+            "name_pt": "Grupo inteiro de Allies como Puppets"
+          }
+        ]
+      },
+      "description_pt": "Pré-req: Possession + Ally ou Dependent. Puppet não resiste sua Possession (auto-success). Puppet sempre IQ 0, ou Involuntary Duty, ou Reprogrammable. Custo só do Puppet — Ally/Dependent separado. Comum: Minion enhancement ou Unwilling limitation.",
+      "page_ref": 78,
+      "detail_level": "full"
+    },
+    {
+      "id": "racial_memory",
+      "name_en": "Racial Memory",
+      "name_pt": "Memória Racial",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 15,
+            "name_pt": "Passive — déjà vu via IQ secret em situações ancestrais"
+          },
+          {
+            "value": 40,
+            "name_pt": "Active — consulta deliberada (1 turno concentração, GM define se ancestrais sabiam, IQ roll)"
+          }
+        ]
+      },
+      "description_pt": "Acessa memórias de ancestrais genéticos (ou gerações anteriores de software para Digital Minds).",
+      "page_ref": 78,
+      "detail_level": "full"
+    },
+    {
+      "id": "radiation_tolerance",
+      "name_en": "Radiation Tolerance",
+      "name_pt": "Tolerância à Radiação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Divisor 2"
+          },
+          {
+            "value": 10,
+            "name_pt": "Divisor 5"
+          },
+          {
+            "value": 15,
+            "name_pt": "Divisor 10"
+          },
+          {
+            "value": 20,
+            "name_pt": "Divisor 20"
+          },
+          {
+            "value": 25,
+            "name_pt": "Divisor 50"
+          },
+          {
+            "value": 30,
+            "name_pt": "Divisor 100"
+          },
+          {
+            "value": 35,
+            "name_pt": "Divisor 200"
+          },
+          {
+            "value": 40,
+            "name_pt": "Divisor 500"
+          },
+          {
+            "value": 45,
+            "name_pt": "Divisor 1000"
+          }
+        ]
+      },
+      "description_pt": "Divide dose efetiva de radiação (após PF de armadura) pelo divisor.",
+      "page_ref": 79,
+      "detail_level": "full"
+    },
+    {
+      "id": "rapid_healing",
+      "name_en": "Rapid Healing",
+      "name_pt": "Cura Rápida",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Rapid Healing — +5 em HT effective ao recuperar HP (pré-req HT 10+)"
+          },
+          {
+            "value": 15,
+            "name_pt": "Very Rapid Healing — mesma + sucesso = 2 HP em vez de 1 (pré-req HT 12+)"
+          }
+        ]
+      },
+      "description_pt": "Não acelera recuperação de stunning/knockout (use Recovery).",
+      "page_ref": 79,
+      "detail_level": "full"
+    },
+    {
+      "id": "rapier_wit",
+      "name_en": "Rapier Wit",
+      "name_pt": "Sagacidade Mordaz",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Stuna oponentes com repartee. Free action. Quick Contest: Public Speaking vs Will. Modifiers: -2 se Clueless/No Sense of Humor; -1/oponente após 1º se atacando grupo; Unfazeable = imune. Vitória = mental stun. Crítico = +1 HP dano por acidente. Falha crítica = enraivece oponente.",
+      "page_ref": 79,
+      "detail_level": "full"
+    },
+    {
+      "id": "reawakened",
+      "name_en": "Reawakened",
+      "name_pt": "Redespertado",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "'Lembra' skills/spells/techniques de vidas passadas. Compra normalmente; advantage só justifica como aprendeu sem professor. Só em settings com reincarnação.",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "recovery",
+      "name_en": "Recovery",
+      "name_pt": "Recuperação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Recupera de unconsciousness 60× mais rápido. Horas → minutos, minutos → segundos. Coma de mês = 12h.",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "reduced_consumption",
+      "name_en": "Reduced Consumption",
+      "name_pt": "Consumo Reduzido",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 2,
+        "level_label": "4 níveis"
+      },
+      "description_pt": "Lvl 1: 2/3 normal (2 refeições/dia). Lvl 2: 1/3 (1/dia). Lvl 3: 1×/semana (~5%). Lvl 4: 1×/mês (~1%). Limitations: Cast-Iron Stomach -50%, Food Only -50%, Water Only -50%.",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "regeneration",
+      "name_en": "Regeneration",
+      "name_pt": "Regeneração",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 10,
+            "name_pt": "Slow — 1 HP/12h"
+          },
+          {
+            "value": 25,
+            "name_pt": "Regular — 1 HP/h"
+          },
+          {
+            "value": 50,
+            "name_pt": "Fast — 1 HP/min"
+          },
+          {
+            "value": 100,
+            "name_pt": "Very Fast — 1 HP/seg"
+          },
+          {
+            "value": 150,
+            "name_pt": "Extreme — 10 HP/seg"
+          }
+        ]
+      },
+      "description_pt": "Inclui Rapid Healing sem custo. Não compatível com Slow Healing/Unhealing. Enhancement: Heals Radiation +40% (10×/HP). Limitation: Radiation Only -60% (só rads, não HP).",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "regrowth",
+      "name_en": "Regrowth",
+      "name_pt": "Reconstituição",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 40
+      },
+      "description_pt": "Regrowth de membros: orelha/dedo em 1d semanas; mão/pé em 1d+1 meses; olho/braço/perna em 2d+2 meses. Com Regeneration: tempo = tempo para curar full HP. Limitation Minor -50% (só pequenos: orelhas, dedos).",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "resistant",
+      "name_en": "Resistant",
+      "name_pt": "Resistente",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "base × resist_mult; base por raridade, mult por nível"
+      },
+      "description_pt": "+bonus em HT para resistir noxious itens (disease, poison, env. syndromes). Base: Very Common (Metabolic Hazards) 30, Common (Poison/Sickness) 15, Occasional (Disease/Ingested Poison) 10, Rare (Acceleration/Altitude/Bends/Sea/Space Sickness) 5. Multiplicador: Immunity ×1, +8 ×½, +3 ×⅓. Mental Resistance: substitui HT por IQ/Will (Psionics é Very Common).",
+      "page_ref": 80,
+      "detail_level": "full"
+    },
+    {
+      "id": "scanning_sense",
+      "name_en": "Scanning Sense",
+      "name_pt": "Sentido de Varredura",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 20,
+            "name_pt": "Radar (2000 jds, só grandes, não water)"
+          },
+          {
+            "value": 20,
+            "name_pt": "Imaging Radar (200 jds, vê pequenos/forma)"
+          },
+          {
+            "value": 20,
+            "name_pt": "Ladar (200 jds, alta resolução, sem fumaça/sólido)"
+          },
+          {
+            "value": 40,
+            "name_pt": "Para-Radar (200 jds, qualquer ambiente, indetectável)"
+          },
+          {
+            "value": 20,
+            "name_pt": "Sonar (2000 jds underwater, 20 jds × atm em ar)"
+          }
+        ]
+      },
+      "description_pt": "Emite + recebe energia, monta 'picture' (tamanho/forma, sem cor). Sem light needed. Ativo: outros sensores te detectam até 2× range. Pode desligar. Arco 120°. Enhancements: Extended Arc +75/+125%, LPI +10%, Multi-Mode +50%, Penetrating +50%, Targeting +20%. Limitation: Targeting Only -40%.",
+      "page_ref": 81,
+      "detail_level": "full"
+    },
+    {
+      "id": "sealed",
+      "name_en": "Sealed",
+      "name_pt": "Selado",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Impermeável a gás/líquido. Waterproof + imune a agentes corrosivos/tóxicos por contato. Aparato respiratório externo protegido. NÃO pressuriza (precisa Pressure Support) nem dispensa respiração (precisa Doesn't Breathe).",
+      "page_ref": 82,
+      "detail_level": "full"
+    },
+    {
+      "id": "security_clearance",
+      "name_en": "Security Clearance",
+      "name_pt": "Credencial de Segurança",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Acesso 'need to know' a faixa estreita (piloto de bombardeiro)"
+          },
+          {
+            "value": 10,
+            "name_pt": "Acesso livre a faixa estreita OU 'need to know' a faixa ampla"
+          },
+          {
+            "value": 75,
+            "name_pt": "Acesso livre a faixa ampla (agente secreto cinematic)"
+          }
+        ]
+      },
+      "description_pt": "Halve costs para org de importância menor. Exige background check; GM pode proibir para chars com passado suspeito (Debt, Secret, Paranoia, Sadism).",
+      "page_ref": 82,
+      "detail_level": "full"
+    },
+    {
+      "id": "see_invisible",
+      "name_en": "See Invisible",
+      "name_pt": "Ver o Invisível",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 15,
+        "note": "comprar separado por tipo de invisibilidade"
+      },
+      "description_pt": "Vê objetos/indivíduos normalmente invisíveis. Um tipo de invisibilidade por compra.",
+      "page_ref": 83,
+      "detail_level": "full"
+    },
+    {
+      "id": "sensitive_touch",
+      "name_en": "Sensitive Touch",
+      "name_pt": "Toque Sensível",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Pontas dos dedos hipersensíveis: calor residual em cadeira, vibração no chão. +4 em qualquer tarefa que usa tato (além de Acute Touch). Ex: Forensics comparando tecidos, Search procurando objetos pequenos.",
+      "page_ref": 83,
+      "detail_level": "full"
+    },
+    {
+      "id": "serendipity",
+      "name_en": "Serendipity",
+      "name_pt": "Serendipidade",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 15
+      },
+      "description_pt": "1 coincidência plausível favorável por sessão por nível. GM decide os detalhes. Você pode sugerir, mas GM tem palavra final. Coincidência implausível pode 'gastar' várias.",
+      "page_ref": 83,
+      "detail_level": "full"
+    },
+    {
+      "id": "shadow_form",
+      "name_en": "Shadow Form",
+      "name_pt": "Forma de Sombra",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 50
+      },
+      "description_pt": "Vira sombra 2D. Desliza por paredes/chão, atravessa frestas. Sobe paredes/tetos a ½ Move. Físico → ½ dano; energia → normal; LUZ → 1.5× dano. Magia/psi normal. Não atravessa 3D space (só slide). Sem ataques/ações físicas. Sem switch = -20 disadvantage. Enhancement: Can Carry Objects +10/+100%.",
+      "page_ref": 83,
+      "detail_level": "full"
+    },
+    {
+      "id": "morph",
+      "name_en": "Morph",
+      "name_pt": "Metamorfo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "100 + (max_template - native_template)"
+      },
+      "description_pt": "Similar a Alternate Form mas sem lista fixa. Assume qualquer racial template existente, dentro de limite de pontos. Base 100 pts = templates ≤ nativo. Soma pontos pra subir teto. Memoriza forma (1 min concentração); IQ 'slots' = formas memorizadas. Forma vista/tocada pode ser assumida sem memorização. Mudanças cosméticas incluídas (imita indivíduo). Enhancement: Unlimited +50% (vira robôs/veículos). Limitations: Cosmetic -50%, Mass Conservation -20%, Retains Shape -20%.",
+      "page_ref": 84,
+      "detail_level": "full"
+    },
+    {
+      "id": "shrinking",
+      "name_en": "Shrinking",
+      "name_pt": "Encolhimento",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Encolhe à vontade. Cada nível: -1 SM, -1/seg. -6 SM = altura /10. Reduz Move, reach, dano, HP, DR proporcionalmente. -2 SM cada = peso /10. Sem carregar nada por default. Enhancements: Affects Others +50%/pessoa, Can Carry Objects +10 a +100%, Full Damage +100%, Full DR +30%, Full HP +30%, Full Move +30%.",
+      "page_ref": 85,
+      "detail_level": "full"
+    },
+    {
+      "id": "signature_gear",
+      "name_en": "Signature Gear",
+      "name_pt": "Equipamento Característico",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "1 pt = 50% starting wealth em goods"
+      },
+      "description_pt": "Posses distintivas não-relacionadas à riqueza. Cada ponto = até 50% da starting wealth média em goods (nunca cash). Se NPC rouba/extravia, GM dá chance de recuperar. Se perdido sem culpa, GM devolve pts ou substitui. Se vendido voluntariamente, pts perdidos.",
+      "page_ref": 85,
+      "detail_level": "full"
+    },
+    {
+      "id": "silence",
+      "name_en": "Silence",
+      "name_pt": "Silêncio",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Move/respira sem ruído. +2/nível em Stealth perfeitamente parado, +1/nível movendo (mesmo com armadura). Só ajuda em escuro, contra listening devices, criaturas cegas e quem depende de audição.",
+      "page_ref": 85,
+      "detail_level": "full"
+    },
+    {
+      "id": "single_minded",
+      "name_en": "Single-Minded",
+      "name_pt": "Concentração Absoluta",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "+3 em rolls de tarefa mental longa em concentração exclusiva (GM julga útil). -5 para notar interrupções; Will para ignorar. GM pode regular que certas tarefas (inventar, magia, social) exigem atenção dividida — vantagem não aplica.",
+      "page_ref": 85,
+      "detail_level": "full"
+    },
+    {
+      "id": "slippery",
+      "name_en": "Slippery",
+      "name_pt": "Escorregadio",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 2,
+        "level_label": "máx 5"
+      },
+      "description_pt": "Difícil de segurar. +1/nível em ST/DX/Escape para escapar restraints, break free em close combat, espremer por aberturas estreitas.",
+      "page_ref": 85,
+      "detail_level": "full"
+    },
+    {
+      "id": "snatcher",
+      "name_en": "Snatcher",
+      "name_pt": "Subtraidor Dimensional",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 80
+      },
+      "description_pt": "Encontra item pequeno em mundo alternativo e 'puxa' através das dimensões. 10 seg concentração + visualização + IQ roll (max 14). Item ≤5 lbs, cabe em uma mão. Mão livre (-3 se amarrada). 2 FP por tentativa. Falha crítica = item errado (talvez perigoso). Items duram até voltar (Permanent enhancement segura). Enhancements: Permanent +300%. Limitations: Less Weight -5 a -30%, Specialized -5 a -25%, Stunning -10%, Unpredictable -25%.",
+      "page_ref": 86,
+      "detail_level": "full"
+    },
+    {
+      "id": "social_chameleon",
+      "name_en": "Social Chameleon",
+      "name_pt": "Camaleão Social",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Sabe o que falar perto de 'social betters'. Imune a reaction penalties por Rank/Status. Em situações sem penalty, +1 em reactions de quem exige respeito (sacerdotes, reis). Cinematic.",
+      "page_ref": 86,
+      "detail_level": "full"
+    },
+    {
+      "id": "social_regard",
+      "name_en": "Social Regard",
+      "name_pt": "Estima Social",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "por +1 reaction, máx +4"
+      },
+      "description_pt": "Membro de classe/raça/sexo bem-vista. Visível a quem te encontra. Não é Reputation (é 'privilege by association'). Tipos: Feared (deferência silenciosa), Respected (high Status virtual), Venerated (estranhos cuidam até quando atrapalha).",
+      "page_ref": 86,
+      "detail_level": "full"
+    },
+    {
+      "id": "speak_underwater",
+      "name_en": "Speak Underwater",
+      "name_pt": "Fala Subaquática",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Fala e ouve normalmente submerso. Enhancement: Interface Crossing +50% (também fala com quem está na superfície).",
+      "page_ref": 87,
+      "detail_level": "full"
+    },
+    {
+      "id": "speak_with_animals",
+      "name_en": "Speak With Animals",
+      "name_pt": "Falar com Animais",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Conversa com animais. Qualidade depende do IQ do animal (insetos = emoções; chimpanzés/gatos = discussão). 1 min por pergunta/resposta. GM pode exigir reaction roll (+2 com comida). Limitations: Specialized — All land animals -40%, All aquatic -40%, classe -50%, família -60%, espécie -80%.",
+      "page_ref": 87,
+      "detail_level": "full"
+    },
+    {
+      "id": "speak_with_plants",
+      "name_en": "Speak With Plants",
+      "name_pt": "Falar com Plantas",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Comunicação empática com plantas. Plantas terrestres IQ 0 (árvore grande pode ser 'mais sábia'). Sabe sobre seu bem-estar (água, pisoteamento) mas não escuta conversas próximas. Plantas normais cooperam sempre.",
+      "page_ref": 87,
+      "detail_level": "full"
+    },
+    {
+      "id": "special_rapport",
+      "name_en": "Special Rapport",
+      "name_pt": "Rapport Especial",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Vínculo único com outra pessoa. Empathy potente que funciona só com essa pessoa, sem distância. Sabe quando o parceiro está em trouble/pain/lying/precisa de ajuda. Ambos precisam comprar. GM pode proibir contra Patrons.",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "spines",
+      "name_en": "Spines",
+      "name_pt": "Espinhos",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 1,
+            "name_pt": "Short Spines — 1-2\" longos; 1d-2 impaling, Reach C"
+          },
+          {
+            "value": 3,
+            "name_pt": "Long Spines — 1-2 ft; 1d impaling, Reach C"
+          }
+        ]
+      },
+      "description_pt": "Espinhos em partes estratégicas do corpo. DX-4 free action contra cada foe em close combat (+2 se ataca por trás). Grapplers/slammers acertam-se automaticamente; slammers tomam DANO MÁXIMO.",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "spirit_empathy",
+      "name_en": "Spirit Empathy",
+      "name_pt": "Empatia Espiritual",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Empathy aplicada a espíritos. IQ roll p/ sentir intenções gerais. Influence skills (Diplomacy, Sex Appeal etc.) funcionam normalmente com espíritos. Não previne espíritos malignos de te perseguirem mas pode facilitar detectar planos. Limitation: Specialized -50% (classe específica: anjos, demônios, faerie etc.).",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "stretching",
+      "name_en": "Stretching",
+      "name_pt": "Elasticidade",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 6
+      },
+      "description_pt": "Cada nível: +1 SM efetivo em uma parte do corpo (sem mudar SM total). Estica braços, pernas, pescoço. ±1 SM/segundo. Não aumenta dano (sem massa/músculo extra). Ideal pra máquinas com manipuladores telescópicos; supers 'rubber body' adicionam Elastic Skin + Double-Jointed + Morph + Super Jump.",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "striker",
+      "name_en": "Striker",
+      "name_pt": "Apêndice Ofensivo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 5,
+            "name_pt": "Crushing ou Piercing"
+          },
+          {
+            "value": 6,
+            "name_pt": "Large Piercing"
+          },
+          {
+            "value": 7,
+            "name_pt": "Cutting"
+          },
+          {
+            "value": 8,
+            "name_pt": "Impaling"
+          }
+        ]
+      },
+      "description_pt": "Parte do corpo pra striking aimed (chifres, tail, stinger). Reach C, thrust dano +1/dado. DX ou Brawling pra acertar. Pode parry (DX/2+3 ou Brawling parry). Enhancements: Long +75/+100%/SM. Limitations: Cannot Parry -40%, Clumsy -20%/-1, Limited Arc -40%, Weak -50%.",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "striking_st",
+      "name_en": "Striking ST",
+      "name_pt": "ST de Golpe",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5,
+        "level_label": "por +1 ST"
+      },
+      "description_pt": "ST extra só para thrust/swing damage. Sem efeito em HP nem Basic Lift. Se ST normal tem No Fine Manipulators ou Size, aplica os mesmos em Striking ST.",
+      "page_ref": 88,
+      "detail_level": "full"
+    },
+    {
+      "id": "subsonic_hearing",
+      "name_en": "Subsonic Hearing",
+      "name_pt": "Audição Subsônica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só subsônica"
+          },
+          {
+            "value": 5,
+            "name_pt": "Subsônica + sons normais"
+          }
+        ]
+      },
+      "description_pt": "Ouve <40 Hz: tempestades distantes, terremotos, manadas, veículos blindados. +1 em Tracking se quarry no chão.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "subsonic_speech",
+      "name_en": "Subsonic Speech",
+      "name_pt": "Fala Subsônica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só subsônica"
+          },
+          {
+            "value": 10,
+            "name_pt": "Alternável com normal"
+          }
+        ]
+      },
+      "description_pt": "Inclui Subsonic Hearing. Fala lenta (½ velocidade), -2 em Fast-Talk e skills que dependem de versatilidade vocal. Carrega 2× a distância da fala normal.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "super_climbing",
+      "name_en": "Super Climbing",
+      "name_pt": "Escalada Super",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 3
+      },
+      "description_pt": "+1 Move/nível ao escalar ou usar Clinging.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "super_jump",
+      "name_en": "Super Jump",
+      "name_pt": "Salto Super",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Cada nível dobra distância/altura de jumping. Move ao saltar = max(Move normal, ⅕ max long jump). Pode jump-slam (no roll de jumping). Cai distância ≤ max high jump sem dano (+5 jds com Acrobatics).",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "super_luck",
+      "name_en": "Super Luck",
+      "name_pt": "Super Sorte",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 100
+      },
+      "description_pt": "1×/hora de jogo, dita resultado de UM die roll (em vez de rolar). Skill efetivo ≥3, e o resultado tem que ser possível em rolagem normal. Compatível com Luck normal mas só pode ter Super Luck 1×.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "supernatural_durability",
+      "name_en": "Supernatural Durability",
+      "name_pt": "Resistência Sobrenatural",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 150
+      },
+      "description_pt": "'Vampiro/serial killer de filme'. Imune a shock/physical stun/knockout. Inclui High Pain Threshold. Em HP≥0, imune a crippling, Move full. Abaixo de 0 HP: ½ Move, pode crippling, NÃO morre exceto por item específico (Occasional+) — vai com Vulnerability. Exceção: dano single de 10×HP = morre. Pra morrer real, ferimento por item específico a -HP+, ou -5×HP automaticamente.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_generic",
+      "name_en": "Talent",
+      "name_pt": "Talento",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": "5/10/15",
+        "level_label": "depende do tamanho do grupo"
+      },
+      "description_pt": "Aptidão natural para grupo de skills relacionadas. Custo: Small (≤6 skills) 5 pts/nv, Medium (7-12) 10 pts/nv, Large (13+) 15 pts/nv. Cada nível: +1 em skills do grupo (mesmo default), +1 reaction de quem é impressionado pela aptidão, -10%/nv no tempo de aprender. Max 4 níveis por Talent. Custom Talents permitidos pelo GM.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_animal_friend",
+      "name_en": "Talent: Animal Friend",
+      "name_pt": "Talento: Amigo dos Animais",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Skills: Animal Handling, Falconry, Packing, Riding, Teamster, Veterinary. Reaction bonus: todos animais.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_artificer",
+      "name_en": "Talent: Artificer",
+      "name_pt": "Talento: Artífice",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Skills: Armoury, Carpentry, Electrician, Electronics Repair, Engineer, Machinist, Masonry, Mechanic, Smith. Reaction bonus: quem você atende.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_business_acumen",
+      "name_en": "Talent: Business Acumen",
+      "name_pt": "Talento: Visão de Negócios",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Skills: Accounting, Administration, Economics, Finance, Gambling, Market Analysis, Merchant, Propaganda. Reaction bonus: quem faz negócios com você.",
+      "page_ref": 89,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_gifted_artist",
+      "name_en": "Talent: Gifted Artist",
+      "name_pt": "Talento: Artista Talentoso",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Skills: Artist, Jeweler, Leatherworking, Photography, Sewing. Reaction bonus: quem compra/critica sua obra.",
+      "page_ref": 90,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_green_thumb",
+      "name_en": "Talent: Green Thumb",
+      "name_pt": "Talento: Bom Jardineiro",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Skills: Biology, Farming, Gardening, Herb Lore, Naturalist. Reaction bonus: jardineiros e plantas sapientes.",
+      "page_ref": 90,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_healer",
+      "name_en": "Talent: Healer",
+      "name_pt": "Talento: Curador",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Skills: Diagnosis, Esoteric Medicine, First Aid, Pharmacy, Physician, Physiology, Psychology, Surgery, Veterinary. Reaction bonus: pacientes (passados e presentes).",
+      "page_ref": 90,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_mathematical_ability",
+      "name_en": "Talent: Mathematical Ability",
+      "name_pt": "Talento: Habilidade Matemática",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Skills: Accounting, Astronomy, Cryptography, Engineer, Finance, Market Analysis, Mathematics, Physics. Reaction bonus: engenheiros e cientistas.",
+      "page_ref": 90,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_musical_ability",
+      "name_en": "Talent: Musical Ability",
+      "name_pt": "Talento: Habilidade Musical",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Skills: Group Performance (Conducting), Musical Composition, Musical Influence, Musical Instrument, Singing. Reaction bonus: quem ouve/critica.",
+      "page_ref": 91,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_outdoorsman",
+      "name_en": "Talent: Outdoorsman",
+      "name_pt": "Talento: Homem da Mata",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 10
+      },
+      "description_pt": "Skills: Camouflage, Fishing, Mimicry, Naturalist, Navigation, Survival, Tracking. Reaction bonus: exploradores, nature lovers.",
+      "page_ref": 91,
+      "detail_level": "full"
+    },
+    {
+      "id": "talent_smooth_operator",
+      "name_en": "Talent: Smooth Operator",
+      "name_pt": "Talento: Operador Suave",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 15
+      },
+      "description_pt": "Skills: Acting, Carousing, Detect Lies, Diplomacy, Fast-Talk, Intimidation, Leadership, Panhandling, Politics, Public Speaking, Savoir-Faire, Sex Appeal, Streetwise. Reaction bonus: con artists, políticos, vendedores — só se NÃO está tentando manipulá-los.",
+      "page_ref": 91,
+      "detail_level": "full"
+    },
+    {
+      "id": "teeth",
+      "name_en": "Teeth",
+      "name_pt": "Dentes",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Blunt (default) — thrust-1 crushing"
+          },
+          {
+            "value": 1,
+            "name_pt": "Sharp Teeth — thrust-1 cutting (carnívoro)"
+          },
+          {
+            "value": 1,
+            "name_pt": "Sharp Beak — thrust-1 large piercing (ave de rapina)"
+          },
+          {
+            "value": 2,
+            "name_pt": "Fangs — thrust-1 impaling (Smilodon)"
+          }
+        ]
+      },
+      "description_pt": "Mordida em close combat.",
+      "page_ref": 91,
+      "detail_level": "full"
+    },
+    {
+      "id": "telecommunication",
+      "name_en": "Telecommunication",
+      "name_pt": "Telecomunicação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 10,
+            "name_pt": "Infrared Communication — 500 jds line of sight"
+          },
+          {
+            "value": 15,
+            "name_pt": "Laser Communication — 50 mi line of sight"
+          },
+          {
+            "value": 10,
+            "name_pt": "Radio — 10 mi omnidirectional"
+          },
+          {
+            "value": 30,
+            "name_pt": "Telesend — range ilimitado, long-distance modifiers"
+          }
+        ]
+      },
+      "description_pt": "Fala/imagens sem voz a longa distância. 1 seg + IQ roll pra establecer; depois sem concentração. Múltiplos contatos: -1/contato após 1º. Enhancements: Broadcast +50% (Telesend), Short Wave +50% (Radio), Universal +50%, Video +40%. Limitations: Racial -20%, Receive Only -50%, Send Only -50%, Telepathic -10%, Vague -50%.",
+      "page_ref": 91,
+      "detail_level": "full"
+    },
+    {
+      "id": "telekinesis",
+      "name_en": "Telekinesis",
+      "name_pt": "Telecinese",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Move objetos sem tocar. ST = TK level, Move = TK level, range max 10 jds. Concentrate maneuver pra agir. Pode grapple/strike, levitate (se tem ST pra próprio peso), throw (range = origem→target + target→destination penalty). Bônus +4 em tarefas que beneficiariam High Manual Dexterity (IQ roll). Limitations: Magnetic -50% (só ferro/níquel/cobalto), Psychokinetic -10%, Visible -20%.",
+      "page_ref": 92,
+      "detail_level": "full"
+    },
+    {
+      "id": "telescopic_vision",
+      "name_en": "Telescopic Vision",
+      "name_pt": "Visão Telescópica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "'Zoom' visual. Cada nível ignora -1 em Vision range penalties sempre, ou -2 com Aim. +1 Acc/nível em ranged attacks (Aim seconds = bonus). Não cumulativo com binoculars/scopes técnicos. Limitation: No Targeting -60%.",
+      "page_ref": 92,
+      "detail_level": "full"
+    },
+    {
+      "id": "temperature_control",
+      "name_en": "Temperature Control",
+      "name_pt": "Controle de Temperatura",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "per_level",
+        "value": 5
+      },
+      "description_pt": "Altera temperatura ambiente até 20°/nível, taxa 2°/nv/seg de concentração. Raio 2 jds em até 10 jds. Não causa dano direto (use Innate Attack burning/fatigue). Limitations: Cold -50%, Heat -50%, Psychokinetic -10%.",
+      "page_ref": 92,
+      "detail_level": "full"
+    },
+    {
+      "id": "temperature_tolerance",
+      "name_en": "Temperature Tolerance",
+      "name_pt": "Tolerância Térmica",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "per_level",
+        "value": 1
+      },
+      "description_pt": "Cada nível adiciona HT graus na 'comfort zone' (humano default 35-90°F = 55° wide). Distribui entre frio/calor. NÃO protege contra fogo/gelo a menos que dano seja só por temperatura ambiente. Realista: humanos 1-2.",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "temporal_inertia",
+      "name_en": "Temporal Inertia",
+      "name_pt": "Inércia Temporal",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Ancorado em probabilidade. Lembra ambas versões se história muda. Não é apagado em paradoxos. Drawback: existe 'você' em qualquer timeline encontrada. Só vale em settings com paradoxos/mudanças temporais.",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "tenure",
+      "name_en": "Tenure",
+      "name_pt": "Estabilidade no Cargo",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Cargo vitalício, só perdido por má conduta extraordinária (agressão, imoralidade grave). Emprego e salário garantidos. Comum: professores universitários, juízes, sacerdotes, senadores.",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "terrain_adaptation",
+      "name_en": "Terrain Adaptation",
+      "name_pt": "Adaptação ao Terreno",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Funciona normal em terreno X, penalty em chão sólido"
+          },
+          {
+            "value": 5,
+            "name_pt": "Funciona normal em ambos"
+          }
+        ]
+      },
+      "description_pt": "Sem DX/Move penalty em um tipo de terreno instável (gelo, areia, neve, etc.). Compre separado por tipo.",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "terror",
+      "name_en": "Terror",
+      "name_pt": "Terror",
+      "type": "supernatural",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "30 + 10/-1 Fright Check"
+      },
+      "description_pt": "Quem te vê ou ouve faz Fright Check imediato. Compre penalties extras: 10 pts/-1. Vítimas +1 por Fright Check após o 1º em 24h. Sucesso = imune por 1 hora. Adicione Melee Attack limitation se só toque. Limitation: Always On -20% (frequentemente com Hideous Appearance+).",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "trained_by_a_master",
+      "name_en": "Trained By A Master",
+      "name_pt": "Treinado por um Mestre",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 30
+      },
+      "description_pt": "Mestre de artes marciais. Metade do penalty pra Rapid Strike e Parry múltiplo (Judo, Karate, Melee Weapons). Foca 'chi' — pré-req pra cinematic skills: Flying Leap, Invisibility Art, Power Blow etc. GM pode exigir pré-reqs (Judo, Karate, Philosophy, Theology). Cinematic.",
+      "page_ref": 93,
+      "detail_level": "full"
+    },
+    {
+      "id": "true_faith",
+      "name_en": "True Faith",
+      "name_pt": "Fé Verdadeira",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Fé religiosa profunda protege contra seres supernaturais malignos. Para usar: brandir símbolo, cantar, ou ação apropriada à religião. Em combate exige Concentrate. Enquanto asserts, nenhuma entidade maligna pode chegar a 1 jd. Force entrar = sai pelo caminho mais curto (Dread). Se não pode sair sem aproximar, Will roll: sucesso = corre pelo lado, falha = paralisado. Pact limitation intrínseca; não aplique de novo.",
+      "page_ref": 94,
+      "detail_level": "full"
+    },
+    {
+      "id": "tunneling",
+      "name_en": "Tunneling",
+      "name_pt": "Escavação",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "variable",
+        "formula": "30 + 5/Tunneling Move"
+      },
+      "description_pt": "Cava através de terra/pedra; expele entulho. Passagem cabe seu corpo. Em pedra = ½ Tunneling Move. GM checa colapso: 1×/min vs maior de Engineer(Mining), Prospecting-3, IQ-4. Modifica por dureza da rocha. -½ Tunneling Move = +1 no roll.",
+      "page_ref": 94,
+      "detail_level": "full"
+    },
+    {
+      "id": "ultrahearing",
+      "name_en": "Ultrahearing",
+      "name_pt": "Audição Ultrassônica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só ultrassônica"
+          },
+          {
+            "value": 5,
+            "name_pt": "Ultrassônica + normais"
+          }
+        ]
+      },
+      "description_pt": "Ouve >20 kHz. Detecta apitos de cão, sonar, motion detectors. Active sonar em 2× range efetivo.",
+      "page_ref": 94,
+      "detail_level": "full"
+    },
+    {
+      "id": "ultrasonic_speech",
+      "name_en": "Ultrasonic Speech",
+      "name_pt": "Fala Ultrassônica",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só ultrassônica"
+          },
+          {
+            "value": 10,
+            "name_pt": "Alternável com normal"
+          }
+        ]
+      },
+      "description_pt": "Inclui Ultrahearing. Muitas criaturas acham frequências sustentadas irritantes/dolorosas.",
+      "page_ref": 94,
+      "detail_level": "full"
+    },
+    {
+      "id": "ultravision",
+      "name_en": "Ultravision",
+      "name_pt": "Ultravisão",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 0,
+            "name_pt": "Só UV (cego sem UV)"
+          },
+          {
+            "value": 10,
+            "name_pt": "Visível + UV"
+          }
+        ]
+      },
+      "description_pt": "Vê UV (luz solar diurna mesmo nublada, lâmpadas fluorescentes). Bloqueado por vidro/sólido. +2 em Vision/Forensics/Observation/Search com UV. À noite, ignora -2 de darkness penalty (cumulative com Night Vision). Subaquático: halve vision penalties.",
+      "page_ref": 94,
+      "detail_level": "full"
+    },
+    {
+      "id": "unaging",
+      "name_en": "Unaging",
+      "name_pt": "Imortalidade Etária",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Não envelhece naturalmente nem por meios sobrenaturais. Idade fixa em qualquer ponto escolhido. Sem aging rolls. Enhancement: Age Control +20% (envelhece/rejuvenesce até 10× normal).",
+      "page_ref": 95,
+      "detail_level": "full"
+    },
+    {
+      "id": "unfazeable",
+      "name_en": "Unfazeable",
+      "name_pt": "Imperturbável",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Imune a Fright Checks. Reaction modifiers raramente afetam. Trata estranhos com cortesia distante. Imune a Intimidation. Não emotionless — só não demonstra. Precisa roleplaying; incompatível com Phobias. Em campanha de horror, GM pode cobrar mais ou proibir.",
+      "page_ref": 95,
+      "detail_level": "full"
+    },
+    {
+      "id": "universal_digestion",
+      "name_en": "Universal Digestion",
+      "name_pt": "Digestão Universal",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Digere qualquer proteína animal/vegetal não-tóxica, por mais alienígena. Sem proteção contra veneno (use Resistant). Pode 'destruir evidência orgânica' comendo.",
+      "page_ref": 95,
+      "detail_level": "full"
+    },
+    {
+      "id": "unkillable",
+      "name_en": "Unkillable",
+      "name_pt": "Indestrutível",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 50,
+            "name_pt": "Unkillable 1 — não morre HT, sobrevive até -10×HP"
+          },
+          {
+            "value": 100,
+            "name_pt": "Unkillable 2 — -10×HP vira esqueleto indestrutível, cura"
+          },
+          {
+            "value": 150,
+            "name_pt": "Unkillable 3 — -10×HP vira forma incorpórea, reforma"
+          }
+        ]
+      },
+      "description_pt": "Não morre. Sofre dor, stun, knockout, crippling. Aging normal por default — combine com Unaging para imortal real. Limitations: Achilles' Heel -10 a -50%, Hindrance -5 a -25%, Reincarnation -20% (Unkillable 2/3), Trigger -5 a -25%.",
+      "page_ref": 95,
+      "detail_level": "full"
+    },
+    {
+      "id": "unusual_background",
+      "name_en": "Unusual Background",
+      "name_pt": "Background Incomum",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "variable",
+        "formula": "GM decide; varia por raridade no setting"
+      },
+      "description_pt": "Catch-all pra justificar acesso a habilidades não-comuns no setting. GM define custo e benefícios. Pode ser 0 (background color) ou 50+ (acesso a Unkillable).",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "vacuum_support",
+      "name_en": "Vacuum Support",
+      "name_pt": "Suporte a Vácuo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Imune a efeitos de vácuo/descompressão. NÃO dá oxigênio (precisa Doesn't Breathe). Geralmente acompanha Sealed + Radiation Tolerance + Temperature Tolerance.",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "vampiric_bite",
+      "name_en": "Vampiric Bite",
+      "name_pt": "Mordida Vampírica",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "variable",
+        "formula": "30 + 5/HP extra drenado/seg"
+      },
+      "description_pt": "Mordida drena vida + cura. Vítima precisa estar helpless/grappled/willing. Dano deve penetrar DR de armadura. 1 HP/seg drenado; cada 3 HP roubados curam 1 HP ou FP (sua escolha). Não passa HP/FP normal. Inclui Teeth (Sharp Teeth ou Sharp Beak — escolha).",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "versatile",
+      "name_en": "Versatile",
+      "name_pt": "Versátil",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 5
+      },
+      "description_pt": "Imaginativo. +1 em tarefas de criatividade/invenção (Artist, Engineer p/ novas invenções, Gadgeteer).",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "vibration_sense",
+      "name_en": "Vibration Sense",
+      "name_pt": "Sentido Vibratório",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Detecta localização/tamanho via vibrações (pele, whiskers, antenas). Especifique ar ou água. Não substitui visão. Sense roll com bonuses por tamanho/velocidade do alvo, penalty por range. Vento/correntes geram noise. Não funciona se fora do elemento ou em sealed suit. Enhancement: Universal +50% (ar + água).",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "visualization",
+      "name_en": "Visualization",
+      "name_pt": "Visualização",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Melhora chances visualizando sucesso. 1 min concentração + descrição detalhada + IQ roll. +1 por ponto de margem se cenário ≈ visualização. Halve se 'not quite same', /3 se 'clearly different'. GM pode dar +2 ou penalty por descrição. Inútil em combate (mudança rápida).",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "voice",
+      "name_en": "Voice",
+      "name_pt": "Voz",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Voz clara, ressonante, atrativa. +2 em: Diplomacy, Fast-Talk, Mimicry, Performance, Politics, Public Speaking, Sex Appeal, Singing. +2 em qualquer reaction roll de quem te ouve.",
+      "page_ref": 97,
+      "detail_level": "full"
+    },
+    {
+      "id": "walk_on_air",
+      "name_en": "Walk on Air",
+      "name_pt": "Caminhar no Ar",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 20
+      },
+      "description_pt": "Ar, fumaça, gases servem de chão. Caminha 'escadas invisíveis' a Move normal. Não funciona em vácuo. Se cai/escorrega: DX roll/seg pra parar no ar; senão queda normal.",
+      "page_ref": 97,
+      "detail_level": "full"
+    },
+    {
+      "id": "walk_on_liquid",
+      "name_en": "Walk on Liquid",
+      "name_pt": "Caminhar sobre Líquido",
+      "type": "physical",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 15
+      },
+      "description_pt": "Caminha sobre superfície de qualquer líquido. NÃO protege de dano por contato (lava, ácido fervente).",
+      "page_ref": 97,
+      "detail_level": "full"
+    },
+    {
+      "id": "warp",
+      "name_en": "Warp",
+      "name_pt": "Teleporte",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "fixed",
+        "value": 100
+      },
+      "description_pt": "Teletransporte. Vê destino, vê remotamente, ou visualiza (se já visitado). IQ roll com penalty de distância (10jds 0, 100jds -2, 1mi -3, 100mi -6, 1000mi -7, +1/×10). Preparation time bonus: 30s 0, 1min +1, ..., 8h +10. Removal -2/level (vista de 2ª mão). FP gasto: +1/FP (declarar antes). Carrega Basic Lift por default; Extra Carrying Capacity pra mais. Crítico falha = destino errado + 1d horas burnout. Pode dodge (instant -10). Enhancements: Blind +50%, Extra Carrying Capacity +10/+20/+30/+50%, Reliable +5%/+1 max +10, Warp Jump +10%/Jumper. Limitations: Hyperjump -25 a -50%, Naked -30%, Psionic Teleportation -10%, Range Limit -5%×(10+penalty).",
+      "page_ref": 97,
+      "detail_level": "full"
+    },
+    {
+      "id": "weapon_master",
+      "name_en": "Weapon Master",
+      "name_pt": "Mestre em Armas",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 20,
+            "name_pt": "Uma arma específica"
+          },
+          {
+            "value": 25,
+            "name_pt": "Duas armas usadas juntas (ex: broadsword+shield)"
+          },
+          {
+            "value": 30,
+            "name_pt": "Classe pequena (fencing weapons, knightly)"
+          },
+          {
+            "value": 35,
+            "name_pt": "Classe média (todas swords, ninja weapons)"
+          },
+          {
+            "value": 40,
+            "name_pt": "Classe grande (bladed, one-handed)"
+          },
+          {
+            "value": 45,
+            "name_pt": "Todas muscle-powered"
+          }
+        ]
+      },
+      "description_pt": "Treinamento alto com armas muscle-powered (não guns). +1/dado em thrust/swing se skill DX+1; +2/dado se DX+2+. Half penalty pra Rapid Strike e parry múltiplo. Familiaridade com todas armas da classe: Easy default DX-1, Average DX-2, Hard DX-3 (não compráveis a partir desse default). Pré-req pra cinematic skills (Blind Fighting, Power Blow). Cinematic.",
+      "page_ref": 99,
+      "detail_level": "full"
+    },
+    {
+      "id": "wild_talent",
+      "name_en": "Wild Talent",
+      "name_pt": "Talento Selvagem",
+      "type": "mental",
+      "origin": "supernatural",
+      "cost": {
+        "type": "per_level",
+        "value": 20
+      },
+      "description_pt": "Faz coisas sem saber como. 1×/sessão/nível: rola contra skill usando attribute base (IQ p/ IQ-based, etc.), sem default penalty. TL irrelevante. Aplica em skills sem default (precisa pré-reqs como Magery/Trained By Master). Sem efeito em skills que já sabe. Enhancement: Retention +25% (pode aprender o skill se tem 1 pt unspent). Limitations: Emergencies Only -30%, Focused -20%.",
+      "page_ref": 99,
+      "detail_level": "full"
+    },
+    {
+      "id": "zeroed",
+      "name_en": "Zeroed",
+      "name_pt": "Apagado",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 10
+      },
+      "description_pt": "Não existe oficialmente. Em fantasy: 'wanderer misterioso', divinação não revela passado. Em hi-tech: sem registros. Mantém só por cash/commodities, contas blind. Se capturado: interrogatório severo (nonperson, sem direitos).",
+      "page_ref": 100,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_deep_sleeper",
+      "name_en": "Perk: Deep Sleeper",
+      "name_pt": "Perk: Sono Pesado",
+      "type": "mental",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Dorme em condições difíceis, atravessa perturbações. Sem efeitos ruins por qualidade do sono. IQ roll normal pra acordar (auto-sucesso com Combat Reflexes).",
+      "page_ref": 100,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_fur",
+      "name_en": "Perk: Fur",
+      "name_pt": "Perk: Pelagem",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Tem pelo. Previne queimaduras solares. Pelagem densa pode justificar 1-3 níveis de DR + Temperature Tolerance, espinhosa de Spines (comprados separados).",
+      "page_ref": 100,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_honest_face",
+      "name_en": "Perk: Honest Face",
+      "name_pt": "Perk: Cara Honesta",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Parece honesto, confiável. Estranhos confidenciam; não escolhido como suspeito. Sem spot-check em alfândegas (a não ser causa específica). +1 em Acting pra 'parecer inocente'.",
+      "page_ref": 100,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_no_hangover",
+      "name_en": "Perk: No Hangover",
+      "name_pt": "Perk: Sem Ressaca",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Nunca tem ressaca. Não mitiga embriaguez, só elimina o pós.",
+      "page_ref": 101,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_penetrating_voice",
+      "name_en": "Perk: Penetrating Voice",
+      "name_pt": "Perk: Voz Penetrante",
+      "type": "physical",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Faz-se ouvir. Em ambiente barulhento, outros +3 em Hearing roll. GM pode dar +1 em Intimidation surpreendendo com grito.",
+      "page_ref": 101,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_sanitized_metabolism",
+      "name_en": "Perk: Sanitized Metabolism",
+      "name_pt": "Perk: Metabolismo Limpo",
+      "type": "physical",
+      "origin": "exotic",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Limpo. Sem mau hálito, suor excessivo, problemas de pele. -1 em tentativas de rastrear por cheiro, +1 em reactions em ambientes apertados.",
+      "page_ref": 101,
+      "detail_level": "full"
+    },
+    {
+      "id": "perk_shtick",
+      "name_en": "Perk: Shtick",
+      "name_pt": "Perk: Marca Registrada",
+      "type": "social",
+      "origin": "mundane",
+      "cost": {
+        "type": "fixed",
+        "value": 1
+      },
+      "description_pt": "Movimento cool ou feature que destaca. Sem bonus combat/reaction, não rende dinheiro, mas dá benefícios menores em jogo (GM discretion). Ex: roupas sempre impecáveis, corre/luta em saltos altos sem penalty.",
+      "page_ref": 101,
+      "detail_level": "full"
+    },
+    {
+      "id": "control",
+      "name_en": "Control",
+      "name_pt": "Controle (Elemento)",
+      "type": "physical",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 20,
+            "name_pt": "Common — Earth, Fire, Gravity, Light, Metal, Plastic, Sound, Water, Wood"
+          },
+          {
+            "value": 15,
+            "name_pt": "Occasional — Ceramics, Ferrous Metals, Ice, Steam, Stone"
+          },
+          {
+            "value": 10,
+            "name_pt": "Rare — Brick, Iron, Paper, Rubber"
+          }
+        ],
+        "level_label": "por nível"
+      },
+      "description_pt": "Molda e move uma categoria de matéria/energia/força (seu 'elemento'). Sólidos: até 10×(nível²) lbs num objeto contínuo. Gases/energia: raio = nível em jds. Tocar (sólido/líquido) ou estar dentro da área (gás/energia) + IQ roll. Quick Contest se outro Control opera. Defensiva: pode shapear barreiras. Ofensiva: move perigo do elemento sobre foe. Não cria o elemento (precisa Create).",
+      "page_ref": 92,
+      "detail_level": "full"
+    },
+    {
+      "id": "create",
+      "name_en": "Create",
+      "name_pt": "Criar (Elemento)",
+      "type": "physical",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "options",
+        "choices": [
+          {
+            "value": 40,
+            "name_pt": "Large Category — Solid, Liquid, Gas, Organic, Inorganic, EM Waves, Physical Waves"
+          },
+          {
+            "value": 20,
+            "name_pt": "Medium Category — Acid, Biochemicals, Drugs, Earth, Metal"
+          },
+          {
+            "value": 10,
+            "name_pt": "Small Category — substância específica"
+          }
+        ],
+        "level_label": "por nível"
+      },
+      "description_pt": "Cria elemento do nada via Concentrate + IQ roll. Sólido/líquido em mãos, gás/energia ao redor. Custa 2 FP por tentativa. Falha crítica = aparece de modo inconveniente. Nível define quantidade. Modifiers: Permanent (+300%), Subtle (+50%), Reduced Range (-20%).",
+      "page_ref": 92,
+      "detail_level": "full"
+    },
+    {
+      "id": "illusion",
+      "name_en": "Illusion",
+      "name_pt": "Ilusão",
+      "type": "mental",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "fixed",
+        "value": 25
+      },
+      "description_pt": "Cria construções de luz/som em raio 2 jds. Sem massa/substância. Concentrate maneuver. Quick Contest IQ vs Per dos observadores. Vitória = vê real; senão nota falha. Para causar Fright Check, exige Artist (Illusion) Quick Contest vs IQ/Per. Modifiers: Adjustable +20%, Independent +40%, Mobile +40%/nv, Reduced Fatigue Cost, Targeting +20%, etc.",
+      "page_ref": 95,
+      "detail_level": "full"
+    },
+    {
+      "id": "leech",
+      "name_en": "Leech",
+      "name_pt": "Drenagem (Vampire)",
+      "type": "physical",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "variable",
+        "formula": "25 pts level 1 + 4 pts/nível adicional"
+      },
+      "description_pt": "Drena vida via contato (grapple/pin). Cada nível: 1 HP/seg drenado. Cura 1 HP por 3 HP roubados (não passa max). Drain termina se solta/morre. Variantes: Leech (Mechanical) afeta máquinas. Pontos convertem em dados conforme Modifying Dice (p269 Basic). Modifiers: Accelerated Healing +25%/lvl, Affects Self +0% (heals you), Steal FP +50% etc.",
+      "page_ref": 96,
+      "detail_level": "full"
+    },
+    {
+      "id": "neutralize_powers",
+      "name_en": "Neutralize (Powers variant)",
+      "name_pt": "Neutralizar (Poderes — variant)",
+      "type": "mental",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "fixed",
+        "value": 50
+      },
+      "description_pt": "Versão do Neutralize do Basic Set adaptada pra Powers: pode neutralizar TODOS poderes de um source (magia, psi, super, etc.) — não só psi. Veja entry 'neutralize' do Basic Set p71 e Static p98 do Powers. Talent: Antipsi Talent ou equivalente.",
+      "page_ref": 97,
+      "detail_level": "full"
+    },
+    {
+      "id": "static",
+      "name_en": "Static",
+      "name_pt": "Estática (anti-poderes)",
+      "type": "physical",
+      "origin": "supernatural",
+      "source_book": "GURPS Powers",
+      "cost": {
+        "type": "fixed",
+        "value": 30
+      },
+      "description_pt": "Bloqueia poderes de UM source específico de afetá-lo (ou equipamento que carrega). Compre separado por source. Magic, Psi, super-powers, etc. Não nega poderes que afetam ambiente ao redor (telekinético pode levantar pedra sobre você). Bloqueia friendly e hostile igualmente. Não pode possuir abilities/Talent desse source. Enhancements: Area Effect +50%/nv, Discriminatory +100%, Switchable +10%. Limitations: Resistible -50%.",
+      "page_ref": 97,
+      "detail_level": "full"
     }
-  ]
+  ],
+  "$expansion": {
+    "GURPS Powers Cap 2": {
+      "advantages_added": 6,
+      "completion_date": "2026-05-16"
+    }
+  }
 }

@@ -1,74 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
     const image = document.getElementById('map-image');
-    const chatContainer = document.getElementById('chat-container-id'); // Obtém a div do chat
-    const personagemContainer = document.querySelector('.personagem-container-gm') || document.querySelector('.personagem-container'); // Obtém a div do personagem
-    const janelaElements = document.querySelectorAll('.janela'); // Todos os elementos com a classe "janela"
+    if (!image) return;
 
-
-    console.log('Esse é o image:', image);
-    console.log('Esse é o chatContainer:', chatContainer);
-    console.log('Esse é o personagemContainer:', personagemContainer);
-    console.log('Esses são os janelaElements:', janelaElements);
     let scale = 1;
-    const scaleFactor = 0.06; // Zoom mais gradual
+    const scaleFactor = 0.06;
     let animationFrameId = null;
-    let isMouseOverChat = false;
-    let isMouseOverJanela = false;
-    let isMouseOverPersonagem = false;
 
-    // Detecta quando o mouse entra e sai do chat
-    chatContainer.addEventListener('mouseenter', () => isMouseOverChat = true);
-    chatContainer.addEventListener('mouseleave', () => isMouseOverChat = false);
-
-    // Detecta quando o mouse entra e sai dos elementos com a classe "janela"
-    janelaElements.forEach(janela => {
-        janela.addEventListener('mouseenter', () => isMouseOverJanela = true);
-        janela.addEventListener('mouseleave', () => isMouseOverJanela = false);
-    });
-
-    // Detecta quando o mouse entra e sai da div .personagem-container-gm
-    personagemContainer.addEventListener('mouseenter', () => isMouseOverPersonagem = true);
-    personagemContainer.addEventListener('mouseleave', () => isMouseOverPersonagem = false);
+    // Seletores de UI que devem rolar normalmente (sem zoom no mapa)
+    // quando o cursor está sobre eles. closest() é resiliente a elementos
+    // criados depois do DOMContentLoaded (menu-modal, .janela dinâmica, etc.).
+    const UI_SELECTOR = [
+        '.chat-container',
+        '.chat-container-submit',
+        '.janela',
+        '.personagem-container',
+        '.personagem-container-gm',
+        '.player-side-nav',
+        '.menu-modal',
+        '.menu-modal-backdrop',
+        '.players-bar',
+        '.turn-controls',
+    ].join(',');
 
     function zoom(event) {
-        // Impede o zoom se o mouse estiver sobre o chat, a div personagem-container-gm ou uma janela
-        if (isMouseOverChat || isMouseOverJanela || isMouseOverPersonagem) return;
+        const t = event.target;
+        if (t instanceof Element && t.closest(UI_SELECTOR)) {
+            // Cursor está sobre UI scrollável — deixa o navegador rolar.
+            // NÃO chama preventDefault, pra não bloquear o scroll natural.
+            return;
+        }
 
         event.preventDefault();
 
-        // Obtém as coordenadas do mouse em relação à imagem
         const rect = image.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
-
-        // Obtém as coordenadas relativas ao centro da imagem
         const offsetX = (mouseX / rect.width) * 100;
         const offsetY = (mouseY / rect.height) * 100;
 
-        // Define o novo scale (mantendo limites)
         if (event.deltaY < 0) {
-            scale += scaleFactor; // Zoom in
+            scale += scaleFactor;
         } else {
-            scale -= scaleFactor; // Zoom out
+            scale -= scaleFactor;
             if (scale < 0.5) {
-                scale = 0.5; // Permite zoom até 50% do tamanho original
+                scale = 0.5;
             }
         }
 
-        // Garante que a animação não seja executada várias vezes ao mesmo tempo
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
         }
-
         animationFrameId = requestAnimationFrame(() => {
             image.style.transformOrigin = `${offsetX}% ${offsetY}%`;
             image.style.transform = `scale(${scale})`;
         });
     }
 
-    // Adiciona transição suave no CSS
     image.style.transition = "transform 0.2s ease-out";
-
-    // Ouvinte de evento global para o zoom (independente da posição do mouse)
     document.addEventListener('wheel', zoom, { passive: false });
 });

@@ -1,31 +1,75 @@
-from django.contrib import admin
-from .models import *  # Importa todos os modelos do arquivo models.py
-from .forms import CharacterSheetForm
+import secrets
+import string
+
+from django.contrib import admin, messages
+from django.contrib.auth.admin import UserAdmin
 from django_json_widget.widgets import (
     JSONEditorWidget,
 )  # Para campos JSON mais amigáveis
 
+from .forms import CharacterSheetForm
+from .models import *  # Importa todos os modelos do arquivo models.py
 
-# Registrando o modelo RegisterUser com customização
+
+# Registrando o modelo RegisterUser com customização do UserAdmin do Django,
+# que automaticamente expõe o link "muda a senha aqui" no formulário de edição
+# e a URL /admin/gurps/registeruser/<id>/password/ pra trocar.
 @admin.register(RegisterUser)
-class RegisterUserAdmin(admin.ModelAdmin):
-    list_display = ("username", "email", "created_date", "is_staff")
+class RegisterUserAdmin(UserAdmin):
+    model = RegisterUser
+    list_display = ("username", "email", "created_date", "is_staff", "is_active")
+    list_filter = ("is_staff", "is_superuser", "is_active", "groups")
     search_fields = ("username", "email")
+    ordering = ("username",)
+
     fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        ("Informações pessoais", {"fields": ("email", "created_date")}),
+        (
+            "Permissões",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                ),
+            },
+        ),
+        ("Datas importantes", {"fields": ("last_login", "date_joined")}),
+    )
+
+    add_fieldsets = (
         (
             None,
             {
-                "fields": (
-                    "username",
-                    "email",
-                    "created_date",
-                    "is_staff",
-                    "groups",
-                    "user_permissions",
-                )
+                "classes": ("wide",),
+                "fields": ("username", "email", "password1", "password2"),
             },
         ),
     )
+
+    actions = ["resetar_senha_aleatoria"]
+
+    @admin.action(description="Resetar senha (gera senha aleatória)")
+    def resetar_senha_aleatoria(self, request, queryset):
+        """Gera uma senha temporária pra cada user selecionado e mostra ao admin."""
+        alphabet = string.ascii_letters + string.digits
+        resultados = []
+        for user in queryset:
+            new_pw = "".join(secrets.choice(alphabet) for _ in range(10))
+            user.set_password(new_pw)
+            user.save(update_fields=["password"])
+            resultados.append(f"{user.username}: {new_pw}")
+        # Lista as senhas geradas no flash message — o admin precisa copiar
+        # e passar pro usuário. Senhas NÃO ficam guardadas em lugar nenhum.
+        self.message_user(
+            request,
+            "Senhas temporárias geradas (copie agora — não vão aparecer de novo): "
+            + "  |  ".join(resultados),
+            level=messages.WARNING,
+        )
 
 
 # Registrando o modelo Campanha com customização
@@ -168,3 +212,23 @@ class MessageAdmin(admin.ModelAdmin):
 
 # Registrando o modelo CharacterSheet com a customização específica
 admin.site.register(CharacterSheet, CharacterSheetAdmin)
+
+
+@admin.register(CharacterSheetV2)
+class CharacterSheetV2Admin(admin.ModelAdmin):
+    """Admin pro modelo novo. JSONFields ganham widget legível."""
+    list_display = ("id", "nome_personagem", "campanha", "owner", "is_quick_npc")
+    list_filter = ("campanha", "is_quick_npc")
+    search_fields = ("id", "nome_personagem", "campanha__nome", "owner__username")
+    readonly_fields = ("id",)
+    formfield_overrides = {
+        # Muitos campos da V2 são JSONField; o widget padrão é textarea sem
+        # validação. JSONEditorWidget dá pretty-print + lint.
+        # (Aplica via filter no formfield_for_dbfield)
+    }
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        from django.db.models import JSONField
+        if isinstance(db_field, JSONField):
+            kwargs["widget"] = JSONEditorWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

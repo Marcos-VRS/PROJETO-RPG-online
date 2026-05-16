@@ -224,37 +224,57 @@ def carregar_campanha_gm(request):
 
 @login_required(login_url="gurps:login")
 def carregar_campanha_player(request):
+    """Lista campanhas onde o user tem ficha (V2 + V1 legado).
+
+    V2 vem como objetos diretos (têm `campanha` ForeignKey). V1 ainda é
+    filtrada por string `info_campanha.player_name`, e a campanha é resolvida
+    via dicionário.
+    """
+    from gurps.models import CharacterSheetV2
+
     username = request.user.username
 
-    personagens = (
-        CharacterSheet.objects.filter(
-            info_campanha__player_name=username  # Mantém a condição existente
-        )
-        .filter(~Q(info_campanha__nome_gm=username))  # Adiciona a condição de exclusão
+    # ===== V2 (nova) =====
+    fichas_v2 = (
+        CharacterSheetV2.objects.filter(owner=request.user)
+        .select_related("campanha")
+        .order_by("-id")
+    )
+    # Adapta pro shape esperado pelo template
+    personagens_v2 = []
+    for f in fichas_v2:
+        if not f.campanha or f.campanha.dono_id == request.user.id:
+            continue  # Skip campanhas próprias do GM
+        # Anexa pseudo-attribute pro template
+        f.campanha_id = f.campanha.id
+        f.info_campanha = {"nome_campanha": f.campanha.nome}
+        personagens_v2.append(f)
+
+    # ===== V1 (legado) — só inclui campanhas que ainda não têm V2 =====
+    v2_campanhas_ids = {f.campanha.id for f in fichas_v2 if f.campanha}
+    personagens_v1 = (
+        CharacterSheet.objects.filter(info_campanha__player_name=username)
+        .filter(~Q(info_campanha__nome_gm=username))
         .distinct()
         .order_by("-id")
     )
-
-    # Criar um dicionário para mapear nome da campanha para id
-    campanhas_dict = {campanha.nome: campanha.id for campanha in Campanha.objects.all()}
-    print(f"\nAQUI ESTÁ O CAMPANHA DICT:{campanhas_dict}\n")
-    # Adicionar o ID da campanha dentro de cada personagem no contexto
-    for personagem in personagens:
+    campanhas_dict = {c.nome: c.id for c in Campanha.objects.all()}
+    personagens_v1_filtered = []
+    for personagem in personagens_v1:
         nome_campanha = personagem.info_campanha.get("nome_campanha")
-        personagem.campanha_id = campanhas_dict.get(
-            nome_campanha, None
-        )  # Adicionando dinamicamente o ID da campanha
+        cid = campanhas_dict.get(nome_campanha)
+        personagem.campanha_id = cid
+        # Se já tem V2 nessa campanha, omite a V1 da lista
+        if cid not in v2_campanhas_ids:
+            personagens_v1_filtered.append(personagem)
 
-    asset_id = "1"  # Variável fixa ou pode ser dinâmica conforme necessário
+    # Combina (V2 primeiro)
+    personagens = personagens_v2 + personagens_v1_filtered
 
-    context = {
-        "personagens": personagens,
-        "asset_id": asset_id,
-    }
     return render(
         request,
         "global/partials/_lista_carregar_campanha_player.html",
-        context,
+        {"personagens": personagens, "asset_id": "1"},
     )
 
 
@@ -272,18 +292,31 @@ def criar_ficha_campanha(request, id):
 
 @login_required(login_url="gurps:login")
 def carregar_fichas(request):
+    """Menu inicial 'Fichas' agora lista CharacterSheetV2 do user.
+
+    Inclui também as fichas V1 (legado) num grupo separado pra acesso
+    durante a migração — usuário consegue terminar de preencher a V2 olhando
+    pra V1.
+    """
+    from gurps.models import CharacterSheetV2
+
     username = request.user.username
 
-    personagens = (
+    fichas_v2 = (
+        CharacterSheetV2.objects.filter(owner=request.user)
+        .select_related("campanha")
+        .order_by("-id")
+    )
+    legado = (
         CharacterSheet.objects.filter(info_campanha__player_name=username)
         .distinct()
         .order_by("-id")
     )
-    print(f"\nAqui estão os personagens{personagens}\n")
+    print(f"\nFichas V2: {fichas_v2.count()} | Legado: {legado.count()}\n")
     return render(
         request,
         "global/lista_carregar_ficha.html",
-        {"personagens": personagens},
+        {"fichas_v2": fichas_v2, "personagens": legado},
     )
 
 

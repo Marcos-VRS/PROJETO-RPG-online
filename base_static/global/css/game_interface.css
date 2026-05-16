@@ -70,16 +70,15 @@ a {
 .coluna-chat {
     display: flex;
     position: fixed;
-    top: 0;
+    /* Encosta na turn-bar (que termina em ~114px). 16px de margem inferior. */
+    top: 116px;
     right: 0;
     width: 17%;
-    height: 98%;
+    height: calc(100vh - 132px);
     background-image: url("/static/global/img/papiro-ficha.jpg");
     padding: 0.5rem;
     border: black solid 1px;
     border-radius: 0.5rem 0.5rem 0 0.5rem;
-
-
 }
 
 .chat-container-menu {
@@ -116,12 +115,13 @@ a {
 .chat-container {
     display: flex;
     position: fixed;
-    top: 5%;
+    /* Encosta no topo da coluna-chat (que agora começa em 116px). */
+    top: 116px;
     right: 0;
     width: 17%;
     justify-content: center;
     align-items: center;
-    height: 83%;
+    height: calc(100vh - 132px - 90px);  /* desconta chat-submit (~90px) */
     background-color: var(--faded-black-color);
     /* Fundo branco semi-transparente */
     overflow-y: auto;
@@ -691,12 +691,12 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
     background: var(--rd6-bg-elevated) !important;
 }
 
-/* Lista de mensagens do chat — entre o header (48px) e o submit (64px) */
+/* Lista de mensagens do chat — entre o header (48px) e o submit (48px) */
 .chat-container {
     top: calc(var(--rd6-topbar-offset) + 48px) !important;
     width: 14.94% !important;
     min-width: 272px !important;
-    height: calc(100vh - var(--rd6-topbar-offset) - 48px - 64px) !important;
+    height: calc(100vh - var(--rd6-topbar-offset) - 48px - 48px) !important;
     background: var(--rd6-bg-elevated) !important;
     border: none !important;
     box-shadow: none !important;
@@ -754,30 +754,32 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
 .bg-red     { background: var(--rd6-hp-bg) !important; border-color: var(--rd6-hp) !important; }
 .bg-blue    { background: var(--rd6-fp-bg) !important; border-color: var(--rd6-fp) !important; }
 
-/* Input de mensagem — colado na base. Altura reduzida pra não invadir lista de msgs. */
+/* Input de mensagem — colado na base. Altura compacta pra não estourar overflow Y. */
 .chat-container-submit {
     top: auto !important;
     bottom: 0 !important;
     width: 14.94% !important;
     min-width: 272px !important;
-    height: 64px !important;
+    height: 48px !important;
     background: var(--rd6-bg-elevated) !important;
     border: none !important;
     border-top: 1px solid var(--rd6-border) !important;
     border-radius: 0 !important;
-    padding: 6px !important;
+    padding: 4px !important;
     z-index: 99 !important;
     box-sizing: border-box !important;
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
+    overflow: hidden !important;
 }
 
 /* Form do input cabe inteiro em row dentro do submit (textarea + botão) */
 .chat-container-submit form {
     display: flex !important;
     width: 100% !important;
-    gap: 6px !important;
+    height: 100% !important;
+    gap: 4px !important;
     align-items: stretch !important;
     margin: 0 !important;
 }
@@ -789,11 +791,13 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
     border-radius: var(--rd6-radius-sm) !important;
     font-family: var(--rd6-font-body) !important;
     font-size: 12px !important;
-    padding: 6px 8px !important;
+    line-height: 1.2 !important;
+    padding: 4px 6px !important;
     transition: border-color var(--rd6-transition) !important;
     flex: 1 !important;
-    height: 52px !important;
-    max-height: 52px !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     resize: none !important;
     box-sizing: border-box !important;
 }
@@ -809,14 +813,14 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
     border: 1px solid var(--rd6-accent) !important;
     border-radius: var(--rd6-radius-sm) !important;
     font-family: var(--rd6-font-display) !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     letter-spacing: 0.06em !important;
     text-transform: uppercase !important;
-    padding: 0 10px !important;
+    padding: 0 8px !important;
     cursor: pointer !important;
     transition: background var(--rd6-transition) !important;
-    height: 52px !important;
+    height: 100% !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
 }
@@ -1005,3 +1009,263 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
     padding: 6px 10px !important;
     margin: 4px 0 !important;
 }
+
+/* ============================================================
+   PLAYER SIDE NAV — coluna vertical de ícones que substitui
+   a barra inferior antiga do player.
+   ============================================================ */
+
+/* Esconde a barra inferior antiga do player E do GM (ambos migrados pra side nav).
+   Mantidas no HTML pra fallback. */
+.personagem-container,
+.personagem-container-gm { display: none !important; }
+/* Menu topo antigo (3 botões FICHA/JOURNAL/SAIR) também foi pra side nav */
+.coluna-chat .chat-container-menu { display: none !important; }
+
+.player-side-nav {
+    position: fixed;
+    /* Ancorada abaixo da turn-bar (que está em top:70px com altura ~44px =>
+       termina em ~114px) E abaixo do label do nome do personagem (16px).
+       Total: 114 + 22 (nome) + 8 (gap) ≈ 144px. */
+    top: 144px;
+    bottom: 16px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 1500;
+    padding: 12px 8px;
+    background: var(--rd6-bg-elevated, rgba(20, 20, 20, 0.85));
+    border: 1px solid var(--rd6-border, #444);
+    border-radius: 36px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    /* Quando os ícones somam mais que o espaço, rola dentro da própria nav. */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rd6-accent, #c9a55c) transparent;
+}
+.player-side-nav::-webkit-scrollbar { width: 6px; }
+.player-side-nav::-webkit-scrollbar-track { background: transparent; }
+.player-side-nav::-webkit-scrollbar-thumb {
+    background: var(--rd6-accent, #c9a55c);
+    border-radius: 3px;
+}
+
+/* Nome do personagem ativo, acima da side nav. Posição calculada
+   pra ficar exatamente em cima da barra (alinhada à largura da nav). */
+.player-side-name {
+    position: fixed;
+    left: 12px;
+    /* Logo abaixo da turn-bar (que termina em ~114px) e logo acima da nav
+       (top:144px). Cabe na faixa de ~30px entre as duas. */
+    top: 118px;
+    width: 72px;             /* mesma largura da nav (8px padding + 56px ícone + 8px) */
+    transform: none;
+    z-index: 1500;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--rd6-accent, #c9a55c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+}
+
+/* Botão "→" ao lado direito da side nav, vertical no meio. Fora do aside
+   pra não ser afetado por overflow:auto da nav. */
+.player-side-next {
+    position: fixed;
+    left: 88px;  /* nav: left 12 + padding/width ~64 + gap ~12 */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1501;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--rd6-accent, #c9a55c);
+    color: #000 !important;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 28px;
+    text-align: center;
+    text-decoration: none !important;
+    border: 1px solid var(--rd6-border, #444);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 120ms ease, background 120ms ease;
+}
+.player-side-next:hover {
+    background: var(--rd6-accent-bright, #e0c378);
+    transform: translateY(-50%) scale(1.12);
+}
+
+.player-side-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid var(--rd6-border, #555);
+    background: var(--rd6-bg, #1a1a1a);
+    color: var(--rd6-text, #e8e8e8);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.player-side-icon:hover {
+    background: var(--rd6-accent, #c9a55c);
+    border-color: var(--rd6-accent-bright, #e0c378);
+    transform: scale(1.08);
+}
+.player-side-icon:hover .psi-label,
+.player-side-icon:hover .psi-glyph { color: #000; }
+
+.psi-glyph {
+    font-size: 22px;
+    line-height: 1;
+}
+.psi-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+}
+
+/* Botão "+" destacado (criar/remover cards) */
+.player-side-icon.psi-add {
+    border-color: var(--rd6-accent, #c9a55c);
+}
+.player-side-icon.psi-add .psi-glyph {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Janela de quickedit: lista compacta com botões de lixeira */
+#janela-quickedit .quickedit-add-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+#janela-quickedit .quickedit-list-section {
+    margin: 10px 0;
+}
+#janela-quickedit .quickedit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--rd6-bg-elevated, rgba(0,0,0,0.3));
+    border: 1px solid var(--rd6-border, #444);
+    border-radius: 4px;
+    margin: 3px 0;
+}
+#janela-quickedit .quickedit-row button {
+    padding: 2px 8px;
+    min-width: 0;
+}
+
+#janela-quickedit .quickedit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    margin: 8px 0;
+    background: var(--rd6-bg, rgba(0,0,0,0.4));
+    border: 1px dashed var(--rd6-accent, #c9a55c);
+    border-radius: 6px;
+}
+#janela-quickedit .quickedit-form-title {
+    font-weight: 700;
+    color: var(--rd6-accent, #c9a55c);
+}
+#janela-quickedit .quickedit-form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 2px;
+}
+#janela-quickedit .quickedit-form input {
+    padding: 4px 8px;
+    background: var(--rd6-bg-elevated, #222);
+    color: var(--rd6-text, #eee);
+    border: 1px solid var(--rd6-border, #555);
+    border-radius: 4px;
+}
+#janela-quickedit .quickedit-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+/* ============================================================
+   Vitals editor (GM-only popover ancorado num mini da players-bar)
+   ============================================================ */
+.vitals-editor {
+    position: fixed;
+    z-index: 2000;
+    min-width: 280px;
+    padding: 10px 12px;
+    background: var(--rd6-bg-elevated, #2a2a2a);
+    color: var(--rd6-text, #eee);
+    border: 1px solid var(--rd6-accent, #c9a55c);
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+}
+.vitals-editor[hidden] { display: none; }
+.vitals-editor-title {
+    font-weight: 700;
+    color: var(--rd6-accent, #c9a55c);
+    margin-bottom: 8px;
+    text-align: center;
+}
+.vitals-editor-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 4px 0;
+}
+.vitals-editor-label {
+    width: 26px;
+    font-weight: 700;
+    color: var(--rd6-accent, #c9a55c);
+}
+.vitals-editor input[type="number"] {
+    width: 56px;
+    padding: 4px 6px;
+    text-align: center;
+    background: var(--rd6-bg, #181818);
+    color: var(--rd6-text, #eee);
+    border: 1px solid var(--rd6-border, #555);
+    border-radius: 4px;
+}
+.vitals-editor-max {
+    color: var(--rd6-text-dim, #aaa);
+    font-size: 12px;
+}
+.vitals-editor button {
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    background: var(--rd6-bg, #1a1a1a);
+    color: var(--rd6-text, #eee);
+    border: 1px solid var(--rd6-border, #555);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+}
+.vitals-editor button:hover {
+    background: var(--rd6-accent, #c9a55c);
+    color: #000;
+}
+/* Cursor pointer só no mini quando o user é GM (presença do JS do editor)
+   — controlado também pelo template (.player-mini sempre clicável,
+   mas o popover só existe em GM-renderized DOM). */
+.player-mini { cursor: pointer; }

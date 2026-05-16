@@ -1,11 +1,33 @@
+/* Título fixo no topo, botões centralizados verticalmente. */
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.titulo-pagina {
+    text-align: center;
+    border: var(--white-color) solid 0.4rem;
+    padding: 2rem;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border-radius: 1rem;
+    width: fit-content;
+    margin: 0;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 .game-master-player-container {
     display: flex;
     gap: 150px;
-    /* Espaço entre os botões */
-    margin-left: 33vh;
     justify-content: center;
     align-items: center;
-
 }
 
 .menu-button {
@@ -22,30 +44,4 @@
 .menu-button:hover {
     background-color: var(--orange);
     transform: scale(1.05);
-}
-
-.titulo-pagina {
-    display: flex;
-    justify-content: center;
-    text-align: center;
-    border: var(--white-color) solid 0.4rem;
-    padding: 2rem;
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    border-radius: 1rem;
-    margin: 0 auto;
-    /* Centraliza horizontalmente */
-    margin-top: 0;
-    margin-left: 8rem;
-    /* Remove qualquer margem superior */
-    width: fit-content;
-    /* Ajusta a largura ao conteúdo */
-    position: absolute;
-    /* Posiciona o título no topo */
-    top: 0;
-    /* Alinha o título ao topo */
-    left: 50%;
-    /* Centraliza horizontalmente */
-    transform: translateX(-50%);
-    /* Ajusta a posição para centralizar */
 }

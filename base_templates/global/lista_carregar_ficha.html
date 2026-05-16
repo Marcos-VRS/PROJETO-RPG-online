@@ -21,20 +21,41 @@
 
 
     <ul class="ul-lista">
-        {% for personagem in personagens %}
+        {% for ficha in fichas_v2 %}
         <li style="font-size: 1rem;" class="item-lista medievalsharp-regular">
-            <a href="{% url "gurps:editar_fichas" personagem.id personagem.info_campanha.nome_campanha%}">
-                <h2 class="nome-personagem">PERSONAGEM: {{ personagem.nome_personagem }}</h2>
-                <h2>CAMPANHA: {{ personagem.info_campanha.nome_campanha }}</h2>
-                {% if personagem.photo %}
-                <img class="imagem-miniatura" src="{{ personagem.photo.url }}" alt="Imagem do personagem">
+            <a href="{% url 'gurps:editar_v2' id=ficha.id %}">
+                <h2 class="nome-personagem">PERSONAGEM: {{ ficha.nome_personagem }}</h2>
+                <h2>CAMPANHA: {{ ficha.campanha.nome }}</h2>
+                {% if ficha.photo %}
+                <img class="imagem-miniatura" src="{{ ficha.photo.url }}" alt="Imagem do personagem">
                 {% else %}
                 <p>Sem imagem disponível</p>
                 {% endif %}
             </a>
         </li>
+        {% empty %}
+        <li class="item-lista medievalsharp-regular" style="color: var(--rd6-text-dim, #888);">
+            Nenhuma ficha nova ainda. Crie uma a partir da campanha (botão "Criar nova ficha (V2)").
+        </li>
         {% endfor %}
     </ul>
+
+    {% if personagens %}
+    <h2 class="titulo-pagina medievalsharp-regular" style="font-size: 1.5rem; margin-top: 40px; opacity: 0.6;">Fichas Legado</h2>
+    <ul class="ul-lista">
+        {% for personagem in personagens %}
+        <li style="font-size: 0.9rem; opacity: 0.7;" class="item-lista medievalsharp-regular">
+            <a href="{% url 'gurps:editar_fichas' personagem.id personagem.info_campanha.nome_campanha %}">
+                <h2 class="nome-personagem">PERSONAGEM: {{ personagem.nome_personagem }} <small>(legado)</small></h2>
+                <h2>CAMPANHA: {{ personagem.info_campanha.nome_campanha }}</h2>
+                {% if personagem.photo %}
+                <img class="imagem-miniatura" src="{{ personagem.photo.url }}" alt="Imagem do personagem">
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <script src="{% static 'global/js/menu/filter_sheet_list.js' %}"></script>
 
 </body>
