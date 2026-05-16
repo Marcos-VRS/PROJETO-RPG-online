@@ -59,6 +59,11 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    # daphne deve vir ANTES de django.contrib.staticfiles pra patchar runserver
+    # e habilitar WebSocket no modo dev. Sem isso, /ws/ retorna 404. Em produção
+    # (.exe bundleado) daphne é lançado como processo separado, então isso só
+    # afeta `python manage.py runserver`.
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
