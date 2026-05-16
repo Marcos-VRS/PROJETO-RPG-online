@@ -1,0 +1,25 @@
+{% load static %}
+{% comment %}
+Bloco compartilhado do <head> — design tokens + tema persistido.
+Inclua em qualquer template DENTRO do <head>, antes de outros <link>:
+    {% raw_include_marker_only_for_docs %}
+Não usar {# ... #} multi-linha aqui: Django só suporta {# #} single-line,
+e qualquer {% include %} dentro de um {# ... #} multi-linha vira recursão.
+{% endcomment %}
+
+<script>
+    (function () {
+        try {
+            var saved = localStorage.getItem('rd6-theme');
+            if (saved === 'light' || saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', saved);
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    })();
+</script>
+
+<link rel="stylesheet" href="{% static 'global/css/design_tokens.css' %}?d={% now 'U' %}">
