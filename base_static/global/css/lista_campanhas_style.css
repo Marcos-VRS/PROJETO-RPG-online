@@ -1,129 +1,117 @@
-:root {
-    --primary-color: #230023;
-    --white-color: #ffffffe8;
-    --light-gray-color: #eeeeee3d;
-    --faded-black-color: rgba(0, 0, 0, 0.534);
-    --faded-thin-black-color: rgba(0, 0, 0, 0.233);
-    --white-gray-color: #e2dee2;
-    --orange: rgba(126, 58, 3, 0.986);
-}
+/* roll3d6 — lista de campanhas / nova campanha — design system v1 */
 
-* {
-    margin: 0;
-    padding: 0;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
-html {
-    scroll-behavior: smooth;
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--rd6-bg);
+    color: var(--rd6-text);
+    font-family: var(--rd6-font-body);
+    padding: 24px 16px;
 }
 
 h2 {
-    background: var(--faded-black-color);
-    border-radius: 0.5rem;
-    color: var(--white-color);
+    background: transparent;
+    color: var(--rd6-accent);
+    font-family: var(--rd6-font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.05em;
 }
 
 a {
-    color: var(--white-color);
+    color: var(--rd6-text);
     text-decoration: none;
+    transition: color var(--rd6-transition);
 }
+
+a:hover { color: var(--rd6-accent); }
 
 p {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(141, 42, 3, 0.76);
-    font-size: 2rem;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-image: url("/static/global/img/paper-texture.jpg");
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    background: transparent;
+    font-size: 14px;
+    color: var(--rd6-text);
 }
 
 .titulo-pagina {
     display: flex;
     justify-content: center;
     text-align: center;
-    border: var(--white-color) solid 0.4rem;
-    padding: 2rem;
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    border-radius: 1rem;
-    margin: 2rem;
-
+    border: 1px solid var(--rd6-border);
+    padding: 20px 32px;
+    background: var(--rd6-bg-elevated);
+    color: var(--rd6-accent);
+    border-radius: var(--rd6-radius-lg);
+    margin: 16px 0 32px 0;
+    font-family: var(--rd6-font-display);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: var(--rd6-shadow-sm);
 }
 
 .ul-lista {
     display: flex;
-    width: 85%;
+    width: 100%;
+    max-width: 1200px;
     justify-content: center;
     flex-wrap: wrap;
+    gap: 20px;
+    padding: 0;
 }
 
 .imagem-miniatura {
     display: flex;
-    width: 300px;
-    max-width: 300px;
+    width: 100%;
+    max-width: 280px;
     height: auto;
-    border: var(--white-color) Solid;
+    border: 1px solid var(--rd6-border);
+    border-radius: var(--rd6-radius-sm);
     margin-top: 10px;
+    overflow: hidden;
 }
 
 .miniatura-imagem {
     display: flex;
-
-    max-width: 80%;
-
-}
-
-.item-lista {
-    display: flex;
-    background: var(--primary-color);
-    text-align: center;
-    color: var(--white-color);
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    border: black solid 0.3rem;
-    border-radius: 1rem;
-    padding: 3rem;
+    max-width: 100%;
+    width: 100%;
     height: auto;
-    width: 75%;
-    margin: 2rem;
-    transition: transform 0.3s ease, border-color 0.3s ease;
-    /* Suaviza a transição */
-    margin: 2rem auto;
+    object-fit: cover;
 }
 
+.item-lista,
 .item-lista-journal {
     display: flex;
-    background: var(--primary-color);
-    text-align: center;
-    color: var(--white-color);
+    background: var(--rd6-bg-elevated);
+    color: var(--rd6-text);
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    border: black solid 0.3rem;
-    border-radius: 1rem;
-    width: 85%;
-    margin: 2rem;
+    border: 1px solid var(--rd6-border);
+    border-radius: var(--rd6-radius-lg);
+    padding: 24px;
+    height: auto;
+    width: 320px;
+    margin: 0;
+    transition: border-color var(--rd6-transition), background var(--rd6-transition), transform var(--rd6-transition);
+    text-align: center;
 }
 
 .item-lista:hover {
-    transform: scale(1.1);
-    /* Cresce o elemento em 1.1 vezes */
-    border-color: red;
-    /* Altera a borda para vermelho */
+    border-color: var(--rd6-accent);
+    background: var(--rd6-bg);
+    transform: translateY(-2px);
 }
 
-
+/* Janela modal (criar nova campanha) */
 .janela {
     display: none;
     position: fixed;
@@ -131,68 +119,112 @@ body {
     left: 50%;
     flex-direction: column;
     transform: translate(-50%, -50%);
-    /* Move a janela 50% para cima e para esquerda */
     justify-content: center;
-    align-items: center;
-    background: white;
-    padding: 3rem;
-    border: 2px solid #333;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    align-items: stretch;
+    background: var(--rd6-bg-elevated);
+    padding: 28px;
+    border: 1px solid var(--rd6-border);
+    box-shadow: var(--rd6-shadow-md);
     z-index: 1000;
-    width: 700px;
-    max-height: 600px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
     overflow-y: auto;
-    /* Corrigido para scroll automático */
-    border-radius: 8px;
-    background-image: url("/static/global/img/papiro-ficha.jpg");
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: var(--white-color);
+    border-radius: var(--rd6-radius-lg);
+    color: var(--rd6-text);
 }
 
-.janela.ativa {
-    display: flex;
-}
+.janela.ativa { display: flex; }
 
 /* Botão fechar */
 .fechar {
     position: absolute;
-    top: 5px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 20px;
-    font-weight: bold;
+    top: 10px;
+    right: 14px;
+    background: transparent;
+    border: 1px solid var(--rd6-border);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 13px;
     cursor: pointer;
-    color: #333;
+    color: var(--rd6-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--rd6-transition), border-color var(--rd6-transition);
+}
+
+.fechar:hover {
+    color: var(--rd6-hp-bright);
+    border-color: var(--rd6-hp-bright);
 }
 
 .menu-button {
     flex: 1;
-    padding: 5px;
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    border: solid 1px black;
+    padding: 10px 14px;
+    background: transparent;
+    color: var(--rd6-text);
+    border: 1px solid var(--rd6-border);
     text-align: center;
-    border-radius: 3px;
+    border-radius: var(--rd6-radius-sm);
     cursor: pointer;
-    font-size: 2rem;
-    gap: 0.5rem;
-    margin: 0.25rem;
+    font-family: var(--rd6-font-body);
+    font-size: 13px;
+    margin: 4px;
+    transition: color var(--rd6-transition), border-color var(--rd6-transition), background var(--rd6-transition);
+    letter-spacing: 0.03em;
+}
 
+.menu-button:hover {
+    color: var(--rd6-accent);
+    border-color: var(--rd6-accent);
+    background: var(--rd6-bg);
 }
 
 .pesquisa-label {
     flex: 1;
-    padding: 5px;
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    border: solid 1px black;
+    padding: 10px 14px;
+    background: transparent;
+    color: var(--rd6-text-dim);
+    border: 1px solid var(--rd6-border);
     text-align: center;
-    border-radius: 3px;
-    font-size: 2rem;
-    gap: 0.5rem;
-    margin: 0.25rem;
+    border-radius: var(--rd6-radius-sm);
+    font-family: var(--rd6-font-body);
+    font-size: 12px;
+    margin: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
 
+/* Inputs dentro da janela */
+.janela input[type="text"],
+.janela input[type="number"],
+.janela textarea,
+.janela select {
+    background: var(--rd6-bg);
+    border: 1px solid var(--rd6-border);
+    border-radius: var(--rd6-radius-sm);
+    color: var(--rd6-text);
+    padding: 8px 10px;
+    font-family: var(--rd6-font-body);
+    font-size: 13px;
+    margin: 6px 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color var(--rd6-transition);
+}
+
+.janela input:focus, .janela textarea:focus, .janela select:focus {
+    outline: none;
+    border-color: var(--rd6-accent);
+}
+
+.janela label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--rd6-text-dim);
+    margin-top: 8px;
+    display: block;
 }
