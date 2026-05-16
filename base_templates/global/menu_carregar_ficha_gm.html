@@ -6,8 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% include 'global/partials/_design_head.html' %}
-    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}">
-    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}?d={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}?d={% now 'U' %}">
     <title>Menu de GM</title>
 </head>
 
