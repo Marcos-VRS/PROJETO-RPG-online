@@ -304,6 +304,13 @@ def game_interface(request, campanha_id, slot):
     # Ver docs/TABLETOP_MAP_PLAN.md §3.1.
     from gurps.models import MapState as _MapState
     map_state, _created = _MapState.objects.get_or_create(asset=pagina_inicial)
+    # Filtra tokens gm_only se user não é GM (defense in depth — JS também filtra).
+    _is_user_gm = (campanha.dono_id == request.user.id)
+    if _is_user_gm:
+        visible_tokens = map_state.tokens or []
+    else:
+        visible_tokens = [t for t in (map_state.tokens or [])
+                          if t.get("layer", "visible") != "gm_only"]
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
     assets = CampanhaAssets.objects.filter(
         campanha=campanha, slot__in=[1, 2], show=True
@@ -415,6 +422,7 @@ def game_interface(request, campanha_id, slot):
         "next_character_id": next_character_id,
         "map_state": map_state,
         "map_image_url": pagina_inicial.image.url if pagina_inicial.image else "",
+        "map_tokens": visible_tokens,
         "players_minis": players_minis,
         "is_gm": is_gm,
         "scene_state": scene_state,

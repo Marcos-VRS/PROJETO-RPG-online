@@ -798,6 +798,12 @@
                     if (window.rd6OnMapStateChanged) window.rd6OnMapStateChanged(data);
                 } else if (data.type === 'map_switched') {
                     if (window.rd6OnMapSwitched) window.rd6OnMapSwitched(data);
+                } else if (data.type === 'map_token_added') {
+                    if (window.rd6OnMapTokenAdded) window.rd6OnMapTokenAdded(data);
+                } else if (data.type === 'map_token_removed') {
+                    if (window.rd6OnMapTokenRemoved) window.rd6OnMapTokenRemoved(data);
+                } else if (data.type === 'map_token_changed') {
+                    if (window.rd6OnMapTokenChanged) window.rd6OnMapTokenChanged(data);
                 }
             };
             rd6GameWS.onclose = function () {
@@ -1425,6 +1431,33 @@
                 </div>
 
                 <hr>
+                <h4>Adicionar token (GM)</h4>
+                <div class="map-config-row">
+                    <label>Personagem:
+                        <select id="map-token-char">
+                            <option value="">(NPC sem ficha)</option>
+                            {% for p in personagens_journal %}
+                                <option value="{{ p.id }}"
+                                        data-nome="{{ p.nome_personagem }}"
+                                        data-color="#c9a55c">
+                                    {{ p.nome_personagem }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <div class="map-config-row">
+                    <label>Camada:
+                        <select id="map-token-layer">
+                            <option value="visible">Visível (todos)</option>
+                            <option value="gm_only">Mestre (só você)</option>
+                            <option value="overlay">Sobreposição (acima de tudo)</option>
+                        </select>
+                    </label>
+                    <button class="menu-button" id="map-token-add-btn">+ Adicionar</button>
+                </div>
+
+                <hr>
                 <h4>Trocar mapa ativo</h4>
                 <div class="map-asset-list">
                     {% for a in all_assets_for_gm %}
@@ -1526,9 +1559,11 @@
     <div class="ferramentas-container"></div>
 
     {# Tabletop map — substitui o drag.js/zoom.js antigos #}
+    {{ map_tokens|json_script:"rd6-map-tokens" }}
     <script src="{% static 'global/js/util/units.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/hex.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/canvas.js' %}?d={% now 'U' %}"></script>
+    <script src="{% static 'global/js/map/tokens.js' %}?d={% now 'U' %}"></script>
     <script>
         (function () {
             document.addEventListener("DOMContentLoaded", function () {
@@ -1550,6 +1585,61 @@
                         opacity: parseFloat(cfgWin.dataset.gridOpacity) || 0.4,
                     });
                 }
+
+                // === Tokens layer ===
+                var initialTokens = [];
+                try {
+                    initialTokens = JSON.parse(document.getElementById("rd6-map-tokens").textContent);
+                } catch (e) { initialTokens = []; }
+
+                window.rd6MapTokens = window.rd6Tokens.attach(window.rd6MapCanvas, {
+                    tokens: initialTokens,
+                    userIsGm: RD6_IS_GM,
+                    getGridSize: function () {
+                        var w = document.getElementById("janela-mapa");
+                        return w ? (parseInt(w.dataset.gridSize, 10) || 50) : 50;
+                    },
+                    getGridOffset: function () {
+                        var w = document.getElementById("janela-mapa");
+                        if (!w) return { x: 0, y: 0 };
+                        return {
+                            x: parseInt(w.dataset.gridOffsetX, 10) || 0,
+                            y: parseInt(w.dataset.gridOffsetY, 10) || 0,
+                        };
+                    },
+                    getCurrentTurnId: function () {
+                        var s = (window.RD6_SCENE_STATE && window.RD6_SCENE_STATE.scenes) || [];
+                        var active = s.find(function (x) {
+                            return x.id === window.RD6_SCENE_STATE.active_scene_id;
+                        });
+                        return active ? active.current_turn_id : null;
+                    },
+                    canMoveToken: function (token) {
+                        if (RD6_IS_GM) return true;
+                        if (!token.character_id) return false;
+                        // Owner do char? E é o turno dele?
+                        var active = (window.RD6_SCENE_STATE && window.RD6_SCENE_STATE.scenes || [])
+                            .find(function (x) { return x.id === window.RD6_SCENE_STATE.active_scene_id; });
+                        var isOurChar = (Number(token.character_id) === Number(window.RD6_ACTIVE_CHAR_ID));
+                        if (!active) return isOurChar;  // sem cena: livre se é seu
+                        var isTurn = (Number(active.current_turn_id) === Number(token.character_id));
+                        return isOurChar && isTurn;
+                    },
+                    onTokenMove: function (token_id, hex_x, hex_y) {
+                        var win = document.getElementById("janela-mapa");
+                        var assetId = win ? parseInt(win.dataset.assetId, 10) : null;
+                        if (assetId == null || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                        window.rd6GameWS.send(JSON.stringify({
+                            type: "map_token_move",
+                            asset_id: assetId,
+                            token_id: token_id,
+                            hex_x: hex_x,
+                            hex_y: hex_y,
+                        }));
+                    },
+                });
+                // Renderiza inicial
+                window.rd6MapTokens.render();
             });
 
             // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===
@@ -1616,6 +1706,67 @@
                 url.searchParams.set("asset", msg.asset_id);
                 window.location.href = url.toString();
             };
+
+            window.rd6OnMapTokenAdded = function (msg) {
+                if (window.rd6MapTokens) window.rd6MapTokens.upsertToken(msg.token);
+            };
+            window.rd6OnMapTokenRemoved = function (msg) {
+                if (window.rd6MapTokens) window.rd6MapTokens.removeToken(msg.token_id);
+            };
+            window.rd6OnMapTokenChanged = function (msg) {
+                if (window.rd6MapTokens) window.rd6MapTokens.upsertToken(msg.token);
+            };
+
+            // GM: botão "+ Adicionar token"
+            document.addEventListener("DOMContentLoaded", function () {
+                var btn = document.getElementById("map-token-add-btn");
+                if (!btn) return;
+                btn.addEventListener("click", function () {
+                    var winEl = document.getElementById("janela-mapa");
+                    if (!winEl || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                    var assetId = parseInt(winEl.dataset.assetId, 10);
+                    var sel = document.getElementById("map-token-char");
+                    var layer = document.getElementById("map-token-layer").value || "visible";
+                    var opt = sel.selectedOptions[0];
+                    var characterId = sel.value ? parseInt(sel.value, 10) : null;
+                    var label = opt ? (opt.dataset.nome || opt.textContent || "Token") : "Token";
+                    var color = opt ? (opt.dataset.color || "#c9a55c") : "#c9a55c";
+                    // Posiciona no hex 0,0 (centro do mapa) — GM arrasta depois
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_token_add",
+                        asset_id: assetId,
+                        token: {
+                            character_id: characterId,
+                            label: label,
+                            color: color,
+                            hex_x: 0, hex_y: 0,
+                            facing: 0,
+                            size_modifier: 0,
+                            posture: "standing",
+                            layer: layer,
+                        },
+                    }));
+                });
+
+                // Tecla Delete remove o token selecionado (GM only)
+                document.addEventListener("keydown", function (ev) {
+                    if (!RD6_IS_GM) return;
+                    if (ev.key !== "Delete" && ev.key !== "Backspace") return;
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    // ignora se o usuário tá digitando num campo
+                    var tag = document.activeElement && document.activeElement.tagName;
+                    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+                    var winEl = document.getElementById("janela-mapa");
+                    if (!winEl) return;
+                    var assetId = parseInt(winEl.dataset.assetId, 10);
+                    if (!confirm("Remover token selecionado?")) return;
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_token_remove",
+                        asset_id: assetId,
+                        token_id: window.rd6MapTokens.selectedId,
+                    }));
+                });
+            });
         })();
     </script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
