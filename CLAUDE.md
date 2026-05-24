@@ -13,6 +13,14 @@ O produto migra de **SaaS hospedado no GCP** para **aplicativo desktop com dois 
 - [Arquitetura de distribuição desktop — instalador, launcher, túnel, empacotamento](docs/DESKTOP_DISTRIBUTION.md)
 - [Arquitetura RAG — em hibernação até voltar com vector store SQLite-friendly](docs/RAG_ARCHITECTURE.md)
 - [Base de conhecimento GURPS 4e — visão geral + plano de catalogação](docs/GURPS_KNOWLEDGE.md)
+
+### Tabletop map system (planejamento — 2026-05-24)
+
+- [Plano técnico do tabletop](docs/TABLETOP_MAP_PLAN.md) — arquitetura, modelo de dados, WS protocol, fases
+- [Regras GURPS aplicadas ao mapa](docs/GURPS_TABLETOP_RULES.md) — hex, facing, reach, manobras, status effects
+- [Fluxo de combate passo a passo](docs/TABLETOP_COMBAT_FLOW.md) — setup → turno → ataque → defesa → dano
+- [Conversões de unidades](docs/UNIT_CONVERSIONS.md) — yard=m (fixed 1:1), lb→kg, helpers Py/JS
+- [Ficha V3 — roadmap](docs/FICHA_V3_ROADMAP.md) — placeholder, só depois do tabletop estar funcional
   - **Catálogos JSON estruturados** em `gurps/data/`:
     - `attributes.json` — ST/DX/IQ/HT + características secundárias + tabela de dano + encumbrance
     - `advantages.json` — 246 vantagens (Basic Set + Powers cap 2)

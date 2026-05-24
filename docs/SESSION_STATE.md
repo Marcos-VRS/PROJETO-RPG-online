@@ -1,9 +1,78 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-16 (sessão estendida, noite).
-> **Status:** pronto pra produção. Build do dist a fazer após o commit dessa sessão.
+> **Última sessão:** 2026-05-24 (planejamento do tabletop).
+> **Status:** planejamento detalhado do sistema de mapa/tabletop documentado em 5 docs. Próximo passo: aguardar respostas do user às perguntas críticas e começar Fase 1 (fundação do canvas).
 >
 > Quando voltar, leia este documento primeiro.
+
+---
+
+## SESSÃO 2026-05-24: Planejamento do Tabletop Map System
+
+**Contexto:** sessão de produção rodou OK no fim de semana (players migraram fichas pra V2). User pediu pra começar a planejar o sistema de **mapa tabletop interativo** com:
+- Grid hexagonal (1 hex = 1 metro)
+- Tokens estilo jogo de tabuleiro
+- Desenhos colaborativos (linhas, círculos, quadrados) em tempo real
+- Base nas regras GURPS 4e
+- Unidades pt-BR (yard→m, lb→kg, etc.)
+
+Pediu pra eu **ler todas as regras de GURPS** e documentar antes de mexer em código. Sem perturbar — voltaria em 1h. Esta sessão é só docs.
+
+**Documentos criados (4 novos):**
+
+1. **`docs/TABLETOP_MAP_PLAN.md`** — plano técnico completo:
+   - Modelo de dados `MapState` (OneToOne com `CampanhaAssets`)
+   - Schema do Token (hex coords, facing, posture, status, image, color)
+   - Schema do Drawing (kind, points, stroke, ephemeral)
+   - WebSocket protocol (`map_token_move/add/remove/update`, `map_drawing_*`, `map_switch`, `map_grid_config`)
+   - Stack: Canvas HTML5 + 3 layers (imagem, grid, interativo) + **Konva.js** (recomendado)
+   - 6 Fases de implementação (fundação → grid → tokens → desenhos → polimentos → ficha V3)
+   - **11 perguntas pro user** (5 críticas, 4 médias, 2 baixas)
+
+2. **`docs/GURPS_TABLETOP_RULES.md`** — regras GURPS aplicáveis:
+   - Conversões pt-BR (yard=m, lb→kg)
+   - Hex flat-top, SM → hexes ocupados
+   - Facing (front/side/back), Reach
+   - Ordem de turnos, 13 manobras principais
+   - Postura (5 estados)
+   - Fluxo ataque/defesa/dano
+   - Status effects (8 tipos) com triggers
+
+3. **`docs/UNIT_CONVERSIONS.md`** — sistema de unidades:
+   - **Regra de ouro: 1 yard = 1 metro** (simplificação intencional do user)
+   - Tabela completa de conversões
+   - Helpers Python (`gurps/units.py` a criar) e JS (`base_static/.../units.js`)
+   - Política: JSONs do catálogo mantêm imperial; conversão só na exibição
+
+4. **`docs/TABLETOP_COMBAT_FLOW.md`** — fluxo passo a passo de combate no mapa:
+   - Setup (GM coloca tokens, sistema ordena por Speed)
+   - Turno individual (manobra → move/step → action → defesa → dano)
+   - 13 manobras com move/defesa permitido
+   - 12 status effects com ícones propostos
+   - Régua, highlight de Reach, movement preview
+   - 9 atalhos de teclado propostos
+   - Casos especiais GURPS (reach multi-hex, close combat, mounted)
+
+5. **`docs/FICHA_V3_ROADMAP.md`** — placeholder pra Ficha V3:
+   - User antecipou: "em algum ponto vamos reconstruir a ficha para que atenda as regras de gurps a risca com o mapa"
+   - Schema preliminar (equipped_weapons estruturado, runtime com aim_accumulated, etc.)
+   - V3 só DEPOIS de tabletop estar funcional e validado
+   - Migração V2→V3 lateral, mesma pattern V1↔V2
+
+**Decisões propostas (aguardando confirmação):**
+- Hex flat-top
+- Konva.js como lib de canvas
+- Snap automático ao centro do hex
+- Player só pode mover token no próprio turno
+- Desenhos atrelados ao mapa específico (não somem)
+- Cor de desenho auto-atribuída por usuário
+- v1 sem LOS automático nem cover automático (manual)
+
+**Perguntas críticas a fazer:**
+Ver `TABLETOP_MAP_PLAN.md` §6 — 11 perguntas numeradas.
+
+**Próximo passo concreto:**
+Quando user voltar, mostrar os 5 docs e perguntar as 5 perguntas críticas. Depois disso começar Fase 1 (substituir `.image-container` por canvas Konva, manter funcional sem grid/token).
 
 ---
 
