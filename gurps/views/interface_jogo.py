@@ -287,7 +287,19 @@ def _build_player_mini(character, present_ids=None, show_numbers=False):
 def game_interface(request, campanha_id, slot):
     username = request.user.username
     campanha = get_object_or_404(Campanha, id=campanha_id)
-    pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
+    # ?asset=<id> permite ao GM trocar o mapa ativo sem mexer em slots.
+    # Se nao vier ou nao existir, cai no default (slot=slot).
+    pagina_inicial = None
+    requested_asset_id = request.GET.get("asset")
+    if requested_asset_id:
+        try:
+            pagina_inicial = CampanhaAssets.objects.filter(
+                pk=int(requested_asset_id), campanha=campanha
+            ).first()
+        except (TypeError, ValueError):
+            pass
+    if pagina_inicial is None:
+        pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     # MapState: auto-cria na primeira vez que esse asset entra na tela de jogo.
     # Ver docs/TABLETOP_MAP_PLAN.md §3.1.
     from gurps.models import MapState as _MapState

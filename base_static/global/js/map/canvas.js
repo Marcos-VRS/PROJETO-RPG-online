@@ -192,9 +192,61 @@ window.rd6Map = window.rd6Map || {};
 
     MapCanvas.prototype.renderAll = function () {
         this._renderImage();
-        // Grid e overlay ficam vazios em Fase 1; outras fases preencherão
-        this._clear(this.ctxGrid);
+        this._renderGrid();
+        // Overlay (tokens/desenhos) vazio até Fase 3
         this._clear(this.ctxOverlay);
+    };
+
+    // === Grid hexagonal (Fase 2) ===
+
+    MapCanvas.prototype.setGridConfig = function (cfg) {
+        // cfg: {enabled, size_px, offset_x, offset_y, color, opacity}
+        this.gridConfig = cfg || null;
+        this.renderAll();
+    };
+
+    MapCanvas.prototype._renderGrid = function () {
+        var ctx = this.ctxGrid;
+        this._clear(ctx);
+        var cfg = this.gridConfig;
+        if (!cfg || !cfg.enabled) return;
+        if (!this.imageReady) return;
+
+        // O grid existe no "mundo" (coordenadas da imagem), então usa o mesmo
+        // transform que a imagem. Tamanho do hex é em pixels da imagem;
+        // o scale do canvas vai aplicar zoom.
+        ctx.save();
+        ctx.translate(this.offsetX, this.offsetY);
+        ctx.scale(this.scale, this.scale);
+
+        // Calcula bbox visível em coordenadas world pra só desenhar o que aparece
+        var topLeft = this.screenToWorld(0, 0);
+        var bottomRight = this.screenToWorld(this.viewportWidth, this.viewportHeight);
+
+        var size = cfg.size_px;
+        var hexes = window.rd6Hex.hexesInPixelRect(
+            topLeft.x, topLeft.y, bottomRight.x, bottomRight.y,
+            size, cfg.offset_x, cfg.offset_y
+        );
+
+        ctx.strokeStyle = cfg.color || "#000000";
+        ctx.lineWidth = Math.max(1 / this.scale, 0.5);  // 1px em screen
+        ctx.globalAlpha = (cfg.opacity == null) ? 0.4 : cfg.opacity;
+
+        for (var i = 0; i < hexes.length; i++) {
+            var h = hexes[i];
+            var center = window.rd6Hex.axialToPixel(h.q, h.r, size, cfg.offset_x, cfg.offset_y);
+            var corners = window.rd6Hex.hexCorners(center.x, center.y, size);
+            ctx.beginPath();
+            ctx.moveTo(corners[0].x, corners[0].y);
+            for (var j = 1; j < 6; j++) {
+                ctx.lineTo(corners[j].x, corners[j].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        ctx.restore();
     };
 
     MapCanvas.prototype._renderImage = function () {

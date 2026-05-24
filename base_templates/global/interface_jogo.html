@@ -768,6 +768,7 @@
             var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
             var url = proto + location.host + '/ws/chat/' + RD6_CAMPANHA_ID + '/';
             rd6GameWS = new WebSocket(url);
+            window.rd6GameWS = rd6GameWS;  // expor pro JS do map config
             rd6GameWS.onmessage = function (ev) {
                 var data;
                 try { data = JSON.parse(ev.data); } catch (e) { return; }
@@ -793,6 +794,10 @@
                     rd6UpdateMiniVitals(data);
                 } else if (data.type === 'character_updated' && data.char) {
                     rd6OnCharacterUpdated(data.char);
+                } else if (data.type === 'map_state_changed') {
+                    if (window.rd6OnMapStateChanged) window.rd6OnMapStateChanged(data);
+                } else if (data.type === 'map_switched') {
+                    if (window.rd6OnMapSwitched) window.rd6OnMapSwitched(data);
                 }
             };
             rd6GameWS.onclose = function () {
@@ -1364,6 +1369,9 @@
             <button class="player-side-icon" title="Dados" onclick="abrirJanela('dados')">
                 <span class="psi-glyph">🎲</span><span class="psi-label">D6</span>
             </button>
+            <button class="player-side-icon" title="Configurar mapa" onclick="abrirJanela('mapa')">
+                <span class="psi-glyph">🗺️</span><span class="psi-label">MAPA</span>
+            </button>
             <a class="player-side-icon" title="Fichas (abre em nova aba)"
                href="{% url 'gurps:menu_fichas_gm' campanha.id %}" target="_blank" rel="noopener">
                 <span class="psi-glyph">📋</span><span class="psi-label">GM</span>
@@ -1377,6 +1385,58 @@
                 <span class="psi-glyph">🚪</span><span class="psi-label">SAIR</span>
             </a>
         </aside>
+
+        <!-- Janela de configuracao de mapa (GM only) -->
+        <div id="janela-mapa" class="janela"
+             data-asset-id="{{ pagina_inicial.id }}"
+             data-grid-enabled="{{ map_state.grid_enabled|yesno:'true,false' }}"
+             data-grid-size="{{ map_state.grid_size_px }}"
+             data-grid-offset-x="{{ map_state.grid_offset_x }}"
+             data-grid-offset-y="{{ map_state.grid_offset_y }}"
+             data-grid-color="{{ map_state.grid_color }}"
+             data-grid-opacity="{{ map_state.grid_opacity }}">
+            <button class="fechar menu-button" onclick="fecharJanela()">&times;</button>
+            <div class="ficha-parte-box medievalsharp-mini">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">CONFIGURAR MAPA</h3>
+
+                <div class="map-config-section">
+                    <label><input type="checkbox" id="map-grid-enabled"
+                                  {% if map_state.grid_enabled %}checked{% endif %}>
+                           Mostrar grid hexagonal</label>
+                </div>
+                <div class="map-config-section">
+                    <label>Tamanho do hex (px):
+                        <input type="number" id="map-grid-size" min="10" max="200"
+                               value="{{ map_state.grid_size_px }}">
+                    </label>
+                </div>
+                <div class="map-config-section map-config-row">
+                    <label>Offset X: <input type="number" id="map-grid-offset-x"
+                                            value="{{ map_state.grid_offset_x }}"></label>
+                    <label>Offset Y: <input type="number" id="map-grid-offset-y"
+                                            value="{{ map_state.grid_offset_y }}"></label>
+                </div>
+                <div class="map-config-section map-config-row">
+                    <label>Cor: <input type="color" id="map-grid-color"
+                                       value="{{ map_state.grid_color }}"></label>
+                    <label>Opacidade: <input type="range" id="map-grid-opacity"
+                                              min="0" max="1" step="0.05"
+                                              value="{{ map_state.grid_opacity }}"></label>
+                </div>
+
+                <hr>
+                <h4>Trocar mapa ativo</h4>
+                <div class="map-asset-list">
+                    {% for a in all_assets_for_gm %}
+                        <a class="map-asset-item{% if a.id == pagina_inicial.id %} is-active{% endif %}"
+                           href="?asset={{ a.id }}"
+                           data-asset-id="{{ a.id }}">
+                            {{ a.name|default:"(sem nome)" }}
+                        </a>
+                    {% empty %}<em>nenhum asset</em>{% endfor %}
+                </div>
+            </div>
+        </div>
 
         <!-- Barra inferior antiga oculta via CSS, mantida pro fallback. -->
         <div class="personagem-container-gm">
@@ -1477,7 +1537,85 @@
                 window.rd6MapCanvas = new window.rd6Map.MapCanvas(root, {
                     imageUrl: root.dataset.imageUrl || null,
                 });
+
+                // Aplica config inicial do grid (lida do data-attrs da janela-mapa)
+                var cfgWin = document.getElementById("janela-mapa");
+                if (cfgWin) {
+                    window.rd6MapCanvas.setGridConfig({
+                        enabled: cfgWin.dataset.gridEnabled === "true",
+                        size_px: parseInt(cfgWin.dataset.gridSize, 10) || 50,
+                        offset_x: parseInt(cfgWin.dataset.gridOffsetX, 10) || 0,
+                        offset_y: parseInt(cfgWin.dataset.gridOffsetY, 10) || 0,
+                        color: cfgWin.dataset.gridColor || "#000000",
+                        opacity: parseFloat(cfgWin.dataset.gridOpacity) || 0.4,
+                    });
+                }
             });
+
+            // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===
+            function sendGridConfig() {
+                var win = document.getElementById("janela-mapa");
+                if (!win || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                var cfg = {
+                    enabled: document.getElementById("map-grid-enabled").checked,
+                    size_px: parseInt(document.getElementById("map-grid-size").value, 10) || 50,
+                    offset_x: parseInt(document.getElementById("map-grid-offset-x").value, 10) || 0,
+                    offset_y: parseInt(document.getElementById("map-grid-offset-y").value, 10) || 0,
+                    color: document.getElementById("map-grid-color").value || "#000000",
+                    opacity: parseFloat(document.getElementById("map-grid-opacity").value) || 0.4,
+                };
+                // Aplica imediato local (optimistic) e envia WS
+                if (window.rd6MapCanvas) window.rd6MapCanvas.setGridConfig(cfg);
+                window.rd6GameWS.send(JSON.stringify({
+                    type: "map_grid_config",
+                    asset_id: parseInt(win.dataset.assetId, 10),
+                    config: cfg,
+                }));
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                ["map-grid-enabled", "map-grid-size", "map-grid-offset-x",
+                 "map-grid-offset-y", "map-grid-color", "map-grid-opacity"]
+                .forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.addEventListener("input", sendGridConfig);
+                });
+
+                // Trocar mapa: intercepta click pra broadcast antes do reload
+                document.querySelectorAll(".map-asset-item").forEach(function (a) {
+                    a.addEventListener("click", function (ev) {
+                        var assetId = parseInt(a.dataset.assetId, 10);
+                        if (window.rd6GameWS && window.rd6GameWS.readyState === 1) {
+                            window.rd6GameWS.send(JSON.stringify({
+                                type: "map_switch",
+                                asset_id: assetId,
+                            }));
+                        }
+                        // Reload local acontece pelo href padrao do <a>
+                    });
+                });
+            });
+
+            // Expor pra o handler WS do template pegar
+            window.rd6OnMapStateChanged = function (msg) {
+                if (!window.rd6MapCanvas) return;
+                var s = msg.map_state || {};
+                window.rd6MapCanvas.setGridConfig({
+                    enabled: s.grid_enabled,
+                    size_px: s.grid_size_px,
+                    offset_x: s.grid_offset_x,
+                    offset_y: s.grid_offset_y,
+                    color: s.grid_color,
+                    opacity: s.grid_opacity,
+                });
+            };
+
+            window.rd6OnMapSwitched = function (msg) {
+                // Recarrega na URL com asset trocado (faz pra player + GM sincronizado)
+                var url = new URL(window.location.href);
+                url.searchParams.set("asset", msg.asset_id);
+                window.location.href = url.toString();
+            };
         })();
     </script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>

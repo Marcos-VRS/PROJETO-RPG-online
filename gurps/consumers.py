@@ -59,6 +59,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self._handle_scene_state_set(data)
             return
 
+        if msg_type == "map_grid_config":
+            await self._handle_map_grid_config(data)
+            return
+
+        if msg_type == "map_switch":
+            await self._handle_map_switch(data)
+            return
+
         # Chat (sem `type`) — compat com chat.js existente.
         message = data.get("message")
         username = data.get("username")
@@ -107,6 +115,75 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {"type": "scene_state_changed", "scene_state": saved},
         )
+
+    # ---- map control --------------------------------------------------------
+
+    async def _handle_map_grid_config(self, data):
+        if not await self._is_gm():
+            return
+        asset_id = data.get("asset_id")
+        cfg = data.get("config") or {}
+        if asset_id is None:
+            return
+        saved = await self._save_map_grid(int(asset_id), cfg)
+        if saved is None:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "map_state_changed",
+             "asset_id": int(asset_id),
+             "map_state": saved},
+        )
+
+    async def _handle_map_switch(self, data):
+        if not await self._is_gm():
+            return
+        asset_id = data.get("asset_id")
+        if asset_id is None:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "map_switched", "asset_id": int(asset_id)},
+        )
+
+    @database_sync_to_async
+    def _save_map_grid(self, asset_id, cfg):
+        from gurps.models import MapState, CampanhaAssets
+        try:
+            asset = CampanhaAssets.objects.get(pk=asset_id)
+        except CampanhaAssets.DoesNotExist:
+            return None
+        # Confirma que o asset pertence à campanha desse socket
+        if str(asset.campanha_id) != str(self.room_name):
+            return None
+        ms, _ = MapState.objects.get_or_create(asset=asset)
+        ms.grid_enabled = bool(cfg.get("enabled", ms.grid_enabled))
+        if "size_px" in cfg:
+            ms.grid_size_px = max(8, int(cfg["size_px"]))
+        if "offset_x" in cfg:
+            ms.grid_offset_x = int(cfg["offset_x"])
+        if "offset_y" in cfg:
+            ms.grid_offset_y = int(cfg["offset_y"])
+        if "color" in cfg:
+            ms.grid_color = str(cfg["color"])[:20]
+        if "opacity" in cfg:
+            try:
+                ms.grid_opacity = float(cfg["opacity"])
+            except (TypeError, ValueError):
+                pass
+        ms.version = (ms.version or 0) + 1
+        ms.save()
+        return {
+            "id": ms.id,
+            "asset_id": ms.asset_id,
+            "grid_enabled": ms.grid_enabled,
+            "grid_size_px": ms.grid_size_px,
+            "grid_offset_x": ms.grid_offset_x,
+            "grid_offset_y": ms.grid_offset_y,
+            "grid_color": ms.grid_color,
+            "grid_opacity": ms.grid_opacity,
+            "version": ms.version,
+        }
 
     def _valid_scene_state(self, state):
         if not isinstance(state, dict):
@@ -177,6 +254,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "type": "character_updated",
             "char": event["char"],
+        }))
+
+    async def map_state_changed(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "map_state_changed",
+            "asset_id": event["asset_id"],
+            "map_state": event["map_state"],
+        }))
+
+    async def map_switched(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "map_switched",
+            "asset_id": event["asset_id"],
         }))
 
     async def character_vitals_changed(self, event):
