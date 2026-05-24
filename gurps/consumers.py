@@ -83,6 +83,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self._handle_map_token_update(data)
             return
 
+        if msg_type == "map_drawing_add":
+            await self._handle_map_drawing_add(data)
+            return
+
+        if msg_type == "map_drawing_remove":
+            await self._handle_map_drawing_remove(data)
+            return
+
+        if msg_type == "map_drawing_clear":
+            await self._handle_map_drawing_clear(data)
+            return
+
         # Chat (sem `type`) — compat com chat.js existente.
         message = data.get("message")
         username = data.get("username")
@@ -161,6 +173,136 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {"type": "map_switched", "asset_id": int(asset_id)},
         )
+
+    # ---- drawings ---------------------------------------------------------
+
+    async def _handle_map_drawing_add(self, data):
+        asset_id = data.get("asset_id")
+        drawing = data.get("drawing") or {}
+        if asset_id is None:
+            return
+        saved = await self._add_drawing(int(asset_id), drawing)
+        if saved is None:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "map_drawing_added",
+             "asset_id": int(asset_id), "drawing": saved},
+        )
+
+    async def _handle_map_drawing_remove(self, data):
+        asset_id = data.get("asset_id")
+        drawing_id = data.get("drawing_id")
+        if asset_id is None or not drawing_id:
+            return
+        ok = await self._remove_drawing(int(asset_id), drawing_id)
+        if not ok:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "map_drawing_removed",
+             "asset_id": int(asset_id), "drawing_id": drawing_id},
+        )
+
+    async def _handle_map_drawing_clear(self, data):
+        # Limpa TODOS os desenhos do mapa (GM only).
+        if not await self._is_gm():
+            return
+        asset_id = data.get("asset_id")
+        if asset_id is None:
+            return
+        ok = await self._clear_drawings(int(asset_id))
+        if not ok:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "map_drawings_cleared", "asset_id": int(asset_id)},
+        )
+
+    @database_sync_to_async
+    def _add_drawing(self, asset_id, drawing):
+        from gurps.models import MapState, CampanhaAssets
+        try:
+            asset = CampanhaAssets.objects.get(pk=asset_id)
+        except CampanhaAssets.DoesNotExist:
+            return None
+        if str(asset.campanha_id) != str(self.room_name):
+            return None
+        ms, _ = MapState.objects.get_or_create(asset=asset)
+
+        import secrets
+        user = self.scope.get("user")
+
+        kind = drawing.get("kind")
+        if kind not in ("line", "rect", "circle", "polygon"):
+            return None
+        points = drawing.get("points") or []
+        if not isinstance(points, list) or not points:
+            return None
+        # Limpa points: aceita arrays [x, y]; valida tamanho
+        try:
+            clean_points = [[float(p[0]), float(p[1])] for p in points[:200]]
+        except (TypeError, ValueError, IndexError):
+            return None
+
+        clean = {
+            "id": "drw_" + secrets.token_hex(4),
+            "author_id": user.id if user else None,
+            "author_color": str(drawing.get("author_color", "#3b82f6"))[:20],
+            "kind": kind,
+            "points": clean_points,
+            "stroke_color": str(drawing.get("stroke_color", "#ff0000"))[:20],
+            "stroke_width": min(20, max(1, int(drawing.get("stroke_width", 3)))),
+            "fill_color": str(drawing.get("fill_color", ""))[:20] or None,
+            "layer": drawing.get("layer", "visible"),
+        }
+        if clean["layer"] not in ("gm_only", "visible", "overlay"):
+            clean["layer"] = "visible"
+        drawings = list(ms.drawings or [])
+        drawings.append(clean)
+        # Limita a 500 desenhos por mapa pra não inchar JSON
+        if len(drawings) > 500:
+            drawings = drawings[-500:]
+        ms.drawings = drawings
+        ms.version = (ms.version or 0) + 1
+        ms.save()
+        return clean
+
+    @database_sync_to_async
+    def _remove_drawing(self, asset_id, drawing_id):
+        from gurps.models import MapState
+        ms = MapState.objects.filter(asset_id=asset_id).first()
+        if ms is None:
+            return False
+        if str(ms.asset.campanha_id) != str(self.room_name):
+            return False
+        user = self.scope.get("user")
+        is_gm = (user and ms.asset.campanha.dono_id == user.id)
+
+        drawings = list(ms.drawings or [])
+        target = next((d for d in drawings if d.get("id") == drawing_id), None)
+        if target is None:
+            return False
+        # Owner OR GM
+        if not is_gm and target.get("author_id") != (user.id if user else None):
+            return False
+        ms.drawings = [d for d in drawings if d.get("id") != drawing_id]
+        ms.version = (ms.version or 0) + 1
+        ms.save()
+        return True
+
+    @database_sync_to_async
+    def _clear_drawings(self, asset_id):
+        from gurps.models import MapState
+        ms = MapState.objects.filter(asset_id=asset_id).first()
+        if ms is None:
+            return False
+        if str(ms.asset.campanha_id) != str(self.room_name):
+            return False
+        ms.drawings = []
+        ms.version = (ms.version or 0) + 1
+        ms.save()
+        return True
 
     # ---- tokens -----------------------------------------------------------
 
@@ -498,6 +640,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "type": "map_token_changed",
             "asset_id": event["asset_id"],
             "token": event["token"],
+        }))
+
+    async def map_drawing_added(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "map_drawing_added",
+            "asset_id": event["asset_id"],
+            "drawing": event["drawing"],
+        }))
+
+    async def map_drawing_removed(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "map_drawing_removed",
+            "asset_id": event["asset_id"],
+            "drawing_id": event["drawing_id"],
+        }))
+
+    async def map_drawings_cleared(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "map_drawings_cleared",
+            "asset_id": event["asset_id"],
         }))
 
     async def character_vitals_changed(self, event):

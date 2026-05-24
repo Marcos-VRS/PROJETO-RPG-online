@@ -192,9 +192,13 @@ window.rd6Tokens = (function () {
         });
     };
 
+    // render() delega ao composite do MapCanvas pra coordenar com drawings layer.
     TokensLayer.prototype.render = function () {
-        var ctx = this.mc.ctxOverlay;
-        this.mc._clear(ctx);
+        this.mc._composeOverlay();
+    };
+
+    // paint() é chamado pelo composite — NÃO limpa o canvas, só desenha em cima.
+    TokensLayer.prototype.paint = function (ctx) {
         var renderable = this._visibleTokens();
         if (!renderable.length) return;
 

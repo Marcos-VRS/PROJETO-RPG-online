@@ -804,6 +804,12 @@
                     if (window.rd6OnMapTokenRemoved) window.rd6OnMapTokenRemoved(data);
                 } else if (data.type === 'map_token_changed') {
                     if (window.rd6OnMapTokenChanged) window.rd6OnMapTokenChanged(data);
+                } else if (data.type === 'map_drawing_added') {
+                    if (window.rd6OnMapDrawingAdded) window.rd6OnMapDrawingAdded(data);
+                } else if (data.type === 'map_drawing_removed') {
+                    if (window.rd6OnMapDrawingRemoved) window.rd6OnMapDrawingRemoved(data);
+                } else if (data.type === 'map_drawings_cleared') {
+                    if (window.rd6OnMapDrawingsCleared) window.rd6OnMapDrawingsCleared(data);
                 }
             };
             rd6GameWS.onclose = function () {
@@ -899,6 +905,9 @@
            href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
             <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
         </a>
+        <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
+            <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
+        </button>
         <a class="player-side-icon" title="Sair da campanha"
            href="{% url 'gurps:leave_game' %}">
             <span class="psi-glyph">🚪</span><span class="psi-label">SAIR</span>
@@ -1533,10 +1542,43 @@
 
     {% endif %}
 
+    <!-- Janela de desenho (player + GM): linhas/retângulos/círculos colaborativos -->
+    <div id="janela-desenho" class="janela"
+         data-asset-id="{{ pagina_inicial.id }}"
+         data-user-color="#3b82f6">
+        <button class="fechar menu-button" onclick="fecharJanela()">&times;</button>
+        <div class="ficha-parte-box medievalsharp-mini">
+            <h3 class="titulo-ficha-gm fredericka-the-great-regular">DESENHAR NO MAPA</h3>
+            <div class="map-config-section">
+                <button class="menu-button" data-draw-mode="none">Selecionar (sem desenhar)</button>
+                <button class="menu-button" data-draw-mode="line">Linha</button>
+                <button class="menu-button" data-draw-mode="rect">Retângulo</button>
+                <button class="menu-button" data-draw-mode="circle">Círculo</button>
+            </div>
+            <div class="map-config-section map-config-row">
+                <label>Cor: <input type="color" id="draw-color" value="#3b82f6"></label>
+                <label>Espessura: <input type="range" id="draw-width" min="1" max="20" value="3"></label>
+            </div>
+            {% if is_gm %}
+            <div class="map-config-section">
+                <label>Camada:
+                    <select id="draw-layer">
+                        <option value="visible">Visível (todos)</option>
+                        <option value="gm_only">Mestre (só você)</option>
+                        <option value="overlay">Sobreposição</option>
+                    </select>
+                </label>
+            </div>
+            <hr>
+            <button class="menu-button" id="draw-clear-all">Limpar todos os desenhos</button>
+            {% endif %}
+        </div>
+    </div>
+
     <!--Ficha completa personagem secundário-->
     <div id="janela-personagem_secundario" class="janela">
         <button class="fechar menu-button" onclick="fecharJanelaSecundario()">×</button>
-        
+
     </div>
 
 
@@ -1560,9 +1602,11 @@
 
     {# Tabletop map — substitui o drag.js/zoom.js antigos #}
     {{ map_tokens|json_script:"rd6-map-tokens" }}
+    {{ map_drawings|json_script:"rd6-map-drawings" }}
     <script src="{% static 'global/js/util/units.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/hex.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/canvas.js' %}?d={% now 'U' %}"></script>
+    <script src="{% static 'global/js/map/drawings.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/tokens.js' %}?d={% now 'U' %}"></script>
     <script>
         (function () {
@@ -1585,6 +1629,29 @@
                         opacity: parseFloat(cfgWin.dataset.gridOpacity) || 0.4,
                     });
                 }
+
+                // === Drawings layer (registrada ANTES dos tokens pra ficar embaixo) ===
+                var initialDrawings = [];
+                try {
+                    initialDrawings = JSON.parse(document.getElementById("rd6-map-drawings").textContent);
+                } catch (e) { initialDrawings = []; }
+                window.rd6MapDrawings = window.rd6Drawings.attach(window.rd6MapCanvas, {
+                    drawings: initialDrawings,
+                    userId: {{ user.id|default:"null" }},
+                    userIsGm: RD6_IS_GM,
+                    userColor: "#3b82f6",
+                    onAdd: function (d) {
+                        var win = document.getElementById("janela-mapa") || document.getElementById("janela-desenho");
+                        if (!win || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                        var assetId = parseInt(win.dataset.assetId, 10);
+                        window.rd6GameWS.send(JSON.stringify({
+                            type: "map_drawing_add",
+                            asset_id: assetId,
+                            drawing: d,
+                        }));
+                    },
+                });
+                window.rd6MapCanvas.addOverlayLayer(window.rd6MapDrawings);
 
                 // === Tokens layer ===
                 var initialTokens = [];
@@ -1638,8 +1705,9 @@
                         }));
                     },
                 });
+                window.rd6MapCanvas.addOverlayLayer(window.rd6MapTokens);
                 // Renderiza inicial
-                window.rd6MapTokens.render();
+                window.rd6MapCanvas._composeOverlay();
             });
 
             // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===
@@ -1716,6 +1784,47 @@
             window.rd6OnMapTokenChanged = function (msg) {
                 if (window.rd6MapTokens) window.rd6MapTokens.upsertToken(msg.token);
             };
+
+            window.rd6OnMapDrawingAdded = function (msg) {
+                if (window.rd6MapDrawings) window.rd6MapDrawings.addDrawing(msg.drawing);
+            };
+            window.rd6OnMapDrawingRemoved = function (msg) {
+                if (window.rd6MapDrawings) window.rd6MapDrawings.removeDrawing(msg.drawing_id);
+            };
+            window.rd6OnMapDrawingsCleared = function () {
+                if (window.rd6MapDrawings) window.rd6MapDrawings.clearAll();
+            };
+
+            // UI da janela-desenho
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll("#janela-desenho [data-draw-mode]").forEach(function (b) {
+                    b.addEventListener("click", function () {
+                        if (window.rd6MapDrawings) window.rd6MapDrawings.setMode(b.dataset.drawMode);
+                    });
+                });
+                var colorEl = document.getElementById("draw-color");
+                if (colorEl) colorEl.addEventListener("input", function () {
+                    if (window.rd6MapDrawings) window.rd6MapDrawings.setStrokeColor(colorEl.value);
+                });
+                var widthEl = document.getElementById("draw-width");
+                if (widthEl) widthEl.addEventListener("input", function () {
+                    if (window.rd6MapDrawings) window.rd6MapDrawings.setStrokeWidth(parseInt(widthEl.value, 10));
+                });
+                var layerEl = document.getElementById("draw-layer");
+                if (layerEl) layerEl.addEventListener("change", function () {
+                    if (window.rd6MapDrawings) window.rd6MapDrawings.setLayer(layerEl.value);
+                });
+                var clearBtn = document.getElementById("draw-clear-all");
+                if (clearBtn) clearBtn.addEventListener("click", function () {
+                    if (!confirm("Limpar TODOS os desenhos do mapa?")) return;
+                    var win = document.getElementById("janela-desenho");
+                    if (!win || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_drawing_clear",
+                        asset_id: parseInt(win.dataset.assetId, 10),
+                    }));
+                });
+            });
 
             // GM: botão "+ Adicionar token"
             document.addEventListener("DOMContentLoaded", function () {

@@ -193,8 +193,28 @@ window.rd6Map = window.rd6Map || {};
     MapCanvas.prototype.renderAll = function () {
         this._renderImage();
         this._renderGrid();
-        // Overlay (tokens/desenhos) vazio até Fase 3
-        this._clear(this.ctxOverlay);
+        this._composeOverlay();
+    };
+
+    // === Composite do overlay ===
+    // Vários layers (drawings + tokens) precisam compartilhar o canvas overlay.
+    // Cada layer registra-se com mc.addOverlayLayer(layer), onde layer tem .paint(ctx).
+    // O composite limpa e chama os paints em ordem registrada.
+
+    MapCanvas.prototype.addOverlayLayer = function (layer) {
+        if (!this._overlayLayers) this._overlayLayers = [];
+        this._overlayLayers.push(layer);
+        this._composeOverlay();
+    };
+
+    MapCanvas.prototype._composeOverlay = function () {
+        var ctx = this.ctxOverlay;
+        this._clear(ctx);
+        if (!this._overlayLayers) return;
+        for (var i = 0; i < this._overlayLayers.length; i++) {
+            var l = this._overlayLayers[i];
+            if (l && typeof l.paint === "function") l.paint(ctx);
+        }
     };
 
     // === Grid hexagonal (Fase 2) ===
