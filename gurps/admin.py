@@ -214,6 +214,20 @@ class MessageAdmin(admin.ModelAdmin):
 admin.site.register(CharacterSheet, CharacterSheetAdmin)
 
 
+@admin.register(MapState)
+class MapStateAdmin(admin.ModelAdmin):
+    list_display = ("id", "asset", "grid_enabled", "version", "updated_at")
+    list_filter = ("grid_enabled",)
+    search_fields = ("asset__name", "asset__campanha__nome")
+    readonly_fields = ("version", "updated_at")
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        from django.db.models import JSONField
+        if isinstance(db_field, JSONField):
+            kwargs["widget"] = JSONEditorWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
 @admin.register(CharacterSheetV2)
 class CharacterSheetV2Admin(admin.ModelAdmin):
     """Admin pro modelo novo. JSONFields ganham widget legível."""

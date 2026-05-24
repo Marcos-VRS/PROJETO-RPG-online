@@ -288,6 +288,10 @@ def game_interface(request, campanha_id, slot):
     username = request.user.username
     campanha = get_object_or_404(Campanha, id=campanha_id)
     pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
+    # MapState: auto-cria na primeira vez que esse asset entra na tela de jogo.
+    # Ver docs/TABLETOP_MAP_PLAN.md §3.1.
+    from gurps.models import MapState as _MapState
+    map_state, _created = _MapState.objects.get_or_create(asset=pagina_inicial)
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
     assets = CampanhaAssets.objects.filter(
         campanha=campanha, slot__in=[1, 2], show=True
@@ -397,6 +401,8 @@ def game_interface(request, campanha_id, slot):
         "personagens_journal": personagens_journal,
         "sheet_list": sheet_list,
         "next_character_id": next_character_id,
+        "map_state": map_state,
+        "map_image_url": pagina_inicial.image.url if pagina_inicial.image else "",
         "players_minis": players_minis,
         "is_gm": is_gm,
         "scene_state": scene_state,

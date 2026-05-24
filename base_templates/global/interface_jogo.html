@@ -21,6 +21,7 @@
     {# cache-buster — single-line only #}
     <link rel="stylesheet" href="{% static 'global/css/design_tokens.css' %}?d={% now 'U' %}">
     <link rel="stylesheet" href="{% static 'global/css/game_interface.css' %}?d={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'global/css/map.css' %}?d={% now 'U' %}">
     <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}?d={% now 'U' %}">
 </head>
 
@@ -803,12 +804,15 @@
         rd6OpenGameWS();
         rd6RenderAll();
     </script>
-    <div class="image-container" data-room-name="{{ campanha.id }}" data-asset-id="{{ pagina_inicial.id }}">
-        {% if pagina_inicial.image %}
-        <img src="{{ pagina_inicial.image.url }}" alt="{{ pagina_inicial.name }}" class="full-screen-image"
-            id="map-image">
-        {% endif %}
-    </div>
+    {# Tabletop map — Fase 1 (fundação).
+       Substitui o .image-container antigo por canvas com pan/zoom.
+       Próximas fases adicionam grid hex, tokens, desenhos.
+       Ver docs/TABLETOP_MAP_PLAN.md. #}
+    <div class="rd6-map-root" id="rd6-map-root"
+         data-room-name="{{ campanha.id }}"
+         data-asset-id="{{ pagina_inicial.id }}"
+         data-image-url="{{ map_image_url }}"
+         data-map-state="{{ map_state.id }}"></div>
 
 
 
@@ -1461,8 +1465,21 @@
 
     <div class="ferramentas-container"></div>
 
-    <script src="{% static 'global/js/mapas/zoom.js' %}?d={% now 'U' %}"></script>
-    <script src="{% static 'global/js/mapas/drag.js' %}"></script>
+    {# Tabletop map — substitui o drag.js/zoom.js antigos #}
+    <script src="{% static 'global/js/util/units.js' %}?d={% now 'U' %}"></script>
+    <script src="{% static 'global/js/map/hex.js' %}?d={% now 'U' %}"></script>
+    <script src="{% static 'global/js/map/canvas.js' %}?d={% now 'U' %}"></script>
+    <script>
+        (function () {
+            document.addEventListener("DOMContentLoaded", function () {
+                var root = document.getElementById("rd6-map-root");
+                if (!root) return;
+                window.rd6MapCanvas = new window.rd6Map.MapCanvas(root, {
+                    imageUrl: root.dataset.imageUrl || null,
+                });
+            });
+        })();
+    </script>
     <script src="{% static 'global/js/chat/chat.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_atributos.js' %}"></script>
     <script src="{% static 'global/js/game_interface/roll_ataque.js' %}"></script>

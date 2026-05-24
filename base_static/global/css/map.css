@@ -1,0 +1,23 @@
+/* ============================================================
+   Map canvas — Fase 1 (fundação).
+   ============================================================ */
+
+/* Container raiz substitui o .image-container antigo */
+.rd6-map-root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: #0a0a0a;
+    z-index: 0;  /* atrás de TODAS as UI */
+}
+
+/* Cada camada é um canvas absoluto preenchendo o root */
+.rd6-map-layer {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+}

@@ -265,3 +265,42 @@ class SaveState(models.Model):
 
     def __str__(self):
         return f"Save de {self.user.username} para {self.campanha.nome}"
+
+
+class MapState(models.Model):
+    """Estado interativo de um CampanhaAssets que está sendo usado como mapa.
+
+    Um CampanhaAssets é a imagem + metadata; MapState carrega o que é interativo
+    em cima dela (config do grid, tokens posicionados, desenhos). Cada asset
+    pode ter zero ou um MapState — auto-criado na primeira vez que uma
+    campanha abre aquele asset na tela de jogo.
+
+    Detalhes do plano em docs/TABLETOP_MAP_PLAN.md.
+    """
+    asset = models.OneToOneField(
+        CampanhaAssets,
+        on_delete=models.CASCADE,
+        related_name="map_state",
+    )
+
+    # Configuração do grid hexagonal (flat-top, 1 hex = 1 metro)
+    grid_enabled = models.BooleanField(default=False)
+    grid_size_px = models.IntegerField(default=50)         # raio do hex em px
+    grid_offset_x = models.IntegerField(default=0)         # alinhamento fino
+    grid_offset_y = models.IntegerField(default=0)
+    grid_color = models.CharField(max_length=20, default="#000000")
+    grid_opacity = models.FloatField(default=0.4)
+
+    # Tokens posicionados. Schema do token em docs/TABLETOP_MAP_PLAN.md §3.2.
+    tokens = models.JSONField(default=list, blank=True)
+
+    # Desenhos colaborativos. Schema em §3.3.
+    drawings = models.JSONField(default=list, blank=True)
+
+    # Versão pra optimistic concurrency. Incrementa a cada save.
+    version = models.IntegerField(default=1)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"MapState do asset #{self.asset_id}"
