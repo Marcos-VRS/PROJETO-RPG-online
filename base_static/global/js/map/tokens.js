@@ -56,13 +56,15 @@ window.rd6Tokens = (function () {
     // === Hit testing ===
 
     TokensLayer.prototype._tokenAt = function (worldX, worldY) {
-        // Itera reverso (z-index visual: ultimo desenhado fica em cima)
+        // Itera reverso (último desenhado = mais ao topo na pilha)
         var grid = this._gridSize();
         var ofs = this._gridOffset();
-        for (var i = this.tokens.length - 1; i >= 0; i--) {
-            var t = this.tokens[i];
+        var renderable = this._visibleTokens();
+        for (var i = renderable.length - 1; i >= 0; i--) {
+            var t = renderable[i];
             var center = window.rd6Hex.axialToPixel(t.hex_x, t.hex_y, grid, ofs.x, ofs.y);
-            var r = grid * 0.85;  // raio de hit do token
+            var scale = t.size_scale || 1.0;
+            var r = grid * 0.85 * scale;
             var dx = worldX - center.x;
             var dy = worldY - center.y;
             if (dx * dx + dy * dy <= r * r) {
@@ -88,6 +90,9 @@ window.rd6Tokens = (function () {
         var overlay = this.mc.canvasOverlay;
         if (!overlay) return;
 
+        // Capture: true faz tokens.js rodar ANTES do canvas.js (que tambem
+        // escuta mousedown no overlay pra pan). Se pegamos um token,
+        // stopImmediatePropagation impede o canvas.js de iniciar pan.
         overlay.addEventListener("mousedown", function (e) {
             if (e.button !== 0) return;  // só botão esquerdo
             var rect = overlay.getBoundingClientRect();
@@ -96,21 +101,23 @@ window.rd6Tokens = (function () {
             var w = self.mc.screenToWorld(sx, sy);
             var t = self._tokenAt(w.x, w.y);
             if (!t) {
-                self.selectedId = null;
-                self.render();
-                return;  // deixa o canvas fazer pan (mousedown sem token)
-            }
-            // Permissão de mover?
-            var canMove = self.opts.canMoveToken
-                ? self.opts.canMoveToken(t)
-                : true;
-            self.selectedId = t.id;
-            self.render();
-            if (!canMove) {
-                e.stopPropagation();
+                // Click no vazio: deselect; deixa o canvas fazer pan
+                if (self.selectedId) {
+                    self.selectedId = null;
+                    self.render();
+                }
                 return;
             }
-            // Iniciou drag
+            // Permissao
+            var canMove = self.opts.canMoveToken ? self.opts.canMoveToken(t) : true;
+            self.selectedId = t.id;
+            self.render();
+            // Sempre bloqueia pan quando clica num token (mesmo sem permissao,
+            // pra player so selecionar sem panico).
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            if (!canMove) return;
+            // Inicia drag
             self._dragging = {
                 token: t,
                 startWorldX: w.x,
@@ -120,9 +127,7 @@ window.rd6Tokens = (function () {
                 tempDX: 0,
                 tempDY: 0,
             };
-            e.stopPropagation();
-            e.preventDefault();
-        });
+        }, true);  // capture phase
 
         document.addEventListener("mousemove", function (e) {
             if (!self._dragging) return;
@@ -185,11 +190,15 @@ window.rd6Tokens = (function () {
     //  3. layer="overlay" (acima de tudo: névoa, weather, etc.)
 
     TokensLayer.prototype._visibleTokens = function () {
-        // Defesa em profundidade: player nunca renderiza gm_only
-        if (this.opts.userIsGm) return this.tokens;
+        // Defesa em profundidade: player nunca renderiza gm_only.
+        // Tambem respeita o toggle "Mostrar sobreposicao" do GM.
+        var showOverlay = window.rd6ShowOverlayLayer !== false;  // default true
         return this.tokens.filter(function (t) {
-            return (t.layer || "visible") !== "gm_only";
-        });
+            var l = t.layer || "visible";
+            if (!this.opts.userIsGm && l === "gm_only") return false;
+            if (!showOverlay && l === "overlay") return false;
+            return true;
+        }, this);
     };
 
     // render() delega ao composite do MapCanvas pra coordenar com drawings layer.
@@ -241,7 +250,10 @@ window.rd6Tokens = (function () {
     };
 
     TokensLayer.prototype._drawToken = function (ctx, t, cx, cy, grid, isCurrentTurn) {
-        var r = grid * 0.8;  // raio do círculo do token
+        // Raio segue o grid mas pode ser escalado via size_scale (default 1.0).
+        // size_scale=2 = token ocupa um hex de 2× raio (~aparente +1 hex de SM).
+        var scale = t.size_scale || 1.0;
+        var r = grid * 0.8 * scale;
 
         // Selected: glow
         if (t.id === this.selectedId) {

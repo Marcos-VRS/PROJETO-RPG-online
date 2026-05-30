@@ -829,7 +829,13 @@
          data-room-name="{{ campanha.id }}"
          data-asset-id="{{ pagina_inicial.id }}"
          data-image-url="{{ map_image_url }}"
-         data-map-state="{{ map_state.id }}"></div>
+         data-map-state="{{ map_state.id }}"
+         data-grid-enabled="{{ campanha.grid_enabled|yesno:'true,false' }}"
+         data-grid-size="{{ campanha.grid_size_px }}"
+         data-grid-offset-x="{{ campanha.grid_offset_x }}"
+         data-grid-offset-y="{{ campanha.grid_offset_y }}"
+         data-grid-color="{{ campanha.grid_color }}"
+         data-grid-opacity="{{ campanha.grid_opacity }}"></div>
 
 
 
@@ -1401,43 +1407,43 @@
             </a>
         </aside>
 
-        <!-- Janela de configuracao de mapa (GM only) -->
+        <!-- Janela de configuracao de mapa (GM only).
+             Config do grid agora vive na Campanha (global, todos os mapas
+             compartilham) - ver migration 0061. -->
         <div id="janela-mapa" class="janela"
-             data-asset-id="{{ pagina_inicial.id }}"
-             data-grid-enabled="{{ map_state.grid_enabled|yesno:'true,false' }}"
-             data-grid-size="{{ map_state.grid_size_px }}"
-             data-grid-offset-x="{{ map_state.grid_offset_x }}"
-             data-grid-offset-y="{{ map_state.grid_offset_y }}"
-             data-grid-color="{{ map_state.grid_color }}"
-             data-grid-opacity="{{ map_state.grid_opacity }}">
+             data-asset-id="{{ pagina_inicial.id }}">
             <button class="fechar menu-button" onclick="fecharJanela()">&times;</button>
             <div class="ficha-parte-box medievalsharp-mini">
                 <h3 class="titulo-ficha-gm fredericka-the-great-regular">CONFIGURAR MAPA</h3>
 
                 <div class="map-config-section">
                     <label><input type="checkbox" id="map-grid-enabled"
-                                  {% if map_state.grid_enabled %}checked{% endif %}>
+                                  {% if campanha.grid_enabled %}checked{% endif %}>
                            Mostrar grid hexagonal</label>
                 </div>
                 <div class="map-config-section">
                     <label>Tamanho do hex (px):
                         <input type="number" id="map-grid-size" min="10" max="200"
-                               value="{{ map_state.grid_size_px }}">
+                               value="{{ campanha.grid_size_px }}">
                     </label>
                 </div>
                 <div class="map-config-section map-config-row">
                     <label>Offset X: <input type="number" id="map-grid-offset-x"
-                                            value="{{ map_state.grid_offset_x }}"></label>
+                                            value="{{ campanha.grid_offset_x }}"></label>
                     <label>Offset Y: <input type="number" id="map-grid-offset-y"
-                                            value="{{ map_state.grid_offset_y }}"></label>
+                                            value="{{ campanha.grid_offset_y }}"></label>
                 </div>
                 <div class="map-config-section map-config-row">
                     <label>Cor: <input type="color" id="map-grid-color"
-                                       value="{{ map_state.grid_color }}"></label>
+                                       value="{{ campanha.grid_color }}"></label>
                     <label>Opacidade: <input type="range" id="map-grid-opacity"
                                               min="0" max="1" step="0.05"
-                                              value="{{ map_state.grid_opacity }}"></label>
+                                              value="{{ campanha.grid_opacity }}"></label>
                 </div>
+
+                <hr>
+                <label><input type="checkbox" id="map-show-overlay" checked>
+                       👁 Mostrar camada de sobreposição</label>
 
                 <hr>
                 <h4>Adicionar token (GM)</h4>
@@ -1617,18 +1623,20 @@
                     imageUrl: root.dataset.imageUrl || null,
                 });
 
-                // Aplica config inicial do grid (lida do data-attrs da janela-mapa)
-                var cfgWin = document.getElementById("janela-mapa");
-                if (cfgWin) {
-                    window.rd6MapCanvas.setGridConfig({
-                        enabled: cfgWin.dataset.gridEnabled === "true",
-                        size_px: parseInt(cfgWin.dataset.gridSize, 10) || 50,
-                        offset_x: parseInt(cfgWin.dataset.gridOffsetX, 10) || 0,
-                        offset_y: parseInt(cfgWin.dataset.gridOffsetY, 10) || 0,
-                        color: cfgWin.dataset.gridColor || "#000000",
-                        opacity: parseFloat(cfgWin.dataset.gridOpacity) || 0.4,
-                    });
-                }
+                // Aplica config inicial do grid (lida do data-attrs do .rd6-map-root,
+                // que existe pra player e GM). Antes lia do janela-mapa, que so
+                // existia pro GM — player nunca via o grid no load.
+                var cfgRoot = root;
+                var opInit = parseFloat(cfgRoot.dataset.gridOpacity);
+                var sizeInit = parseInt(cfgRoot.dataset.gridSize, 10);
+                window.rd6MapCanvas.setGridConfig({
+                    enabled: cfgRoot.dataset.gridEnabled === "true",
+                    size_px: isNaN(sizeInit) ? 50 : sizeInit,
+                    offset_x: parseInt(cfgRoot.dataset.gridOffsetX, 10) || 0,
+                    offset_y: parseInt(cfgRoot.dataset.gridOffsetY, 10) || 0,
+                    color: cfgRoot.dataset.gridColor || "#000000",
+                    opacity: isNaN(opInit) ? 0.4 : opInit,
+                });
 
                 // === Drawings layer (registrada ANTES dos tokens pra ficar embaixo) ===
                 var initialDrawings = [];
@@ -1663,16 +1671,14 @@
                     tokens: initialTokens,
                     userIsGm: RD6_IS_GM,
                     getGridSize: function () {
-                        var w = document.getElementById("janela-mapa");
-                        return w ? (parseInt(w.dataset.gridSize, 10) || 50) : 50;
+                        // Pega do gridConfig atual do canvas (sempre sync com WS)
+                        var c = window.rd6MapCanvas && window.rd6MapCanvas.gridConfig;
+                        return (c && c.size_px) || 50;
                     },
                     getGridOffset: function () {
-                        var w = document.getElementById("janela-mapa");
-                        if (!w) return { x: 0, y: 0 };
-                        return {
-                            x: parseInt(w.dataset.gridOffsetX, 10) || 0,
-                            y: parseInt(w.dataset.gridOffsetY, 10) || 0,
-                        };
+                        var c = window.rd6MapCanvas && window.rd6MapCanvas.gridConfig;
+                        if (!c) return { x: 0, y: 0 };
+                        return { x: c.offset_x || 0, y: c.offset_y || 0 };
                     },
                     getCurrentTurnId: function () {
                         var s = (window.RD6_SCENE_STATE && window.RD6_SCENE_STATE.scenes) || [];
@@ -1714,13 +1720,19 @@
             function sendGridConfig() {
                 var win = document.getElementById("janela-mapa");
                 if (!win || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                // parseFloat("0") = 0 e `0 || 0.4 = 0.4` (bug: zerar opacidade ia pra max).
+                // Usar isNaN explicito.
+                var sizeRaw = parseInt(document.getElementById("map-grid-size").value, 10);
+                var oxRaw = parseInt(document.getElementById("map-grid-offset-x").value, 10);
+                var oyRaw = parseInt(document.getElementById("map-grid-offset-y").value, 10);
+                var opRaw = parseFloat(document.getElementById("map-grid-opacity").value);
                 var cfg = {
                     enabled: document.getElementById("map-grid-enabled").checked,
-                    size_px: parseInt(document.getElementById("map-grid-size").value, 10) || 50,
-                    offset_x: parseInt(document.getElementById("map-grid-offset-x").value, 10) || 0,
-                    offset_y: parseInt(document.getElementById("map-grid-offset-y").value, 10) || 0,
+                    size_px: isNaN(sizeRaw) ? 50 : Math.max(8, sizeRaw),
+                    offset_x: isNaN(oxRaw) ? 0 : oxRaw,
+                    offset_y: isNaN(oyRaw) ? 0 : oyRaw,
                     color: document.getElementById("map-grid-color").value || "#000000",
-                    opacity: parseFloat(document.getElementById("map-grid-opacity").value) || 0.4,
+                    opacity: isNaN(opRaw) ? 0.4 : opRaw,
                 };
                 // Aplica imediato local (optimistic) e envia WS
                 if (window.rd6MapCanvas) window.rd6MapCanvas.setGridConfig(cfg);
@@ -1751,6 +1763,50 @@
                         }
                         // Reload local acontece pelo href padrao do <a>
                     });
+                });
+
+                // Toggle "Mostrar sobreposicao" (visao do ceu — GM)
+                var overlayChk = document.getElementById("map-show-overlay");
+                if (overlayChk) overlayChk.addEventListener("change", function () {
+                    window.rd6ShowOverlayLayer = overlayChk.checked;
+                    if (window.rd6MapCanvas) window.rd6MapCanvas._composeOverlay();
+                });
+
+                // Keyboard shortcuts pra token selecionado:
+                //   1 = camada visible, 2 = gm_only, 3 = overlay (GM only)
+                //   + = aumenta tamanho, - = diminui
+                document.addEventListener("keydown", function (ev) {
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    var tag = document.activeElement && document.activeElement.tagName;
+                    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+                    var assetId = parseInt(root.dataset.assetId, 10);
+                    var tokId = window.rd6MapTokens.selectedId;
+                    var patch = null;
+                    if (ev.key === "1" && RD6_IS_GM) patch = { layer: "visible" };
+                    else if (ev.key === "2" && RD6_IS_GM) patch = { layer: "gm_only" };
+                    else if (ev.key === "3" && RD6_IS_GM) patch = { layer: "overlay" };
+                    else if (ev.key === "+" || ev.key === "=") {
+                        var idx = window.rd6MapTokens._indexOf(tokId);
+                        if (idx >= 0) {
+                            var cur = window.rd6MapTokens.tokens[idx].size_scale || 1.0;
+                            patch = { size_scale: Math.min(5.0, cur + 0.25) };
+                        }
+                    } else if (ev.key === "-" || ev.key === "_") {
+                        var idx2 = window.rd6MapTokens._indexOf(tokId);
+                        if (idx2 >= 0) {
+                            var cur2 = window.rd6MapTokens.tokens[idx2].size_scale || 1.0;
+                            patch = { size_scale: Math.max(0.3, cur2 - 0.25) };
+                        }
+                    }
+                    if (patch && window.rd6GameWS && window.rd6GameWS.readyState === 1) {
+                        ev.preventDefault();
+                        window.rd6GameWS.send(JSON.stringify({
+                            type: "map_token_update",
+                            asset_id: assetId,
+                            token_id: tokId,
+                            patch: patch,
+                        }));
+                    }
                 });
             });
 

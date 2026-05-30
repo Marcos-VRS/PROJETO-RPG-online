@@ -378,7 +378,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def _add_token(self, asset_id, token):
-        from gurps.models import MapState, CampanhaAssets
+        from gurps.models import MapState, CampanhaAssets, CharacterSheetV2, CharacterSheet
         try:
             asset = CampanhaAssets.objects.get(pk=asset_id)
         except CampanhaAssets.DoesNotExist:
@@ -389,23 +389,62 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Token id gerado server-side pra evitar colisão
         import secrets
         token_id = "tok_" + secrets.token_hex(4)
-        # Camada do token: mapa fundo é a imagem; tokens vão em 3 camadas:
-        #  - "gm_only" : só GM enxerga (NPC pre-posicionado, surpresa, etc)
-        #  - "visible" : todos veem (default — players + GM)
-        #  - "overlay" : acima de tudo (névoa, weather, marcadores de GM)
         layer = token.get("layer", "visible")
         if layer not in ("gm_only", "visible", "overlay"):
             layer = "visible"
+
+        # Se tem character_id, puxa avatar e cor do owner da ficha.
+        cid = token.get("character_id")
+        image_url = str(token.get("image_url", ""))[:300]
+        owner_color = None
+        if cid:
+            char = CharacterSheetV2.objects.filter(pk=cid).first()
+            if char is None:
+                char = CharacterSheet.objects.filter(pk=cid).first()
+            if char and getattr(char, "photo", None):
+                try:
+                    if not image_url and char.photo and char.photo.url:
+                        image_url = char.photo.url
+                except (ValueError, AttributeError):
+                    pass
+            # Cor do dono do char = cor do player. Hash do username em HSL claro.
+            # GM (dono da campanha) = vermelho fixo.
+            owner_user = None
+            if isinstance(char, CharacterSheetV2):
+                owner_user = char.owner
+            elif char:
+                info = getattr(char, "info_campanha", None) or {}
+                player_name = info.get("player_name")
+                if player_name:
+                    from gurps.models import RegisterUser
+                    owner_user = RegisterUser.objects.filter(username=player_name).first()
+            if owner_user:
+                if asset.campanha.dono_id == owner_user.id:
+                    owner_color = "#dc2626"  # vermelho do GM
+                else:
+                    # Hash simples do username pra cor consistente
+                    h = 0
+                    for ch in owner_user.username:
+                        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+                    hue = h % 360
+                    if hue < 0 or 350 < hue or hue > 10 < 350:
+                        pass
+                    # Evita vermelho (reservado pro GM): empurra pra outras zonas
+                    if hue < 30 or hue > 340:
+                        hue = (hue + 60) % 360
+                    owner_color = "hsl(" + str(hue) + ", 70%, 55%)"
+
         clean = {
             "id": token_id,
-            "character_id": token.get("character_id"),
+            "character_id": cid,
             "label": str(token.get("label", ""))[:80],
-            "image_url": str(token.get("image_url", ""))[:300],
-            "color": str(token.get("color", "#c9a55c"))[:20],
+            "image_url": image_url,
+            "color": owner_color or str(token.get("color", "#c9a55c"))[:20],
             "hex_x": int(token.get("hex_x", 0)),
             "hex_y": int(token.get("hex_y", 0)),
             "facing": int(token.get("facing", 0)) % 6,
             "size_modifier": int(token.get("size_modifier", 0)),
+            "size_scale": float(token.get("size_scale", 1.0)),  # multiplicador do raio
             "posture": token.get("posture", "standing"),
             "status_effects": list(token.get("status_effects", [])),
             "z_index": int(token.get("z_index", 1)),
@@ -474,7 +513,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Apply patch (filtra campos permitidos)
         ALLOWED_ANY = {"hex_x", "hex_y", "facing", "posture", "status_effects",
-                       "label", "color", "z_index"}
+                       "label", "color", "z_index", "size_scale"}
         ALLOWED_GM_ONLY = {"layer"}  # só GM muda camada do token
         for k, v in patch.items():
             if k in ALLOWED_GM_ONLY and not is_gm:
@@ -487,6 +526,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 target[k] = int(v)
             elif k == "status_effects":
                 target[k] = list(v)
+            elif k == "size_scale":
+                try:
+                    target[k] = max(0.3, min(5.0, float(v)))
+                except (TypeError, ValueError):
+                    pass
             elif k == "layer":
                 if v in ("gm_only", "visible", "overlay"):
                     target[k] = v
@@ -500,41 +544,44 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def _save_map_grid(self, asset_id, cfg):
-        from gurps.models import MapState, CampanhaAssets
+        # Grid config agora vive na Campanha (compartilhado entre todos os
+        # mapas). asset_id ainda recebemos pra compat mas usamos pra achar
+        # a Campanha; o salvar e a leitura usam Campanha.
+        from gurps.models import Campanha, CampanhaAssets
         try:
             asset = CampanhaAssets.objects.get(pk=asset_id)
         except CampanhaAssets.DoesNotExist:
             return None
-        # Confirma que o asset pertence à campanha desse socket
         if str(asset.campanha_id) != str(self.room_name):
             return None
-        ms, _ = MapState.objects.get_or_create(asset=asset)
-        ms.grid_enabled = bool(cfg.get("enabled", ms.grid_enabled))
+        c = asset.campanha
+        if "enabled" in cfg:
+            c.grid_enabled = bool(cfg["enabled"])
         if "size_px" in cfg:
-            ms.grid_size_px = max(8, int(cfg["size_px"]))
+            c.grid_size_px = max(8, int(cfg["size_px"]))
         if "offset_x" in cfg:
-            ms.grid_offset_x = int(cfg["offset_x"])
+            c.grid_offset_x = int(cfg["offset_x"])
         if "offset_y" in cfg:
-            ms.grid_offset_y = int(cfg["offset_y"])
+            c.grid_offset_y = int(cfg["offset_y"])
         if "color" in cfg:
-            ms.grid_color = str(cfg["color"])[:20]
+            c.grid_color = str(cfg["color"])[:20]
         if "opacity" in cfg:
             try:
-                ms.grid_opacity = float(cfg["opacity"])
+                c.grid_opacity = float(cfg["opacity"])
             except (TypeError, ValueError):
                 pass
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        c.save(update_fields=[
+            "grid_enabled", "grid_size_px", "grid_offset_x",
+            "grid_offset_y", "grid_color", "grid_opacity"
+        ])
         return {
-            "id": ms.id,
-            "asset_id": ms.asset_id,
-            "grid_enabled": ms.grid_enabled,
-            "grid_size_px": ms.grid_size_px,
-            "grid_offset_x": ms.grid_offset_x,
-            "grid_offset_y": ms.grid_offset_y,
-            "grid_color": ms.grid_color,
-            "grid_opacity": ms.grid_opacity,
-            "version": ms.version,
+            "asset_id": asset_id,
+            "grid_enabled": c.grid_enabled,
+            "grid_size_px": c.grid_size_px,
+            "grid_offset_x": c.grid_offset_x,
+            "grid_offset_y": c.grid_offset_y,
+            "grid_color": c.grid_color,
+            "grid_opacity": c.grid_opacity,
         }
 
     def _valid_scene_state(self, state):

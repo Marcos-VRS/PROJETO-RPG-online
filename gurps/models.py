@@ -73,6 +73,15 @@ class Campanha(models.Model):
     # Quando vazio (default), todos os personagens da campanha são tratados como presentes.
     scene_state = models.JSONField(blank=True, null=True, default=dict)
 
+    # Configuracao do grid hexagonal. GLOBAL por campanha — todos os mapas
+    # compartilham a mesma config. Ao trocar mapa, grid nao reseta.
+    grid_enabled = models.BooleanField(default=False)
+    grid_size_px = models.IntegerField(default=50)
+    grid_offset_x = models.IntegerField(default=0)
+    grid_offset_y = models.IntegerField(default=0)
+    grid_color = models.CharField(max_length=20, default="#000000")
+    grid_opacity = models.FloatField(default=0.4)
+
     def __str__(self):
         return self.nome
 

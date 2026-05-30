@@ -80,9 +80,13 @@ window.rd6Drawings = (function () {
     // === Render ===
 
     DrawingsLayer.prototype._visibleDrawings = function () {
-        if (this.opts.userIsGm) return this.drawings;
+        var showOverlay = window.rd6ShowOverlayLayer !== false;
+        var self = this;
         return this.drawings.filter(function (d) {
-            return (d.layer || "visible") !== "gm_only";
+            var l = d.layer || "visible";
+            if (!self.opts.userIsGm && l === "gm_only") return false;
+            if (!showOverlay && l === "overlay") return false;
+            return true;
         });
     };
 

@@ -301,9 +301,23 @@ def game_interface(request, campanha_id, slot):
     if pagina_inicial is None:
         pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
     # MapState: auto-cria na primeira vez que esse asset entra na tela de jogo.
-    # Ver docs/TABLETOP_MAP_PLAN.md §3.1.
+    # Tokens e drawings vivem em MapState (por mapa). Grid config vive na
+    # Campanha (compartilhada entre todos os mapas) pra nao resetar ao trocar.
     from gurps.models import MapState as _MapState
     map_state, _created = _MapState.objects.get_or_create(asset=pagina_inicial)
+    # Se o MapState ja tinha grid config (legado antes da migration 0061) e a
+    # Campanha ainda esta com defaults, copia uma vez (migration soft).
+    if _created is False and not campanha.grid_enabled and map_state.grid_enabled:
+        campanha.grid_enabled = map_state.grid_enabled
+        campanha.grid_size_px = map_state.grid_size_px
+        campanha.grid_offset_x = map_state.grid_offset_x
+        campanha.grid_offset_y = map_state.grid_offset_y
+        campanha.grid_color = map_state.grid_color
+        campanha.grid_opacity = map_state.grid_opacity
+        campanha.save(update_fields=[
+            "grid_enabled", "grid_size_px", "grid_offset_x",
+            "grid_offset_y", "grid_color", "grid_opacity"
+        ])
     # Filtra tokens E drawings gm_only se user não é GM (defesa em profundidade).
     _is_user_gm = (campanha.dono_id == request.user.id)
     if _is_user_gm:
