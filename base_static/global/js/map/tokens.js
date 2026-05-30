@@ -104,6 +104,7 @@ window.rd6Tokens = (function () {
                 // Click no vazio: deselect; deixa o canvas fazer pan
                 if (self.selectedId) {
                     self.selectedId = null;
+                    if (self.opts.onSelect) self.opts.onSelect(null);
                     self.render();
                 }
                 return;
@@ -111,6 +112,7 @@ window.rd6Tokens = (function () {
             // Permissao
             var canMove = self.opts.canMoveToken ? self.opts.canMoveToken(t) : true;
             self.selectedId = t.id;
+            if (self.opts.onSelect) self.opts.onSelect(t);
             self.render();
             // Sempre bloqueia pan quando clica num token (mesmo sem permissao,
             // pra player so selecionar sem panico).

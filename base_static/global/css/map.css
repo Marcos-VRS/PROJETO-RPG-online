@@ -83,3 +83,59 @@
     content: "▸ ";
     color: var(--rd6-accent, #c9a55c);
 }
+
+/* ============================================================
+   Toolbar do token selecionado (flutuante no topo-centro)
+   ============================================================ */
+.rd6-token-toolbar {
+    position: fixed;
+    top: 124px;          /* abaixo da turn-bar */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--rd6-bg-elevated, #2a2a2a);
+    border: 1px solid var(--rd6-accent, #c9a55c);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.rd6-token-toolbar[hidden] { display: none; }
+.rd6-tt-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rd6-accent, #c9a55c);
+    padding: 0 6px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.rd6-tt-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--rd6-border, #555);
+    background: var(--rd6-bg, #1a1a1a);
+    color: var(--rd6-text, #eee);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.rd6-tt-btn:hover {
+    background: var(--rd6-accent, #c9a55c);
+    color: #000;
+}
+.rd6-tt-del:hover { background: #dc2626; color: #fff; }
+.rd6-tt-sep {
+    width: 1px;
+    height: 22px;
+    background: var(--rd6-border, #555);
+    margin: 0 2px;
+}

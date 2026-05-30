@@ -837,6 +837,22 @@
          data-grid-color="{{ campanha.grid_color }}"
          data-grid-opacity="{{ campanha.grid_opacity }}"></div>
 
+    {# Toolbar do token selecionado — aparece ao clicar num token #}
+    <div id="rd6-token-toolbar" class="rd6-token-toolbar" hidden>
+        <span class="rd6-tt-label" id="rd6-tt-name">—</span>
+        <button class="rd6-tt-btn" id="rd6-tt-bigger" title="Aumentar (tecla +)">＋</button>
+        <button class="rd6-tt-btn" id="rd6-tt-smaller" title="Diminuir (tecla -)">－</button>
+        <button class="rd6-tt-btn" id="rd6-tt-facing" title="Girar facing">↻</button>
+        {% if is_gm %}
+        <span class="rd6-tt-sep"></span>
+        <button class="rd6-tt-btn rd6-tt-layer" data-layer="visible" title="Camada visível (tecla 1)">👁</button>
+        <button class="rd6-tt-btn rd6-tt-layer" data-layer="gm_only" title="Camada do mestre (tecla 2)">🛡</button>
+        <button class="rd6-tt-btn rd6-tt-layer" data-layer="overlay" title="Camada sobreposição (tecla 3)">☁</button>
+        <span class="rd6-tt-sep"></span>
+        <button class="rd6-tt-btn rd6-tt-del" id="rd6-tt-del" title="Remover (Delete)">🗑</button>
+        {% endif %}
+    </div>
+
 
 
     <div class="coluna-chat">
@@ -1699,9 +1715,8 @@
                         return isOurChar && isTurn;
                     },
                     onTokenMove: function (token_id, hex_x, hex_y) {
-                        var win = document.getElementById("janela-mapa");
-                        var assetId = win ? parseInt(win.dataset.assetId, 10) : null;
-                        if (assetId == null || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                        var assetId = parseInt(root.dataset.assetId, 10);
+                        if (!window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
                         window.rd6GameWS.send(JSON.stringify({
                             type: "map_token_move",
                             asset_id: assetId,
@@ -1710,6 +1725,44 @@
                             hex_y: hex_y,
                         }));
                     },
+                    onSelect: function (token) {
+                        var tb = document.getElementById("rd6-token-toolbar");
+                        if (!tb) return;
+                        if (!token) { tb.hidden = true; return; }
+                        tb.hidden = false;
+                        var nameEl = document.getElementById("rd6-tt-name");
+                        if (nameEl) nameEl.textContent = token.label || "Token";
+                    },
+                });
+
+                // === Wire da toolbar do token ===
+                var ttBigger = document.getElementById("rd6-tt-bigger");
+                if (ttBigger) ttBigger.addEventListener("click", function () { window.rd6BumpSelectedSize(0.25); });
+                var ttSmaller = document.getElementById("rd6-tt-smaller");
+                if (ttSmaller) ttSmaller.addEventListener("click", function () { window.rd6BumpSelectedSize(-0.25); });
+                var ttFacing = document.getElementById("rd6-tt-facing");
+                if (ttFacing) ttFacing.addEventListener("click", function () {
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    var idx = window.rd6MapTokens._indexOf(window.rd6MapTokens.selectedId);
+                    if (idx < 0) return;
+                    var cur = window.rd6MapTokens.tokens[idx].facing || 0;
+                    window.rd6PatchSelectedToken({ facing: (cur + 1) % 6 });
+                });
+                document.querySelectorAll(".rd6-tt-layer").forEach(function (b) {
+                    b.addEventListener("click", function () {
+                        window.rd6PatchSelectedToken({ layer: b.dataset.layer });
+                    });
+                });
+                var ttDel = document.getElementById("rd6-tt-del");
+                if (ttDel) ttDel.addEventListener("click", function () {
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    if (!confirm("Remover token selecionado?")) return;
+                    if (!window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_token_remove",
+                        asset_id: parseInt(root.dataset.assetId, 10),
+                        token_id: window.rd6MapTokens.selectedId,
+                    }));
                 });
                 window.rd6MapCanvas.addOverlayLayer(window.rd6MapTokens);
                 // Renderiza inicial
@@ -1772,41 +1825,37 @@
                     if (window.rd6MapCanvas) window.rd6MapCanvas._composeOverlay();
                 });
 
-                // Keyboard shortcuts pra token selecionado:
-                //   1 = camada visible, 2 = gm_only, 3 = overlay (GM only)
-                //   + = aumenta tamanho, - = diminui
+                // Helper: aplica patch ao token selecionado via WS
+                window.rd6PatchSelectedToken = function (patch) {
+                    var mapRoot = document.getElementById("rd6-map-root");
+                    if (!mapRoot || !window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    if (!window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_token_update",
+                        asset_id: parseInt(mapRoot.dataset.assetId, 10),
+                        token_id: window.rd6MapTokens.selectedId,
+                        patch: patch,
+                    }));
+                };
+                window.rd6BumpSelectedSize = function (delta) {
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
+                    var idx = window.rd6MapTokens._indexOf(window.rd6MapTokens.selectedId);
+                    if (idx < 0) return;
+                    var cur = window.rd6MapTokens.tokens[idx].size_scale || 1.0;
+                    var next = Math.max(0.3, Math.min(5.0, cur + delta));
+                    window.rd6PatchSelectedToken({ size_scale: next });
+                };
+
+                // Keyboard shortcuts (atalho rapido; UI tem botoes tambem)
                 document.addEventListener("keydown", function (ev) {
                     if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return;
                     var tag = document.activeElement && document.activeElement.tagName;
                     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-                    var assetId = parseInt(root.dataset.assetId, 10);
-                    var tokId = window.rd6MapTokens.selectedId;
-                    var patch = null;
-                    if (ev.key === "1" && RD6_IS_GM) patch = { layer: "visible" };
-                    else if (ev.key === "2" && RD6_IS_GM) patch = { layer: "gm_only" };
-                    else if (ev.key === "3" && RD6_IS_GM) patch = { layer: "overlay" };
-                    else if (ev.key === "+" || ev.key === "=") {
-                        var idx = window.rd6MapTokens._indexOf(tokId);
-                        if (idx >= 0) {
-                            var cur = window.rd6MapTokens.tokens[idx].size_scale || 1.0;
-                            patch = { size_scale: Math.min(5.0, cur + 0.25) };
-                        }
-                    } else if (ev.key === "-" || ev.key === "_") {
-                        var idx2 = window.rd6MapTokens._indexOf(tokId);
-                        if (idx2 >= 0) {
-                            var cur2 = window.rd6MapTokens.tokens[idx2].size_scale || 1.0;
-                            patch = { size_scale: Math.max(0.3, cur2 - 0.25) };
-                        }
-                    }
-                    if (patch && window.rd6GameWS && window.rd6GameWS.readyState === 1) {
-                        ev.preventDefault();
-                        window.rd6GameWS.send(JSON.stringify({
-                            type: "map_token_update",
-                            asset_id: assetId,
-                            token_id: tokId,
-                            patch: patch,
-                        }));
-                    }
+                    if (ev.key === "1" && RD6_IS_GM) { ev.preventDefault(); window.rd6PatchSelectedToken({ layer: "visible" }); }
+                    else if (ev.key === "2" && RD6_IS_GM) { ev.preventDefault(); window.rd6PatchSelectedToken({ layer: "gm_only" }); }
+                    else if (ev.key === "3" && RD6_IS_GM) { ev.preventDefault(); window.rd6PatchSelectedToken({ layer: "overlay" }); }
+                    else if (ev.key === "+" || ev.key === "=") { ev.preventDefault(); window.rd6BumpSelectedSize(0.25); }
+                    else if (ev.key === "-" || ev.key === "_") { ev.preventDefault(); window.rd6BumpSelectedSize(-0.25); }
                 });
             });
 
