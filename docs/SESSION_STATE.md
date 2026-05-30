@@ -1,9 +1,86 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-24 (planejamento do tabletop).
-> **Status:** planejamento detalhado do sistema de mapa/tabletop documentado em 5 docs. Próximo passo: aguardar respostas do user às perguntas críticas e começar Fase 1 (fundação do canvas).
+> **Última sessão:** 2026-05-24 (implementação do tabletop, Fases 1-4 + fixes).
+> **Status:** Tabletop com canvas + grid hex + tokens + desenhos funcionando. User testou e reportou bugs; corrigi a maioria. Tokens aparecem com imagem, arrastáveis com snap. Toolbar visual do token recém-adicionada (não testada pelo user ainda).
 >
 > Quando voltar, leia este documento primeiro.
+
+---
+
+## SESSÃO 2026-05-24 (TARDE/NOITE): Implementação do Tabletop — Fases 1-4
+
+**Dist em produção:** `dist/roll3d6-setup.exe` (53.4 MB, 16/05 19:59, commit `01212a6`). É a versão que rodou na sessão de jogo. Tabletop NÃO está nessa dist — só nos commits. Rebuildar quando tabletop amadurecer.
+
+### Fases implementadas (todas commitadas)
+
+| Fase | Commit | O que faz |
+|---|---|---|
+| 1 Fundação | `e7cbfbe` | Canvas 2D (3 layers: imagem/grid/overlay) substitui `.image-container`. Pan/zoom. Hex math flat-top (`hex.js`). Model `MapState`. `gurps/units.py`. |
+| 2 Grid + troca mapa | `c4f249a` | Grid hex configurável (GM). Janela 🗺️ MAPA. Trocar mapa ativo (WS reload). |
+| 3 Tokens | `5cb1359` | Tokens 3 camadas (visible/gm_only/overlay), drag+snap, facing. GM adiciona via dropdown. |
+| 4 Desenhos | `e93d8c0` | Linhas/retângulos/círculos colaborativos. Composite overlay (drawings embaixo, tokens em cima). |
+| Batch fixes | `1d6d850` | Grid→Campanha (não reseta ao trocar mapa), cor do dono na borda, size_scale, toggle overlay, avatar do char no token. Migration 0061. |
+| Toolbar+fix | `58e2284` | Toolbar visual do token + corrige `root` undefined nos atalhos. |
+
+### Arquivos do tabletop
+
+```
+gurps/
+├── models.py            # MapState (tokens/drawings JSON) + Campanha.grid_* (migration 0061)
+├── consumers.py         # handlers map_grid_config/switch/token_*/drawing_*
+├── units.py             # conversões imperial→métrico
+└── views/interface_jogo.py  # passa map_state, map_tokens, map_drawings + grid da Campanha
+
+base_static/global/js/map/
+├── hex.js               # axialToPixel, pixelToAxial, hexCorners, distance (flat-top)
+├── canvas.js            # MapCanvas: 3 layers, pan/zoom, addOverlayLayer/_composeOverlay
+├── tokens.js            # TokensLayer: drag+snap, 3 camadas, size_scale, onSelect
+└── drawings.js          # DrawingsLayer: line/rect/circle, polyline
+
+base_static/global/js/util/units.js  # rd6Units (lbToKg, fmtWeight)
+base_static/global/css/map.css       # .rd6-map-root, .map-asset-item, .rd6-token-toolbar
+```
+
+### Decisões estruturais cravadas nesta sessão
+
+- **Grid config vive na Campanha** (não no MapState). Todos os mapas da campanha compartilham. Trocar mapa não reseta grid. Migration 0061.
+- **Tokens/drawings vivem no MapState** (por mapa específico).
+- **3 camadas de token/drawing**: `visible` (todos), `gm_only` (só GM, alpha 0.65), `overlay` (acima de tudo — "visão do céu", alpha 0.85). Toggle "👁 Mostrar sobreposição" liga/desliga overlay.
+- **Cor da borda do token** = cor do dono: GM = `#dc2626` (vermelho fixo); players = HSL hash do username (evita vermelho).
+- **size_scale** no token: multiplicador do raio (0.3-5.0), default 1.0. Segue o grid, snap continua.
+- **Snap híbrido**: default snap ao hex; Shift = livre (parcial — ainda usa hex coords).
+
+### BUGS QUE O USER REPORTOU E O STATUS
+
+✅ Corrigidos:
+- Token não arrastava (canvas roubava o clique) → capture phase + stopImmediatePropagation
+- Slider opacidade voltava pro max ao zerar → isNaN em vez de `|| 0.4`
+- Player não via grid no load → data-attrs movidos pro `.rd6-map-root`
+- Token sem imagem → `_add_token` copia `char.photo.url`
+- Grid resetava ao trocar mapa → grid_* na Campanha
+- `root` undefined nos atalhos → helpers globais
+
+⚠️ User confirmou funcionando: token com imagem, arrastável, snap.
+❓ User disse "nada do resto funcionou" mas SEM detalhe. Toolbar visual adicionada DEPOIS desse feedback — precisa testar. Provável que os atalhos não funcionassem por causa do `root` undefined (agora corrigido).
+
+### O QUE FALTA / PRÓXIMOS PASSOS
+
+1. **User testar a toolbar do token** (botões +/-/girar/camada/remover). Se não funcionar, pedir Console (F12) — feedback "nada funcionou" é vago demais.
+2. **Cor do dono na mini da players-bar** (pedido do user): ainda NÃO feito. Precisa atualizar `_build_player_mini` pra incluir `owner_color` + CSS da borda do `.player-mini`.
+3. **Status effects abaixo das barras HP/FP do mini** (pedido antigo do user): ainda não.
+4. **Mini da players-bar às vezes sem imagem** (user reportou): investigar — precisa do caso específico (quick NPC? V2?).
+5. **GM Tool Box** (UserAsset): planejado em `TABLETOP_MAP_PLAN.md §6.1`, não iniciado.
+6. **Fase 5 Polimentos**: régua, highlight de reach, movement preview.
+7. **Ficha V3**: roadmap em `docs/FICHA_V3_ROADMAP.md`, só depois do tabletop maduro.
+
+### Como rodar pra testar
+
+```powershell
+$env:ROLL3D6_DESKTOP_HOME = "$env:OneDrive\roll3d6"
+.\.venv\Scripts\python.exe manage.py collectstatic --noinput  # SEMPRE após editar base_static/
+.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000 --noreload
+```
+Lembrar: em desktop mode, Whitenoise serve do STATIC_ROOT → `collectstatic` obrigatório após editar CSS/JS. Ver memória `feedback-collectstatic-desktop`.
 
 ---
 
