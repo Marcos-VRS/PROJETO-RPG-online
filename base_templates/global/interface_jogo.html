@@ -861,9 +861,8 @@
         // ---- Boot -----------------------------------------------------------
         rd6OpenGameWS();
         rd6RenderAll();
-        // Pinta os ícones de status das minis renderizadas server-side
-        // (status_icons.js é carregado mais abaixo, mas como este script roda
-        // inline no fim do body ele já está disponível).
+        // Pinta os ícones de status das minis renderizadas server-side.
+        // status_icons.js já foi incluído antes deste script inline.
         if (window.rd6StatusIcons) {
             document.querySelectorAll('.player-mini-status').forEach(function (el) {
                 window.rd6StatusIcons.paintInto(el);
@@ -1716,6 +1715,16 @@
     <script>
         (function () {
             document.addEventListener("DOMContentLoaded", function () {
+                try {
+                    rd6BootMap();
+                } catch (e) {
+                    // Falha no boot do mapa não pode quebrar o resto do jogo
+                    // silenciosamente (foi a causa de um cascata de bugs). Loga
+                    // claro pra diagnóstico rápido.
+                    console.error("[rd6Map] erro no boot do mapa:", e);
+                }
+            });
+            function rd6BootMap() {
                 var root = document.getElementById("rd6-map-root");
                 if (!root) return;
                 window.rd6MapCanvas = new window.rd6Map.MapCanvas(root, {
@@ -1934,14 +1943,16 @@
                 if (statusClose) statusClose.addEventListener("click", function () {
                     statusPopup.hidden = true;
                 });
-                // Fecha o popup ao clicar fora dele. CAPTURE phase pra rodar
-                // ANTES dos listeners do canvas (tokens/tools fazem
-                // stopImmediatePropagation e impediriam um listener bubble).
+                // Fecha o popup ao clicar fora dele. CAPTURE phase no document
+                // roda ANTES dos listeners capture do canvas (tokens/tools), e
+                // o stopPropagation impede que o mesmo clique selecione token /
+                // inicie desenho — clicar fora apenas DISMISSA o popup.
                 document.addEventListener("mousedown", function (ev) {
                     if (!statusPopup || statusPopup.hidden) return;
                     if (statusPopup.contains(ev.target)) return;
                     if (ttStatus && ttStatus.contains(ev.target)) return;
                     statusPopup.hidden = true;
+                    ev.stopPropagation();
                 }, true);
 
                 // Carrega status custom da tool box do GM e registra no mapa de ícones
@@ -1984,7 +1995,7 @@
                 // Re-mede após o layout estabilizar.
                 requestAnimationFrame(function () { window.rd6MapCanvas.refresh(); });
                 setTimeout(function () { window.rd6MapCanvas.refresh(); }, 250);
-            });
+            }
             // Também ao terminar de carregar tudo (CSS/fonts).
             window.addEventListener("load", function () {
                 if (window.rd6MapCanvas) window.rd6MapCanvas.refresh();
@@ -2175,8 +2186,11 @@
             };
 
             // Esc encerra o modo ativo (régua/desenho) e esconde a mode toolbar.
+            // Não dispara quando o foco está num campo de texto (digitar Esc).
             document.addEventListener("keydown", function (ev) {
                 if (ev.key !== "Escape") return;
+                var tag = document.activeElement && document.activeElement.tagName;
+                if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
                 var mt = document.getElementById("rd6-mode-toolbar");
                 if (mt && !mt.hidden) {
                     ev.preventDefault();
