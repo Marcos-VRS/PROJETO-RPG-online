@@ -30,7 +30,7 @@ window.rd6MapTools = (function () {
     MapTools.prototype.setRulerMode = function (on) {
         this.rulerMode = !!on;
         if (!on) { this.rulerStart = null; this.rulerEnd = null; }
-        this.mc.canvasOverlay.style.cursor = on ? "crosshair" : "grab";
+        this.mc.canvasOverlay.style.cursor = on ? "crosshair" : "default";
         this.mc._composeOverlay();
     };
     MapTools.prototype.toggleRuler = function () {

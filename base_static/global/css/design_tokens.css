@@ -127,16 +127,14 @@ html[data-theme="light"] {
     gap: var(--rd6-space-sm);
     padding: 3px var(--rd6-space-sm);
     background: transparent;          /* vazado */
-    /* Borda com a cor identitária do dono (--owner-color setado inline).
-       GM = vermelho; players = HSL do username. Fallback: border padrão. */
-    border: 2px solid var(--owner-color, var(--rd6-border));
+    border: 1px solid var(--rd6-border);
     border-radius: var(--rd6-radius-md);
     transition: background var(--rd6-transition), border-color var(--rd6-transition);
 }
 
 .player-mini:hover {
     background: var(--rd6-bg-elevated);
-    box-shadow: 0 0 0 1px var(--owner-color, var(--rd6-accent));
+    border-color: var(--rd6-accent);
 }
 
 /* Ícones de status abaixo das barras HP/FP, atrelados ao personagem */
@@ -177,7 +175,10 @@ html[data-theme="light"] {
     font-size: 13px;                 /* +25% */
     font-weight: 600;
     color: var(--rd6-bg);
-    border: 1px solid var(--rd6-border);
+    /* Borda com a cor identitária do dono (--owner-color inline na .player-mini).
+       GM = vermelho; players = HSL do username. Só no círculo (token), não no
+       retângulo de info. */
+    border: 2px solid var(--owner-color, var(--rd6-border));
     transition: opacity var(--rd6-transition), width var(--rd6-transition), height var(--rd6-transition);
 }
 

@@ -1902,6 +1902,13 @@
                 if (statusClose) statusClose.addEventListener("click", function () {
                     statusPopup.hidden = true;
                 });
+                // Fecha o popup ao clicar fora dele (e fora do botão que o abre)
+                document.addEventListener("mousedown", function (ev) {
+                    if (!statusPopup || statusPopup.hidden) return;
+                    if (statusPopup.contains(ev.target)) return;
+                    if (ttStatus && ttStatus.contains(ev.target)) return;
+                    statusPopup.hidden = true;
+                });
 
                 // Carrega status custom da tool box do GM e registra no mapa de ícones
                 if (RD6_IS_GM && window.rd6StatusIcons) {
@@ -1936,8 +1943,8 @@
                 });
                 window.rd6MapCanvas.addOverlayLayer(window.rd6MapTools);
 
-                // Renderiza inicial
-                window.rd6MapCanvas._composeOverlay();
+                // Renderiza inicial (renderAll garante imagem + grid + overlay).
+                window.rd6MapCanvas.renderAll();
             });
 
             // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===

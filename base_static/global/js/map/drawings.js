@@ -32,8 +32,7 @@ window.rd6Drawings = (function () {
     DrawingsLayer.prototype.setMode = function (m) {
         this.mode = m;  // "none" | "line" | "rect" | "circle"
         var overlay = this.mc.canvasOverlay;
-        if (m === "none") overlay.style.cursor = "grab";
-        else overlay.style.cursor = "crosshair";
+        overlay.style.cursor = (m === "none") ? "default" : "crosshair";
     };
 
     DrawingsLayer.prototype.setStrokeColor = function (c) {

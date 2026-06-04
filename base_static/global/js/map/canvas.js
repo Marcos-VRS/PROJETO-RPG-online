@@ -114,16 +114,22 @@ window.rd6Map = window.rd6Map || {};
             self.renderAll();
         }, { passive: false });
 
-        // Mouse drag = pan (botão do meio, ou esquerdo se nada selecionado)
+        // Pan = botão DIREITO (2) ou meio (1). Esquerdo (0) fica livre pra
+        // token/desenho/régua sem competir com o pan.
         this.canvasOverlay.addEventListener("mousedown", function (e) {
-            // Botão do meio (1) ou esquerdo (0). Direito reserva pra menu de contexto futuro.
-            if (e.button !== 0 && e.button !== 1) return;
+            if (e.button !== 2 && e.button !== 1) return;
             self._dragging = true;
             self._dragStartX = e.clientX;
             self._dragStartY = e.clientY;
             self._dragOriginX = self.offsetX;
             self._dragOriginY = self.offsetY;
             self.canvasOverlay.style.cursor = "grabbing";
+            e.preventDefault();
+        });
+
+        // Desabilita o menu de contexto (botão direito vira pan, não menu).
+        this.canvasOverlay.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
         });
 
         document.addEventListener("mousemove", function (e) {
@@ -138,7 +144,7 @@ window.rd6Map = window.rd6Map || {};
         document.addEventListener("mouseup", function () {
             if (!self._dragging) return;
             self._dragging = false;
-            self.canvasOverlay.style.cursor = "grab";
+            self.canvasOverlay.style.cursor = "default";
         });
 
         // Resize do viewport
@@ -147,8 +153,8 @@ window.rd6Map = window.rd6Map || {};
             self.renderAll();
         });
 
-        // Cursor inicial
-        this.canvasOverlay.style.cursor = "grab";
+        // Cursor inicial (default crosshair/seta; pan é botão direito)
+        this.canvasOverlay.style.cursor = "default";
     };
 
     MapCanvas.prototype.loadImage = function (url) {
@@ -230,7 +236,7 @@ window.rd6Map = window.rd6Map || {};
         this._clear(ctx);
         var cfg = this.gridConfig;
         if (!cfg || !cfg.enabled) return;
-        if (!this.imageReady) return;
+        // Grid desenha mesmo sem imagem (não bloqueia no load inicial).
 
         // O grid existe no "mundo" (coordenadas da imagem), então usa o mesmo
         // transform que a imagem. Tamanho do hex é em pixels da imagem;
