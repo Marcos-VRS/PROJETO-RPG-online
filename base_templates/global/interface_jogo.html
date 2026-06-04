@@ -714,6 +714,12 @@
                 if (c.nome) mini.dataset.characterName = c.nome;
                 var img = mini.querySelector('.player-mini-avatar img');
                 if (img && c.avatar_url) img.src = c.avatar_url;
+                if (c.owner_color) mini.style.setProperty('--owner-color', c.owner_color);
+                // Atualiza status effects da mini em tempo real
+                var statusEl = mini.querySelector('.player-mini-status');
+                if (statusEl && window.rd6StatusIcons) {
+                    statusEl.innerHTML = window.rd6StatusIcons.html(c.status_effects || []);
+                }
             }
             // Side nav nome (se for a ativa)
             if (RD6_ACTIVE_CHAR_ID && String(c.id) === String(RD6_ACTIVE_CHAR_ID)) {
@@ -875,9 +881,19 @@
         <button class="rd6-tt-btn rd6-tt-layer" data-layer="gm_only" title="Camada do mestre (tecla 2)">🛡</button>
         <button class="rd6-tt-btn rd6-tt-layer" data-layer="overlay" title="Camada sobreposição (tecla 3)">☁</button>
         <span class="rd6-tt-sep"></span>
+        <button class="rd6-tt-btn" id="rd6-tt-status" title="Status effects">🏷</button>
         <button class="rd6-tt-btn rd6-tt-del" id="rd6-tt-del" title="Remover (Delete)">🗑</button>
         {% endif %}
     </div>
+
+    {# Popup de status effects (GM): toggle de status no personagem do token #}
+    {% if is_gm %}
+    <div id="rd6-status-popup" class="rd6-status-popup" hidden>
+        <div class="rd6-status-popup-title">Status do personagem</div>
+        <div class="rd6-status-popup-grid" id="rd6-status-popup-grid"></div>
+        <button class="menu-button" id="rd6-status-popup-close">Fechar</button>
+    </div>
+    {% endif %}
 
 
 
@@ -1801,6 +1817,63 @@
                         asset_id: parseInt(root.dataset.assetId, 10),
                         token_id: window.rd6MapTokens.selectedId,
                     }));
+                });
+
+                // === Popup de status effects (GM) ===
+                var ttStatus = document.getElementById("rd6-tt-status");
+                var statusPopup = document.getElementById("rd6-status-popup");
+                var statusGrid = document.getElementById("rd6-status-popup-grid");
+                function rd6SelectedTokenCharId() {
+                    if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return null;
+                    var idx = window.rd6MapTokens._indexOf(window.rd6MapTokens.selectedId);
+                    if (idx < 0) return null;
+                    return window.rd6MapTokens.tokens[idx].character_id || null;
+                }
+                function rd6CharCurrentStatus(charId) {
+                    // Lê do mini no DOM (data) — fonte de verdade renderizada
+                    var statusEl = document.querySelector('.player-mini-status[data-character-id="' + charId + '"]');
+                    if (!statusEl) return [];
+                    return Array.prototype.map.call(
+                        statusEl.querySelectorAll('[data-status]'),
+                        function (s) { return s.dataset.status; });
+                }
+                function rd6OpenStatusPopup() {
+                    if (!statusPopup || !statusGrid || !window.rd6StatusIcons) return;
+                    var charId = rd6SelectedTokenCharId();
+                    if (!charId) { alert("Esse token não tem ficha vinculada."); return; }
+                    var current = rd6CharCurrentStatus(charId);
+                    statusGrid.innerHTML = "";
+                    Object.keys(window.rd6StatusIcons.ICONS).forEach(function (key) {
+                        var info = window.rd6StatusIcons.ICONS[key];
+                        var on = current.indexOf(key) >= 0;
+                        var btn = document.createElement("button");
+                        btn.className = "rd6-status-opt" + (on ? " is-on" : "");
+                        btn.innerHTML = info.emoji + " <small>" + info.label + "</small>";
+                        btn.dataset.statusKey = key;
+                        btn.addEventListener("click", function () {
+                            btn.classList.toggle("is-on");
+                            rd6CommitStatus(charId);
+                        });
+                        statusGrid.appendChild(btn);
+                    });
+                    statusPopup.hidden = false;
+                }
+                function rd6CommitStatus(charId) {
+                    var keys = Array.prototype.map.call(
+                        statusGrid.querySelectorAll(".rd6-status-opt.is-on"),
+                        function (b) { return b.dataset.statusKey; });
+                    if (window.rd6GameWS && window.rd6GameWS.readyState === 1) {
+                        window.rd6GameWS.send(JSON.stringify({
+                            type: "character_status_set",
+                            char_id: charId,
+                            status_effects: keys,
+                        }));
+                    }
+                }
+                if (ttStatus) ttStatus.addEventListener("click", rd6OpenStatusPopup);
+                var statusClose = document.getElementById("rd6-status-popup-close");
+                if (statusClose) statusClose.addEventListener("click", function () {
+                    statusPopup.hidden = true;
                 });
                 window.rd6MapCanvas.addOverlayLayer(window.rd6MapTokens);
 

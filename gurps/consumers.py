@@ -107,6 +107,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self._handle_map_drawing_clear(data)
             return
 
+        if msg_type == "character_status_set":
+            await self._handle_character_status_set(data)
+            return
+
         # Chat (sem `type`) — compat com chat.js existente.
         message = data.get("message")
         username = data.get("username")
@@ -322,6 +326,60 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ms.version = (ms.version or 0) + 1
         ms.save()
         return True
+
+    # ---- status effects do personagem -------------------------------------
+
+    async def _handle_character_status_set(self, data):
+        """GM aplica/remove status effects de um char.
+        Body: {char_id, status_effects: [chaves...]}.
+        Persiste em runtime_stats.status_effects e broadcasta character_updated.
+        """
+        if not await self._is_gm():
+            return
+        char_id = data.get("char_id")
+        effects = data.get("status_effects")
+        if char_id is None or not isinstance(effects, list):
+            return
+        result = await self._save_char_status(int(char_id), effects)
+        if result is None:
+            return
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {"type": "character_updated", "char": result},
+        )
+
+    @database_sync_to_async
+    def _save_char_status(self, char_id, effects):
+        from gurps.models import CharacterSheetV2, CharacterSheet, Campanha
+        from gurps.views.interface_jogo import (
+            _wrap_v2_as_legacy, _build_player_mini,
+        )
+        # Sanitiza: só strings curtas, máx 20 status
+        clean = [str(e)[:40] for e in effects][:20]
+
+        char = CharacterSheetV2.objects.filter(pk=char_id).first()
+        campanha = None
+        if char is not None:
+            campanha = char.campanha
+        else:
+            char = CharacterSheet.objects.filter(pk=char_id).first()
+            if char is None:
+                return None
+            nome_camp = (char.info_campanha or {}).get("nome_campanha")
+            campanha = Campanha.objects.filter(nome=nome_camp).first() if nome_camp else None
+
+        if campanha is None or str(campanha.id) != str(self.room_name):
+            return None
+
+        rs = dict(char.runtime_stats or {})
+        rs["status_effects"] = clean
+        char.runtime_stats = rs
+        char.save(update_fields=["runtime_stats"])
+
+        if isinstance(char, CharacterSheetV2):
+            _wrap_v2_as_legacy(char)
+        return _build_player_mini(char, present_ids=None, show_numbers=True,
+                                  campanha=campanha)
 
     # ---- tokens -----------------------------------------------------------
 
