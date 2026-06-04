@@ -244,12 +244,15 @@ def _hp_pct_and_negative(hp_atual, hp_max):
     return f"{100 * abs_hp / neg_cap:.1f}", True
 
 
-def _build_player_mini(character, present_ids=None, show_numbers=False):
+def _build_player_mini(character, present_ids=None, show_numbers=False, campanha=None):
     """Empacota a ficha num dicionário leve pra exibição da barra de players.
 
     ``show_numbers`` controla privacidade: True → mostra ``HP X/Y`` e ``FP X/Y``
     em texto sobre a barra; False → só a barra colorida sem os valores. GM
     sempre tem show_numbers=True; players têm True só na própria ficha.
+
+    ``campanha`` (opcional) é usado pra resolver a cor identitária do dono
+    (borda da mini). GM = vermelho; players = HSL do username.
     """
     sub = character.sub_attributes or {}
     runtime = character.runtime_stats or {}
@@ -264,6 +267,19 @@ def _build_player_mini(character, present_ids=None, show_numbers=False):
     fp_pct = f"{100 * fp_atual / fp_max:.1f}" if fp_max > 0 else "0"
     is_present = present_ids is None or character.id in present_ids
     info = character.info_campanha or {}
+
+    # Cor do dono (borda da mini). Tolerante a campanha=None.
+    owner_color = "#c9a55c"
+    if campanha is not None:
+        try:
+            from gurps.owner_color import owner_color_for_character
+            owner_color = owner_color_for_character(character, campanha)
+        except Exception:
+            pass
+
+    # Status effects persistentes (runtime_stats.status_effects = lista de chaves)
+    status_effects = list(runtime.get("status_effects") or [])
+
     return {
         "id": character.id,
         "nome": nome,
@@ -280,6 +296,8 @@ def _build_player_mini(character, present_ids=None, show_numbers=False):
         "is_present": is_present,
         "show_numbers": show_numbers,
         "is_quick_npc": bool(info.get("is_quick_npc")),
+        "owner_color": owner_color,
+        "status_effects": status_effects,
     }
 
 
@@ -425,7 +443,7 @@ def game_interface(request, campanha_id, slot):
     for p in personagens_journal:
         owner = (p.info_campanha or {}).get("player_name")
         show_numbers = is_gm or (owner == username)
-        players_minis.append(_build_player_mini(p, present_ids, show_numbers))
+        players_minis.append(_build_player_mini(p, present_ids, show_numbers, campanha=campanha))
 
     # Ordena minis pela ordem manual da cena ativa. Quem não está na cena fica
     # no fim em ordem alfabética (só importa pro modal — não aparece na barra).
@@ -768,16 +786,19 @@ def adjust_character_vitals(request, char_id):
     return JsonResponse({"ok": True, **{k: v for k, v in payload.items() if k != "type"}})
 
 
-def _serialize_char_for_client(character, viewer_username, viewer_is_gm):
+def _serialize_char_for_client(character, viewer_username, viewer_is_gm, campanha=None):
     """Pacote do char enviado via WS/HTTP — mesmo shape que _build_player_mini.
 
     Detecta V1/V2 e aplica wrapper se for V2.
     """
     if isinstance(character, CharacterSheetV2):
+        if campanha is None:
+            campanha = character.campanha
         character = _wrap_v2_as_legacy(character)
     owner = (character.info_campanha or {}).get("player_name")
     show_numbers = viewer_is_gm or (owner == viewer_username)
-    return _build_player_mini(character, present_ids=None, show_numbers=show_numbers)
+    return _build_player_mini(character, present_ids=None, show_numbers=show_numbers,
+                              campanha=campanha)
 
 
 @csrf_exempt
@@ -860,7 +881,7 @@ def save_quick_character(request):
     # Re-popula info_campanha com linked_asset_id pro avatar resolver corretamente
     char.info_campanha["linked_asset_id"] = asset_id_int
 
-    char_data = _build_player_mini(char, present_ids=None, show_numbers=True)
+    char_data = _build_player_mini(char, present_ids=None, show_numbers=True, campanha=campanha)
 
     _broadcast_to_campanha(
         campanha.id,

@@ -412,7 +412,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if layer not in ("gm_only", "visible", "overlay"):
             layer = "visible"
 
-        # Se tem character_id, puxa avatar e cor do owner da ficha.
+        # Se tem character_id, puxa avatar (photo do char ou asset linkado) e
+        # cor do owner. Helper compartilhado com a mini (gurps/owner_color.py).
         cid = token.get("character_id")
         image_url = str(token.get("image_url", ""))[:300]
         owner_color = None
@@ -420,38 +421,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
             char = CharacterSheetV2.objects.filter(pk=cid).first()
             if char is None:
                 char = CharacterSheet.objects.filter(pk=cid).first()
-            if char and getattr(char, "photo", None):
+            if char and not image_url:
+                # photo do char tem prioridade; senao asset linkado.
                 try:
-                    if not image_url and char.photo and char.photo.url:
+                    if getattr(char, "photo", None) and char.photo and char.photo.url:
                         image_url = char.photo.url
                 except (ValueError, AttributeError):
                     pass
-            # Cor do dono do char = cor do player. Hash do username em HSL claro.
-            # GM (dono da campanha) = vermelho fixo.
-            owner_user = None
-            if isinstance(char, CharacterSheetV2):
-                owner_user = char.owner
-            elif char:
-                info = getattr(char, "info_campanha", None) or {}
-                player_name = info.get("player_name")
-                if player_name:
-                    from gurps.models import RegisterUser
-                    owner_user = RegisterUser.objects.filter(username=player_name).first()
-            if owner_user:
-                if asset.campanha.dono_id == owner_user.id:
-                    owner_color = "#dc2626"  # vermelho do GM
-                else:
-                    # Hash simples do username pra cor consistente
-                    h = 0
-                    for ch in owner_user.username:
-                        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
-                    hue = h % 360
-                    if hue < 0 or 350 < hue or hue > 10 < 350:
-                        pass
-                    # Evita vermelho (reservado pro GM): empurra pra outras zonas
-                    if hue < 30 or hue > 340:
-                        hue = (hue + 60) % 360
-                    owner_color = "hsl(" + str(hue) + ", 70%, 55%)"
+                if not image_url:
+                    info = getattr(char, "info_campanha", None) or {}
+                    linked = info.get("linked_asset_id") or getattr(char, "linked_asset_id", None)
+                    if linked:
+                        la = CampanhaAssets.objects.filter(pk=int(linked)).first() if str(linked).isdigit() else None
+                        if la and la.image:
+                            try:
+                                image_url = la.image.url
+                            except (ValueError, AttributeError):
+                                pass
+            if char:
+                from gurps.owner_color import owner_color_for_character
+                owner_color = owner_color_for_character(char, asset.campanha)
 
         clean = {
             "id": token_id,

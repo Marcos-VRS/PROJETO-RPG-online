@@ -37,6 +37,7 @@
                  data-character-name="{{ p.nome }}"
                  data-hp-atual="{{ p.hp_atual }}" data-hp-max="{{ p.hp_max }}"
                  data-fp-atual="{{ p.fp_atual }}" data-fp-max="{{ p.fp_max }}"
+                 style="--owner-color: {{ p.owner_color }}"
                  title="{{ p.nome }}">
                 <div class="player-mini-avatar">
                     {% if p.avatar_url %}
@@ -58,6 +59,9 @@
                         {% if p.show_numbers %}
                             <span class="player-mini-bar-label">FP {{ p.fp_atual }}/{{ p.fp_max }}</span>
                         {% endif %}
+                    </div>
+                    <div class="player-mini-status" data-character-id="{{ p.id }}">
+                        {% for s in p.status_effects %}<span class="player-mini-status-icon" title="{{ s }}" data-status="{{ s }}"></span>{% endfor %}
                     </div>
                 </div>
             </div>
@@ -183,6 +187,8 @@
     {{ scene_state|json_script:"rd6-scene-state" }}
     {{ all_characters_data|json_script:"rd6-all-characters" }}
 
+    {# status_icons cedo pra o boot do script principal poder pintar as minis #}
+    <script src="{% static 'global/js/map/status_icons.js' %}?d={% now 'U' %}"></script>
     <script>
         // ---- UI básica (theme/avatars/menu) ----
         function rd6ToggleTheme() {
@@ -649,6 +655,8 @@
             var fpLabel = showNumbers
                 ? '<span class="player-mini-bar-label">FP ' + c.fp_atual + '/' + c.fp_max + '</span>' : '';
             var hpNegClass = c.hp_is_negative ? ' is-negative' : '';
+            var statusHtml = (window.rd6StatusIcons)
+                ? window.rd6StatusIcons.html(c.status_effects || []) : '';
             return ''
                 + '<div class="player-mini-avatar">' + avatar + '</div>'
                 + '<div class="player-mini-info">'
@@ -659,6 +667,7 @@
                 +   '<div class="player-mini-bar player-mini-bar-fp">'
                 +     '<div class="player-mini-bar-fill" style="width:' + c.fp_pct + '%"></div>' + fpLabel
                 +   '</div>'
+                +   '<div class="player-mini-status" data-character-id="' + c.id + '">' + statusHtml + '</div>'
                 + '</div>';
         }
 
@@ -676,6 +685,7 @@
             el.dataset.hpMax = c.hp_max;
             el.dataset.fpAtual = c.fp_atual;
             el.dataset.fpMax = c.fp_max;
+            if (c.owner_color) el.style.setProperty('--owner-color', c.owner_color);
             el.title = c.nome;
             el.innerHTML = rd6BuildMiniInnerHtml(c);
             bar.insertBefore(el, spacer);
@@ -828,6 +838,14 @@
         // ---- Boot -----------------------------------------------------------
         rd6OpenGameWS();
         rd6RenderAll();
+        // Pinta os ícones de status das minis renderizadas server-side
+        // (status_icons.js é carregado mais abaixo, mas como este script roda
+        // inline no fim do body ele já está disponível).
+        if (window.rd6StatusIcons) {
+            document.querySelectorAll('.player-mini-status').forEach(function (el) {
+                window.rd6StatusIcons.paintInto(el);
+            });
+        }
     </script>
     {# Tabletop map — Fase 1 (fundação).
        Substitui o .image-container antigo por canvas com pan/zoom.
