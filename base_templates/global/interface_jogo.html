@@ -236,6 +236,7 @@
         // ---- Estado de cena (multi-cena, sincronizado via WS) ----
         var RD6_CAMPANHA_ID = "{{ campanha.id }}";
         var RD6_IS_GM = {% if is_gm %}true{% else %}false{% endif %};
+        var RD6_USER_ID = {{ user.id|default:"null" }};
         var RD6_WS_TOKEN = "{{ ws_token }}";
         // ID da ficha do user ativo nesta aba do jogo. Usado pra decidir se um
         // character_updated vindo via WS deve atualizar as janelas modais.
@@ -2166,12 +2167,14 @@
                 if (!window.rd6MapDrawings) return;
                 window.rd6MapTools && window.rd6MapTools.setRulerMode(false);
                 window.rd6MapDrawings.setMode(kind || "line");
+                var clearTitle = RD6_IS_GM ? "Apagar TODOS os desenhos" : "Apagar meus desenhos";
                 var btns =
                     '<button class="rd6-tt-btn" data-mode-draw="line" title="Linha">／</button>' +
                     '<button class="rd6-tt-btn" data-mode-draw="rect" title="Retângulo">▭</button>' +
                     '<button class="rd6-tt-btn" data-mode-draw="circle" title="Círculo">◯</button>' +
                     '<input type="color" id="rd6-mode-color" value="#3b82f6" title="Cor" ' +
-                    'style="width:28px;height:28px;border:none;background:none;cursor:pointer">';
+                    'style="width:28px;height:28px;border:none;background:none;cursor:pointer">' +
+                    '<button class="rd6-tt-btn rd6-tt-del" data-mode-clear title="' + clearTitle + '">🗑</button>';
                 rd6ShowModeToolbar("✏️ Desenho", btns);
                 // wire dos botões internos
                 document.querySelectorAll("#rd6-mode-tools [data-mode-draw]").forEach(function (b) {
@@ -2183,7 +2186,33 @@
                 if (col) col.addEventListener("input", function () {
                     window.rd6MapDrawings.setStrokeColor(col.value);
                 });
+                var clr = document.querySelector("#rd6-mode-tools [data-mode-clear]");
+                if (clr) clr.addEventListener("click", rd6ClearDrawings);
             };
+
+            // Apaga desenhos: GM apaga TODOS (map_drawing_clear); player apaga
+            // só os seus (loop de map_drawing_remove nos próprios author_id).
+            function rd6ClearDrawings() {
+                var rootEl = document.getElementById("rd6-map-root");
+                if (!rootEl || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
+                var assetId = parseInt(rootEl.dataset.assetId, 10);
+                if (RD6_IS_GM) {
+                    if (!confirm("Apagar TODOS os desenhos do mapa?")) return;
+                    window.rd6GameWS.send(JSON.stringify({
+                        type: "map_drawing_clear", asset_id: assetId,
+                    }));
+                } else {
+                    var mine = (window.rd6MapDrawings && window.rd6MapDrawings.drawings || [])
+                        .filter(function (d) { return d.author_id === RD6_USER_ID; });
+                    if (!mine.length) { return; }
+                    if (!confirm("Apagar seus " + mine.length + " desenho(s)?")) return;
+                    mine.forEach(function (d) {
+                        window.rd6GameWS.send(JSON.stringify({
+                            type: "map_drawing_remove", asset_id: assetId, drawing_id: d.id,
+                        }));
+                    });
+                }
+            }
 
             // Esc encerra o modo ativo (régua/desenho) e esconde a mode toolbar.
             // Não dispara quando o foco está num campo de texto (digitar Esc).
