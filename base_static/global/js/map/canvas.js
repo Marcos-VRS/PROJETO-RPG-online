@@ -202,6 +202,14 @@ window.rd6Map = window.rd6Map || {};
         this._composeOverlay();
     };
 
+    // Re-mede o canvas (caso o CSS/layout tenha mudado depois do construtor)
+    // e re-renderiza. Necessário porque no DOMContentLoaded o CSS pode não
+    // estar aplicado ainda → canvas com tamanho errado → grid não aparece.
+    MapCanvas.prototype.refresh = function () {
+        this._resizeCanvases();
+        this.renderAll();
+    };
+
     // === Composite do overlay ===
     // Vários layers (drawings + tokens) precisam compartilhar o canvas overlay.
     // Cada layer registra-se com mc.addOverlayLayer(layer), onde layer tem .paint(ctx).

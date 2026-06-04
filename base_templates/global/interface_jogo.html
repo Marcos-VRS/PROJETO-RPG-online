@@ -288,6 +288,21 @@
             rd6RenderCharList();
             rd6ApplySceneStateToBar();
             rd6RenderTurnControls();
+            rd6AdjustTurnBarPosition();
+        }
+
+        // Posiciona a turn-bar logo abaixo da players-bar, que cresce quando
+        // tem status effects. Antes era top:70px fixo e os status empurravam
+        // a players-bar por cima da turn-bar.
+        function rd6AdjustTurnBarPosition() {
+            var bar = document.getElementById('players-bar');
+            var turn = document.getElementById('turn-controls');
+            if (!bar || !turn) return;
+            var h = bar.offsetHeight || 70;
+            turn.style.top = h + 'px';
+            // body padding-top = players-bar + turn-bar (se ativa)
+            var turnH = turn.classList.contains('is-active') ? (turn.offsetHeight || 38) : 0;
+            document.body.style.paddingTop = (h + turnH) + 'px';
         }
 
         function rd6RenderTurnControls() {
@@ -720,6 +735,8 @@
                 if (statusEl && window.rd6StatusIcons) {
                     statusEl.innerHTML = window.rd6StatusIcons.html(c.status_effects || []);
                 }
+                // Status mudou → players-bar pode ter mudado de altura
+                rd6AdjustTurnBarPosition();
             }
             // Side nav nome (se for a ativa)
             if (RD6_ACTIVE_CHAR_ID && String(c.id) === String(RD6_ACTIVE_CHAR_ID)) {
@@ -886,6 +903,16 @@
         {% endif %}
     </div>
 
+    {# Toolbar de MODO (régua/desenho) — aparece no topo quando o comportamento
+       do mouse muda. Mesmo formato da token toolbar. Fechar desativa o modo. #}
+    <div id="rd6-mode-toolbar" class="rd6-token-toolbar" hidden>
+        <span class="rd6-tt-label" id="rd6-mode-label">—</span>
+        <span id="rd6-mode-tools"></span>
+        <span class="rd6-tt-sep"></span>
+        <button class="rd6-tt-btn rd6-tt-del" id="rd6-mode-close" title="Encerrar (Esc)"
+                onclick="window.rd6CloseMode && window.rd6CloseMode()">✕</button>
+    </div>
+
     {# Popup de status effects (GM): toggle de status no personagem do token #}
     {% if is_gm %}
     <div id="rd6-status-popup" class="rd6-status-popup" hidden>
@@ -969,11 +996,12 @@
            href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
             <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
         </a>
-        <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
+        <button class="player-side-icon" title="Desenhar no mapa"
+                onclick="window.rd6EnterDrawMode && window.rd6EnterDrawMode('line')">
             <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
         </button>
         <button class="player-side-icon" title="Régua (tecla R)" data-tool="ruler"
-                onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
+                onclick="window.rd6EnterRulerMode && window.rd6EnterRulerMode()">
             <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
         </button>
         <a class="player-side-icon" title="Sair da campanha"
@@ -1455,11 +1483,12 @@
             <button class="player-side-icon" title="Configurar mapa" onclick="abrirJanela('mapa')">
                 <span class="psi-glyph">🗺️</span><span class="psi-label">MAPA</span>
             </button>
-            <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
+            <button class="player-side-icon" title="Desenhar no mapa"
+                    onclick="window.rd6EnterDrawMode && window.rd6EnterDrawMode('line')">
                 <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
             </button>
             <button class="player-side-icon" title="Régua (tecla R)" data-tool="ruler"
-                    onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
+                    onclick="window.rd6EnterRulerMode && window.rd6EnterRulerMode()">
                 <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
             </button>
             <a class="player-side-icon" title="Fichas (abre em nova aba)"
@@ -1783,6 +1812,9 @@
                         var tb = document.getElementById("rd6-token-toolbar");
                         if (!tb) return;
                         if (!token) { tb.hidden = true; return; }
+                        // Selecionar token é exclusivo com modo régua/desenho
+                        var mt = document.getElementById("rd6-mode-toolbar");
+                        if (mt && !mt.hidden && window.rd6CloseMode) window.rd6CloseMode();
                         tb.hidden = false;
                         var nameEl = document.getElementById("rd6-tt-name");
                         if (nameEl) nameEl.textContent = token.label || "Token";
@@ -1947,13 +1979,15 @@
 
                 // Renderiza inicial (renderAll garante imagem + grid + overlay).
                 window.rd6MapCanvas.renderAll();
-                // Re-render de segurança após o layout estabilizar (imagem +
-                // dimensões do canvas). Garante o grid no load (antes só
-                // aparecia ao mexer no checkbox).
-                requestAnimationFrame(function () {
-                    window.rd6MapCanvas.renderAll();
-                });
-                setTimeout(function () { window.rd6MapCanvas.renderAll(); }, 200);
+                // refresh() = resize + render. No DOMContentLoaded o CSS pode
+                // não estar aplicado (canvas com tamanho 0/errado → grid some).
+                // Re-mede após o layout estabilizar.
+                requestAnimationFrame(function () { window.rd6MapCanvas.refresh(); });
+                setTimeout(function () { window.rd6MapCanvas.refresh(); }, 250);
+            });
+            // Também ao terminar de carregar tudo (CSS/fonts).
+            window.addEventListener("load", function () {
+                if (window.rd6MapCanvas) window.rd6MapCanvas.refresh();
             });
 
             // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===
@@ -2086,6 +2120,69 @@
             window.rd6OnMapDrawingsCleared = function () {
                 if (window.rd6MapDrawings) window.rd6MapDrawings.clearAll();
             };
+
+            // === Mode toolbar (régua / desenho) no topo ===
+            // Substitui a token toolbar quando o comportamento do mouse muda.
+            window.rd6CloseMode = function () {
+                // Desativa régua e desenho
+                if (window.rd6MapTools && window.rd6MapTools.rulerMode) {
+                    window.rd6MapTools.setRulerMode(false);
+                }
+                if (window.rd6MapDrawings) window.rd6MapDrawings.setMode("none");
+                var mt = document.getElementById("rd6-mode-toolbar");
+                if (mt) mt.hidden = true;
+            };
+            function rd6ShowModeToolbar(label, toolsHtml) {
+                // Esconde a token toolbar (exclusivo)
+                var tt = document.getElementById("rd6-token-toolbar");
+                if (tt) tt.hidden = true;
+                if (window.rd6MapTokens) { window.rd6MapTokens.selectedId = null; }
+                var mt = document.getElementById("rd6-mode-toolbar");
+                var lbl = document.getElementById("rd6-mode-label");
+                var tools = document.getElementById("rd6-mode-tools");
+                if (!mt) return;
+                if (lbl) lbl.textContent = label;
+                if (tools) tools.innerHTML = toolsHtml || "";
+                mt.hidden = false;
+            }
+            window.rd6EnterRulerMode = function () {
+                if (!window.rd6MapTools) return;
+                window.rd6MapDrawings && window.rd6MapDrawings.setMode("none");
+                window.rd6MapTools.setRulerMode(true);
+                rd6ShowModeToolbar("📏 Régua", "<small>clique e arraste no mapa</small>");
+            };
+            window.rd6EnterDrawMode = function (kind) {
+                if (!window.rd6MapDrawings) return;
+                window.rd6MapTools && window.rd6MapTools.setRulerMode(false);
+                window.rd6MapDrawings.setMode(kind || "line");
+                var btns =
+                    '<button class="rd6-tt-btn" data-mode-draw="line" title="Linha">／</button>' +
+                    '<button class="rd6-tt-btn" data-mode-draw="rect" title="Retângulo">▭</button>' +
+                    '<button class="rd6-tt-btn" data-mode-draw="circle" title="Círculo">◯</button>' +
+                    '<input type="color" id="rd6-mode-color" value="#3b82f6" title="Cor" ' +
+                    'style="width:28px;height:28px;border:none;background:none;cursor:pointer">';
+                rd6ShowModeToolbar("✏️ Desenho", btns);
+                // wire dos botões internos
+                document.querySelectorAll("#rd6-mode-tools [data-mode-draw]").forEach(function (b) {
+                    b.addEventListener("click", function () {
+                        window.rd6MapDrawings.setMode(b.dataset.modeDraw);
+                    });
+                });
+                var col = document.getElementById("rd6-mode-color");
+                if (col) col.addEventListener("input", function () {
+                    window.rd6MapDrawings.setStrokeColor(col.value);
+                });
+            };
+
+            // Esc encerra o modo ativo (régua/desenho) e esconde a mode toolbar.
+            document.addEventListener("keydown", function (ev) {
+                if (ev.key !== "Escape") return;
+                var mt = document.getElementById("rd6-mode-toolbar");
+                if (mt && !mt.hidden) {
+                    ev.preventDefault();
+                    window.rd6CloseMode();
+                }
+            });
 
             // UI da janela-desenho
             document.addEventListener("DOMContentLoaded", function () {
