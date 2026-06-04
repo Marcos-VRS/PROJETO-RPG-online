@@ -1843,8 +1843,8 @@
                     if (!charId) { alert("Esse token não tem ficha vinculada."); return; }
                     var current = rd6CharCurrentStatus(charId);
                     statusGrid.innerHTML = "";
-                    Object.keys(window.rd6StatusIcons.ICONS).forEach(function (key) {
-                        var info = window.rd6StatusIcons.ICONS[key];
+                    window.rd6StatusIcons.allKeys().forEach(function (key) {
+                        var info = window.rd6StatusIcons.get(key);
                         var on = current.indexOf(key) >= 0;
                         var btn = document.createElement("button");
                         btn.className = "rd6-status-opt" + (on ? " is-on" : "");
@@ -1856,7 +1856,34 @@
                         });
                         statusGrid.appendChild(btn);
                     });
+                    // Botão criar status custom (vai pra tool box do GM)
+                    var addBtn = document.createElement("button");
+                    addBtn.className = "rd6-status-opt rd6-status-add";
+                    addBtn.innerHTML = "➕ <small>Criar status custom…</small>";
+                    addBtn.addEventListener("click", rd6CreateCustomStatus);
+                    statusGrid.appendChild(addBtn);
                     statusPopup.hidden = false;
+                }
+                function rd6CreateCustomStatus() {
+                    var name = window.prompt("Nome do status:");
+                    if (!name) return;
+                    var emoji = window.prompt("Emoji ou símbolo (ex: 🔮):", "●") || "●";
+                    fetch("/toolbox/create/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "X-CSRFToken": rd6GetCsrf() },
+                        body: JSON.stringify({
+                            kind: "status_effect", name: name,
+                            data: { icon: emoji, label: name },
+                        }),
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        if (d.ok && d.item) {
+                            var key = "ua_" + d.item.id;
+                            window.rd6StatusIcons.registerCustom(key, d.item.data.icon, d.item.name);
+                            rd6OpenStatusPopup();  // re-render com o novo
+                        } else {
+                            alert(d.error || "Erro ao criar status.");
+                        }
+                    }).catch(function () { alert("Erro de rede."); });
                 }
                 function rd6CommitStatus(charId) {
                     var keys = Array.prototype.map.call(
@@ -1875,6 +1902,19 @@
                 if (statusClose) statusClose.addEventListener("click", function () {
                     statusPopup.hidden = true;
                 });
+
+                // Carrega status custom da tool box do GM e registra no mapa de ícones
+                if (RD6_IS_GM && window.rd6StatusIcons) {
+                    fetch("/toolbox/?kind=status_effect", { credentials: "same-origin" })
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            (d.items || []).forEach(function (it) {
+                                var key = "ua_" + it.id;
+                                var icon = (it.data && it.data.icon) || "●";
+                                window.rd6StatusIcons.registerCustom(key, icon, it.name);
+                            });
+                        }).catch(function () {});
+                }
                 window.rd6MapCanvas.addOverlayLayer(window.rd6MapTokens);
 
                 // === Ferramentas (Fase 5): hex hover, régua, reach ===

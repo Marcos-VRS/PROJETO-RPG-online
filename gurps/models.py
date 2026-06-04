@@ -313,3 +313,45 @@ class MapState(models.Model):
 
     def __str__(self):
         return f"MapState do asset #{self.asset_id}"
+
+
+class UserAsset(models.Model):
+    """Biblioteca pessoal do user (tipicamente GM), reutilizável em QUALQUER
+    campanha onde ele é dono. NÃO vinculado a campanha específica.
+
+    Guarda status effects custom, tokens reutilizáveis (NPCs padrão), etc.
+    Os presets de status do sistema NÃO ficam aqui — vivem em
+    `status_icons.js` (front). UserAsset é só o que o GM cria/importa.
+
+    Detalhes em docs/TABLETOP_NEXT_PHASES.md §6.
+    """
+    KIND_CHOICES = [
+        ("status_effect", "Status Effect"),
+        ("token", "Token reutilizável"),
+        ("map", "Mapa template"),
+        ("drawing", "Desenho template"),
+    ]
+    SOURCE_CHOICES = [
+        ("custom", "Criado pelo user"),
+        ("book", "Importado do livro"),
+        ("preset", "Preset do sistema"),
+    ]
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tool_box",
+    )
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    name = models.CharField(max_length=80)
+    # Schema do data varia por kind. Ver docs.
+    data = models.JSONField(default=dict, blank=True)
+    image = models.ImageField(upload_to="user_assets/", blank=True, null=True)
+    source = models.CharField(max_length=20, default="custom", choices=SOURCE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["kind", "name"]
+
+    def __str__(self):
+        return f"{self.get_kind_display()}: {self.name} ({self.owner_id})"

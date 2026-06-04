@@ -27,8 +27,18 @@ window.rd6StatusIcons = (function () {
         cursed:         { emoji: "💀", label: "Amaldiçoado" },
     };
 
+    // Status custom do GM (da tool box) registrados em runtime.
+    var CUSTOM = {};
+    function registerCustom(key, emoji, label) {
+        CUSTOM[key] = { emoji: emoji || "●", label: label || key, custom: true };
+    }
+
     function get(key) {
-        return ICONS[key] || { emoji: "●", label: key };
+        return ICONS[key] || CUSTOM[key] || { emoji: "●", label: key };
+    }
+
+    function allKeys() {
+        return Object.keys(ICONS).concat(Object.keys(CUSTOM));
     }
 
     // Preenche os <span.player-mini-status-icon[data-status]> de um container
@@ -52,5 +62,8 @@ window.rd6StatusIcons = (function () {
         }).join("");
     }
 
-    return { get: get, paintInto: paintInto, html: html, ICONS: ICONS };
+    return {
+        get: get, paintInto: paintInto, html: html,
+        ICONS: ICONS, registerCustom: registerCustom, allKeys: allKeys,
+    };
 })();

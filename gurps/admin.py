@@ -214,6 +214,13 @@ class MessageAdmin(admin.ModelAdmin):
 admin.site.register(CharacterSheet, CharacterSheetAdmin)
 
 
+@admin.register(UserAsset)
+class UserAssetAdmin(admin.ModelAdmin):
+    list_display = ("id", "kind", "name", "owner", "source", "created_at")
+    list_filter = ("kind", "source")
+    search_fields = ("name", "owner__username")
+
+
 @admin.register(MapState)
 class MapStateAdmin(admin.ModelAdmin):
     list_display = ("id", "asset", "grid_enabled", "version", "updated_at")

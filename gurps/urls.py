@@ -148,6 +148,10 @@ urlpatterns = [
         views.adjust_character_vitals,
         name="adjust_character_vitals",
     ),
+    # GM Tool Box (biblioteca pessoal do user)
+    path("toolbox/", views.toolbox_list, name="toolbox_list"),
+    path("toolbox/create/", views.toolbox_create, name="toolbox_create"),
+    path("toolbox/<int:item_id>/delete/", views.toolbox_delete, name="toolbox_delete"),
 
     # =========================================================================
     # CharacterSheetV2 (ficha nova, 2026-05-16)
