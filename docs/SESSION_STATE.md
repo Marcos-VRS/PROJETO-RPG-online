@@ -1,9 +1,57 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-24 (implementação do tabletop, Fases 1-4 + fixes).
-> **Status:** Tabletop com canvas + grid hex + tokens + desenhos funcionando. User testou e reportou bugs; corrigi a maioria. Tokens aparecem com imagem, arrastáveis com snap. Toolbar visual do token recém-adicionada (não testada pelo user ainda).
+> **Última sessão:** 2026-05-31 (Fases 5-6 do tabletop + pendências da players-bar + fix WS auth).
+> **Status:** Tabletop com Fases 1-5 completas + Fase 6 parcial. Muita coisa nova NÃO testada visualmente pelo user (trabalho autônomo). PRIORIDADE ao voltar: testar tudo e reportar bugs com Console (F12).
 >
 > Quando voltar, leia este documento primeiro.
+
+---
+
+## SESSÃO 2026-05-31: Fases 5-6 + pendências + fix WS auth (trabalho autônomo)
+
+User pediu pra adiantar o máximo sem interromper. Feito em 7 commits.
+
+### Fix crítico: GM remoto via tunnel não controlava turno (commit `c1267f9`)
+- **Causa:** via Cloudflare Tunnel o cookie de sessão nem sempre chega no WS → AuthMiddleware vira AnonymousUser → `_is_gm()` falha → scene_state nunca persiste pro GM remoto. Confirmado nos dados (campanha do amigo tinha scene_state={}).
+- **Fix:** auth do WS por **token assinado** (`django.core.signing`). View gera `ws_token={uid,cid}`; cliente envia `{type:'auth',token}` no onopen; consumer valida e marca `authed_is_gm`. `_is_gm()` usa o token com prioridade. `_effective_user_id()` centraliza (token > scope).
+
+### Pendências da players-bar resolvidas (commit `<cor+status>`)
+- **Cor do dono na mini:** `gurps/owner_color.py` (helper compartilhado). GM=#dc2626; players=HSL do username. Borda da `.player-mini` via `--owner-color`. Mesmo helper no token.
+- **Status effects na mini:** `runtime_stats.status_effects` → ícones abaixo das barras HP/FP. `status_icons.js` (mapa chave→emoji, 18 presets).
+- **Avatar mais robusto:** `_add_token` tenta photo do char, depois asset linkado.
+
+### Fase 5 — Polimentos (commit `<fase5>`)
+- `tools.js` (overlay layer): hex highlight sob cursor; **régua** (botão 📏 nas side navs + tecla R, mostra "N hex · N m"); highlight de **reach** do token selecionado (Reach 1 fixo na v1).
+- **Movement preview** no drag (tokens.js): linha do hex original ao atual, verde se dentro do Basic Move, vermelho se excede. Token carrega `basic_move`.
+- `hex.js`: `hexRing`, `hexesWithin`.
+- Planejamento detalhado em `docs/TABLETOP_NEXT_PHASES.md`.
+
+### Fase 6 — GM Tool Box (commits `240ee8b` + `<userasset>`)
+- **Aplicar status effects:** WS `character_status_set` (GM). Botão 🏷 na toolbar do token → popup de status (presets + custom) com toggle. Persiste em runtime_stats; broadcast atualiza minis.
+- **Model UserAsset** (migration 0062): biblioteca pessoal do GM (status custom, tokens reutilizáveis), persiste entre campanhas. Admin registrado.
+- **Endpoints:** GET `/toolbox/?kind=`, POST `/toolbox/create/`, POST `/toolbox/<id>/delete/`.
+- **Status custom:** botão "➕ Criar status custom" no popup (nome+emoji) → salva na tool box → registra no front. Carregados no boot.
+
+### O QUE FALTA TESTAR (importante!)
+Tudo abaixo foi implementado mas NÃO testado visualmente pelo user:
+1. Toolbar do token (botões +/-/girar/camada/status/remover).
+2. Cor do dono na mini + no token.
+3. Status effects: aplicar via 🏷, ver na mini, criar custom.
+4. Régua (📏 / tecla R), hex hover, reach highlight, movement preview.
+5. Fix do GM remoto (precisa de dist nova + teste com amigo via tunnel).
+
+### O QUE FALTA IMPLEMENTAR (Fase 6 restante)
+- Tokens reutilizáveis na tool box (criar token a partir de UserAsset salvo).
+- UI completa da Tool Box (modal com abas Status/Tokens/Mapas) — hoje só status via popup.
+- Importar status oficiais do livro (`combat_tables.json`).
+- Ficha V3 (roadmap em FICHA_V3_ROADMAP.md, só depois).
+
+### Migrations novas nesta sessão
+- 0061: grid_* na Campanha (sessão anterior).
+- 0062: UserAsset.
+
+### Dist em produção
+`dist/roll3d6-setup.exe` (16/05, commit `01212a6`) — **NÃO tem nada do tabletop nem o fix de WS auth**. Rebuildar antes da próxima sessão de jogo com o amigo (o fix do GM remoto só vale com dist nova).
 
 ---
 
