@@ -4,9 +4,11 @@
 // Registra-se como overlay layer (paint) no MapCanvas. Tudo client-side,
 // efêmero (não persiste, não usa WS).
 //
-// API: window.rd6MapTools.attach(mapCanvas, opts)
+// API: window.rd6Tools.attach(mapCanvas, opts)  → instância vira window.rd6MapTools
 //   opts: { getGridSize, getGridOffset, getSelectedToken }
-window.rd6MapTools = (function () {
+// (factory = rd6Tools, igual ao padrão rd6Tokens/rd6Drawings; a INSTÂNCIA
+//  criada no boot é window.rd6MapTools)
+window.rd6Tools = (function () {
     "use strict";
 
     function MapTools(mc, opts) {
