@@ -956,6 +956,10 @@
         <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
             <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
         </button>
+        <button class="player-side-icon" title="Régua (tecla R)" id="psi-ruler-player"
+                onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
+            <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
+        </button>
         <a class="player-side-icon" title="Sair da campanha"
            href="{% url 'gurps:leave_game' %}">
             <span class="psi-glyph">🚪</span><span class="psi-label">SAIR</span>
@@ -1435,6 +1439,13 @@
             <button class="player-side-icon" title="Configurar mapa" onclick="abrirJanela('mapa')">
                 <span class="psi-glyph">🗺️</span><span class="psi-label">MAPA</span>
             </button>
+            <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
+                <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
+            </button>
+            <button class="player-side-icon" title="Régua (tecla R)"
+                    onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
+                <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
+            </button>
             <a class="player-side-icon" title="Fichas (abre em nova aba)"
                href="{% url 'gurps:menu_fichas_gm' campanha.id %}" target="_blank" rel="noopener">
                 <span class="psi-glyph">📋</span><span class="psi-label">GM</span>
@@ -1656,6 +1667,7 @@
     <script src="{% static 'global/js/map/canvas.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/drawings.js' %}?d={% now 'U' %}"></script>
     <script src="{% static 'global/js/map/tokens.js' %}?d={% now 'U' %}"></script>
+    <script src="{% static 'global/js/map/tools.js' %}?d={% now 'U' %}"></script>
     <script>
         (function () {
             document.addEventListener("DOMContentLoaded", function () {
@@ -1791,6 +1803,26 @@
                     }));
                 });
                 window.rd6MapCanvas.addOverlayLayer(window.rd6MapTokens);
+
+                // === Ferramentas (Fase 5): hex hover, régua, reach ===
+                window.rd6MapTools = window.rd6Tools.attach(window.rd6MapCanvas, {
+                    getGridSize: function () {
+                        var c = window.rd6MapCanvas && window.rd6MapCanvas.gridConfig;
+                        return (c && c.size_px) || 50;
+                    },
+                    getGridOffset: function () {
+                        var c = window.rd6MapCanvas && window.rd6MapCanvas.gridConfig;
+                        if (!c) return { x: 0, y: 0 };
+                        return { x: c.offset_x || 0, y: c.offset_y || 0 };
+                    },
+                    getSelectedToken: function () {
+                        if (!window.rd6MapTokens || !window.rd6MapTokens.selectedId) return null;
+                        var idx = window.rd6MapTokens._indexOf(window.rd6MapTokens.selectedId);
+                        return idx >= 0 ? window.rd6MapTokens.tokens[idx] : null;
+                    },
+                });
+                window.rd6MapCanvas.addOverlayLayer(window.rd6MapTools);
+
                 // Renderiza inicial
                 window.rd6MapCanvas._composeOverlay();
             });

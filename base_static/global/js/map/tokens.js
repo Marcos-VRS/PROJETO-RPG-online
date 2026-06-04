@@ -232,6 +232,11 @@ window.rd6Tokens = (function () {
         ctx.translate(this.mc.offsetX, this.mc.offsetY);
         ctx.scale(this.mc.scale, this.mc.scale);
 
+        // Movement preview: linha do hex original ao atual + custo em hex/m.
+        if (this._dragging) {
+            this._drawMovePreview(ctx, this._dragging, grid, ofs);
+        }
+
         for (var i = 0; i < sorted.length; i++) {
             var t = sorted[i];
             var center = window.rd6Hex.axialToPixel(t.hex_x, t.hex_y, grid, ofs.x, ofs.y);
@@ -333,6 +338,43 @@ window.rd6Tokens = (function () {
             ctx.textBaseline = "middle";
             ctx.fillText(t.label.substring(0, 20), cx, cy + r + 9);
         }
+    };
+
+    TokensLayer.prototype._drawMovePreview = function (ctx, drag, grid, ofs) {
+        var origin = window.rd6Hex.axialToPixel(drag.origHexX, drag.origHexY, grid, ofs.x, ofs.y);
+        var curWorldX = drag.startWorldX + drag.tempDX;
+        var curWorldY = drag.startWorldY + drag.tempDY;
+        var curHex = window.rd6Hex.pixelToAxial(curWorldX, curWorldY, grid, ofs.x, ofs.y);
+        var curCenter = window.rd6Hex.axialToPixel(curHex.q, curHex.r, grid, ofs.x, ofs.y);
+        var dist = window.rd6Hex.distance(drag.origHexX, drag.origHexY, curHex.q, curHex.r);
+        if (dist <= 0) return;
+
+        var move = drag.token.basic_move || 5;
+        var exceeded = dist > move;
+        ctx.save();
+        ctx.strokeStyle = exceeded ? "#ef4444" : "#22c55e";
+        ctx.lineWidth = 3 / this.mc.scale;
+        ctx.setLineDash([8 / this.mc.scale, 5 / this.mc.scale]);
+        ctx.beginPath();
+        ctx.moveTo(origin.x, origin.y);
+        ctx.lineTo(curCenter.x, curCenter.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label no destino
+        var fs = 13 / this.mc.scale;
+        var text = dist + " hex / " + dist + " m" + (exceeded ? " (excede Move " + move + ")" : "");
+        ctx.font = "bold " + fs + "px sans-serif";
+        var w = ctx.measureText(text).width + 10 / this.mc.scale;
+        var h = 18 / this.mc.scale;
+        var ly = curCenter.y - grid - h;
+        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillRect(curCenter.x - w / 2, ly, w, h);
+        ctx.fillStyle = exceeded ? "#fca5a5" : "#86efac";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, curCenter.x, ly + h / 2);
+        ctx.restore();
     };
 
     TokensLayer.prototype._getCachedImage = function (url) {

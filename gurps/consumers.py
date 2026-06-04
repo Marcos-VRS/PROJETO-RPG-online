@@ -442,6 +442,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 from gurps.owner_color import owner_color_for_character
                 owner_color = owner_color_for_character(char, asset.campanha)
 
+        # basic_move pro movement preview (best-effort; default 5).
+        basic_move = 5
+        if cid and char:
+            try:
+                if isinstance(char, CharacterSheetV2):
+                    from gurps.sheet_v2_calc import compute_secondary
+                    sec = compute_secondary(char.primary_attributes or {},
+                                            char.secondary_modifiers or {})
+                    basic_move = int(sec.get("basic_move", 5))
+                else:
+                    sub = char.sub_attributes or {}
+                    basic_move = int(sub.get("move") or sub.get("basic_move") or 5)
+            except (TypeError, ValueError, KeyError):
+                basic_move = 5
+
         clean = {
             "id": token_id,
             "character_id": cid,
@@ -457,6 +472,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "status_effects": list(token.get("status_effects", [])),
             "z_index": int(token.get("z_index", 1)),
             "layer": layer,
+            "basic_move": basic_move,
         }
         tokens = list(ms.tokens or [])
         tokens.append(clean)

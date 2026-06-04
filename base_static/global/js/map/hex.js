@@ -86,6 +86,31 @@ window.rd6Hex = (function () {
         return { q: q + d.q, r: r + d.r };
     }
 
+    // Anel de hexes a distância exata `radius` do centro (q,r).
+    // radius 0 = [centro]; radius 1 = 6 vizinhos; etc.
+    function hexRing(q, r, radius) {
+        if (radius <= 0) return [{ q: q, r: r }];
+        var results = [];
+        // Começa no hex a `radius` passos na direção 4, depois caminha os 6 lados.
+        var cur = { q: q + DIRECTIONS[4].q * radius, r: r + DIRECTIONS[4].r * radius };
+        for (var side = 0; side < 6; side++) {
+            for (var step = 0; step < radius; step++) {
+                results.push({ q: cur.q, r: cur.r });
+                cur = neighbor(cur.q, cur.r, side);
+            }
+        }
+        return results;
+    }
+
+    // Todos os hexes até distância `radius` (preenchido, inclui centro).
+    function hexesWithin(q, r, radius) {
+        var out = [];
+        for (var k = 0; k <= radius; k++) {
+            out = out.concat(hexRing(q, r, k));
+        }
+        return out;
+    }
+
     // === Iterar hexes visíveis num retângulo de pixels ===
     // Útil pra desenhar só o grid que aparece na viewport.
     function hexesInPixelRect(x0, y0, x1, y1, size, originX, originY) {
@@ -115,6 +140,8 @@ window.rd6Hex = (function () {
         hexCorners: hexCorners,
         distance: distance,
         neighbor: neighbor,
+        hexRing: hexRing,
+        hexesWithin: hexesWithin,
         DIRECTIONS: DIRECTIONS,
         hexesInPixelRect: hexesInPixelRect,
     };
