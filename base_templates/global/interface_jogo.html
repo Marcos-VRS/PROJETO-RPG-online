@@ -230,6 +230,7 @@
         // ---- Estado de cena (multi-cena, sincronizado via WS) ----
         var RD6_CAMPANHA_ID = "{{ campanha.id }}";
         var RD6_IS_GM = {% if is_gm %}true{% else %}false{% endif %};
+        var RD6_WS_TOKEN = "{{ ws_token }}";
         // ID da ficha do user ativo nesta aba do jogo. Usado pra decidir se um
         // character_updated vindo via WS deve atualizar as janelas modais.
         var RD6_ACTIVE_CHAR_ID = {% if personagem %}{{ personagem.id }}{% else %}null{% endif %};
@@ -769,6 +770,13 @@
             var url = proto + location.host + '/ws/chat/' + RD6_CAMPANHA_ID + '/';
             rd6GameWS = new WebSocket(url);
             window.rd6GameWS = rd6GameWS;  // expor pro JS do map config
+            rd6GameWS.onopen = function () {
+                // Autentica via token assinado (resiliente a falha de cookie no
+                // tunnel). Sem isso, GM remoto não consegue controlar cena/turno.
+                if (RD6_WS_TOKEN) {
+                    rd6GameWS.send(JSON.stringify({ type: "auth", token: RD6_WS_TOKEN }));
+                }
+            };
             rd6GameWS.onmessage = function (ev) {
                 var data;
                 try { data = JSON.parse(ev.data); } catch (e) { return; }

@@ -37,6 +37,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
+        # Identidade autenticada via token assinado (ver _handle_auth).
+        # Necessário porque via Cloudflare Tunnel o cookie de sessão NEM SEMPRE
+        # chega no upgrade do WebSocket, fazendo o AuthMiddlewareStack resolver
+        # AnonymousUser e _is_gm() falhar. O token (vindo do HTTP, que funciona)
+        # garante a identidade do GM remoto.
+        self.authed_user_id = None
+        self.authed_is_gm = False
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
@@ -53,6 +61,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         if msg_type == "ping":
             await self.send(text_data=json.dumps({"type": "pong"}))
+            return
+
+        if msg_type == "auth":
+            await self._handle_auth(data)
             return
 
         if msg_type == "scene_state_set":
@@ -114,11 +126,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # ---- scene control ------------------------------------------------------
 
     async def _handle_scene_state_set(self, data):
-        if not await self._is_gm():
+        gm_ok = await self._is_gm()
+        if not gm_ok:
+            user = self.scope.get("user")
+            uname = getattr(user, "username", None) if user else None
+            print(f"[WS scene_state_set REJEITADO] room={self.room_name} "
+                  f"user={uname!r} — não é GM (ou não autenticado)")
             return  # só GM altera
 
         new_state = data.get("scene_state")
         if not self._valid_scene_state(new_state):
+            print(f"[WS scene_state_set REJEITADO] room={self.room_name} "
+                  f"— scene_state inválido")
             return
 
         # Normaliza character_ids E current_turn_id pra int. Se current_turn_id
@@ -231,7 +250,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ms, _ = MapState.objects.get_or_create(asset=asset)
 
         import secrets
-        user = self.scope.get("user")
+        author_id = self._effective_user_id()
 
         kind = drawing.get("kind")
         if kind not in ("line", "rect", "circle", "polygon"):
@@ -247,7 +266,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         clean = {
             "id": "drw_" + secrets.token_hex(4),
-            "author_id": user.id if user else None,
+            "author_id": author_id,
             "author_color": str(drawing.get("author_color", "#3b82f6"))[:20],
             "kind": kind,
             "points": clean_points,
@@ -276,15 +295,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return False
         if str(ms.asset.campanha_id) != str(self.room_name):
             return False
-        user = self.scope.get("user")
-        is_gm = (user and ms.asset.campanha.dono_id == user.id)
+        uid = self._effective_user_id()
+        is_gm = (uid is not None and ms.asset.campanha.dono_id == uid)
 
         drawings = list(ms.drawings or [])
         target = next((d for d in drawings if d.get("id") == drawing_id), None)
         if target is None:
             return False
         # Owner OR GM
-        if not is_gm and target.get("author_id") != (user.id if user else None):
+        if not is_gm and target.get("author_id") != uid:
             return False
         ms.drawings = [d for d in drawings if d.get("id") != drawing_id]
         ms.version = (ms.version or 0) + 1
@@ -481,8 +500,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
         if str(ms.asset.campanha_id) != str(self.room_name):
             return None
-        user = self.scope.get("user")
-        is_gm = (user and ms.asset.campanha.dono_id == user.id)
+        uid = self._effective_user_id()
+        is_gm = (uid is not None and ms.asset.campanha.dono_id == uid)
 
         tokens = list(ms.tokens or [])
         target = None
@@ -505,10 +524,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     v1 = CharacterSheet.objects.filter(pk=cid).first()
                     if v1:
                         # V1 nao tem owner FK; usa info_campanha.player_name
+                        from gurps.models import RegisterUser
                         owner_name = (v1.info_campanha or {}).get("player_name")
-                        if owner_name and user and owner_name == user.username:
-                            owner_id = user.id
-            if owner_id != (user.id if user else None):
+                        if owner_name:
+                            owner = RegisterUser.objects.filter(username=owner_name).first()
+                            owner_id = owner.id if owner else None
+            if owner_id != uid:
                 return None  # nao pode
 
         # Apply patch (filtra campos permitidos)
@@ -609,8 +630,56 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return False
         return True
 
+    # ---- auth via token assinado (resiliente a falha de cookie no tunnel) ----
+
+    async def _handle_auth(self, data):
+        """Cliente envia {type:'auth', token:'...'} logo após conectar.
+        O token é gerado no HTTP (django.core.signing) e codifica (uid, cid).
+        Valida assinatura + que cid bate com a sala + se o user é dono → GM.
+        """
+        token = data.get("token")
+        if not token:
+            return
+        payload = await self._resolve_ws_token(token)
+        if not payload:
+            return
+        if str(payload.get("cid")) != str(self.room_name):
+            return
+        self.authed_user_id = payload.get("uid")
+        self.authed_is_gm = await self._check_is_dono(self.authed_user_id)
+
     @database_sync_to_async
-    def _is_gm(self):
+    def _resolve_ws_token(self, token):
+        from django.core import signing
+        try:
+            return signing.loads(token, salt="rd6-ws-auth", max_age=60 * 60 * 24 * 7)
+        except signing.BadSignature:
+            return None
+
+    @database_sync_to_async
+    def _check_is_dono(self, uid):
+        if uid is None:
+            return False
+        campanha = Campanha.objects.filter(id=self.room_name).first()
+        return bool(campanha and campanha.dono_id == uid)
+
+    def _effective_user_id(self):
+        """ID do user confiável: token assinado tem prioridade; senão scope."""
+        if self.authed_user_id is not None:
+            return self.authed_user_id
+        user = self.scope.get("user")
+        if user and getattr(user, "is_authenticated", False):
+            return user.id
+        return None
+
+    async def _is_gm(self):
+        # Token assinado (vindo do HTTP) tem prioridade — funciona via tunnel.
+        if self.authed_is_gm:
+            return True
+        return await self._is_gm_via_scope()
+
+    @database_sync_to_async
+    def _is_gm_via_scope(self):
         user = self.scope.get("user")
         if not user or not user.is_authenticated:
             return False

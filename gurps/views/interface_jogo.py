@@ -411,6 +411,15 @@ def game_interface(request, campanha_id, slot):
 
     is_gm = (campanha.dono_id is not None) and (campanha.dono_id == request.user.id)
 
+    # Token assinado pra autenticar o WebSocket de forma confiável mesmo quando
+    # o cookie de sessão não chega no upgrade do WS (via Cloudflare Tunnel).
+    # O cliente envia {type:'auth', token} logo após conectar. Ver consumers.py.
+    from django.core import signing
+    ws_token = signing.dumps(
+        {"uid": request.user.id, "cid": campanha.id},
+        salt="rd6-ws-auth",
+    )
+
     # Minis de todos os personagens da campanha (privacidade aplicada).
     players_minis = []
     for p in personagens_journal:
@@ -443,6 +452,7 @@ def game_interface(request, campanha_id, slot):
         "map_drawings": visible_drawings,
         "players_minis": players_minis,
         "is_gm": is_gm,
+        "ws_token": ws_token,
         "scene_state": scene_state,
         "all_characters_data": [
             {"id": p["id"], "nome": p["nome"], "speed": p["speed"], "is_quick_npc": p["is_quick_npc"]} for p in players_minis
