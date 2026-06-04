@@ -972,7 +972,7 @@
         <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
             <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
         </button>
-        <button class="player-side-icon" title="Régua (tecla R)" id="psi-ruler-player"
+        <button class="player-side-icon" title="Régua (tecla R)" data-tool="ruler"
                 onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
             <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
         </button>
@@ -1458,7 +1458,7 @@
             <button class="player-side-icon" title="Desenhar no mapa" onclick="abrirJanela('desenho')">
                 <span class="psi-glyph">✏️</span><span class="psi-label">DRAW</span>
             </button>
-            <button class="player-side-icon" title="Régua (tecla R)"
+            <button class="player-side-icon" title="Régua (tecla R)" data-tool="ruler"
                     onclick="window.rd6MapTools && window.rd6MapTools.toggleRuler()">
                 <span class="psi-glyph">📏</span><span class="psi-label">RÉGUA</span>
             </button>
@@ -1902,13 +1902,15 @@
                 if (statusClose) statusClose.addEventListener("click", function () {
                     statusPopup.hidden = true;
                 });
-                // Fecha o popup ao clicar fora dele (e fora do botão que o abre)
+                // Fecha o popup ao clicar fora dele. CAPTURE phase pra rodar
+                // ANTES dos listeners do canvas (tokens/tools fazem
+                // stopImmediatePropagation e impediriam um listener bubble).
                 document.addEventListener("mousedown", function (ev) {
                     if (!statusPopup || statusPopup.hidden) return;
                     if (statusPopup.contains(ev.target)) return;
                     if (ttStatus && ttStatus.contains(ev.target)) return;
                     statusPopup.hidden = true;
-                });
+                }, true);
 
                 // Carrega status custom da tool box do GM e registra no mapa de ícones
                 if (RD6_IS_GM && window.rd6StatusIcons) {
@@ -1945,6 +1947,13 @@
 
                 // Renderiza inicial (renderAll garante imagem + grid + overlay).
                 window.rd6MapCanvas.renderAll();
+                // Re-render de segurança após o layout estabilizar (imagem +
+                // dimensões do canvas). Garante o grid no load (antes só
+                // aparecia ao mexer no checkbox).
+                requestAnimationFrame(function () {
+                    window.rd6MapCanvas.renderAll();
+                });
+                setTimeout(function () { window.rd6MapCanvas.renderAll(); }, 200);
             });
 
             // === GM controls: envia map_grid_config por WS quando GM mexe nos inputs ===
@@ -2083,6 +2092,9 @@
                 document.querySelectorAll("#janela-desenho [data-draw-mode]").forEach(function (b) {
                     b.addEventListener("click", function () {
                         if (window.rd6MapDrawings) window.rd6MapDrawings.setMode(b.dataset.drawMode);
+                        // Fecha a janela de desenho ao escolher uma ferramenta
+                        // (exceto "Selecionar (none)" que pode ficar aberta).
+                        if (b.dataset.drawMode !== "none") fecharJanela();
                     });
                 });
                 var colorEl = document.getElementById("draw-color");

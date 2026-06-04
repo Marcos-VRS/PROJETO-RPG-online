@@ -137,17 +137,20 @@ html[data-theme="light"] {
     border-color: var(--rd6-accent);
 }
 
-/* Ícones de status abaixo das barras HP/FP, atrelados ao personagem */
+/* Ícones de status abaixo das barras HP/FP, atrelados ao personagem.
+   Container colapsa quando vazio (:empty) pra não inchar a players-bar
+   e empurrar a turn-bar. */
 .player-mini-status {
     display: flex;
     gap: 2px;
-    margin-top: 2px;
-    min-height: 14px;
     flex-wrap: wrap;
     max-width: 165px;
 }
+.player-mini-status:not(:empty) {
+    margin-top: 2px;
+}
 .player-mini-status-icon {
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1;
     cursor: help;
 }

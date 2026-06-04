@@ -31,6 +31,8 @@ window.rd6MapTools = (function () {
         this.rulerMode = !!on;
         if (!on) { this.rulerStart = null; this.rulerEnd = null; }
         this.mc.canvasOverlay.style.cursor = on ? "crosshair" : "default";
+        // Feedback visual: destaca os botões de régua via body class.
+        document.body.classList.toggle("rd6-ruler-active", this.rulerMode);
         this.mc._composeOverlay();
     };
     MapTools.prototype.toggleRuler = function () {

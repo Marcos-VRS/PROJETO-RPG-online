@@ -244,7 +244,8 @@ def _hp_pct_and_negative(hp_atual, hp_max):
     return f"{100 * abs_hp / neg_cap:.1f}", True
 
 
-def _build_player_mini(character, present_ids=None, show_numbers=False, campanha=None):
+def _build_player_mini(character, present_ids=None, show_numbers=False, campanha=None,
+                       color_map=None):
     """Empacota a ficha num dicionário leve pra exibição da barra de players.
 
     ``show_numbers`` controla privacidade: True → mostra ``HP X/Y`` e ``FP X/Y``
@@ -268,12 +269,12 @@ def _build_player_mini(character, present_ids=None, show_numbers=False, campanha
     is_present = present_ids is None or character.id in present_ids
     info = character.info_campanha or {}
 
-    # Cor do dono (borda da mini). Tolerante a campanha=None.
+    # Cor do dono (borda do avatar). GM=vermelho, players=cor única.
     owner_color = "#c9a55c"
     if campanha is not None:
         try:
-            from gurps.owner_color import owner_color_for_character
-            owner_color = owner_color_for_character(character, campanha)
+            from gurps.owner_color import color_for_character
+            owner_color = color_for_character(character, campanha, color_map=color_map)
         except Exception:
             pass
 
@@ -439,11 +440,17 @@ def game_interface(request, campanha_id, slot):
     )
 
     # Minis de todos os personagens da campanha (privacidade aplicada).
+    # Mapa de cores distintas por player (golden angle). Computado uma vez.
+    from gurps.owner_color import build_player_color_map
+    player_color_map = build_player_color_map(personagens_journal, campanha)
+
     players_minis = []
     for p in personagens_journal:
         owner = (p.info_campanha or {}).get("player_name")
         show_numbers = is_gm or (owner == username)
-        players_minis.append(_build_player_mini(p, present_ids, show_numbers, campanha=campanha))
+        players_minis.append(_build_player_mini(p, present_ids, show_numbers,
+                                                campanha=campanha,
+                                                color_map=player_color_map))
 
     # Ordena minis pela ordem manual da cena ativa. Quem não está na cena fica
     # no fim em ordem alfabética (só importa pro modal — não aparece na barra).

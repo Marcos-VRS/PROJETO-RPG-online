@@ -95,6 +95,10 @@ window.rd6Tokens = (function () {
         // stopImmediatePropagation impede o canvas.js de iniciar pan.
         overlay.addEventListener("mousedown", function (e) {
             if (e.button !== 0) return;  // só botão esquerdo
+            // Régua ou desenho ativos têm prioridade — não selecionar token.
+            if (window.rd6MapTools && window.rd6MapTools.rulerMode) return;
+            if (window.rd6MapDrawings && window.rd6MapDrawings.mode &&
+                window.rd6MapDrawings.mode !== "none") return;
             var rect = overlay.getBoundingClientRect();
             var sx = e.clientX - rect.left;
             var sy = e.clientY - rect.top;

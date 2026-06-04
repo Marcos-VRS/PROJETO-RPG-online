@@ -22,6 +22,14 @@
     top: 0;
 }
 
+/* Botão de régua destacado quando o modo régua está ativo */
+body.rd6-ruler-active [data-tool="ruler"] {
+    background: var(--rd6-accent, #c9a55c) !important;
+    border-color: var(--rd6-accent-bright, #e0c378) !important;
+}
+body.rd6-ruler-active [data-tool="ruler"] .psi-glyph,
+body.rd6-ruler-active [data-tool="ruler"] .psi-label { color: #000 !important; }
+
 /* ============================================================
    Janela de configuração de mapa (GM only)
    ============================================================ */
