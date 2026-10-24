@@ -76,6 +76,30 @@ def pick_checkpoint(preferred: str = DEFAULT_CKPT, base_url: str = DEFAULT_URL) 
     return avail[0]
 
 
+def free_memory(base_url: str = DEFAULT_URL, timeout: float = 10.0) -> bool:
+    """Pede pro ComfyUI descarregar modelos e liberar VRAM (/free). Best-effort —
+    ajuda a evitar OOM acumulado ao gerar muitos clipes / trocar de modelo."""
+    try:
+        payload = json.dumps({"unload_models": True, "free_memory": True}).encode("utf-8")
+        req = urllib.request.Request(base_url.rstrip("/") + "/free", data=payload,
+                                     headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=timeout)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def wait_online(base_url: str = DEFAULT_URL, timeout: float = 90.0,
+                interval: float = 3.0) -> bool:
+    """Espera o ComfyUI voltar a responder (ex. depois de um restart). True se subiu."""
+    start = time.monotonic()
+    while time.monotonic() - start < timeout:
+        if status(base_url).get("online"):
+            return True
+        time.sleep(interval)
+    return False
+
+
 def _build_sdxl_graph(prompt, negative, width, height, steps, cfg, seed, ckpt,
                       sampler_name=DEFAULT_SAMPLER, scheduler=DEFAULT_SCHEDULER):
     """Grafo mínimo SDXL text2img no formato API do ComfyUI."""

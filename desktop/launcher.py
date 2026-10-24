@@ -182,10 +182,13 @@ def _find_comfyui() -> "Path | None":
     return None
 
 
-def _spawn_comfyui():
+def _spawn_comfyui(home: "Path | None" = None):
     """Sobe o ComfyUI junto do app (parte integrante). Se a porta 8188 já estiver
     em uso (ex. o usuário abriu o .bat), não duplica. Se não achar a instalação,
-    só não sobe — os estúdios degradam pra 'offline' sem quebrar nada."""
+    só não sobe — os estúdios degradam pra 'offline' sem quebrar nada.
+
+    Loga stdout/stderr em <home>/logs/comfyui.log pra permitir diagnóstico de
+    crashes (ex. OOM na GPU)."""
     if _port_in_use(8188):
         return None
     comfy = _find_comfyui()
@@ -197,13 +200,36 @@ def _spawn_comfyui():
     creationflags = 0
     if os.name == "nt":
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    log_fh = subprocess.DEVNULL
+    try:
+        if home is not None:
+            logdir = Path(home) / "logs"
+            logdir.mkdir(parents=True, exist_ok=True)
+            log_fh = open(logdir / "comfyui.log", "w", encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        log_fh = subprocess.DEVNULL
     try:
         return subprocess.Popen(
             cmd, cwd=str(comfy), creationflags=creationflags,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stdout=log_fh, stderr=subprocess.STDOUT,
         )
     except Exception:  # noqa: BLE001
         return None
+
+
+def _start_comfyui_watchdog(home: "Path | None", state: dict):
+    """Thread: se o ComfyUI que NÓS iniciamos cair (OOM/crash), reinicia. Não
+    mexe numa instância que o usuário subiu à parte (state['proc'] é None aí)."""
+    def _loop():
+        while True:
+            time.sleep(20)
+            proc = state.get("proc")
+            if proc is None:
+                continue  # não gerenciamos (user tem a própria, ou não há ComfyUI)
+            if proc.poll() is not None:  # morreu
+                if not _port_in_use(8188):
+                    state["proc"] = _spawn_comfyui(home)
+    threading.Thread(target=_loop, daemon=True).start()
 
 
 def main() -> int:
@@ -250,8 +276,10 @@ def main() -> int:
     django_server.start()
 
     # ComfyUI como parte integrante: sobe junto do app (se instalado e não já
-    # rodando). Fica idle até a 1ª geração; encerra no fim.
-    comfy_proc = _spawn_comfyui()
+    # rodando). Fica idle até a 1ª geração; encerra no fim. Um watchdog reinicia
+    # se ele cair (ex. OOM na GPU durante um vídeo).
+    comfy_state = {"proc": _spawn_comfyui(home)}
+    _start_comfyui_watchdog(home, comfy_state)
 
     # Workers do Estúdio de Imagem e de Vídeo (ComfyUI). Ociosos se o ComfyUI
     # não estiver de pé.
@@ -292,7 +320,7 @@ def main() -> int:
         t = getattr(api, "_tunnel", None)
         if t is not None:
             t.stop()
-        for _proc in (imagegen_proc, videogen_proc, comfy_proc):
+        for _proc in (imagegen_proc, videogen_proc, comfy_state.get("proc")):
             if _proc is not None:
                 try:
                     _proc.terminate()

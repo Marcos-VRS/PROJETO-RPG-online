@@ -89,20 +89,17 @@ class Command(BaseCommand):
                   progress=f"0/{len(shots)} tomadas")
         self.stdout.write(f"  storyboard: {len(shots)} tomadas, clima={mood} ({'claude' if used else 'mecanico'})")
 
-        # 2) gera cada tomada
+        # 2) gera cada tomada (libera VRAM antes de cada uma pra evitar OOM
+        # acumulado em GPU pequena; re-tenta se o ComfyUI cair no meio).
         tmpdir = tempfile.mkdtemp(prefix=f"rpgvid_{req.id}_")
         clips = []
         for i, s in enumerate(shots, 1):
             self._set(req, progress=f"gerando tomada {i}/{len(shots)}")
             self.stdout.write(f"  #{req.id} tomada {i}/{len(shots)}: {s['prompt'][:60]!r}")
-            try:
-                mp4 = comfyui_client.generate_clip_mp4(
-                    prompt=s["prompt"], seconds=s["seconds"], fps=req.fps,
-                    width=req.width, height=req.height, steps=req.steps, cfg=req.cfg,
-                    base_url=self.base_url, timeout=self.clip_timeout)
-            except Exception as e:  # noqa: BLE001
-                self._fail(req, f"tomada {i} falhou: {e}")
-                return
+            comfyui_client.free_memory(self.base_url)
+            mp4 = self._gen_clip(req, s, i, len(shots))
+            if mp4 is None:
+                return  # _gen_clip já marcou failed
             cp = os.path.join(tmpdir, f"shot_{i:03d}.mp4")
             with open(cp, "wb") as f:
                 f.write(mp4)
@@ -127,6 +124,28 @@ class Command(BaseCommand):
         self._set(req, result_file=rel, status="done", error="", progress="pronto")
         self.stdout.write(self.style.SUCCESS(
             f"#{req.id} OK — vídeo montado ({len(clips)} tomadas, musica={bool(music)})."))
+
+    def _gen_clip(self, req, s, i, n):
+        """Gera um clipe com até 2 tentativas. Se o ComfyUI cair (OOM/crash),
+        espera ele voltar (o launcher reinicia) e tenta de novo. Retorna os bytes
+        do mp4, ou None (e marca failed) se falhar de vez."""
+        for attempt in (1, 2):
+            try:
+                return comfyui_client.generate_clip_mp4(
+                    prompt=s["prompt"], seconds=s["seconds"], fps=req.fps,
+                    width=req.width, height=req.height, steps=req.steps, cfg=req.cfg,
+                    base_url=self.base_url, timeout=self.clip_timeout)
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(
+                    f"  tomada {i} tentativa {attempt} falhou: {str(e)[:120]}"))
+                if attempt == 1:
+                    self._set(req, progress=f"tomada {i}: ComfyUI caiu, aguardando voltar...")
+                    comfyui_client.wait_online(self.base_url, timeout=180)
+                    comfyui_client.free_memory(self.base_url)
+                else:
+                    self._fail(req, f"tomada {i} falhou após 2 tentativas: {str(e)[:300]}")
+                    return None
+        return None
 
     def _fail(self, req, msg):
         req.status = "failed"
