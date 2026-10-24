@@ -482,6 +482,145 @@
                     if (slider && sval) slider.addEventListener('input', function () { sval.textContent = slider.value; });
                 })();
             </script>
+
+            <details class="quick-char-create" id="videogen-form">
+                <summary>🎬 Estúdio de Vídeo (IA · GPU)</summary>
+                <div class="quick-char-fields">
+                    <p class="scene-control-hint" style="margin:4px 0;">Descreva o que aconteceu. A IA lê o journal,
+                        escreve um roteiro em cenas e monta um vídeo estilo anime com trilha. Leva de minutos a
+                        horas — pode fechar e voltar; continua gerando.</p>
+                    <textarea id="vg-prompt" rows="3" maxlength="1800"
+                        placeholder="Ex.: 'o grupo invade o castelo, enfrenta o guardião de fogo e resgata a prisioneira'"
+                        style="width:100%;resize:vertical;font-family:inherit;"></textarea>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);">Estilo:
+                        <select id="vg-style" style="width:100%;">
+                            <option value="anime">Anime (padrão)</option>
+                            <option value="cinematic_dark">Cinematográfico escuro</option>
+                            <option value="gritty">Grimdark</option>
+                            <option value="oil">Pintura a óleo</option>
+                        </select>
+                    </label>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);">Duração alvo:
+                        <select id="vg-seconds" style="width:100%;">
+                            <option value="30">~30s (rápido)</option>
+                            <option value="60">~60s</option>
+                            <option value="90" selected>~90s</option>
+                            <option value="120">~120s</option>
+                        </select>
+                    </label>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);">Música:
+                        <select id="vg-music" style="width:100%;">
+                            <option value="">Automática (pelo clima da cena)</option>
+                        </select>
+                    </label>
+                    <label style="font-size:11px;color:var(--rd6-text-dim);">…ou enviar uma música:
+                        <input type="file" id="vg-music-upload" accept="audio/*" style="width:100%;font-size:11px;">
+                    </label>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);display:flex;align-items:center;gap:6px;margin-top:4px;">
+                        <input type="checkbox" id="vg-context" checked style="width:auto;"> Ler o journal (coerência com o mundo)
+                    </label>
+                    <button type="button" class="quick-char-submit" onclick="rd6VideoSubmit()">Gerar vídeo</button>
+                    <p class="scene-control-hint" id="vg-status" style="margin:6px 0;"></p>
+                    <div id="vg-list"></div>
+                </div>
+            </details>
+            <script>
+                var RD6_VG_CAMP = {{ campanha.id }};
+                var _vgPoll = null;
+                function rd6VideoStudioInit() {
+                    rd6VgLoadMusic();
+                    rd6VideoPoll();
+                }
+                function rd6VgLoadMusic() {
+                    var sel = document.getElementById('vg-music');
+                    fetch('/videogen/' + RD6_VG_CAMP + '/music/')
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            var tracks = (d && d.tracks) || [];
+                            sel.innerHTML = '<option value="">Automática (pelo clima da cena)</option>';
+                            var byMood = {};
+                            tracks.forEach(function (t) { (byMood[t.mood] = byMood[t.mood] || []).push(t); });
+                            Object.keys(byMood).sort().forEach(function (mood) {
+                                var og = document.createElement('optgroup'); og.label = mood;
+                                byMood[mood].forEach(function (t) {
+                                    var o = document.createElement('option'); o.value = t.rel; o.textContent = t.name; og.appendChild(o);
+                                });
+                                sel.appendChild(og);
+                            });
+                        }).catch(function () {});
+                }
+                function rd6VideoSubmit() {
+                    var prompt = (document.getElementById('vg-prompt').value || '').trim();
+                    var st = document.getElementById('vg-status');
+                    if (!prompt) { st.textContent = 'Descreva o que aconteceu primeiro.'; return; }
+                    var upEl = document.getElementById('vg-music-upload');
+                    var upFile = upEl && upEl.files && upEl.files[0];
+                    st.textContent = 'Enviando…';
+                    var fd = new FormData();
+                    fd.append('prompt', prompt);
+                    fd.append('style', document.getElementById('vg-style').value);
+                    fd.append('target_seconds', document.getElementById('vg-seconds').value);
+                    fd.append('use_context', document.getElementById('vg-context').checked ? '1' : '0');
+                    fd.append('music_file', document.getElementById('vg-music').value || '');
+                    if (upFile) fd.append('music_upload', upFile);
+                    fetch('/videogen/' + RD6_VG_CAMP + '/request/', {
+                        method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() }, body: fd
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        if (d && d.ok) {
+                            document.getElementById('vg-prompt').value = '';
+                            if (upEl) upEl.value = '';
+                            st.textContent = d.comfy_online
+                                ? (d.video_models ? 'Na fila — gerando (pode demorar). Pode fechar e voltar.'
+                                                  : '⚠ Modelos de vídeo não encontrados no ComfyUI.')
+                                : '⚠ ComfyUI offline no host — o pedido ficou na fila.';
+                            rd6VideoPoll();
+                        } else { st.textContent = (d && d.error) || 'Erro ao enviar.'; }
+                    }).catch(function () { st.textContent = 'Falha de rede.'; });
+                }
+                function rd6VideoPoll() {
+                    fetch('/videogen/' + RD6_VG_CAMP + '/list/')
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            if (!d || !d.ok) return;
+                            rd6VideoRender(d.requests || [], d);
+                            var active = (d.requests || []).some(function (x) { return x.status === 'pending' || x.status === 'processing'; });
+                            if (_vgPoll) clearTimeout(_vgPoll);
+                            if (active) _vgPoll = setTimeout(rd6VideoPoll, 5000);
+                        }).catch(function () {});
+                }
+                function rd6VideoRender(reqs, d) {
+                    var box = document.getElementById('vg-list');
+                    var head = (d.comfy && !d.comfy.online) ? '<div class="mg-err">ComfyUI offline no host.</div>' : '';
+                    var S = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou', approved: 'aprovado' };
+                    box.innerHTML = head + (reqs || []).map(function (r) {
+                        var h = '<div class="mg-card"><div class="mg-card-head"><span class="mg-badge ' + r.status + '">' + (S[r.status] || r.status) + '</span>';
+                        if (r.music_file) h += '<span style="font-size:10px;color:#c9a55c">♪ ' + rd6Esc(r.music_file) + '</span>';
+                        else if (r.mood) h += '<span style="font-size:10px;color:#c9a55c">♪ ' + rd6Esc(r.mood) + ' (auto)</span>';
+                        h += '</div><div class="mg-prompt">' + rd6Esc(r.prompt) + '</div>';
+                        if (r.status === 'processing' && r.progress) h += '<div style="font-size:12px;color:#7fb0ff">⏳ ' + rd6Esc(r.progress) + '</div>';
+                        if (r.expanded_prompt) h += '<details class="mg-xprompt"><summary>roteiro</summary><div>' + rd6Esc(r.expanded_prompt) + '</div></details>';
+                        if ((r.status === 'done' || r.status === 'approved') && r.has_result) {
+                            h += '<video src="/videogen/mp4/' + r.id + '/" controls preload="metadata" style="width:100%;border-radius:6px;margin-top:6px;background:#000"></video>';
+                            if (r.status === 'done') h += '<div class="mg-actions"><button class="mg-approve" onclick="rd6VideoApprove(' + r.id + ')">✓ Aprovar</button><button onclick="rd6VideoDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                        } else if (r.status === 'failed') {
+                            h += '<div class="mg-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="mg-actions"><button onclick="rd6VideoDiscard(' + r.id + ')">Remover</button></div>';
+                        }
+                        return h + '</div>';
+                    }).join('');
+                }
+                function rd6VideoApprove(id) {
+                    fetch('/videogen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })
+                        .then(function () { rd6VideoPoll(); }).catch(function () {});
+                }
+                function rd6VideoDiscard(id) {
+                    fetch('/videogen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })
+                        .then(function () { rd6VideoPoll(); }).catch(function () {});
+                }
+                (function () {
+                    var det = document.getElementById('videogen-form');
+                    if (det) det.addEventListener('toggle', function () { if (det.open) rd6VideoStudioInit(); });
+                })();
+            </script>
             {% endif %}
             <div class="scenes-pills" id="scenes-pills"></div>
 

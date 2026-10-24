@@ -12,6 +12,7 @@ Uso bundleado (depois do PyInstaller):
 from __future__ import annotations
 
 import os
+import socket
 import subprocess
 import sys
 import threading
@@ -153,6 +154,58 @@ def _spawn_imagegen_worker(project_root: Path, home: Path):
         return None
 
 
+def _port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        return s.connect_ex((host, port)) == 0
+
+
+def _find_comfyui() -> "Path | None":
+    """Acha a instalação portable do ComfyUI. Checa ROLL3D6_COMFYUI_HOME e os
+    locais comuns. Precisa de python_embeded/python.exe + ComfyUI/main.py."""
+    cands = []
+    env = os.environ.get("ROLL3D6_COMFYUI_HOME")
+    if env:
+        cands.append(Path(env))
+    userprofile = os.environ.get("USERPROFILE") or str(Path.home())
+    cands += [
+        Path(userprofile) / "ComfyUI_windows_portable",
+        Path(userprofile) / "Desktop" / "ComfyUI_windows_portable",
+        Path("C:/ComfyUI_windows_portable"),
+    ]
+    for c in cands:
+        try:
+            if (c / "python_embeded" / "python.exe").exists() and (c / "ComfyUI" / "main.py").exists():
+                return c
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def _spawn_comfyui():
+    """Sobe o ComfyUI junto do app (parte integrante). Se a porta 8188 já estiver
+    em uso (ex. o usuário abriu o .bat), não duplica. Se não achar a instalação,
+    só não sobe — os estúdios degradam pra 'offline' sem quebrar nada."""
+    if _port_in_use(8188):
+        return None
+    comfy = _find_comfyui()
+    if comfy is None:
+        return None
+    py = comfy / "python_embeded" / "python.exe"
+    cmd = [str(py), "-s", str(comfy / "ComfyUI" / "main.py"),
+           "--lowvram", "--port", "8188", "--disable-auto-launch"]
+    creationflags = 0
+    if os.name == "nt":
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        return subprocess.Popen(
+            cmd, cwd=str(comfy), creationflags=creationflags,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main() -> int:
     # Modo daphne: o subprocess que serve HTTP.
     if len(sys.argv) >= 2 and sys.argv[1] == "--daphne":
@@ -196,6 +249,10 @@ def main() -> int:
     django_server = server.DjangoServer(project_root, home, port)
     django_server.start()
 
+    # ComfyUI como parte integrante: sobe junto do app (se instalado e não já
+    # rodando). Fica idle até a 1ª geração; encerra no fim.
+    comfy_proc = _spawn_comfyui()
+
     # Workers do Estúdio de Imagem e de Vídeo (ComfyUI). Ociosos se o ComfyUI
     # não estiver de pé.
     imagegen_proc = _spawn_imagegen_worker(project_root, home)
@@ -235,7 +292,7 @@ def main() -> int:
         t = getattr(api, "_tunnel", None)
         if t is not None:
             t.stop()
-        for _proc in (imagegen_proc, videogen_proc):
+        for _proc in (imagegen_proc, videogen_proc, comfy_proc):
             if _proc is not None:
                 try:
                     _proc.terminate()
