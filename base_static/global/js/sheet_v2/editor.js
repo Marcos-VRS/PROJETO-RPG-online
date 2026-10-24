@@ -114,10 +114,21 @@
         try {
             const list = JSON.parse(el.value || '[]');
             return list.reduce((acc, e) => {
-                if (useComputed && typeof e.computed_cost === 'number') return acc + e.computed_cost;
-                const c = (e.manual_cost !== null && e.manual_cost !== undefined) ? parseInt(e.manual_cost, 10) :
-                          (e.custom_cost !== null && e.custom_cost !== undefined) ? parseInt(e.custom_cost, 10) :
-                          (typeof e.computed_cost === 'number' ? e.computed_cost : 0);
+                let c;
+                if (useComputed) {
+                    // Advantages/Disadvantages: custo do catálogo (computed_cost) ou
+                    // override manual (manual_cost/custom_cost).
+                    if (typeof e.computed_cost === 'number') return acc + e.computed_cost;
+                    c = (e.manual_cost !== null && e.manual_cost !== undefined) ? parseInt(e.manual_cost, 10) :
+                        (e.custom_cost !== null && e.custom_cost !== undefined) ? parseInt(e.custom_cost, 10) : 0;
+                } else {
+                    // Skills: o custo É os pontos investidos (custom_cost sobrepõe se
+                    // for manual). Casa com cost_skill_entry() no backend — antes essa
+                    // soma olhava só computed_cost/custom_cost e ignorava `points`,
+                    // fazendo o total do editor não contar o custo das perícias.
+                    c = (e.custom_cost !== null && e.custom_cost !== undefined) ? parseInt(e.custom_cost, 10) :
+                        (parseInt(e.points, 10) || 0);
+                }
                 return acc + (c || 0);
             }, 0);
         } catch (_) { return 0; }
@@ -213,19 +224,17 @@
             row.appendChild(levelInput);
 
             function configureLevelInput(canLevels, currentLevel) {
-                if (canLevels) {
-                    levelInput.type = 'number';
-                    levelInput.min = '1';
-                    levelInput.readOnly = false;
-                    levelInput.classList.remove('v2-level-disabled');
-                    levelInput.value = currentLevel || 1;
-                    levelInput.placeholder = '#';
-                } else {
-                    levelInput.type = 'text';
-                    levelInput.readOnly = true;
-                    levelInput.classList.add('v2-level-disabled');
-                    levelInput.value = '—';
-                }
+                // "permita para todos por enquanto": o nível é editável em TODAS as
+                // vantagens/desvantagens (inclusive manuais), não só nas per_level.
+                // O custo só é recalculado automaticamente pra catálogo per_level;
+                // nas demais o nível é uma quantidade que o user controla (o custo
+                // manual continua manual). O parâmetro canLevels virou informativo.
+                levelInput.type = 'number';
+                levelInput.min = '1';
+                levelInput.readOnly = false;
+                levelInput.classList.remove('v2-level-disabled');
+                levelInput.value = currentLevel || 1;
+                levelInput.placeholder = '#';
             }
             configureLevelInput(supportsLevels, entry.level);
 
@@ -289,32 +298,46 @@
             // ============ Modifiers drawer ============
 
             function recomputeEntryCost() {
-                // Recalcula custo base + soma modifiers
-                let base;
-                if (entry.is_manual) {
-                    base = parseInt(entry.manual_cost, 10) || 0;
-                } else {
-                    const opt = findCatalogEntry(kind, entry.key);
-                    if (!opt) {
-                        entry.computed_cost = 0;
-                        costInput.value = '';
-                        return;
-                    }
-                    if (opt.cost_type === 'per_level') {
-                        base = (opt.value || 0) * (entry.level || 1);
-                    } else {
-                        base = opt.value || 0;
-                    }
-                }
                 const totalPct = sumModifierPct(entry.modifiers);
+                const pctSpan = drawer.querySelector('.v2-mods-total-pct');
+
+                if (entry.is_manual) {
+                    // Modo caneta (edição livre): o custo é EXATAMENTE o valor
+                    // digitado. Limitações/ampliações NÃO recalculam o valor — o
+                    // user manda no custo final. (Casa com o backend, que pro
+                    // manual retorna manual_cost cru, ignorando modificadores.)
+                    entry.computed_cost = parseInt(entry.manual_cost, 10) || 0;
+                    costInput.value = entry.computed_cost;
+                    if (pctSpan) {
+                        pctSpan.textContent = (totalPct >= 0 ? '+' : '') + totalPct
+                            + '% (não aplicado no modo manual)';
+                    }
+                    modBtn.textContent = entry.modifiers.length > 0 ? `MOD (${entry.modifiers.length})` : 'MOD';
+                    return;
+                }
+
+                // Modo catálogo (direto do livro): base × (1 + %), aplicando as
+                // limitações/ampliações em tempo real. Ex.: base 150 com -80% = 30.
+                const opt = findCatalogEntry(kind, entry.key);
+                if (!opt) {
+                    entry.computed_cost = 0;
+                    costInput.value = '';
+                    return;
+                }
+                let base;
+                if (opt.cost_type === 'per_level') {
+                    base = (opt.value || 0) * (entry.level || 1);
+                } else {
+                    base = opt.value || 0;
+                }
                 const cappedPct = Math.max(totalPct, -80);
                 const adjusted = base * (1 + cappedPct / 100);
                 entry.computed_cost = adjusted >= 0 ? Math.ceil(adjusted) : Math.floor(adjusted);
                 costInput.value = entry.computed_cost;
-                // Atualiza display %
-                const pctSpan = drawer.querySelector('.v2-mods-total-pct');
-                if (pctSpan) pctSpan.textContent = (totalPct >= 0 ? '+' : '') + totalPct + '%' + (cappedPct !== totalPct ? ' (capped at -80%)' : '');
-                // Atualiza counter no botão
+                if (pctSpan) {
+                    pctSpan.textContent = (totalPct >= 0 ? '+' : '') + totalPct + '%'
+                        + (cappedPct !== totalPct ? ' (capped at -80%)' : '');
+                }
                 modBtn.textContent = entry.modifiers.length > 0 ? `MOD (${entry.modifiers.length})` : 'MOD';
             }
 

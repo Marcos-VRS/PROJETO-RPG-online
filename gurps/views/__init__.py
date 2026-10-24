@@ -9,3 +9,15 @@ from .sheet_v2 import (
     api_quick_add, api_quick_remove,
 )
 from .toolbox import toolbox_list, toolbox_create, toolbox_delete
+from .map_gen import (
+    map_gen_request, map_gen_status, map_gen_list, map_gen_svg,
+    map_gen_approve, map_gen_discard,
+)
+from .image_gen import (
+    imagegen_status, imagegen_request, imagegen_req_status, imagegen_list,
+    imagegen_png, imagegen_approve, imagegen_discard, imagegen_journal,
+)
+from .video_gen import (
+    videogen_request, videogen_list, videogen_mp4,
+    videogen_approve, videogen_discard, videogen_music,
+)

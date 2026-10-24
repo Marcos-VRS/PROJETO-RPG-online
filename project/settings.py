@@ -79,6 +79,9 @@ INSTALLED_APPS = [
     "django_htmx",
     "channels",
     "corsheaders",  # Certifique-se de que o CORS está instalado
+    "django_json_widget",  # JSONEditorWidget no admin (fichas V2/MapState).
+    #                        Sem isso o template django_json_widget.html não é
+    #                        achado e o admin da ficha V2 dá 500.
     # "rag",  # hibernado desde 2026-05-14 (pivô desktop): depende de pgvector.
     #          ver docs/RAG_ARCHITECTURE.md
 ]

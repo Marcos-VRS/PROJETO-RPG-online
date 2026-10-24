@@ -1100,6 +1100,78 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
     background: var(--rd6-accent-bright, #e0c378);
     transform: translateY(-50%) scale(1.12);
 }
+/* botão é <button> agora — zera defaults do UA */
+.player-side-next { cursor: pointer; padding: 0; font-family: inherit; }
+
+/* Dropdown de troca de personagem (aparece ao lado da setinha) */
+.player-char-menu {
+    position: fixed;
+    left: 124px;  /* logo à direita da setinha (88 + 28 + gap) */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1502;
+    min-width: 180px;
+    max-width: 260px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: var(--rd6-bg, #1a1a1a);
+    border: 1px solid var(--rd6-border, #555);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    padding: 6px;
+}
+.player-char-menu[hidden] { display: none; }
+.pcm-title {
+    font-size: 11px;
+    color: var(--rd6-text-dim, #999);
+    padding: 4px 8px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.pcm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--rd6-text, #e8e8e8) !important;
+    text-decoration: none !important;
+    font-size: 14px;
+}
+.pcm-item:hover { background: var(--rd6-accent, #c9a55c); color: #000 !important; }
+.pcm-item.is-current { background: rgba(201, 165, 92, 0.18); font-weight: 700; }
+.pcm-check { color: var(--rd6-accent, #c9a55c); }
+.pcm-item.is-current:hover .pcm-check { color: #000; }
+
+/* Seletor de referência do journal (Estúdio de Imagem) */
+.ig-jref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--rd6-border, #444);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+}
+.ig-jref-grid[hidden] { display: none; }
+.ig-jref-item {
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    background: none;
+    cursor: pointer;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+.ig-jref-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-jref-item.is-sel { border-color: var(--rd6-accent, #c9a55c); }
+.mg-xprompt { margin: 2px 0 4px; font-size: 10px; color: var(--rd6-text-dim, #999); }
+.mg-xprompt summary { cursor: pointer; opacity: 0.7; }
+.mg-xprompt div { margin-top: 3px; font-style: italic; line-height: 1.3; }
 
 .player-side-icon {
     width: 56px;
@@ -1269,3 +1341,196 @@ body.has-turn-controls { --rd6-topbar-offset: 98px; }
    — controlado também pelo template (.player-mini sempre clicável,
    mas o popover só existe em GM-renderized DOM). */
 .player-mini { cursor: pointer; }
+
+/* ============================================================
+   JOURNAL MODAL — redesign responsivo (2026-08-09)
+   Ocupa ~75% da tela, cabeçalho fixo com filtro, corpo rolável
+   com grid de cards (miniatura + nome + descrição). Escopado só
+   às janelas do journal — não afeta as outras modais (.janela).
+   ============================================================ */
+#janela-journal-gm.janela,
+#janela-journal-player.janela {
+    width: 75vw !important;
+    max-width: 75vw !important;
+    height: 75vh !important;
+    max-height: 75vh !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    padding: 0 !important;
+    overflow: hidden !important;            /* o scroll vive no .journal-body */
+    background: var(--rd6-bg-elevated) !important;
+    background-image: none !important;      /* sem papiro na modal do journal */
+    flex-direction: column !important;
+    z-index: 1200 !important;               /* acima do chat e das outras janelas */
+}
+#janela-journal-gm.janela.ativa,
+#janela-journal-player.janela.ativa {
+    display: flex !important;
+}
+.journal-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 0 0 auto;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--rd6-border);
+    background: var(--rd6-bg-elevated);
+}
+.journal-title {
+    margin: 0;
+    font-size: 18px;
+    color: var(--rd6-accent) !important;
+    white-space: nowrap;
+}
+.journal-search { flex: 1; max-width: 360px; }
+.journal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 12px 20px 24px;
+}
+.journal-section-title {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rd6-text-dim);
+    margin: 14px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rd6-border);
+}
+.journal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 8px;
+}
+.journal-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--rd6-bg) !important;
+    border: 1px solid var(--rd6-border) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    transition: border-color var(--rd6-transition), transform var(--rd6-transition);
+}
+.journal-card:hover { border-color: var(--rd6-accent) !important; transform: translateY(-2px); }
+.journal-card.is-hidden-asset { opacity: 0.72; }
+.journal-thumb {
+    aspect-ratio: 4 / 3;
+    background: #161616;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: zoom-in;
+}
+.journal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.journal-noimg { color: var(--rd6-text-dim); font-size: 11px; }
+.journal-card-name {
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 10px 2px;
+    color: var(--rd6-text);
+    line-height: 1.25;
+}
+.journal-hidden-tag {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--rd6-hp-bright, #e0736b);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.journal-card-desc {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--rd6-text-dim);
+    padding: 0 10px 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.journal-empty { color: var(--rd6-text-dim); font-size: 13px; padding: 10px 4px; }
+
+/* Lightbox: imagem grande por cima da tela */
+.journal-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.86);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    cursor: zoom-out;
+}
+.journal-lightbox.ativa { display: flex; }
+.journal-lightbox .jlb-inner {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    max-width: 94vw;
+    max-height: 92vh;
+    background: var(--rd6-bg-elevated);
+    border: 1px solid var(--rd6-border);
+    border-radius: 10px;
+    padding: 14px;
+    position: relative;
+    cursor: default;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+.journal-lightbox .jlb-img {
+    max-width: 66vw;
+    max-height: 86vh;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #111;
+}
+.journal-lightbox:not(.jlb-has-text) .jlb-img { max-width: 90vw; }
+.journal-lightbox .jlb-panel {
+    width: min(340px, 32vw);
+    overflow-y: auto;
+    padding: 4px 6px 4px 4px;
+    color: var(--rd6-text);
+}
+.journal-lightbox .jlb-title {
+    color: var(--rd6-accent);
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-family: var(--rd6-font-display, inherit);
+}
+.journal-lightbox .jlb-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--rd6-text-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.journal-lightbox .jlb-close {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--rd6-text-dim);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+}
+.journal-lightbox .jlb-close:hover { color: var(--rd6-hp-bright, #e0736b); }
+@media (max-width: 680px) {
+    .journal-lightbox .jlb-inner { flex-direction: column; }
+    .journal-lightbox .jlb-panel { width: auto; max-height: 28vh; }
+    .journal-lightbox .jlb-img { max-width: 88vw; max-height: 52vh; }
+}
+
+@media (max-width: 680px) {
+    #janela-journal-gm.janela,
+    #janela-journal-player.janela {
+        width: 94vw !important; max-width: 94vw !important;
+        height: 88vh !important; max-height: 88vh !important;
+    }
+    .journal-head { flex-wrap: wrap; }
+    .journal-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}

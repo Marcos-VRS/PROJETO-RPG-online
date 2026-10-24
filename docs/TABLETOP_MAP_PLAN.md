@@ -1,8 +1,55 @@
 # Tabletop Map System — Plano técnico
 
 > **Objetivo:** transformar a "imagem de fundo" atual da tela de jogo em um **mapa tabletop interativo** estilo Foundry/Roll20, mas enxuto e GURPS-first.
-> **Status:** planejamento. Não há código escrito ainda.
-> **Sessão de origem:** 2026-05-24 (user pediu antes de sair, retoma em ~1h).
+> **Status:** Fases 1-5 implementadas + Fase 6 parcial. **Arquitetura migrou** (2026-06-05): o save state vive na CENA, não no mapa. Ver §0.
+> **Sessão de origem:** 2026-05-24. **Refactor estado-na-cena:** 2026-06-05.
+
+---
+
+## 0. ARQUITETURA ATUAL (implementada — 2026-06-05)
+
+> Esta seção **supersede** o modelo original (§3.1, §5, decisão §6.5) onde houver conflito. O plano abaixo (§1+) é preservado como histórico de planejamento.
+
+### Princípio central: **o estado pertence à CENA, o mapa é só um fundo**
+
+Antes, tokens/desenhos viviam no `MapState` (atrelado ao asset/mapa). Isso fazia o estado "viajar junto" com a imagem. O user pediu o contrário: **cada cena é um save state completo e independente**; o mapa é apenas uma imagem de fundo reutilizável.
+
+**Modelo de dados (tudo em `Campanha.scene_state`, JSON):**
+
+```js
+scene = {
+  id, name, character_ids: [...], current_turn_id,
+  background_asset_id: null | <CampanhaAssets.id>,  // null = branco 10000×10000; senão a IMAGEM do asset
+  tokens:   [ {…}, … ],     // schema do token igual §3.2 (sem asset_id)
+  drawings: [ {…}, … ],     // schema do drawing igual §3.3
+  char_runtime: { "<char_id>": { hp_atual, fp_atual, status_effects: [...] } }  // vida/status POR CENA
+}
+```
+
+- **`MapState` ficou vestigial.** Não é mais lido/escrito pra tokens/desenhos. Continua existindo só pra `data-map-state` e soft-migrate antigo do grid. Tokens/desenhos NÃO vivem mais nele.
+- **Asset enviado = só imagem de fundo.** Nunca guarda estado, nunca é apagado pelo sistema de cenas. Trocar o fundo de uma cena não mexe nos tokens/desenhos dela.
+- **Mapa em branco = `background_asset_id: null`** → canvas pinta um retângulo branco 10000×10000 (~200×200 hexes). Não existe "asset em branco" — então não há o que apagar ao deletar a cena. (Os blanks slot=3 da versão intermediária são limpos no 1º load do GM.)
+- **Vida/status por cena:** com cena ativa, HP/FP/status vêm de `scene.char_runtime` (ausente = full). Sem cena, cai pro `runtime_stats` global (legado). Dano numa cena não vaza pra outra.
+- **Grid** continua na `Campanha` (compartilhado entre cenas/fundos). Migration 0061.
+
+### O que dirige a renderização
+
+A view `game_interface` renderiza **sempre a cena ativa**: fundo (`background_asset_id` → imagem ou branco) + `scene.tokens` + `scene.drawings` + `scene.char_runtime`. Não usa mais `?asset`. Trocar de cena (ou o fundo dela) → `map_switched` → reload → renderiza a cena ativa.
+
+### WS protocol (atual)
+
+Os handlers `map_token_*` / `map_drawing_*` operam na **cena ATIVA** da campanha (server resolve via `scene_state.active_scene_id`). O cliente ainda manda `asset_id` nas mensagens por compat, mas o **server ignora**. Broadcasts não levam mais `asset_id`.
+
+- `map_switch {asset_id}` → define `scene.background_asset_id` da cena ativa (asset_id 0/null = branco). Broadcast `map_switched` (sem payload) → todos recarregam.
+- `scene_state_set` → o cliente manda cenas "leves" (id/name/character_ids/turn). O server faz **merge** preservando os campos pesados gerenciados por ele (tokens/drawings/char_runtime/background_asset_id). Broadcast de scene_state também é "leve" (economia de banda — regra #5).
+- Vitals: `POST /character/<id>/vitals/` escreve em `scene.char_runtime` da cena ativa; `character_status_set` (WS) idem pra status.
+
+### Arquivos do refactor (2026-06-05)
+
+- `gurps/consumers.py` — `_persist_scene_state` (merge), `_load_active_scene_ctx`, `_light_scene_state`; handlers de token/desenho/grid/switch reescritos pra cena ativa; `_save_char_status` na cena.
+- `gurps/views/interface_jogo.py` — `game_interface` renderiza a cena ativa; `_build_player_mini(runtime_override=…)`; `adjust_character_vitals` na cena; `_light_scene_state_for_client`; limpeza de blanks slot=3.
+- `base_static/global/js/map/canvas.js` — fundo branco 10000×10000 quando sem imagem (`fitToBlank`).
+- `base_templates/global/interface_jogo.html` — "Fundo da cena" (com **⬜ Em branco**); `rd6OnMapSwitched` recarrega; Ctrl+Z desfaz último desenho.
 
 ---
 
@@ -34,6 +81,8 @@
 ## 3. ARQUITETURA
 
 ### 3.1 Modelo de dados
+
+> ⚠️ **SUPERSEDED por §0 (2026-06-05).** Tokens/drawings NÃO vivem mais no `MapState` — vivem na cena (`scene.tokens` / `scene.drawings`). O `MapState` abaixo virou vestigial. Mantido como histórico.
 
 Modelo novo `MapState` (1:1 com `CampanhaAssets`):
 
@@ -278,7 +327,7 @@ Hex math: usar funções do Red Blob Games (axial coords, pixel→hex, etc.), co
 
 4. **Hex orientation:** ✅ **Flat-top**. Lado plano em cima. Padrão GURPS oficial.
 
-5. **Persistência de desenhos:** ✅ **Atrelados ao mapa, persistem**. Cada desenho fica no `MapState.drawings` do mapa específico. Trocar pra outro mapa esconde; voltar reaparece.
+5. **Persistência de desenhos:** ⚠️ **REVISADO em 2026-06-05 (ver §0).** Antes: atrelados ao mapa (`MapState.drawings`). Agora: **atrelados à CENA** (`scene.drawings`). Cada cena tem o próprio conjunto; trocar o fundo da cena não mexe nos desenhos. O mapa virou só imagem de fundo.
 
 ### Médias
 

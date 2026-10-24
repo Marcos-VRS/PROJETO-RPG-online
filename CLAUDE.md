@@ -21,6 +21,7 @@ O produto migra de **SaaS hospedado no GCP** para **aplicativo desktop com dois 
 - [Fluxo de combate passo a passo](docs/TABLETOP_COMBAT_FLOW.md) — setup → turno → ataque → defesa → dano
 - [Conversões de unidades](docs/UNIT_CONVERSIONS.md) — yard=m (fixed 1:1), lb→kg, helpers Py/JS
 - [Ficha V3 — roadmap](docs/FICHA_V3_ROADMAP.md) — placeholder, só depois do tabletop estar funcional
+- [Geração de mapas por IA](docs/MAP_GEN_PLAN.md) — GM manda prompt → Claude headless gera SVG na escala → aprovação → asset (feature aprovada 2026-08-09, em implementação)
   - **Catálogos JSON estruturados** em `gurps/data/`:
     - `attributes.json` — ST/DX/IQ/HT + características secundárias + tabela de dano + encumbrance
     - `advantages.json` — 246 vantagens (Basic Set + Powers cap 2)

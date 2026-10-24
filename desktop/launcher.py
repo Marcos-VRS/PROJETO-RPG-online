@@ -12,6 +12,7 @@ Uso bundleado (depois do PyInstaller):
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -67,10 +68,101 @@ def _run_as_daphne() -> int:
     return 0
 
 
+def _run_as_imagegen_worker() -> int:
+    """Modo subprocess: roda o worker do Estúdio de Imagem (ComfyUI). Chamado
+    via `roll3d6.exe --imagegen-worker`. Chama o handle do management command
+    direto (evita a descoberta de commands, que falha no app bundleado)."""
+    runtime_config.bootstrap_env()
+    import django  # noqa: WPS433
+
+    django.setup()
+    from gurps.management.commands.imagegen_worker import Command  # noqa: WPS433
+    from gurps import comfyui_client  # noqa: WPS433
+
+    try:
+        Command().handle(
+            interval=3.0, url=comfyui_client.DEFAULT_URL,
+            ckpt=comfyui_client.DEFAULT_CKPT, timeout=300, once=False,
+            claude="claude", model="sonnet",
+        )
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def _run_as_videogen_worker() -> int:
+    """Modo subprocess: roda o worker do Estúdio de Vídeo (AnimateDiff + ffmpeg).
+    Chamado via `roll3d6.exe --videogen-worker`."""
+    runtime_config.bootstrap_env()
+    import django  # noqa: WPS433
+
+    django.setup()
+    from gurps.management.commands.videogen_worker import Command  # noqa: WPS433
+    from gurps import comfyui_client  # noqa: WPS433
+
+    try:
+        Command().handle(
+            interval=4.0, url=comfyui_client.DEFAULT_URL, timeout=900,
+            claude="claude", model="sonnet", once=False,
+        )
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def _spawn_worker(project_root: Path, home: Path, flag: str):
+    """Sobe um worker como subprocess (ao lado do daphne). Genérico pro flag dado."""
+    if getattr(sys, "frozen", False):
+        cmd = [sys.executable, flag]
+    else:
+        cmd = [sys.executable, "-m", "desktop.launcher", flag]
+    env = dict(os.environ)
+    env["ROLL3D6_DESKTOP_HOME"] = str(home)
+    env.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+    creationflags = 0
+    if os.name == "nt":
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        return subprocess.Popen(
+            cmd, cwd=str(project_root), env=env, creationflags=creationflags,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _spawn_imagegen_worker(project_root: Path, home: Path):
+    """Sobe o worker de imagem como subprocess (ao lado do daphne). Se o ComfyUI
+    não estiver de pé, o worker só fica ocioso — não quebra nada."""
+    if getattr(sys, "frozen", False):
+        cmd = [sys.executable, "--imagegen-worker"]
+    else:
+        cmd = [sys.executable, "-m", "desktop.launcher", "--imagegen-worker"]
+    env = dict(os.environ)
+    env["ROLL3D6_DESKTOP_HOME"] = str(home)
+    env.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+    creationflags = 0
+    if os.name == "nt":
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        return subprocess.Popen(
+            cmd, cwd=str(project_root), env=env, creationflags=creationflags,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main() -> int:
     # Modo daphne: o subprocess que serve HTTP.
     if len(sys.argv) >= 2 and sys.argv[1] == "--daphne":
         return _run_as_daphne()
+    # Modo worker de imagem: subprocess que gera imagens via ComfyUI.
+    if len(sys.argv) >= 2 and sys.argv[1] == "--imagegen-worker":
+        return _run_as_imagegen_worker()
+    # Modo worker de vídeo: subprocess que gera vídeos via AnimateDiff + ffmpeg.
+    if len(sys.argv) >= 2 and sys.argv[1] == "--videogen-worker":
+        return _run_as_videogen_worker()
 
     # 1. Bootstrap de paths e SECRET_KEY antes de importar Django.
     home = runtime_config.bootstrap_env()
@@ -103,6 +195,11 @@ def main() -> int:
 
     django_server = server.DjangoServer(project_root, home, port)
     django_server.start()
+
+    # Workers do Estúdio de Imagem e de Vídeo (ComfyUI). Ociosos se o ComfyUI
+    # não estiver de pé.
+    imagegen_proc = _spawn_imagegen_worker(project_root, home)
+    videogen_proc = _spawn_worker(project_root, home, "--videogen-worker")
 
     def _boot_async():
         if not server.wait_ready(port, timeout=30):
@@ -138,6 +235,12 @@ def main() -> int:
         t = getattr(api, "_tunnel", None)
         if t is not None:
             t.stop()
+        for _proc in (imagegen_proc, videogen_proc):
+            if _proc is not None:
+                try:
+                    _proc.terminate()
+                except Exception:  # noqa: BLE001
+                    pass
         django_server.stop()
         session_lock.release()
 

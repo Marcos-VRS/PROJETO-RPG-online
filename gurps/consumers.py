@@ -161,97 +161,197 @@ class ChatConsumer(AsyncWebsocketConsumer):
             s["current_turn_id"] = cur_int
 
         new_state["version"] = 2
-        saved = await self._save_state(new_state)
+        saved, reload_map = await self._persist_scene_state(new_state)
+        # Broadcast LEVE: o cliente não usa tokens/drawings/char_runtime no
+        # RD6_SCENE_STATE (o mapa lê deles via reload). Economiza banda.
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "scene_state_changed", "scene_state": saved},
+            {"type": "scene_state_changed",
+             "scene_state": self._light_scene_state(saved)},
         )
+        # Troca de cena ATIVA → todos recarregam pra ver o fundo + tokens +
+        # desenhos + vida DAQUELA cena (estado vive na cena, não no mapa).
+        if reload_map:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "map_switched"},
+            )
+
+    @database_sync_to_async
+    def _persist_scene_state(self, new_state):
+        """Salva scene_state preservando o estado pesado gerenciado pelo servidor.
+
+        O cliente manda cenas "leves" (id/name/character_ids/current_turn_id).
+        Os campos pesados — tokens, drawings, char_runtime, background_asset_id —
+        vivem no servidor. Aqui fazemos MERGE: cena existente preserva esses
+        campos do estado salvo; cena nova começa vazia (fundo em branco, sem
+        tokens nem desenhos). NÃO cria nem apaga assets: o mapa é só um fundo.
+
+        Retorna (saved_state, reload_map). reload_map=True quando a cena ATIVA
+        muda — aí os clientes recarregam pra trocar fundo/tokens/desenhos/vida.
+        """
+        from gurps.models import Campanha
+        try:
+            campanha = Campanha.objects.get(id=self.room_name)
+        except (Campanha.DoesNotExist, ValueError):
+            return new_state, False
+
+        old_state = campanha.scene_state if isinstance(campanha.scene_state, dict) else {}
+        old_by_id = {s.get("id"): s for s in (old_state.get("scenes") or [])
+                     if isinstance(s, dict)}
+        old_active = old_state.get("active_scene_id")
+
+        MANAGED = ("tokens", "drawings", "char_runtime", "background_asset_id")
+        for s in new_state.get("scenes", []):
+            if not isinstance(s, dict):
+                continue
+            old = old_by_id.get(s.get("id"))
+            if old is not None:
+                for k in MANAGED:
+                    if k in old:
+                        s[k] = old[k]
+            s.setdefault("tokens", [])
+            s.setdefault("drawings", [])
+            s.setdefault("char_runtime", {})
+            s.setdefault("background_asset_id", None)
+
+        campanha.scene_state = new_state
+        campanha.save(update_fields=["scene_state"])
+
+        reload_map = (new_state.get("active_scene_id") != old_active)
+        return new_state, reload_map
+
+    @staticmethod
+    def _light_scene_state(state):
+        """scene_state enxuto pro WS: sem os campos pesados que o cliente não
+        precisa em RD6_SCENE_STATE (tokens/drawings/char_runtime)."""
+        if not isinstance(state, dict):
+            return state
+        light = []
+        for s in state.get("scenes") or []:
+            if not isinstance(s, dict):
+                continue
+            light.append({
+                "id": s.get("id"),
+                "name": s.get("name"),
+                "character_ids": s.get("character_ids", []),
+                "current_turn_id": s.get("current_turn_id"),
+                "background_asset_id": s.get("background_asset_id"),
+            })
+        return {
+            "version": state.get("version", 2),
+            "active_scene_id": state.get("active_scene_id"),
+            "scenes": light,
+        }
+
+    def _load_active_scene_ctx(self):
+        """(sync) Carrega a campanha + a cena ATIVA (dict mutável), garantindo
+        tokens/drawings/char_runtime. Retorna (campanha, scene) ou (campanha,
+        None) se não há cena. Salve com campanha.save(update_fields=['scene_state'])
+        após mutar a cena."""
+        from gurps.models import Campanha
+        try:
+            campanha = Campanha.objects.get(id=self.room_name)
+        except (Campanha.DoesNotExist, ValueError):
+            return None, None
+        state = campanha.scene_state if isinstance(campanha.scene_state, dict) else {}
+        scenes = state.get("scenes") or []
+        aid = state.get("active_scene_id")
+        scene = next((s for s in scenes if isinstance(s, dict) and s.get("id") == aid), None)
+        if scene is None and scenes:
+            scene = scenes[0]
+        if scene is None:
+            return campanha, None
+        scene.setdefault("tokens", [])
+        scene.setdefault("drawings", [])
+        scene.setdefault("char_runtime", {})
+        return campanha, scene
 
     # ---- map control --------------------------------------------------------
 
     async def _handle_map_grid_config(self, data):
+        # Grid é da Campanha (compartilhado entre cenas/fundos). asset_id é
+        # ignorado — o fundo pode ser em branco (sem asset).
         if not await self._is_gm():
             return
-        asset_id = data.get("asset_id")
         cfg = data.get("config") or {}
-        if asset_id is None:
-            return
-        saved = await self._save_map_grid(int(asset_id), cfg)
+        saved = await self._save_map_grid(cfg)
         if saved is None:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_state_changed",
-             "asset_id": int(asset_id),
-             "map_state": saved},
+            {"type": "map_state_changed", "map_state": saved},
         )
 
     async def _handle_map_switch(self, data):
+        # "Trocar mapa" agora = definir o FUNDO da cena ativa. asset_id None/0
+        # → fundo em branco; senão a imagem daquele asset. Tokens/desenhos da
+        # cena NÃO mudam (estado vive na cena).
         if not await self._is_gm():
             return
-        asset_id = data.get("asset_id")
-        if asset_id is None:
+        ok = await self._set_active_scene_background(data.get("asset_id"))
+        if not ok:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_switched", "asset_id": int(asset_id)},
+            {"type": "map_switched"},
         )
+
+    @database_sync_to_async
+    def _set_active_scene_background(self, asset_id):
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
+            return False
+        if asset_id in (None, "", 0, "0"):
+            scene["background_asset_id"] = None
+        else:
+            try:
+                scene["background_asset_id"] = int(asset_id)
+            except (TypeError, ValueError):
+                return False
+        campanha.save(update_fields=["scene_state"])
+        return True
 
     # ---- drawings ---------------------------------------------------------
 
     async def _handle_map_drawing_add(self, data):
-        asset_id = data.get("asset_id")
-        drawing = data.get("drawing") or {}
-        if asset_id is None:
-            return
-        saved = await self._add_drawing(int(asset_id), drawing)
+        saved = await self._add_drawing(data.get("drawing") or {})
         if saved is None:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_drawing_added",
-             "asset_id": int(asset_id), "drawing": saved},
+            {"type": "map_drawing_added", "drawing": saved},
         )
 
     async def _handle_map_drawing_remove(self, data):
-        asset_id = data.get("asset_id")
         drawing_id = data.get("drawing_id")
-        if asset_id is None or not drawing_id:
+        if not drawing_id:
             return
-        ok = await self._remove_drawing(int(asset_id), drawing_id)
+        ok = await self._remove_drawing(drawing_id)
         if not ok:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_drawing_removed",
-             "asset_id": int(asset_id), "drawing_id": drawing_id},
+            {"type": "map_drawing_removed", "drawing_id": drawing_id},
         )
 
     async def _handle_map_drawing_clear(self, data):
-        # Limpa TODOS os desenhos do mapa (GM only).
+        # Limpa TODOS os desenhos da cena ativa (GM only).
         if not await self._is_gm():
             return
-        asset_id = data.get("asset_id")
-        if asset_id is None:
-            return
-        ok = await self._clear_drawings(int(asset_id))
+        ok = await self._clear_drawings()
         if not ok:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_drawings_cleared", "asset_id": int(asset_id)},
+            {"type": "map_drawings_cleared"},
         )
 
     @database_sync_to_async
-    def _add_drawing(self, asset_id, drawing):
-        from gurps.models import MapState, CampanhaAssets
-        try:
-            asset = CampanhaAssets.objects.get(pk=asset_id)
-        except CampanhaAssets.DoesNotExist:
+    def _add_drawing(self, drawing):
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return None
-        if str(asset.campanha_id) != str(self.room_name):
-            return None
-        ms, _ = MapState.objects.get_or_create(asset=asset)
 
         import secrets
         author_id = self._effective_user_id()
@@ -281,50 +381,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
         if clean["layer"] not in ("gm_only", "visible", "overlay"):
             clean["layer"] = "visible"
-        drawings = list(ms.drawings or [])
+        drawings = scene.get("drawings") or []
         drawings.append(clean)
-        # Limita a 500 desenhos por mapa pra não inchar JSON
+        # Limita a 500 desenhos por cena pra não inchar o JSON
         if len(drawings) > 500:
             drawings = drawings[-500:]
-        ms.drawings = drawings
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["drawings"] = drawings
+        campanha.save(update_fields=["scene_state"])
         return clean
 
     @database_sync_to_async
-    def _remove_drawing(self, asset_id, drawing_id):
-        from gurps.models import MapState
-        ms = MapState.objects.filter(asset_id=asset_id).first()
-        if ms is None:
-            return False
-        if str(ms.asset.campanha_id) != str(self.room_name):
+    def _remove_drawing(self, drawing_id):
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return False
         uid = self._effective_user_id()
-        is_gm = (uid is not None and ms.asset.campanha.dono_id == uid)
+        is_gm = (uid is not None and campanha.dono_id == uid)
 
-        drawings = list(ms.drawings or [])
+        drawings = scene.get("drawings") or []
         target = next((d for d in drawings if d.get("id") == drawing_id), None)
         if target is None:
             return False
         # Owner OR GM
         if not is_gm and target.get("author_id") != uid:
             return False
-        ms.drawings = [d for d in drawings if d.get("id") != drawing_id]
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["drawings"] = [d for d in drawings if d.get("id") != drawing_id]
+        campanha.save(update_fields=["scene_state"])
         return True
 
     @database_sync_to_async
-    def _clear_drawings(self, asset_id):
-        from gurps.models import MapState
-        ms = MapState.objects.filter(asset_id=asset_id).first()
-        if ms is None:
+    def _clear_drawings(self):
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return False
-        if str(ms.asset.campanha_id) != str(self.room_name):
-            return False
-        ms.drawings = []
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["drawings"] = []
+        campanha.save(update_fields=["scene_state"])
         return True
 
     # ---- status effects do personagem -------------------------------------
@@ -371,54 +462,62 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if campanha is None or str(campanha.id) != str(self.room_name):
             return None
 
-        rs = dict(char.runtime_stats or {})
-        rs["status_effects"] = clean
-        char.runtime_stats = rs
-        char.save(update_fields=["runtime_stats"])
+        # Status vive na CENA ativa (char_runtime). Sem cena → runtime_stats global.
+        state = campanha.scene_state if isinstance(campanha.scene_state, dict) else {}
+        scenes = state.get("scenes") or []
+        aid = state.get("active_scene_id")
+        scene = next((s for s in scenes if isinstance(s, dict) and s.get("id") == aid), None)
+        if scene is None and scenes:
+            scene = scenes[0]
+
+        override = None
+        if scene is not None:
+            entry = scene.setdefault("char_runtime", {}).setdefault(str(char.id), {})
+            entry["status_effects"] = clean
+            campanha.scene_state = state
+            campanha.save(update_fields=["scene_state"])
+            override = entry
+        else:
+            rs = dict(char.runtime_stats or {})
+            rs["status_effects"] = clean
+            char.runtime_stats = rs
+            char.save(update_fields=["runtime_stats"])
 
         if isinstance(char, CharacterSheetV2):
             _wrap_v2_as_legacy(char)
         return _build_player_mini(char, present_ids=None, show_numbers=True,
-                                  campanha=campanha)
+                                  campanha=campanha, runtime_override=override)
 
     # ---- tokens -----------------------------------------------------------
 
     async def _handle_map_token_add(self, data):
         if not await self._is_gm():
             return
-        asset_id = data.get("asset_id")
-        token = data.get("token") or {}
-        if asset_id is None:
-            return
-        saved = await self._add_token(int(asset_id), token)
+        saved = await self._add_token(data.get("token") or {})
         if saved is None:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_token_added", "asset_id": int(asset_id), "token": saved},
+            {"type": "map_token_added", "token": saved},
         )
 
     async def _handle_map_token_remove(self, data):
         if not await self._is_gm():
             return
-        asset_id = data.get("asset_id")
         token_id = data.get("token_id")
-        if asset_id is None or not token_id:
+        if not token_id:
             return
-        ok = await self._remove_token(int(asset_id), token_id)
+        ok = await self._remove_token(token_id)
         if not ok:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_token_removed",
-             "asset_id": int(asset_id),
-             "token_id": token_id},
+            {"type": "map_token_removed", "token_id": token_id},
         )
 
     async def _handle_map_token_move(self, data):
-        asset_id = data.get("asset_id")
         token_id = data.get("token_id")
-        if asset_id is None or not token_id:
+        if not token_id:
             return
         patch = {}
         for key in ("hex_x", "hex_y", "facing"):
@@ -426,43 +525,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 patch[key] = data[key]
         if not patch:
             return
-        result = await self._update_token(int(asset_id), token_id, patch, check_perm="owner")
+        result = await self._update_token(token_id, patch, check_perm="owner")
         if result is None:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_token_changed",
-             "asset_id": int(asset_id),
-             "token": result},
+            {"type": "map_token_changed", "token": result},
         )
 
     async def _handle_map_token_update(self, data):
-        asset_id = data.get("asset_id")
         token_id = data.get("token_id")
         patch = data.get("patch") or {}
-        if asset_id is None or not token_id or not patch:
+        if not token_id or not patch:
             return
         # Filtra campos que o owner pode editar; GM pode tudo
-        result = await self._update_token(int(asset_id), token_id, patch, check_perm="owner")
+        result = await self._update_token(token_id, patch, check_perm="owner")
         if result is None:
             return
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "map_token_changed",
-             "asset_id": int(asset_id),
-             "token": result},
+            {"type": "map_token_changed", "token": result},
         )
 
     @database_sync_to_async
-    def _add_token(self, asset_id, token):
-        from gurps.models import MapState, CampanhaAssets, CharacterSheetV2, CharacterSheet
-        try:
-            asset = CampanhaAssets.objects.get(pk=asset_id)
-        except CampanhaAssets.DoesNotExist:
+    def _add_token(self, token):
+        from gurps.models import CampanhaAssets, CharacterSheetV2, CharacterSheet
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return None
-        if str(asset.campanha_id) != str(self.room_name):
-            return None
-        ms, _ = MapState.objects.get_or_create(asset=asset)
         # Token id gerado server-side pra evitar colisão
         import secrets
         token_id = "tok_" + secrets.token_hex(4)
@@ -487,8 +577,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 except (ValueError, AttributeError):
                     pass
                 if not image_url:
+                    # linked_asset_id pode estar no info_campanha (V1) ou, no
+                    # caso da ficha rápida V2, só em runtime_stats. O char aqui
+                    # é carregado cru (sem wrapper), então checamos os três.
                     info = getattr(char, "info_campanha", None) or {}
-                    linked = info.get("linked_asset_id") or getattr(char, "linked_asset_id", None)
+                    linked = (info.get("linked_asset_id")
+                              or getattr(char, "linked_asset_id", None)
+                              or (getattr(char, "runtime_stats", None) or {}).get("linked_asset_id"))
                     if linked:
                         la = CampanhaAssets.objects.filter(pk=int(linked)).first() if str(linked).isdigit() else None
                         if la and la.image:
@@ -498,7 +593,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                                 pass
             if char:
                 from gurps.owner_color import owner_color_for_character
-                owner_color = owner_color_for_character(char, asset.campanha)
+                owner_color = owner_color_for_character(char, campanha)
 
         # basic_move pro movement preview (best-effort; default 5).
         basic_move = 5
@@ -532,41 +627,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "layer": layer,
             "basic_move": basic_move,
         }
-        tokens = list(ms.tokens or [])
+        tokens = scene.get("tokens") or []
         tokens.append(clean)
-        ms.tokens = tokens
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["tokens"] = tokens
+        campanha.save(update_fields=["scene_state"])
         return clean
 
     @database_sync_to_async
-    def _remove_token(self, asset_id, token_id):
-        from gurps.models import MapState
-        ms = MapState.objects.filter(asset_id=asset_id).first()
-        if ms is None:
+    def _remove_token(self, token_id):
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return False
-        if str(ms.asset.campanha_id) != str(self.room_name):
+        tokens = scene.get("tokens") or []
+        new_tokens = [t for t in tokens if t.get("id") != token_id]
+        if len(new_tokens) == len(tokens):
             return False
-        before = len(ms.tokens or [])
-        ms.tokens = [t for t in (ms.tokens or []) if t.get("id") != token_id]
-        if len(ms.tokens) == before:
-            return False
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["tokens"] = new_tokens
+        campanha.save(update_fields=["scene_state"])
         return True
 
     @database_sync_to_async
-    def _update_token(self, asset_id, token_id, patch, check_perm):
-        from gurps.models import MapState, CharacterSheetV2, CharacterSheet
-        ms = MapState.objects.filter(asset_id=asset_id).first()
-        if ms is None:
-            return None
-        if str(ms.asset.campanha_id) != str(self.room_name):
+    def _update_token(self, token_id, patch, check_perm):
+        from gurps.models import CharacterSheetV2, CharacterSheet
+        campanha, scene = self._load_active_scene_ctx()
+        if scene is None:
             return None
         uid = self._effective_user_id()
-        is_gm = (uid is not None and ms.asset.campanha.dono_id == uid)
+        is_gm = (uid is not None and campanha.dono_id == uid)
 
-        tokens = list(ms.tokens or [])
+        tokens = scene.get("tokens") or []
         target = None
         for t in tokens:
             if t.get("id") == token_id:
@@ -621,24 +710,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             else:
                 target[k] = v
 
-        ms.tokens = tokens
-        ms.version = (ms.version or 0) + 1
-        ms.save()
+        scene["tokens"] = tokens
+        campanha.save(update_fields=["scene_state"])
         return target
 
     @database_sync_to_async
-    def _save_map_grid(self, asset_id, cfg):
-        # Grid config agora vive na Campanha (compartilhado entre todos os
-        # mapas). asset_id ainda recebemos pra compat mas usamos pra achar
-        # a Campanha; o salvar e a leitura usam Campanha.
-        from gurps.models import Campanha, CampanhaAssets
+    def _save_map_grid(self, cfg):
+        # Grid vive na Campanha (compartilhado entre cenas/fundos).
+        from gurps.models import Campanha
         try:
-            asset = CampanhaAssets.objects.get(pk=asset_id)
-        except CampanhaAssets.DoesNotExist:
+            c = Campanha.objects.get(id=self.room_name)
+        except (Campanha.DoesNotExist, ValueError):
             return None
-        if str(asset.campanha_id) != str(self.room_name):
-            return None
-        c = asset.campanha
         if "enabled" in cfg:
             c.grid_enabled = bool(cfg["enabled"])
         if "size_px" in cfg:
@@ -659,7 +742,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "grid_offset_y", "grid_color", "grid_opacity"
         ])
         return {
-            "asset_id": asset_id,
             "grid_enabled": c.grid_enabled,
             "grid_size_px": c.grid_size_px,
             "grid_offset_x": c.grid_offset_x,
@@ -790,55 +872,47 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def map_state_changed(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_state_changed",
-            "asset_id": event["asset_id"],
             "map_state": event["map_state"],
         }))
 
     async def map_switched(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_switched",
-            "asset_id": event["asset_id"],
         }))
 
     async def map_token_added(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_token_added",
-            "asset_id": event["asset_id"],
             "token": event["token"],
         }))
 
     async def map_token_removed(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_token_removed",
-            "asset_id": event["asset_id"],
             "token_id": event["token_id"],
         }))
 
     async def map_token_changed(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_token_changed",
-            "asset_id": event["asset_id"],
             "token": event["token"],
         }))
 
     async def map_drawing_added(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_drawing_added",
-            "asset_id": event["asset_id"],
             "drawing": event["drawing"],
         }))
 
     async def map_drawing_removed(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_drawing_removed",
-            "asset_id": event["asset_id"],
             "drawing_id": event["drawing_id"],
         }))
 
     async def map_drawings_cleared(self, event):
         await self.send(text_data=json.dumps({
             "type": "map_drawings_cleared",
-            "asset_id": event["asset_id"],
         }))
 
     async def character_vitals_changed(self, event):

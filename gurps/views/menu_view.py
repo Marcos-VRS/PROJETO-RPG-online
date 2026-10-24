@@ -451,11 +451,11 @@ def add_asset_save(request, campanha_id):
         # Captura os valores do formulário
         name = request.POST.get("name")
         description = request.POST.get("description")
-        show = request.POST.get("show", "off") == "on"  # Converte para booleano
-        if show:
-            slot = 2
-        elif not show:
-            slot = 3
+        show = request.POST.get("show", "off") == "on"  # visibilidade p/ players
+        # slot=2 = asset de campanha (handout/mapa). A VISIBILIDADE é controlada
+        # só pelo campo `show`, NUNCA pelo slot. (slot=3 foi descontinuado: colidia
+        # com a limpeza de cenas em branco no game_interface e apagava o asset.)
+        slot = 2
         image = request.FILES.get("image")  # Captura a imagem
 
         print(
@@ -520,10 +520,10 @@ def edit_asset_save(request, asset_id):
         asset.show = (
             request.POST.get("show") == "on"
         )  # Checkbox retorna "on" se marcado
-        if asset.show:
+        # Visibilidade é SÓ o campo `show`. NUNCA mandar pro slot=3 (era apagado
+        # pela limpeza de cenas do game_interface). Só resgata legado preso no 3.
+        if asset.slot == 3:
             asset.slot = 2
-        elif not asset.show:
-            asset.slot = 3
         asset.description = request.POST.get("description")
 
         # Se uma nova imagem foi enviada, atualiza

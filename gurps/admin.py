@@ -253,3 +253,44 @@ class CharacterSheetV2Admin(admin.ModelAdmin):
         if isinstance(db_field, JSONField):
             kwargs["widget"] = JSONEditorWidget
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+@admin.register(MapGenRequest)
+class MapGenRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "status", "campanha", "requested_by", "short_prompt", "created_at")
+    list_filter = ("status", "campanha")
+    search_fields = ("id", "prompt", "campanha__nome")
+    readonly_fields = ("created_at", "updated_at")
+
+    def short_prompt(self, obj):
+        return (obj.prompt or "")[:60]
+    short_prompt.short_description = "prompt"
+
+
+@admin.register(GenWorkerStatus)
+class GenWorkerStatusAdmin(admin.ModelAdmin):
+    list_display = ("id", "last_seen")
+
+
+@admin.register(ImageGenRequest)
+class ImageGenRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "status", "kind", "campanha", "requested_by", "short_prompt", "created_at")
+    list_filter = ("status", "kind", "campanha")
+    search_fields = ("id", "prompt", "campanha__nome")
+    readonly_fields = ("created_at", "updated_at")
+
+    def short_prompt(self, obj):
+        return (obj.prompt or "")[:60]
+    short_prompt.short_description = "prompt"
+
+
+@admin.register(VideoGenRequest)
+class VideoGenRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "status", "campanha", "requested_by", "mood", "progress", "short_prompt", "created_at")
+    list_filter = ("status", "campanha")
+    search_fields = ("id", "prompt", "campanha__nome")
+    readonly_fields = ("created_at", "updated_at")
+
+    def short_prompt(self, obj):
+        return (obj.prompt or "")[:60]
+    short_prompt.short_description = "prompt"

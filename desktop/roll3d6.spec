@@ -137,6 +137,14 @@ try:
 except Exception:
     pass
 
+# imageio-ffmpeg: traz o binário ffmpeg (usado pelo videogen_worker pra montar
+# o vídeo — concat dos clipes + trilha). Sem isso, o worker de vídeo não monta.
+try:
+    datas += collect_data_files("imageio_ffmpeg")
+    hidden_imports += ["imageio_ffmpeg"]
+except Exception:
+    pass
+
 # cloudflared.exe — se existir no perfil do dev em build time, bundleia
 # pra evitar download no primeiro launch.
 import os

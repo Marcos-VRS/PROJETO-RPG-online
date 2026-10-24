@@ -23,6 +23,14 @@ window.rd6Map = window.rd6Map || {};
         this.image = null;        // HTMLImageElement carregado
         this.imageReady = false;
 
+        // Mapa em branco: quando não há imagem de fundo, renderiza um
+        // retângulo BRANCO grande (área jogável) do tamanho blankWidth×blankHeight.
+        // Usado pelas cenas novas (cada cena = um mapa em branco gigante).
+        this.blankWidth = opts.blankWidth || 10000;
+        this.blankHeight = opts.blankHeight || 10000;
+        this.isBlank = !this.imageUrl;
+        this._blankFitted = false;
+
         // Transform (world → screen)
         this.scale = 1.0;
         this.offsetX = 0;
@@ -41,7 +49,14 @@ window.rd6Map = window.rd6Map || {};
 
         this._setupCanvases();
         this._attachEvents();
-        if (this.imageUrl) this.loadImage(this.imageUrl);
+        if (this.imageUrl) {
+            this.loadImage(this.imageUrl);
+        } else {
+            // Sem imagem: mapa em branco. Centraliza/encaixa (refresh re-ajusta
+            // depois do CSS aplicar, via _blankFitted).
+            this.fitToBlank();
+            this.renderAll();
+        }
     }
 
     MapCanvas.prototype._setupCanvases = function () {
@@ -196,6 +211,18 @@ window.rd6Map = window.rd6Map || {};
         this.offsetY = (this.viewportHeight - ih * this.scale) / 2;
     };
 
+    // Encaixa o mapa em branco (blankWidth×blankHeight) inteiro no viewport,
+    // centralizado. Como é grande (10000px), abre com zoom bem reduzido.
+    MapCanvas.prototype.fitToBlank = function () {
+        var w = this.blankWidth, h = this.blankHeight;
+        if (!w || !h || !this.viewportWidth) return;
+        var sx = this.viewportWidth / w;
+        var sy = this.viewportHeight / h;
+        this.scale = Math.max(this.minScale, Math.min(sx, sy));
+        this.offsetX = (this.viewportWidth - w * this.scale) / 2;
+        this.offsetY = (this.viewportHeight - h * this.scale) / 2;
+    };
+
     MapCanvas.prototype.renderAll = function () {
         this._renderImage();
         this._renderGrid();
@@ -207,6 +234,13 @@ window.rd6Map = window.rd6Map || {};
     // estar aplicado ainda → canvas com tamanho errado → grid não aparece.
     MapCanvas.prototype.refresh = function () {
         this._resizeCanvases();
+        // Mapa em branco: faz o fit inicial UMA vez, agora que o canvas tem
+        // tamanho real (no construtor o CSS pode não ter aplicado ainda).
+        // Não re-encaixa em resizes posteriores pra não resetar o pan do GM.
+        if (this.isBlank && !this._blankFitted && this.viewportWidth > 0) {
+            this.fitToBlank();
+            this._blankFitted = true;
+        }
         this.renderAll();
     };
 
@@ -287,7 +321,20 @@ window.rd6Map = window.rd6Map || {};
         var ctx = this.ctxImage;
         this._clear(ctx);
         if (!this.imageReady) {
-            // Sem imagem ainda: desenha fundo escuro neutro
+            if (this.isBlank) {
+                // Mapa em branco: fundo escuro fora da área jogável + um
+                // retângulo BRANCO grande no "mundo" (acompanha pan/zoom).
+                ctx.fillStyle = "#2a2a2a";
+                ctx.fillRect(0, 0, this.viewportWidth, this.viewportHeight);
+                ctx.save();
+                ctx.translate(this.offsetX, this.offsetY);
+                ctx.scale(this.scale, this.scale);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, this.blankWidth, this.blankHeight);
+                ctx.restore();
+                return;
+            }
+            // Sem imagem ainda (carregando): desenha fundo escuro neutro
             ctx.fillStyle = "#1a1a1a";
             ctx.fillRect(0, 0, this.viewportWidth, this.viewportHeight);
             return;

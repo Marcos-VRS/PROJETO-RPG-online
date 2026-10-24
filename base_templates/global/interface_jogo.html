@@ -133,6 +133,356 @@
             <button class="menu-modal-tab active" type="button" data-tab="cena">Controle de Cena</button>
         </div>
         <div class="menu-modal-body" id="menu-modal-body">
+            {% if is_gm %}
+            <details class="quick-char-create" id="campaign-points-form">
+                <summary>⚙ Pontos da campanha</summary>
+                <div class="quick-char-fields">
+                    <label style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin:4px 0;">
+                        Pontos de criação
+                        <input type="number" id="cp-pontos" min="0" max="100000" value="{{ campanha.pontos_de_ficha }}" oninput="rd6CampPointsTotal()" style="max-width:96px;">
+                    </label>
+                    <label style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin:4px 0;">
+                        XP acumulado
+                        <input type="number" id="cp-xp" min="0" max="100000" value="{{ campanha.xp_acumulado }}" oninput="rd6CampPointsTotal()" style="max-width:96px;">
+                    </label>
+                    <p class="scene-control-hint" style="margin:6px 0;">Total por ficha: <strong id="cp-total">—</strong> pts <span style="opacity:.7">(criação + XP)</span></p>
+                    <button type="button" class="quick-char-submit" onclick="rd6SaveCampaignPoints()">Salvar e aplicar a todas as fichas</button>
+                    <p class="quick-char-error" id="cp-msg" style="display:none"></p>
+                </div>
+            </details>
+            <script>
+                function rd6CampPointsTotal() {
+                    var p = parseInt((document.getElementById('cp-pontos') || {}).value, 10) || 0;
+                    var x = parseInt((document.getElementById('cp-xp') || {}).value, 10) || 0;
+                    var el = document.getElementById('cp-total');
+                    if (el) el.textContent = (p + x);
+                }
+                function rd6SaveCampaignPoints() {
+                    var p = parseInt((document.getElementById('cp-pontos') || {}).value, 10) || 0;
+                    var x = parseInt((document.getElementById('cp-xp') || {}).value, 10) || 0;
+                    var msg = document.getElementById('cp-msg');
+                    function show(txt, ok) {
+                        if (!msg) return;
+                        msg.style.display = 'block';
+                        msg.textContent = txt;
+                        msg.style.color = ok ? 'var(--rd6-accent, #8ab4f8)' : 'var(--rd6-hp-bright, #e0736b)';
+                    }
+                    show('Salvando…', true);
+                    fetch("{% url 'gurps:atualizar_pontos_campanha' campanha.id %}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': rd6GetCsrf() },
+                        body: JSON.stringify({ pontos_de_ficha: p, xp_acumulado: x })
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        if (d && d.ok) {
+                            show('✓ Salvo. ' + d.updated + ' ficha(s) atualizada(s) — total ' + d.total + ' pts.', true);
+                        } else {
+                            show((d && d.error) || 'Erro ao salvar.', false);
+                        }
+                    }).catch(function () { show('Falha de rede.', false); });
+                }
+                document.addEventListener('DOMContentLoaded', rd6CampPointsTotal);
+            </script>
+
+            <details class="quick-char-create" id="map-gen-form">
+                <summary>🗺️ Gerar mapa (IA)</summary>
+                <div class="quick-char-fields">
+                    <textarea id="mg-prompt" rows="3" maxlength="1000"
+                        placeholder="Descreva o mapa: ex. 'taverna de 2 cômodos com lareira e cozinha nos fundos'"
+                        style="width:100%;resize:vertical;font-family:inherit;"></textarea>
+                    <button type="button" class="quick-char-submit" onclick="rd6MapGenSubmit()">Gerar mapa</button>
+                    <p class="scene-control-hint" id="mg-status" style="margin:6px 0;"></p>
+                    <div id="mg-list"></div>
+                </div>
+            </details>
+            <style>
+                .mg-card{border:1px solid var(--rd6-border);border-radius:8px;padding:8px;margin:8px 0;background:var(--rd6-bg);}
+                .mg-card-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;margin-bottom:6px;}
+                .mg-badge{font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:10px;border:1px solid var(--rd6-border);}
+                .mg-badge.pending,.mg-badge.processing{color:var(--rd6-accent);}
+                .mg-badge.done{color:#5fbf7f;border-color:#5fbf7f;}
+                .mg-badge.failed{color:var(--rd6-hp-bright,#e0736b);border-color:var(--rd6-hp-bright,#e0736b);}
+                .mg-prompt{font-size:11.5px;color:var(--rd6-text-dim);margin-bottom:6px;}
+                .mg-preview{width:100%;max-height:180px;object-fit:contain;background:#161616;border-radius:6px;cursor:zoom-in;display:block;}
+                .mg-actions{display:flex;gap:8px;margin-top:8px;}
+                .mg-actions button{flex:1;padding:6px;border-radius:6px;border:1px solid var(--rd6-border);background:transparent;color:var(--rd6-text);cursor:pointer;font-size:12px;}
+                .mg-approve{border-color:#5fbf7f!important;color:#5fbf7f!important;}
+                .mg-err{font-size:11px;color:var(--rd6-hp-bright,#e0736b);}
+            </style>
+            <script>
+                var RD6_MG_CAMP = {{ campanha.id }};
+                var _mgPollTimer = null;
+
+                function rd6MapGenSubmit() {
+                    var ta = document.getElementById('mg-prompt');
+                    var prompt = (ta.value || '').trim();
+                    var st = document.getElementById('mg-status');
+                    if (!prompt) { st.textContent = 'Descreva o mapa primeiro.'; return; }
+                    st.textContent = 'Enviando…';
+                    fetch('/map-gen/' + RD6_MG_CAMP + '/request/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': rd6GetCsrf() },
+                        body: JSON.stringify({ prompt: prompt })
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        if (d && d.ok) {
+                            ta.value = '';
+                            st.textContent = d.worker_online
+                                ? 'Gerando… (pode levar 1-3 min)'
+                                : '⚠ Gerador offline — o pedido ficou na fila e será atendido quando o worker subir.';
+                            rd6MapGenPoll();
+                        } else {
+                            st.textContent = (d && d.error) || 'Erro ao enviar.';
+                        }
+                    }).catch(function () { st.textContent = 'Falha de rede.'; });
+                }
+
+                function rd6MapGenPoll() {
+                    fetch('/map-gen/' + RD6_MG_CAMP + '/list/')
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            if (!d || !d.ok) return;
+                            rd6MapGenRender(d.requests || []);
+                            var active = (d.requests || []).some(function (x) {
+                                return x.status === 'pending' || x.status === 'processing';
+                            });
+                            if (_mgPollTimer) clearTimeout(_mgPollTimer);
+                            if (active) _mgPollTimer = setTimeout(rd6MapGenPoll, 5000);
+                        }).catch(function () {});
+                }
+
+                function rd6MapGenRender(reqs) {
+                    var box = document.getElementById('mg-list');
+                    if (!reqs.length) { box.innerHTML = ''; return; }
+                    var STATUS = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
+                    box.innerHTML = reqs.map(function (r) {
+                        var h = '<div class="mg-card">';
+                        h += '<div class="mg-card-head"><span class="mg-badge ' + r.status + '">' + (STATUS[r.status] || r.status) + '</span></div>';
+                        h += '<div class="mg-prompt">' + rd6Esc(r.prompt) + '</div>';
+                        if (r.status === 'done' && r.has_result) {
+                            h += '<img class="mg-preview" src="/map-gen/svg/' + r.id + '/" alt="preview"'
+                               + ' onclick="rd6OpenLightbox(this.src, \'mapa\')">';
+                            h += '<div class="mg-actions">'
+                               + '<button class="mg-approve" onclick="rd6MapGenApprove(' + r.id + ')">✓ Aprovar</button>'
+                               + '<button onclick="rd6MapGenDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                        } else if (r.status === 'failed') {
+                            h += '<div class="mg-err">' + rd6Esc(r.error || 'falhou') + '</div>';
+                            h += '<div class="mg-actions"><button onclick="rd6MapGenDiscard(' + r.id + ')">Remover</button></div>';
+                        }
+                        return h + '</div>';
+                    }).join('');
+                }
+
+                function rd6MapGenApprove(id) {
+                    fetch('/map-gen/' + id + '/approve/', {
+                        method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() }
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        var st = document.getElementById('mg-status');
+                        if (d && d.ok) {
+                            st.textContent = '✓ Aprovado "' + (d.asset_name || '') + '" — está no Journal (📖), oculto dos players.';
+                        } else { st.textContent = (d && d.error) || 'Erro ao aprovar.'; }
+                        rd6MapGenPoll();
+                    }).catch(function () {});
+                }
+
+                function rd6MapGenDiscard(id) {
+                    fetch('/map-gen/' + id + '/discard/', {
+                        method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() }
+                    }).then(function () { rd6MapGenPoll(); }).catch(function () {});
+                }
+
+                // Ao abrir a seção, carrega a lista (pega pendentes/prontos existentes).
+                (function () {
+                    var det = document.getElementById('map-gen-form');
+                    if (det) det.addEventListener('toggle', function () { if (det.open) rd6MapGenPoll(); });
+                })();
+            </script>
+
+            <details class="quick-char-create" id="imggen-form">
+                <summary>🎨 Estúdio de Imagem (IA · GPU)</summary>
+                <div class="quick-char-fields">
+                    <label style="font-size:12px;color:var(--rd6-text-dim);">Tipo:
+                        <select id="ig-kind" style="width:100%;">
+                            <option value="personagem">Personagem (retrato)</option>
+                            <option value="mapa">Mapa (battlemap)</option>
+                            <option value="cena">Cena / cenário</option>
+                        </select>
+                    </label>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);">Estilo:
+                        <select id="ig-style" style="width:100%;">
+                            <option value="cinematic_dark">Cinematográfico escuro (realista) — padrão</option>
+                            <option value="photoreal">Fotorrealista neutro</option>
+                            <option value="oil">Pintura a óleo sombria</option>
+                            <option value="gritty">Sujo / grimdark</option>
+                            <option value="none">Sem estilo (só meu texto)</option>
+                        </select>
+                    </label>
+                    <textarea id="ig-prompt" rows="3" maxlength="1000"
+                        placeholder="Descreva curto: ex. 'guarda barbudo no portão'. O resto a IA completa lendo o journal."
+                        style="width:100%;resize:vertical;font-family:inherit;"></textarea>
+                    <label style="font-size:12px;color:var(--rd6-text-dim);display:flex;align-items:center;gap:6px;margin-top:2px;">
+                        <input type="checkbox" id="ig-context" checked style="width:auto;">
+                        Ler o journal (IA mantém coerência com o mundo e o que já foi aprovado)
+                    </label>
+                    <div style="margin-top:4px;">
+                        <button type="button" class="menu-button-gm medievalsharp-mini" id="ig-jref-btn"
+                                onclick="rd6IgToggleJournalRef()" style="font-size:11px;">📖 Referência do journal</button>
+                        <span id="ig-jref-label" style="font-size:11px;color:var(--rd6-text-dim);margin-left:6px;"></span>
+                        <div id="ig-jref-grid" class="ig-jref-grid" hidden></div>
+                    </div>
+                    <label style="font-size:11px;color:var(--rd6-text-dim);display:block;margin-top:4px;">
+                        …ou subir uma imagem de referência:
+                        <input type="file" id="ig-ref" accept="image/*" style="width:100%;font-size:11px;">
+                    </label>
+                    <label id="ig-ref-weight-wrap" style="font-size:12px;color:var(--rd6-text-dim);display:none;">
+                        Força da referência: <span id="ig-ref-weight-val">0.7</span>
+                        <input type="range" id="ig-ref-weight" min="0.2" max="1.2" step="0.1" value="0.7" style="width:100%;">
+                    </label>
+                    <button type="button" class="quick-char-submit" onclick="rd6ImgGenSubmit()">Gerar imagem</button>
+                    <p class="scene-control-hint" id="ig-status" style="margin:6px 0;"></p>
+                    <div id="ig-list"></div>
+                </div>
+            </details>
+            <script>
+                var RD6_IG_CAMP = {{ campanha.id }};
+                var _igPollTimer = null;
+                var _igJournalRef = null;   // {id, name} do asset do journal escolhido
+                // O estilo agora é só a CHAVE — o servidor (claude/journal ou fallback
+                // mecânico) aplica as palavras-chave. A UI manda o texto cru.
+                function rd6IgToggleJournalRef() {
+                    var grid = document.getElementById('ig-jref-grid');
+                    if (!grid) return;
+                    if (!grid.hidden) { grid.hidden = true; return; }
+                    grid.hidden = false;
+                    grid.innerHTML = '<span style="font-size:11px;opacity:.6">carregando…</span>';
+                    fetch('/imagegen/' + RD6_IG_CAMP + '/journal/')
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            var items = (d && d.items) || [];
+                            if (!items.length) { grid.innerHTML = '<span style="font-size:11px;opacity:.6">Nenhuma imagem no journal ainda.</span>'; return; }
+                            grid.innerHTML = items.map(function (it) {
+                                var sel = (_igJournalRef && _igJournalRef.id === it.id) ? ' is-sel' : '';
+                                var nm = rd6Esc(it.name);
+                                return '<button type="button" class="ig-jref-item' + sel + '" title="' + nm + '" ' +
+                                    'data-id="' + it.id + '" data-name="' + nm + '" onclick="rd6IgPickJournalRef(this)">' +
+                                    '<img src="' + it.url + '" alt=""></button>';
+                            }).join('');
+                        }).catch(function () { grid.innerHTML = '<span style="font-size:11px;opacity:.6">Erro ao carregar.</span>'; });
+                }
+                function rd6IgPickJournalRef(btn) {
+                    var id = parseInt(btn.getAttribute('data-id'), 10);
+                    var name = btn.getAttribute('data-name') || ('asset ' + id);
+                    var grid = document.getElementById('ig-jref-grid');
+                    grid.querySelectorAll('.ig-jref-item').forEach(function (b) { b.classList.remove('is-sel'); });
+                    if (_igJournalRef && _igJournalRef.id === id) {
+                        _igJournalRef = null;  // clicou de novo = desmarca
+                    } else {
+                        _igJournalRef = { id: id, name: name };
+                        btn.classList.add('is-sel');
+                    }
+                    var lbl = document.getElementById('ig-jref-label');
+                    var rw = document.getElementById('ig-ref-weight-wrap');
+                    if (lbl) lbl.textContent = _igJournalRef ? ('ref: ' + _igJournalRef.name) : '';
+                    if (rw) rw.style.display = _igJournalRef ? 'block' : 'none';
+                }
+                function rd6ImgGenSubmit() {
+                    var prompt = (document.getElementById('ig-prompt').value || '').trim();
+                    var kind = document.getElementById('ig-kind').value || 'personagem';
+                    var styleKey = (document.getElementById('ig-style') || {}).value || 'cinematic_dark';
+                    var useContext = document.getElementById('ig-context').checked ? '1' : '0';
+                    var st = document.getElementById('ig-status');
+                    if (!prompt) { st.textContent = 'Descreva a imagem primeiro.'; return; }
+                    var refInput = document.getElementById('ig-ref');
+                    var refFile = refInput && refInput.files && refInput.files[0];
+                    var refWeight = (document.getElementById('ig-ref-weight') || {}).value || '0.7';
+                    st.textContent = 'Enviando…';
+                    var fd = new FormData();
+                    fd.append('prompt', prompt);
+                    fd.append('kind', kind);
+                    fd.append('style', styleKey);
+                    fd.append('use_context', useContext);
+                    if (_igJournalRef) { fd.append('ref_asset_id', _igJournalRef.id); fd.append('ref_weight', refWeight); }
+                    if (refFile) { fd.append('ref_image', refFile); fd.append('ref_weight', refWeight); }
+                    fetch('/imagegen/' + RD6_IG_CAMP + '/request/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': rd6GetCsrf() },
+                        body: fd
+                    }).then(function (r) { return r.json(); }).then(function (d) {
+                        if (d && d.ok) {
+                            document.getElementById('ig-prompt').value = '';
+                            if (refInput) refInput.value = '';
+                            _igJournalRef = null;
+                            var jl = document.getElementById('ig-jref-label'); if (jl) jl.textContent = '';
+                            var jg = document.getElementById('ig-jref-grid'); if (jg) jg.hidden = true;
+                            var rw = document.getElementById('ig-ref-weight-wrap');
+                            if (rw) rw.style.display = 'none';
+                            st.textContent = d.comfy_online
+                                ? 'Gerando na GPU… (' + (d.comfy_device || 'GPU') + ') — pode levar de segundos a min.'
+                                : '⚠ ComfyUI offline no host — inicie o ComfyUI. O pedido ficou na fila.';
+                            rd6ImgGenPoll();
+                        } else { st.textContent = (d && d.error) || 'Erro ao enviar.'; }
+                    }).catch(function () { st.textContent = 'Falha de rede.'; });
+                }
+                function rd6ImgGenPoll() {
+                    fetch('/imagegen/' + RD6_IG_CAMP + '/list/')
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            if (!d || !d.ok) return;
+                            rd6ImgGenRender(d.requests || [], d.comfy || {});
+                            var active = (d.requests || []).some(function (x) {
+                                return x.status === 'pending' || x.status === 'processing';
+                            });
+                            if (_igPollTimer) clearTimeout(_igPollTimer);
+                            if (active) _igPollTimer = setTimeout(rd6ImgGenPoll, 4000);
+                        }).catch(function () {});
+                }
+                function rd6ImgGenRender(reqs, comfy) {
+                    var box = document.getElementById('ig-list');
+                    var head = (comfy && !comfy.online)
+                        ? '<div class="mg-err">ComfyUI offline no host — inicie-o pra gerar.</div>' : '';
+                    var STATUS = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
+                    box.innerHTML = head + (reqs || []).map(function (r) {
+                        var h = '<div class="mg-card">';
+                        h += '<div class="mg-card-head"><span class="mg-badge ' + r.status + '">' + (STATUS[r.status] || r.status) + '</span><span style="font-size:10px;opacity:.6">' + rd6Esc(r.kind) + '</span></div>';
+                        h += '<div class="mg-prompt">' + rd6Esc(r.prompt) + '</div>';
+                        if (r.expanded_prompt && r.expanded_prompt !== r.prompt) {
+                            h += '<details class="mg-xprompt"><summary>prompt da IA</summary><div>' + rd6Esc(r.expanded_prompt) + '</div></details>';
+                        }
+                        if (r.status === 'done' && r.has_result) {
+                            h += '<img class="mg-preview" src="/imagegen/png/' + r.id + '/" alt="preview" onclick="rd6OpenLightbox(this.src,\'imagem\')">';
+                            h += '<div class="mg-actions"><button class="mg-approve" onclick="rd6ImgGenApprove(' + r.id + ')">✓ Aprovar</button><button onclick="rd6ImgGenDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                        } else if (r.status === 'failed') {
+                            h += '<div class="mg-err">' + rd6Esc(r.error || 'falhou') + '</div>';
+                            h += '<div class="mg-actions"><button onclick="rd6ImgGenDiscard(' + r.id + ')">Remover</button></div>';
+                        }
+                        return h + '</div>';
+                    }).join('');
+                }
+                function rd6ImgGenApprove(id) {
+                    fetch('/imagegen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })
+                        .then(function (r) { return r.json(); }).then(function (d) {
+                            var st = document.getElementById('ig-status');
+                            if (d && d.ok) st.textContent = '✓ Aprovado "' + (d.asset_name || '') + '" — está no Journal (📖), oculto dos players.';
+                            else st.textContent = (d && d.error) || 'Erro ao aprovar.';
+                            rd6ImgGenPoll();
+                        }).catch(function () {});
+                }
+                function rd6ImgGenDiscard(id) {
+                    fetch('/imagegen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })
+                        .then(function () { rd6ImgGenPoll(); }).catch(function () {});
+                }
+                (function () {
+                    var det = document.getElementById('imggen-form');
+                    if (det) det.addEventListener('toggle', function () { if (det.open) rd6ImgGenPoll(); });
+                    var refIn = document.getElementById('ig-ref');
+                    var rw = document.getElementById('ig-ref-weight-wrap');
+                    if (refIn && rw) refIn.addEventListener('change', function () {
+                        rw.style.display = (refIn.files && refIn.files[0]) ? 'block' : 'none';
+                    });
+                    var slider = document.getElementById('ig-ref-weight');
+                    var sval = document.getElementById('ig-ref-weight-val');
+                    if (slider && sval) slider.addEventListener('input', function () { sval.textContent = slider.value; });
+                })();
+            </script>
+            {% endif %}
             <div class="scenes-pills" id="scenes-pills"></div>
 
             <div class="scene-name-wrap">
@@ -153,8 +503,11 @@
                         <input type="number" id="qc-fp" placeholder="FP" min="0" max="9999" value="10">
                         <input type="number" id="qc-move" placeholder="MOVE" min="0" max="999" value="5">
                     </div>
+                    <label class="qc-image-lbl">Imagem do token (envie aqui):
+                        <input type="file" id="qc-image" accept="image/*">
+                    </label>
                     <select id="qc-asset">
-                        <option value="">— sem asset linkado —</option>
+                        <option value="">— ou linkar asset existente —</option>
                         {% for a in all_assets_for_gm %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
                     </select>
                     <button type="button" class="quick-char-submit" onclick="rd6QuickCharSave()">Criar ficha</button>
@@ -241,6 +594,7 @@
         // ID da ficha do user ativo nesta aba do jogo. Usado pra decidir se um
         // character_updated vindo via WS deve atualizar as janelas modais.
         var RD6_ACTIVE_CHAR_ID = {% if personagem %}{{ personagem.id }}{% else %}null{% endif %};
+        var RD6_OWNED_CHAR_IDS = {{ owned_char_ids|default:"[]" }};  // fichas do próprio player
         var RD6_SCENE_STATE = JSON.parse(document.getElementById('rd6-scene-state').textContent);
         var RD6_ALL_CHARACTERS = JSON.parse(document.getElementById('rd6-all-characters').textContent);
         var RD6_MAX_SCENES = 10;
@@ -592,53 +946,58 @@
             return m ? decodeURIComponent(m[1]) : '';
         }
 
-        function rd6QuickCharSave() {
+        // prefix/containerId permitem reusar o mesmo form em lugares diferentes
+        // (controle de cena = 'qc'/'quick-char-form'; modal de tokens = 'tpqc'/'tpqc-form').
+        function rd6QuickCharSave(prefix, containerId) {
             if (!RD6_IS_GM) return;
-            var nome = (document.getElementById('qc-nome').value || '').trim();
-            var hp = document.getElementById('qc-hp').value || '10';
-            var fp = document.getElementById('qc-fp').value || '10';
-            var move = document.getElementById('qc-move').value || '5';
-            var assetSelect = document.getElementById('qc-asset');
-            var assetId = assetSelect ? assetSelect.value : '';
-            var errEl = document.getElementById('qc-error');
-            errEl.style.display = 'none';
+            prefix = prefix || 'qc';
+            containerId = containerId || 'quick-char-form';
+            var g = function (suf) { return document.getElementById(prefix + '-' + suf); };
+            var container = document.getElementById(containerId);
+            var nome = ((g('nome') && g('nome').value) || '').trim();
+            var assetSelect = g('asset');
+            var fileInput = g('image');
+            var errEl = g('error');
+            if (errEl) errEl.style.display = 'none';
             if (!nome) {
-                errEl.textContent = 'Nome obrigatório.';
-                errEl.style.display = '';
+                if (errEl) { errEl.textContent = 'Nome obrigatório.'; errEl.style.display = ''; }
                 return;
             }
-            var btn = document.querySelector('.quick-char-submit');
+            // Multipart (FormData): permite subir a imagem no próprio form — o
+            // servidor cria o asset (show=True) e linka; não precisa criar antes.
+            var fd = new FormData();
+            fd.append('campanha_id', RD6_CAMPANHA_ID);
+            fd.append('nome', nome);
+            fd.append('hp', (g('hp') && g('hp').value) || '10');
+            fd.append('fp', (g('fp') && g('fp').value) || '10');
+            fd.append('move', (g('move') && g('move').value) || '5');
+            if (assetSelect && assetSelect.value) fd.append('asset_id', assetSelect.value);
+            if (fileInput && fileInput.files && fileInput.files[0]) fd.append('image', fileInput.files[0]);
+            var btn = container ? container.querySelector('.quick-char-submit') : null;
             if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
             fetch('/quick-character/save/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': rd6GetCsrf() },
-                body: JSON.stringify({
-                    campanha_id: RD6_CAMPANHA_ID,
-                    nome: nome,
-                    hp: hp,
-                    fp: fp,
-                    move: move,
-                    asset_id: assetId || null,
-                }),
+                headers: { 'X-CSRFToken': rd6GetCsrf() },  // sem Content-Type: browser seta o boundary
+                body: fd,
             }).then(function (r) { return r.json().then(function (d) { return {status: r.status, body: d}; }); })
               .then(function (res) {
                   if (btn) { btn.disabled = false; btn.textContent = 'Criar ficha'; }
                   if (res.status !== 200 || !res.body.ok) {
-                      errEl.textContent = (res.body && res.body.error) || 'Erro ao criar.';
-                      errEl.style.display = '';
+                      if (errEl) { errEl.textContent = (res.body && res.body.error) || 'Erro ao criar.'; errEl.style.display = ''; }
                       return;
                   }
-                  // Limpa form (servidor já fez WS broadcast — UI atualiza via handler).
-                  document.getElementById('qc-nome').value = '';
-                  document.getElementById('qc-hp').value = '10';
-                  document.getElementById('qc-fp').value = '10';
-                  document.getElementById('qc-move').value = '5';
+                  // Limpa form (servidor já fez WS broadcast — UI atualiza via handler,
+                  // que adiciona o card no grid da modal de tokens automaticamente).
+                  g('nome').value = '';
+                  if (g('hp')) g('hp').value = '10';
+                  if (g('fp')) g('fp').value = '10';
+                  if (g('move')) g('move').value = '5';
                   if (assetSelect) assetSelect.value = '';
-                  document.getElementById('quick-char-form').open = false;
+                  if (fileInput) fileInput.value = '';
+                  if (container && container.tagName === 'DETAILS') container.open = false;
               }).catch(function (e) {
                   if (btn) { btn.disabled = false; btn.textContent = 'Criar ficha'; }
-                  errEl.textContent = 'Erro de rede.';
-                  errEl.style.display = '';
+                  if (errEl) { errEl.textContent = 'Erro de rede.'; errEl.style.display = ''; }
               });
         }
 
@@ -710,6 +1069,44 @@
         function rd6RemoveMiniFromBar(charId) {
             var el = document.querySelector('.player-mini[data-character-id="' + charId + '"]');
             if (el) el.remove();
+        }
+
+        // Deixa o personagem disponível na modal "Adicionar tokens" do GM
+        // imediatamente (sem F5). Só existe pra GM; no-op pro player.
+        function rd6AddCharToTokenSelect(c) {
+            var grid = document.getElementById('tp-grid');
+            if (!grid || !c || c.id == null) return;
+            if (grid.querySelector('.tp-card[data-id="' + c.id + '"]')) return;  // já existe
+            var lbl = document.createElement('label');
+            lbl.className = 'tp-card';
+            lbl.setAttribute('data-nome', (c.nome || '').toLowerCase());
+            lbl.setAttribute('data-id', c.id);
+            lbl.setAttribute('data-label', c.nome || 'Token');
+            lbl.setAttribute('data-color', c.owner_color || '#c9a55c');
+            var initials = (c.nome || '?').trim().slice(0, 2).toUpperCase();
+            var thumb = document.createElement('span');
+            thumb.className = 'tp-thumb';
+            if (c.avatar_url) {
+                var im = document.createElement('img');
+                im.src = c.avatar_url; im.alt = c.nome || '';
+                thumb.appendChild(im);
+            } else {
+                var ini = document.createElement('span');
+                ini.className = 'tp-initials'; ini.textContent = initials;
+                thumb.appendChild(ini);
+            }
+            var chk = document.createElement('input');
+            chk.type = 'checkbox'; chk.className = 'tp-check';
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'tp-name'; nameSpan.textContent = c.nome || ('Personagem ' + c.id);
+            lbl.appendChild(chk); lbl.appendChild(thumb); lbl.appendChild(nameSpan);
+            grid.insertBefore(lbl, grid.firstChild);  // recém-criado vai pro TOPO
+        }
+        function rd6RemoveCharFromTokenSelect(charId) {
+            var grid = document.getElementById('tp-grid');
+            if (!grid) return;
+            var card = grid.querySelector('.tp-card[data-id="' + charId + '"]');
+            if (card) card.remove();
         }
 
         // Lida com "character_updated" do WS: atualiza mini sempre; se for a
@@ -826,10 +1223,12 @@
                         is_quick_npc: !!data.char.is_quick_npc,
                     });
                     rd6AddMiniToBar(data.char);
+                    rd6AddCharToTokenSelect(data.char);  // token disponível no mapa na hora
                     rd6RenderAll();
                 } else if (data.type === 'character_deleted' && data.char_id) {
                     RD6_ALL_CHARACTERS = RD6_ALL_CHARACTERS.filter(function (x) { return x.id !== data.char_id; });
                     rd6RemoveMiniFromBar(data.char_id);
+                    rd6RemoveCharFromTokenSelect(data.char_id);
                     if (data.scene_state) RD6_SCENE_STATE = data.scene_state;
                     rd6RenderAll();
                 } else if (data.type === 'character_vitals_changed' && data.char_id) {
@@ -985,15 +1384,15 @@
         <button class="player-side-icon psi-add" title="Criar / remover cards"
                 onclick="abrirJanela('quickedit')"
                 data-sheet-id="{{ personagem.id }}">
-            <span class="psi-glyph">＋</span><span class="psi-label">EDIT</span>
+            <span class="psi-glyph">＋</span><span class="psi-label">Cards</span>
         </button>
 
         <a class="player-side-icon" title="Minhas fichas (abre em nova aba)"
            href="{% url 'gurps:lista_v2_player' campanha_id=campanha.id %}" target="_blank" rel="noopener">
             <span class="psi-glyph">📋</span><span class="psi-label">FICHA</span>
         </a>
-        <a class="player-side-icon" title="Journal (abre em nova aba)"
-           href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
+        <a class="player-side-icon" title="Journal" href="javascript:void(0)"
+           onclick="rd6OpenJournal('player')">
             <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
         </a>
         <button class="player-side-icon" title="Desenhar no mapa"
@@ -1011,9 +1410,40 @@
     </aside>
 
     {% if next_character_id %}
-    <a class="player-side-next"
-       title="Próximo personagem"
-       href="?character={{ next_character_id }}">→</a>
+    <button type="button" class="player-side-next"
+            title="Trocar de personagem"
+            aria-haspopup="true" aria-expanded="false"
+            onclick="rd6ToggleCharSwitch(event)">⇄</button>
+    <div class="player-char-menu" id="player-char-menu" role="menu" hidden>
+        <div class="pcm-title">Trocar de personagem</div>
+        {% for sheet in personagens_gm %}
+            <a class="pcm-item{% if sheet.id == personagem.id %} is-current{% endif %}"
+               role="menuitem" href="?character={{ sheet.id }}">
+                <span class="pcm-name">{{ sheet.nome_personagem }}</span>
+                {% if sheet.id == personagem.id %}<span class="pcm-check">✓</span>{% endif %}
+            </a>
+        {% endfor %}
+    </div>
+    <script>
+        function rd6ToggleCharSwitch(e) {
+            e.preventDefault(); e.stopPropagation();
+            var m = document.getElementById('player-char-menu');
+            if (!m) return;
+            var show = m.hidden;
+            m.hidden = !show;
+            var b = e.currentTarget;
+            if (b && b.setAttribute) b.setAttribute('aria-expanded', show ? 'true' : 'false');
+        }
+        document.addEventListener('click', function (e) {
+            var m = document.getElementById('player-char-menu');
+            if (!m || m.hidden) return;
+            if (e.target.closest && (e.target.closest('#player-char-menu') || e.target.closest('.player-side-next'))) return;
+            m.hidden = true;
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { var m = document.getElementById('player-char-menu'); if (m) m.hidden = true; }
+        });
+    </script>
     {% endif %}
 
     <!-- Ficha do personagem (barra inferior antiga — oculta via CSS, mantida pra fallback) -->
@@ -1353,6 +1783,24 @@
             {% endfor %}
             </div>
 
+            <div class="ficha-parte-box">
+                <h3 class="titulo-ficha-gm fredericka-the-great-regular">ITENS DIVERSOS</h3>
+            {% for equip in personagem.equipment_misc %}
+                <div class="ficha-parte-box-ataque">
+                    <span class="medievalsharp-large">{{ equip.nome }}</span>{% if equip.qty %} <span class="medievalsharp-regular">×{{ equip.qty }}</span>{% endif %}<br>
+                    <span class="medievalsharp-regular">
+                        {% if equip.weight %}Weight: {{ equip.weight }}<br>{% endif %}
+                        {% if equip.cost %}Cost: ${{ equip.cost }}<br>{% endif %}
+                    </span>
+                    {% if equip.notes %}<span class="medievalsharp-mini" style="white-space: pre-wrap;">{{ equip.notes }}</span><br>{% endif %}
+                    {% if equip.details %}<span class="medievalsharp-mini" style="white-space: pre-wrap;"><br>Detalhes:<br>{{ equip.details }}</span><br>{% endif %}
+                    <br>
+                </div>
+            {% empty %}
+                <span class="medievalsharp-mini">—</span>
+            {% endfor %}
+            </div>
+
 
 
 
@@ -1433,42 +1881,42 @@
 
 
         <!--Journal Player-->
-        <div id="janela-journal-player" class="janela">
-            
+        <div id="janela-journal-player" class="janela janela-journal">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-
-            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
-            <input class="input-pesquisa-asset medievalsharp-mini" type="text" id="search-journal" onkeyup="filtrarJournal()" placeholder="Pesquisar no Journal"><br>
-            
-            
-            {% for psjournal in personagens_journal %}
-                <div class="ficha-parte-box-journal medievalsharp-mini">
-                    <div class="medievalsharp-large asset-line">{{ psjournal.nome_personagem }}</div><br>
-                    <div class="medievalsharp-mini asset-line">{{ psjournal.background }}</div><br>
-                    {% if psjournal.photo %}
-                        <img src="{{ psjournal.photo.url }}" alt="Miniatura de {{ psjournal.nome_personagem }}" class="miniatura-imagem"><br><br>
-                    {% else %}
-                        <p>Sem imagem disponível</p>
-
-                    {% endif %}
+            <div class="journal-head">
+                <h3 class="journal-title fredericka-the-great-regular">Journal</h3>
+                <input class="input-pesquisa-asset journal-search" type="text"
+                       id="search-journal-player" onkeyup="rd6FilterJournal('player')"
+                       placeholder="Filtrar por nome…">
+            </div>
+            <div class="journal-body">
+                <div class="journal-section-title">Personagens</div>
+                <div class="journal-grid" data-jgrid="personagens">
+                {% for ps in personagens_journal %}
+                    <div class="journal-card" data-nome="{{ ps.nome_personagem|lower }}">
+                        <div class="journal-thumb">
+                        {% if ps.avatar_url %}<img src="{{ ps.avatar_url }}" loading="lazy" alt="{{ ps.nome_personagem }}">
+                        {% else %}<span class="journal-noimg">sem imagem</span>{% endif %}
+                        </div>
+                        <div class="journal-card-name">{{ ps.nome_personagem }}</div>
+                        <div class="journal-card-desc">{{ ps.background }}</div>
+                    </div>
+                {% empty %}<div class="journal-empty">Nenhum personagem.</div>{% endfor %}
                 </div>
-            {% endfor %}
-            
-            {% for asset in assets %}
-            
-                <div class="ficha-parte-box-journal medievalsharp-mini">
-                    <div class="medievalsharp-large asset-line">{{ asset.name }}</div><br>
-                    <div class="medievalsharp-mini asset-line">{{ asset.description }}</div><br>
-                    {% if asset.image %}
-                        <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
-                    {% else %}
-                        <p>Sem imagem disponível</p>
-
-                    {% endif %}
+                <div class="journal-section-title">Mapas &amp; Assets</div>
+                <div class="journal-grid" data-jgrid="assets">
+                {% for asset in assets %}
+                    <div class="journal-card" data-nome="{{ asset.name|lower }}">
+                        <div class="journal-thumb">
+                        {% if asset.image %}<img src="{{ asset.image.url }}" loading="lazy" alt="{{ asset.name }}">
+                        {% else %}<span class="journal-noimg">sem imagem</span>{% endif %}
+                        </div>
+                        <div class="journal-card-name">{{ asset.name }}</div>
+                        <div class="journal-card-desc">{{ asset.description }}</div>
+                    </div>
+                {% empty %}<div class="journal-empty">Nenhum asset.</div>{% endfor %}
                 </div>
-
-            {% endfor %}
-
+            </div>
         </div>
 
 
@@ -1495,8 +1943,8 @@
                href="{% url 'gurps:menu_fichas_gm' campanha.id %}" target="_blank" rel="noopener">
                 <span class="psi-glyph">📋</span><span class="psi-label">GM</span>
             </a>
-            <a class="player-side-icon" title="Journal (abre em nova aba)"
-               href="{% url 'gurps:journal' campanha.id %}" target="_blank" rel="noopener">
+            <a class="player-side-icon" title="Journal" href="javascript:void(0)"
+               onclick="rd6OpenJournal('gm')">
                 <span class="psi-glyph">📖</span><span class="psi-label">JRNL</span>
             </a>
             <a class="player-side-icon" title="Sair da campanha"
@@ -1543,39 +1991,21 @@
                 <label><input type="checkbox" id="map-show-overlay" checked>
                        👁 Mostrar camada de sobreposição</label>
 
+                {% if is_gm %}
                 <hr>
-                <h4>Adicionar token (GM)</h4>
-                <div class="map-config-row">
-                    <label>Personagem:
-                        <select id="map-token-char">
-                            <option value="">(NPC sem ficha)</option>
-                            {% for p in personagens_journal %}
-                                <option value="{{ p.id }}"
-                                        data-nome="{{ p.nome_personagem }}"
-                                        data-color="#c9a55c">
-                                    {{ p.nome_personagem }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                </div>
-                <div class="map-config-row">
-                    <label>Camada:
-                        <select id="map-token-layer">
-                            <option value="visible">Visível (todos)</option>
-                            <option value="gm_only">Mestre (só você)</option>
-                            <option value="overlay">Sobreposição (acima de tudo)</option>
-                        </select>
-                    </label>
-                    <button class="menu-button" id="map-token-add-btn">+ Adicionar</button>
-                </div>
+                <h4>Tokens (GM)</h4>
+                <button type="button" class="menu-button" style="width:100%;"
+                        onclick="abrirJanela('token-picker')">➕ Adicionar tokens…</button>
+                {% endif %}
 
                 <hr>
-                <h4>Trocar mapa ativo</h4>
+                <h4>Fundo da cena</h4>
                 <div class="map-asset-list">
+                    <a class="map-asset-item{% if not active_background_id %} is-active{% endif %}"
+                       href="javascript:void(0)" data-asset-id="0">⬜ Em branco</a>
                     {% for a in all_assets_for_gm %}
-                        <a class="map-asset-item{% if a.id == pagina_inicial.id %} is-active{% endif %}"
-                           href="?asset={{ a.id }}"
+                        <a class="map-asset-item{% if a.id == active_background_id %} is-active{% endif %}"
+                           href="javascript:void(0)"
                            data-asset-id="{{ a.id }}">
                             {{ a.name|default:"(sem nome)" }}
                         </a>
@@ -1606,44 +2036,226 @@
 
 
         <!--Journal GM-->
-        <div id="janela-journal-gm" class="janela">
-    
+        <div id="janela-journal-gm" class="janela janela-journal">
             <button class="fechar menu-button" onclick="fecharJanela()">×</button>
-
-            <label class="titulo-personagem-gm medievalsharp-regular">PESQUISAR:</label>
-            <input class="input-pesquisa-asset medievalsharp-mini" type="text" id="search-journal" onkeyup="filtrarJournal()" placeholder="Pesquisar no Journal"><br>
-            
-            
-            {% for psjournal in personagens_journal %}
-                <div class="ficha-parte-box-journal medievalsharp-mini">
-                    <div class="medievalsharp-large asset-line">{{ psjournal.nome_personagem }}</div><br>
-                    <div class="medievalsharp-mini asset-line">{{ psjournal.background }}</div><br>
-                    {% if psjournal.photo %}
-                        <img src="{{ psjournal.photo.url }}" alt="Miniatura de {{ psjournal.nome_personagem }}" class="miniatura-imagem"><br><br>
-                    {% else %}
-                        <p>Sem imagem disponível</p>
-
-                    {% endif %}
+            <div class="journal-head">
+                <h3 class="journal-title fredericka-the-great-regular">Journal do Mestre</h3>
+                <input class="input-pesquisa-asset journal-search" type="text"
+                       id="search-journal-gm" onkeyup="rd6FilterJournal('gm')"
+                       placeholder="Filtrar por nome…">
+            </div>
+            <div class="journal-body">
+                <div class="journal-section-title">Personagens</div>
+                <div class="journal-grid" data-jgrid="personagens">
+                {% for ps in personagens_journal %}
+                    <div class="journal-card" data-nome="{{ ps.nome_personagem|lower }}">
+                        <div class="journal-thumb">
+                        {% if ps.avatar_url %}<img src="{{ ps.avatar_url }}" loading="lazy" alt="{{ ps.nome_personagem }}">
+                        {% else %}<span class="journal-noimg">sem imagem</span>{% endif %}
+                        </div>
+                        <div class="journal-card-name">{{ ps.nome_personagem }}</div>
+                        <div class="journal-card-desc">{{ ps.background }}</div>
+                    </div>
+                {% empty %}<div class="journal-empty">Nenhum personagem.</div>{% endfor %}
                 </div>
-            {% endfor %}
-            
-            {% for asset in assets %}
-            
-                <div class="ficha-parte-box-journal medievalsharp-mini">
-                    <div class="medievalsharp-large asset-line">{{ asset.name }}</div><br>
-                    <div class="medievalsharp-mini asset-line">{{ asset.description }}</div><br>
-                    {% if asset.image %}
-                        <img src="{{ asset.image.url }}" alt="Miniatura de {{ asset.name }}" class="miniatura-imagem"><br><br>
-                    {% else %}
-                        <p>Sem imagem disponível</p>
-
-                    {% endif %}
+                <div class="journal-section-title">Mapas &amp; Assets</div>
+                <div class="journal-grid" data-jgrid="assets">
+                {% for asset in assets_gm %}{# GM vê todos, inclusive show=False #}
+                    <div class="journal-card{% if not asset.show %} is-hidden-asset{% endif %}"
+                         data-nome="{{ asset.name|lower }}">
+                        <div class="journal-thumb">
+                        {% if asset.image %}<img src="{{ asset.image.url }}" loading="lazy" alt="{{ asset.name }}">
+                        {% else %}<span class="journal-noimg">sem imagem</span>{% endif %}
+                        </div>
+                        <div class="journal-card-name">{{ asset.name }}{% if not asset.show %} <span class="journal-hidden-tag">oculto</span>{% endif %}</div>
+                        <div class="journal-card-desc">{{ asset.description }}</div>
+                    </div>
+                {% empty %}<div class="journal-empty">Nenhum asset.</div>{% endfor %}
                 </div>
-
-            {% endfor %}
-
+            </div>
         </div>
 
+    {% endif %}
+
+    <!-- Lightbox global do journal: clicar numa miniatura abre a imagem grande + texto ao lado. -->
+    <div id="journal-lightbox" class="journal-lightbox">
+        <div class="jlb-inner">
+            <button type="button" class="jlb-close" aria-label="Fechar">&times;</button>
+            <img class="jlb-img" src="" alt="">
+            <div class="jlb-panel" hidden>
+                <h3 class="jlb-title"></h3>
+                <div class="jlb-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Abre o journal e SEMPRE recarrega (nova requisição) — pega personagens
+        // e assets recém-criados sem precisar dar F5 na tela.
+        function rd6OpenJournal(scope) {
+            abrirJanela('journal-' + scope);
+            var modal = document.getElementById('janela-journal-' + scope);
+            if (!modal) return;
+            var pg = modal.querySelector('[data-jgrid="personagens"]');
+            var ag = modal.querySelector('[data-jgrid="assets"]');
+            fetch('/journal-data/' + RD6_CAMPANHA_ID + '/')
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (!d || !d.ok) return;
+                    if (pg) pg.innerHTML = (d.personagens && d.personagens.length)
+                        ? d.personagens.map(rd6JournalCardChar).join('')
+                        : '<div class="journal-empty">Nenhum personagem.</div>';
+                    if (ag) ag.innerHTML = (d.assets && d.assets.length)
+                        ? d.assets.map(rd6JournalCardAsset).join('')
+                        : '<div class="journal-empty">Nenhum asset.</div>';
+                }).catch(function () {});
+        }
+        function rd6JournalCardChar(p) {
+            var thumb = p.avatar_url
+                ? '<img src="' + p.avatar_url + '" loading="lazy" alt="">'
+                : '<span class="journal-noimg">sem imagem</span>';
+            return '<div class="journal-card" data-nome="' + rd6Esc((p.nome || '').toLowerCase()) + '">'
+                + '<div class="journal-thumb">' + thumb + '</div>'
+                + '<div class="journal-card-name">' + rd6Esc(p.nome || '') + '</div>'
+                + '<div class="journal-card-desc">' + rd6Esc(p.background || '') + '</div></div>';
+        }
+        function rd6JournalCardAsset(a) {
+            var thumb = a.image_url
+                ? '<img src="' + a.image_url + '" loading="lazy" alt="">'
+                : '<span class="journal-noimg">sem imagem</span>';
+            var tag = a.show ? '' : ' <span class="journal-hidden-tag">oculto</span>';
+            var cls = a.show ? 'journal-card' : 'journal-card is-hidden-asset';
+            return '<div class="' + cls + '" data-nome="' + rd6Esc((a.name || '').toLowerCase()) + '">'
+                + '<div class="journal-thumb">' + thumb + '</div>'
+                + '<div class="journal-card-name">' + rd6Esc(a.name || '') + tag + '</div>'
+                + '<div class="journal-card-desc">' + rd6Esc(a.description || '') + '</div></div>';
+        }
+    </script>
+
+    {% if is_gm %}
+    <!-- Modal de inserir tokens (GM): grid de personagens, seleção múltipla. -->
+    <div id="janela-token-picker" class="janela janela-token-picker">
+        <button class="fechar menu-button" onclick="fecharJanela()">×</button>
+        <div class="tp-head">
+            <h3 class="fredericka-the-great-regular tp-title">Adicionar tokens</h3>
+            <input type="text" id="tp-search" class="input-pesquisa-asset tp-search"
+                   placeholder="Filtrar por nome…" oninput="rd6TokenPickerFilter(this.value)" autocomplete="off">
+        </div>
+        <details class="quick-char-create tp-newchar" id="tpqc-form">
+            <summary>+ Nova ficha rápida</summary>
+            <div class="quick-char-fields">
+                <input type="text" id="tpqc-nome" placeholder="Nome do personagem" maxlength="30">
+                <div class="quick-char-row">
+                    <input type="number" id="tpqc-hp" placeholder="HP" min="0" max="9999" value="10">
+                    <input type="number" id="tpqc-fp" placeholder="FP" min="0" max="9999" value="10">
+                    <input type="number" id="tpqc-move" placeholder="MOVE" min="0" max="999" value="5">
+                </div>
+                <label class="qc-image-lbl">Imagem do token (envie aqui):
+                    <input type="file" id="tpqc-image" accept="image/*">
+                </label>
+                <select id="tpqc-asset">
+                    <option value="">— ou linkar asset existente —</option>
+                    {% for a in all_assets_for_gm %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                </select>
+                <button type="button" class="quick-char-submit" onclick="rd6QuickCharSave('tpqc','tpqc-form')">Criar ficha</button>
+                <p class="quick-char-error" id="tpqc-error" style="display:none"></p>
+            </div>
+        </details>
+        <div class="tp-body" id="tp-grid">
+            {% for p in personagens_journal %}
+            <label class="tp-card" data-nome="{{ p.nome_personagem|lower }}" data-id="{{ p.id }}"
+                   data-label="{{ p.nome_personagem }}" data-color="#c9a55c">
+                <input type="checkbox" class="tp-check">
+                <span class="tp-thumb">
+                    {% if p.avatar_url %}<img src="{{ p.avatar_url }}" loading="lazy" alt="{{ p.nome_personagem }}">
+                    {% else %}<span class="tp-initials">{{ p.nome_personagem|slice:":2"|upper }}</span>{% endif %}
+                </span>
+                <span class="tp-name">{{ p.nome_personagem }}</span>
+            </label>
+            {% empty %}<div class="tp-empty">Nenhum personagem na campanha.</div>{% endfor %}
+        </div>
+        <div class="tp-foot">
+            <label class="tp-layer-lbl">Camada:
+                <select id="tp-layer">
+                    <option value="visible">Visível</option>
+                    <option value="gm_only">Só GM</option>
+                    <option value="overlay">Sobreposição</option>
+                </select>
+            </label>
+            <button type="button" class="quick-char-submit tp-insert" onclick="rd6TokenPickerInsert()">Inserir selecionados (<span id="tp-count">0</span>)</button>
+        </div>
+    </div>
+    <style>
+        #janela-token-picker.janela{width:min(680px,82vw)!important;max-width:82vw!important;height:72vh!important;max-height:72vh!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;padding:0!important;overflow:hidden!important;background:var(--rd6-bg-elevated)!important;background-image:none!important;flex-direction:column!important;z-index:1300!important;}
+        #janela-token-picker.janela.ativa{display:flex!important;}
+        .tp-head{display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--rd6-border);flex:0 0 auto;}
+        .tp-title{margin:0;color:var(--rd6-accent)!important;font-size:17px;white-space:nowrap;}
+        .tp-search{flex:1;max-width:320px;}
+        /* 4 colunas no desktop; reduz em telas menores. */
+        .tp-body{flex:1 1 auto;overflow-y:auto;padding:14px 18px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-content:start;}
+        @media (max-width:620px){.tp-body{grid-template-columns:repeat(3,minmax(0,1fr));}}
+        @media (max-width:440px){.tp-body{grid-template-columns:repeat(2,minmax(0,1fr));}}
+        .qc-image-lbl{display:block;font-size:12px;color:var(--rd6-text-dim);margin:2px 0;}
+        .qc-image-lbl input[type=file]{display:block;margin-top:3px;font-size:11px;color:var(--rd6-text);max-width:100%;}
+        .tp-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 6px;border:1px solid var(--rd6-border);border-radius:8px;background:var(--rd6-bg);cursor:pointer;position:relative;transition:border-color .15s;}
+        .tp-card:hover{border-color:var(--rd6-accent);}
+        .tp-check{position:absolute;top:6px;left:6px;width:16px;height:16px;cursor:pointer;}
+        .tp-card:has(.tp-check:checked){border-color:var(--rd6-accent);box-shadow:inset 0 0 0 1px var(--rd6-accent);}
+        .tp-thumb{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#161616;display:flex;align-items:center;justify-content:center;}
+        .tp-thumb img{width:100%;height:100%;object-fit:cover;}
+        .tp-initials{color:var(--rd6-text-dim);font-size:17px;font-weight:600;}
+        .tp-name{font-size:12px;text-align:center;line-height:1.2;color:var(--rd6-text);word-break:break-word;}
+        .tp-empty{color:var(--rd6-text-dim);grid-column:1/-1;padding:10px;}
+        .tp-newchar{flex:0 0 auto;margin:8px 18px 0;border:1px solid var(--rd6-border);border-radius:8px;background:var(--rd6-bg);padding:6px 10px;}
+        .tp-newchar > summary{cursor:pointer;font-size:13px;color:var(--rd6-accent);}
+        .tp-foot{display:flex;gap:10px;align-items:center;padding:12px 18px;border-top:1px solid var(--rd6-border);flex:0 0 auto;}
+        .tp-layer-lbl{font-size:12px;color:var(--rd6-text-dim);}
+        .tp-insert{margin-left:auto;}
+    </style>
+    <script>
+        function rd6TokenPickerFilter(q) {
+            q = (q || '').toLowerCase().trim();
+            document.querySelectorAll('#tp-grid .tp-card').forEach(function (c) {
+                var n = c.getAttribute('data-nome') || '';
+                c.style.display = (!q || n.indexOf(q) !== -1) ? '' : 'none';
+            });
+        }
+        function rd6TokenPickerCount() {
+            var n = document.querySelectorAll('#tp-grid .tp-check:checked').length;
+            var el = document.getElementById('tp-count');
+            if (el) el.textContent = n;
+        }
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.classList && e.target.classList.contains('tp-check')) rd6TokenPickerCount();
+        });
+        function _rd6TokenAdd(token) {
+            if (!window.rd6GameWS || window.rd6GameWS.readyState !== 1) return false;
+            var root = document.getElementById('rd6-map-root');
+            var assetId = root ? parseInt(root.dataset.assetId, 10) : 0;
+            window.rd6GameWS.send(JSON.stringify({ type: 'map_token_add', asset_id: assetId, token: token }));
+            return true;
+        }
+        function rd6TokenPickerInsert() {
+            var layer = (document.getElementById('tp-layer') || {}).value || 'visible';
+            var checked = document.querySelectorAll('#tp-grid .tp-card .tp-check:checked');
+            if (!checked.length) return;
+            var i = 0;
+            checked.forEach(function (chk) {
+                var card = chk.closest('.tp-card');
+                _rd6TokenAdd({
+                    character_id: card.dataset.id ? parseInt(card.dataset.id, 10) : null,
+                    label: card.dataset.label || 'Token',
+                    color: card.dataset.color || '#c9a55c',
+                    hex_x: (i % 4) - 1, hex_y: Math.floor(i / 4),  // cluster perto do centro
+                    facing: 0, size_modifier: 0, posture: 'standing', layer: layer
+                });
+                chk.checked = false;
+                i++;
+            });
+            rd6TokenPickerCount();
+            fecharJanela();
+        }
+    </script>
     {% endif %}
 
     <!-- Janela de desenho (player + GM): linhas/retângulos/círculos colaborativos -->
@@ -1757,6 +2369,10 @@
                     userId: {{ user.id|default:"null" }},
                     userIsGm: RD6_IS_GM,
                     userColor: "#3b82f6",
+                    getGridSize: function () {
+                        var c = window.rd6MapCanvas && window.rd6MapCanvas.gridConfig;
+                        return (c && c.size_px) || 50;
+                    },
                     onAdd: function (d) {
                         var win = document.getElementById("janela-mapa") || document.getElementById("janela-desenho");
                         if (!win || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
@@ -1797,15 +2413,17 @@
                         return active ? active.current_turn_id : null;
                     },
                     canMoveToken: function (token) {
+                        // GM move qualquer token. Player move QUALQUER token de uma
+                        // ficha SUA (qualquer hora — sem trava de turno). O server
+                        // revalida por owner de qualquer forma.
                         if (RD6_IS_GM) return true;
                         if (!token.character_id) return false;
-                        // Owner do char? E é o turno dele?
-                        var active = (window.RD6_SCENE_STATE && window.RD6_SCENE_STATE.scenes || [])
-                            .find(function (x) { return x.id === window.RD6_SCENE_STATE.active_scene_id; });
-                        var isOurChar = (Number(token.character_id) === Number(window.RD6_ACTIVE_CHAR_ID));
-                        if (!active) return isOurChar;  // sem cena: livre se é seu
-                        var isTurn = (Number(active.current_turn_id) === Number(token.character_id));
-                        return isOurChar && isTurn;
+                        var owned = window.RD6_OWNED_CHAR_IDS || [];
+                        var cid = Number(token.character_id);
+                        for (var i = 0; i < owned.length; i++) {
+                            if (Number(owned[i]) === cid) return true;
+                        }
+                        return false;
                     },
                     onTokenMove: function (token_id, hex_x, hex_y) {
                         var assetId = parseInt(root.dataset.assetId, 10);
@@ -2037,17 +2655,19 @@
                     if (el) el.addEventListener("input", sendGridConfig);
                 });
 
-                // Trocar mapa: intercepta click pra broadcast antes do reload
+                // Fundo da cena: define o background_asset_id da cena ativa
+                // (asset_id=0 → branco). O reload vem do broadcast map_switched
+                // do server, depois que o fundo foi salvo (sem race/flicker).
                 document.querySelectorAll(".map-asset-item").forEach(function (a) {
                     a.addEventListener("click", function (ev) {
-                        var assetId = parseInt(a.dataset.assetId, 10);
+                        ev.preventDefault();
+                        var assetId = parseInt(a.dataset.assetId, 10) || 0;
                         if (window.rd6GameWS && window.rd6GameWS.readyState === 1) {
                             window.rd6GameWS.send(JSON.stringify({
                                 type: "map_switch",
                                 asset_id: assetId,
                             }));
                         }
-                        // Reload local acontece pelo href padrao do <a>
                     });
                 });
 
@@ -2107,9 +2727,11 @@
             };
 
             window.rd6OnMapSwitched = function (msg) {
-                // Recarrega na URL com asset trocado (faz pra player + GM sincronizado)
+                // Estado vive na cena: ao trocar de cena ativa (ou o fundo dela),
+                // recarrega pra renderizar fundo + tokens + desenhos + vida da
+                // cena ativa. A view já lê tudo da cena (não precisa ?asset).
                 var url = new URL(window.location.href);
-                url.searchParams.set("asset", msg.asset_id);
+                url.searchParams.delete("asset");
                 window.location.href = url.toString();
             };
 
@@ -2227,6 +2849,37 @@
                 }
             });
 
+            // Ctrl+Z: desfaz o ÚLTIMO desenho do próprio usuário no mapa.
+            // O server (map_drawing_remove) já valida que só dá pra apagar o
+            // próprio (ou qualquer um, se for GM). Aqui escolhemos sempre o
+            // último desenho cujo author_id == eu, varrendo de trás pra frente.
+            function rd6UndoLastDrawing() {
+                var rootEl = document.getElementById("rd6-map-root");
+                if (!rootEl || !window.rd6MapDrawings) return false;
+                if (!window.rd6GameWS || window.rd6GameWS.readyState !== 1) return false;
+                var list = window.rd6MapDrawings.drawings || [];
+                var mine = null;
+                for (var i = list.length - 1; i >= 0; i--) {
+                    if (Number(list[i].author_id) === Number(RD6_USER_ID)) { mine = list[i]; break; }
+                }
+                if (!mine) return false;
+                var assetId = parseInt(rootEl.dataset.assetId, 10);
+                window.rd6GameWS.send(JSON.stringify({
+                    type: "map_drawing_remove", asset_id: assetId, drawing_id: mine.id,
+                }));
+                // Some na hora localmente; broadcast do server confirma pros outros.
+                window.rd6MapDrawings.removeDrawing(mine.id);
+                return true;
+            }
+            document.addEventListener("keydown", function (ev) {
+                var key = (ev.key || "").toLowerCase();
+                if (key !== "z" || !(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey) return;
+                // Não rouba o Ctrl+Z nativo de campos de texto.
+                var tag = document.activeElement && document.activeElement.tagName;
+                if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+                if (rd6UndoLastDrawing()) ev.preventDefault();
+            });
+
             // UI da janela-desenho
             document.addEventListener("DOMContentLoaded", function () {
                 document.querySelectorAll("#janela-desenho [data-draw-mode]").forEach(function (b) {
@@ -2261,38 +2914,9 @@
                 });
             });
 
-            // GM: botão "+ Adicionar token"
+            // GM: tecla Delete remove o token selecionado. (A inserção de tokens
+            // agora vive na modal #janela-token-picker.)
             document.addEventListener("DOMContentLoaded", function () {
-                var btn = document.getElementById("map-token-add-btn");
-                if (!btn) return;
-                btn.addEventListener("click", function () {
-                    var winEl = document.getElementById("janela-mapa");
-                    if (!winEl || !window.rd6GameWS || window.rd6GameWS.readyState !== 1) return;
-                    var assetId = parseInt(winEl.dataset.assetId, 10);
-                    var sel = document.getElementById("map-token-char");
-                    var layer = document.getElementById("map-token-layer").value || "visible";
-                    var opt = sel.selectedOptions[0];
-                    var characterId = sel.value ? parseInt(sel.value, 10) : null;
-                    var label = opt ? (opt.dataset.nome || opt.textContent || "Token") : "Token";
-                    var color = opt ? (opt.dataset.color || "#c9a55c") : "#c9a55c";
-                    // Posiciona no hex 0,0 (centro do mapa) — GM arrasta depois
-                    window.rd6GameWS.send(JSON.stringify({
-                        type: "map_token_add",
-                        asset_id: assetId,
-                        token: {
-                            character_id: characterId,
-                            label: label,
-                            color: color,
-                            hex_x: 0, hex_y: 0,
-                            facing: 0,
-                            size_modifier: 0,
-                            posture: "standing",
-                            layer: layer,
-                        },
-                    }));
-                });
-
-                // Tecla Delete remove o token selecionado (GM only)
                 document.addEventListener("keydown", function (ev) {
                     if (!RD6_IS_GM) return;
                     if (ev.key !== "Delete" && ev.key !== "Backspace") return;

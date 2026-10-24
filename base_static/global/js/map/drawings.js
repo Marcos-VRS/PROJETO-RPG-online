@@ -114,7 +114,65 @@ window.rd6Drawings = (function () {
             ctx.setLineDash([6, 4]);
             this._drawOne(ctx, this._inProgress);
             ctx.restore();
+            this._drawMeasure(ctx, this._inProgress);
         }
+        ctx.restore();
+    };
+
+    // metros por pixel: hexes adjacentes (1 m) distam √3 × size pixels.
+    DrawingsLayer.prototype._metersPerPx = function () {
+        var g = (this.opts.getGridSize && this.opts.getGridSize()) || 50;
+        return 1 / (Math.sqrt(3) * g);
+    };
+
+    // Réguas de medida durante o desenho (círculo = raio; retângulo = L e A).
+    DrawingsLayer.prototype._drawMeasure = function (ctx, d) {
+        if (!d || !d.points || d.points.length < 2) return;
+        var mpp = this._metersPerPx();
+        function fmt(px) {
+            var m = px * mpp;
+            return (m >= 10 ? m.toFixed(0) : m.toFixed(1)) + " m";
+        }
+        if (d.kind === "circle") {
+            var cx = d.points[0][0], cy = d.points[0][1];
+            var ex = d.points[1][0], ey = d.points[1][1];
+            var dx = ex - cx, dy = ey - cy;
+            var rpx = Math.sqrt(dx * dx + dy * dy);
+            // linha-régua do raio (centro → borda)
+            ctx.save();
+            ctx.strokeStyle = "#ffd700";
+            ctx.lineWidth = 1.5 / this.mc.scale;
+            ctx.setLineDash([5 / this.mc.scale, 3 / this.mc.scale]);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+            ctx.restore();
+            this._measureLabel(ctx, (cx + ex) / 2, (cy + ey) / 2, "R " + fmt(rpx));
+        } else if (d.kind === "rect") {
+            var x0 = Math.min(d.points[0][0], d.points[1][0]);
+            var y0 = Math.min(d.points[0][1], d.points[1][1]);
+            var x1 = Math.max(d.points[0][0], d.points[1][0]);
+            var y1 = Math.max(d.points[0][1], d.points[1][1]);
+            var wpx = x1 - x0, hpx = y1 - y0;
+            this._measureLabel(ctx, (x0 + x1) / 2, y0, "↔ " + fmt(wpx));  // largura, topo
+            this._measureLabel(ctx, x0, (y0 + y1) / 2, "↕ " + fmt(hpx));  // altura, lado
+        }
+    };
+
+    DrawingsLayer.prototype._measureLabel = function (ctx, x, y, text) {
+        ctx.save();
+        var fs = 13 / this.mc.scale;
+        ctx.font = "bold " + fs + "px sans-serif";
+        var pad = 6 / this.mc.scale;
+        var w = ctx.measureText(text).width + pad * 2;
+        var h = 18 / this.mc.scale;
+        ctx.fillStyle = "rgba(0,0,0,0.82)";
+        ctx.fillRect(x - w / 2, y - h / 2, w, h);
+        ctx.fillStyle = "#ffd700";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y);
         ctx.restore();
     };
 

@@ -61,7 +61,7 @@
         <h2>Vantagens</h2>
         <ul class="v2-list">
             {% for adv in sheet.advantages %}
-                <li>{{ adv.id }}{% if adv.level %} ×{{ adv.level }}{% endif %}{% if adv.notes %} — {{ adv.notes }}{% endif %}</li>
+                <li>{% firstof adv.label adv.id "?" %}{% if adv.level %} ×{{ adv.level }}{% endif %}{% if adv.notes %} — {{ adv.notes }}{% endif %}</li>
             {% empty %}
                 <li class="v2-empty">Nenhuma.</li>
             {% endfor %}
@@ -72,7 +72,7 @@
         <h2>Desvantagens</h2>
         <ul class="v2-list">
             {% for d in sheet.disadvantages %}
-                <li>{{ d.id }}{% if d.self_control %} (SC {{ d.self_control }}){% endif %}{% if d.notes %} — {{ d.notes }}{% endif %}</li>
+                <li>{% firstof d.label d.id "?" %}{% if d.self_control %} (SC {{ d.self_control }}){% endif %}{% if d.notes %} — {{ d.notes }}{% endif %}</li>
             {% empty %}
                 <li class="v2-empty">Nenhuma.</li>
             {% endfor %}
@@ -83,7 +83,7 @@
         <h2>Perícias</h2>
         <ul class="v2-list">
             {% for s in sheet.skills %}
-                <li>{{ s.id }} — {{ s.points }} pts{% if s.specialty %} ({{ s.specialty }}){% endif %}</li>
+                <li>{% firstof s.label s.id "?" %} — {{ s.points|default:0 }} pts{% if s.specialty %} ({{ s.specialty }}){% endif %}</li>
             {% empty %}
                 <li class="v2-empty">Nenhuma.</li>
             {% endfor %}
@@ -93,13 +93,13 @@
     <section class="v2-section">
         <h2>Equipamento</h2>
         <h3>Armas Corpo-a-Corpo</h3>
-        <ul class="v2-list">{% for it in sheet.equipment_melee %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <ul class="v2-list">{% for it in sheet.equipment_melee %}<li>{% firstof it.name it.label it.id "(item)" %}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
         <h3>Armas à Distância</h3>
-        <ul class="v2-list">{% for it in sheet.equipment_ranged %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <ul class="v2-list">{% for it in sheet.equipment_ranged %}<li>{% firstof it.name it.label it.id "(item)" %}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
         <h3>Armaduras</h3>
-        <ul class="v2-list">{% for it in sheet.equipment_armor %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <ul class="v2-list">{% for it in sheet.equipment_armor %}<li>{% firstof it.name it.label it.id "(item)" %}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
         <h3>Itens diversos</h3>
-        <ul class="v2-list">{% for it in sheet.equipment_misc %}<li>{{ it.name|default:it.id }}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
+        <ul class="v2-list">{% for it in sheet.equipment_misc %}<li>{% firstof it.name it.label it.id "(item)" %}</li>{% empty %}<li class="v2-empty">—</li>{% endfor %}</ul>
     </section>
 </div>
 

@@ -67,6 +67,9 @@ def _wrap_v2_as_legacy(v2):
         "nome_campanha": v2.campanha.nome if v2.campanha else "",
         "nome_gm": v2.campanha.dono.username if v2.campanha and v2.campanha.dono else "",
         "is_quick_npc": v2.is_quick_npc,
+        # Asset linkado (avatar da ficha rápida) vive em runtime_stats na V2.
+        # Copia pro info_campanha pra _resolve_avatar_url achar após reload.
+        "linked_asset_id": (v2.runtime_stats or {}).get("linked_asset_id"),
     }
     pts = v2.points or {}
     v2.pontos_soma = {
@@ -205,6 +208,29 @@ def _migrate_scene_state(raw):
     return {"version": 2, "scenes": [scene], "active_scene_id": "s_001"}
 
 
+def _light_scene_state_for_client(state):
+    """scene_state enxuto pro cliente: sem os campos pesados (tokens/drawings/
+    char_runtime) que o RD6_SCENE_STATE não usa. Mantém metadados das cenas."""
+    if not isinstance(state, dict):
+        return {"version": 2, "scenes": [], "active_scene_id": None}
+    light = []
+    for s in state.get("scenes") or []:
+        if not isinstance(s, dict):
+            continue
+        light.append({
+            "id": s.get("id"),
+            "name": s.get("name"),
+            "character_ids": s.get("character_ids", []),
+            "current_turn_id": s.get("current_turn_id"),
+            "background_asset_id": s.get("background_asset_id"),
+        })
+    return {
+        "version": state.get("version", 2),
+        "active_scene_id": state.get("active_scene_id"),
+        "scenes": light,
+    }
+
+
 def _resolve_avatar_url(character):
     """Avatar: photo do char se houver, senão image do asset linkado, senão None.
 
@@ -217,7 +243,11 @@ def _resolve_avatar_url(character):
         except Exception:
             pass
     info = getattr(character, "info_campanha", None) or {}
-    linked = info.get("linked_asset_id") or getattr(character, "linked_asset_id", None)
+    # linked_asset_id pode estar em info_campanha (V1), como atributo direto, ou
+    # em runtime_stats (ficha rápida V2 crua, sem wrapper).
+    linked = (info.get("linked_asset_id")
+              or getattr(character, "linked_asset_id", None)
+              or (getattr(character, "runtime_stats", None) or {}).get("linked_asset_id"))
     if linked:
         try:
             asset = CampanhaAssets.objects.get(id=int(linked))
@@ -245,7 +275,7 @@ def _hp_pct_and_negative(hp_atual, hp_max):
 
 
 def _build_player_mini(character, present_ids=None, show_numbers=False, campanha=None,
-                       color_map=None):
+                       color_map=None, runtime_override=None):
     """Empacota a ficha num dicionário leve pra exibição da barra de players.
 
     ``show_numbers`` controla privacidade: True → mostra ``HP X/Y`` e ``FP X/Y``
@@ -254,9 +284,14 @@ def _build_player_mini(character, present_ids=None, show_numbers=False, campanha
 
     ``campanha`` (opcional) é usado pra resolver a cor identitária do dono
     (borda da mini). GM = vermelho; players = HSL do username.
+
+    ``runtime_override`` (opcional): quando a campanha usa cenas, HP/FP/status
+    vêm do estado DAQUELA cena (scene['char_runtime'][char_id]), não do
+    runtime_stats global do model. Passe um dict (mesmo vazio = full) pra ativar
+    o modo-cena; None = usa o runtime_stats global (comportamento legado).
     """
     sub = character.sub_attributes or {}
-    runtime = character.runtime_stats or {}
+    runtime = runtime_override if runtime_override is not None else (character.runtime_stats or {})
     hp_max = _safe_int(sub.get("hp"))
     fp_max = _safe_int(sub.get("fp"))
     hp_atual = _safe_int(runtime.get("hp_atual"), default=hp_max)
@@ -306,26 +341,46 @@ def _build_player_mini(character, present_ids=None, show_numbers=False, campanha
 def game_interface(request, campanha_id, slot):
     username = request.user.username
     campanha = get_object_or_404(Campanha, id=campanha_id)
-    # ?asset=<id> permite ao GM trocar o mapa ativo sem mexer em slots.
-    # Se nao vier ou nao existir, cai no default (slot=slot).
-    pagina_inicial = None
-    requested_asset_id = request.GET.get("asset")
-    if requested_asset_id:
-        try:
-            pagina_inicial = CampanhaAssets.objects.filter(
-                pk=int(requested_asset_id), campanha=campanha
-            ).first()
-        except (TypeError, ValueError):
-            pass
-    if pagina_inicial is None:
+    # ===== A CENA dirige o mapa: fundo + tokens + desenhos + vida =====
+    # O save state vive na CENA (scene_state). O mapa é só um fundo: branco OU
+    # a imagem de um asset enviado (que fica intacto e nunca guarda estado).
+    scene_state = _migrate_scene_state(campanha.scene_state)
+    scenes = scene_state.get("scenes") or []
+    active_scene_id = scene_state.get("active_scene_id")
+    active_scene = next((s for s in scenes if s.get("id") == active_scene_id), None)
+    if active_scene is None and scenes:
+        active_scene = scenes[0]
+        scene_state["active_scene_id"] = active_scene["id"]
+
+    _is_user_gm = (campanha.dono_id == request.user.id)
+
+    # NÃO deletar slot=3 aqui. O slot=3 já foi usado por DUAS coisas conflitantes:
+    # (a) mapas-de-cena em branco vestigiais e (b) assets com show=False (convenção
+    # antiga do add/edit_asset). Deletar slot=3 apagava assets ocultos do GM.
+    # Agora a visibilidade é SÓ o campo `show`; slot=3 foi descontinuado.
+
+    # Fundo da cena ativa: asset enviado (imagem) ou branco (sem asset).
+    bg_asset = None
+    if active_scene and active_scene.get("background_asset_id"):
+        bg_asset = CampanhaAssets.objects.filter(
+            pk=active_scene["background_asset_id"], campanha=campanha
+        ).first()
+    if bg_asset is not None:
+        pagina_inicial = bg_asset
+        map_image_url = bg_asset.image.url if bg_asset.image else ""
+    else:
+        # Placeholder estrutural pro template (.id). Imagem vazia = branco quando
+        # há cena ativa; sem cena nenhuma, mostra a imagem default da campanha.
         pagina_inicial = get_object_or_404(CampanhaAssets, campanha=campanha, slot=slot)
-    # MapState: auto-cria na primeira vez que esse asset entra na tela de jogo.
-    # Tokens e drawings vivem em MapState (por mapa). Grid config vive na
-    # Campanha (compartilhada entre todos os mapas) pra nao resetar ao trocar.
+        if active_scene is not None:
+            map_image_url = ""
+        else:
+            map_image_url = pagina_inicial.image.url if pagina_inicial.image else ""
+
+    # MapState do asset estrutural: só pra data-map-state + soft-migrate do grid
+    # (tokens/desenhos NÃO vêm mais daqui — vêm da cena).
     from gurps.models import MapState as _MapState
     map_state, _created = _MapState.objects.get_or_create(asset=pagina_inicial)
-    # Se o MapState ja tinha grid config (legado antes da migration 0061) e a
-    # Campanha ainda esta com defaults, copia uma vez (migration soft).
     if _created is False and not campanha.grid_enabled and map_state.grid_enabled:
         campanha.grid_enabled = map_state.grid_enabled
         campanha.grid_size_px = map_state.grid_size_px
@@ -337,23 +392,35 @@ def game_interface(request, campanha_id, slot):
             "grid_enabled", "grid_size_px", "grid_offset_x",
             "grid_offset_y", "grid_color", "grid_opacity"
         ])
-    # Filtra tokens E drawings gm_only se user não é GM (defesa em profundidade).
-    _is_user_gm = (campanha.dono_id == request.user.id)
+
+    # Tokens/desenhos vêm da CENA ATIVA. Filtra gm_only pra quem não é GM.
+    scene_tokens = (active_scene.get("tokens") if active_scene else None) or []
+    scene_drawings = (active_scene.get("drawings") if active_scene else None) or []
     if _is_user_gm:
-        visible_tokens = map_state.tokens or []
-        visible_drawings = map_state.drawings or []
+        visible_tokens = scene_tokens
+        visible_drawings = scene_drawings
     else:
-        visible_tokens = [t for t in (map_state.tokens or [])
+        visible_tokens = [t for t in scene_tokens
                           if t.get("layer", "visible") != "gm_only"]
-        visible_drawings = [d for d in (map_state.drawings or [])
+        visible_drawings = [d for d in scene_drawings
                             if d.get("layer", "visible") != "gm_only"]
     messages = Message.objects.filter(campanha=campanha).order_by("timestamp")
     assets = CampanhaAssets.objects.filter(
         campanha=campanha, slot__in=[1, 2], show=True
     ).order_by("-id")
+    # Journal do GM vê TODOS os assets slot 1/2, inclusive os com show=False
+    # (bug antigo: o GM só via show=True dentro do jogo). Players seguem com
+    # `assets` (show=True). Exclui slot 3 (mapas-de-cena em branco vestigiais).
+    assets_gm = CampanhaAssets.objects.filter(
+        campanha=campanha, slot__in=[1, 2]
+    ).order_by("-id")
     # Lista completa dos assets pro GM linkar fichas rápidas a (visíveis ou não).
+    # Exclui os mapas-de-cena auto-criados (slot 3, em branco) pra não poluir
+    # o seletor manual "Trocar mapa ativo" — esses são trocados pelas cenas.
     all_assets_for_gm = list(
-        CampanhaAssets.objects.filter(campanha=campanha).order_by("-id").values("id", "name")
+        CampanhaAssets.objects.filter(campanha=campanha)
+        .exclude(slot=3)
+        .order_by("-id").values("id", "name")
     )
 
     print(f"\n Aqui estão os assets {assets} \n")
@@ -401,6 +468,11 @@ def game_interface(request, campanha_id, slot):
 
     # Todas as fichas da campanha (todos players + GM) — V2 + V1 fallback
     personagens_journal = _get_all_sheets_for_campanha(campanha)
+    # Avatar do journal: foto do char OU imagem do asset linkado (ficha rápida).
+    # Sem isso, quick NPCs (photo vazio, mas com linked_asset_id) apareciam
+    # como "sem imagem" no journal mesmo tendo retrato no asset linkado.
+    for _p in personagens_journal:
+        _p.avatar_url = _resolve_avatar_url(_p)
 
     # sheet_list = fichas secundárias do player (sem a "primária" #1)
     if len(fichas_do_player) > 1:
@@ -408,17 +480,8 @@ def game_interface(request, campanha_id, slot):
     else:
         sheet_list = []
     print(f"\nFICHAS DO PLAYER ({username}): {len(fichas_do_player)}\n")
-    # Estado multi-cena (controlado pelo GM, sincronizado via WS).
-    scene_state = _migrate_scene_state(campanha.scene_state)
-    scenes = scene_state.get("scenes") or []
-    active_scene_id = scene_state.get("active_scene_id")
-    active_scene = next((s for s in scenes if s.get("id") == active_scene_id), None)
-    if active_scene is None and scenes:
-        active_scene = scenes[0]
-        scene_state["active_scene_id"] = active_scene["id"]
-
-    # Personagens "em cena" e ordem vêm da cena ativa. Se não há cena ainda,
-    # todos são considerados presentes (estado inicial = nenhuma cena criada).
+    # active_scene / scene_state já resolvidos no topo (dirigem fundo+estado).
+    # Personagens "em cena" e ordem vêm da cena ativa. Sem cena → todos presentes.
     if active_scene:
         order_ids = active_scene.get("character_ids") or []
         present_ids = set(order_ids)
@@ -428,7 +491,7 @@ def game_interface(request, campanha_id, slot):
 
     from django.conf import settings as dj_settings
 
-    is_gm = (campanha.dono_id is not None) and (campanha.dono_id == request.user.id)
+    is_gm = _is_user_gm
 
     # Token assinado pra autenticar o WebSocket de forma confiável mesmo quando
     # o cookie de sessão não chega no upgrade do WS (via Cloudflare Tunnel).
@@ -444,13 +507,19 @@ def game_interface(request, campanha_id, slot):
     from gurps.owner_color import build_player_color_map
     player_color_map = build_player_color_map(personagens_journal, campanha)
 
+    # Vida/status por CENA: com cena ativa, HP/FP/status vêm de
+    # active_scene['char_runtime'] (ausente = full); sem cena, runtime_stats global.
+    scene_runtime = (active_scene.get("char_runtime") or {}) if active_scene else None
+
     players_minis = []
     for p in personagens_journal:
         owner = (p.info_campanha or {}).get("player_name")
         show_numbers = is_gm or (owner == username)
+        override = scene_runtime.get(str(p.id), {}) if scene_runtime is not None else None
         players_minis.append(_build_player_mini(p, present_ids, show_numbers,
                                                 campanha=campanha,
-                                                color_map=player_color_map))
+                                                color_map=player_color_map,
+                                                runtime_override=override))
 
     # Ordena minis pela ordem manual da cena ativa. Quem não está na cena fica
     # no fim em ordem alfabética (só importa pro modal — não aparece na barra).
@@ -468,21 +537,26 @@ def game_interface(request, campanha_id, slot):
         "messages": messages_with_colors,  # Enviamos as mensagens com cor ao template
         "username": username,
         "assets": assets,
+        "assets_gm": assets_gm,
         "personagens_journal": personagens_journal,
         "sheet_list": sheet_list,
         "next_character_id": next_character_id,
         "map_state": map_state,
-        "map_image_url": pagina_inicial.image.url if pagina_inicial.image else "",
+        "map_image_url": map_image_url,
         "map_tokens": visible_tokens,
         "map_drawings": visible_drawings,
         "players_minis": players_minis,
         "is_gm": is_gm,
         "ws_token": ws_token,
-        "scene_state": scene_state,
+        "scene_state": _light_scene_state_for_client(scene_state),
         "all_characters_data": [
             {"id": p["id"], "nome": p["nome"], "speed": p["speed"], "is_quick_npc": p["is_quick_npc"]} for p in players_minis
         ],
         "all_assets_for_gm": all_assets_for_gm,
+        "active_background_id": active_scene.get("background_asset_id") if active_scene else None,
+        # IDs das fichas do próprio player — pra liberar mover o próprio token
+        # no client (o server revalida por owner de qualquer jeito).
+        "owned_char_ids": [f.id for f in fichas_do_player],
         "debug": dj_settings.DEBUG,
     }
     return render(request, "global/interface_jogo.html", context)
@@ -760,21 +834,40 @@ def adjust_character_vitals(request, char_id):
     hp_max = _safe_int(sub.get("hp"))
     fp_max = _safe_int(sub.get("fp"))
 
-    rs = dict(char.runtime_stats or {})
-    if "hp_atual" in body:
-        # HP pode ir até -10×hp_max (barra "morte" roxa). Acima de hp_max não.
-        neg_cap = -10 * hp_max
-        hp_new = max(neg_cap, min(_safe_int(body.get("hp_atual"), default=hp_max), hp_max))
-        rs["hp_atual"] = hp_new
-    if "fp_atual" in body:
-        fp_new = max(0, min(_safe_int(body.get("fp_atual"), default=fp_max), fp_max))
-        rs["fp_atual"] = fp_new
+    # Vida vive na CENA ativa (char_runtime). Sem cena → runtime_stats global.
+    def _clamp_hp(v):
+        return max(-10 * hp_max, min(_safe_int(v, default=hp_max), hp_max))
+    def _clamp_fp(v):
+        return max(0, min(_safe_int(v, default=fp_max), fp_max))
 
-    char.runtime_stats = rs
-    char.save(update_fields=["runtime_stats"])
+    _state = campanha.scene_state if isinstance(campanha.scene_state, dict) else {}
+    _scenes = _state.get("scenes") or []
+    _aid = _state.get("active_scene_id")
+    _scene = next((s for s in _scenes if isinstance(s, dict) and s.get("id") == _aid), None)
+    if _scene is None and _scenes:
+        _scene = _scenes[0]
 
-    hp_atual = _safe_int(rs.get("hp_atual"), default=hp_max)
-    fp_atual = _safe_int(rs.get("fp_atual"), default=fp_max)
+    if _scene is not None:
+        entry = _scene.setdefault("char_runtime", {}).setdefault(str(char.id), {})
+        if "hp_atual" in body:
+            entry["hp_atual"] = _clamp_hp(body.get("hp_atual"))
+        if "fp_atual" in body:
+            entry["fp_atual"] = _clamp_fp(body.get("fp_atual"))
+        campanha.scene_state = _state
+        campanha.save(update_fields=["scene_state"])
+        hp_atual = _safe_int(entry.get("hp_atual"), default=hp_max)
+        fp_atual = _safe_int(entry.get("fp_atual"), default=fp_max)
+    else:
+        rs = dict(char.runtime_stats or {})
+        if "hp_atual" in body:
+            rs["hp_atual"] = _clamp_hp(body.get("hp_atual"))
+        if "fp_atual" in body:
+            rs["fp_atual"] = _clamp_fp(body.get("fp_atual"))
+        char.runtime_stats = rs
+        char.save(update_fields=["runtime_stats"])
+        hp_atual = _safe_int(rs.get("hp_atual"), default=hp_max)
+        fp_atual = _safe_int(rs.get("fp_atual"), default=fp_max)
+
     hp_pct, hp_is_negative = _hp_pct_and_negative(hp_atual, hp_max)
     fp_pct = f"{100 * fp_atual / fp_max:.1f}" if fp_max > 0 else "0"
 
@@ -808,6 +901,49 @@ def _serialize_char_for_client(character, viewer_username, viewer_is_gm, campanh
                               campanha=campanha)
 
 
+@login_required(login_url="gurps:login")
+def atualizar_pontos_campanha(request, campanha_id):
+    """GM edita os pontos da campanha (budget de criação + XP acumulado).
+
+    POST JSON: {pontos_de_ficha, xp_acumulado}. Só o dono (GM) pode.
+    Aplica o novo total (pontos_de_ficha + xp_acumulado) como ``available`` de
+    TODAS as fichas V2 da campanha e recalcula o ``remaining`` de cada uma
+    (via recompute_points no save). Retorna quantas fichas foram atualizadas.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "só o GM pode editar os pontos"}, status=403)
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "JSON inválido"}, status=400)
+
+    pontos = max(0, _safe_int(body.get("pontos_de_ficha"), default=campanha.pontos_de_ficha))
+    xp = max(0, _safe_int(body.get("xp_acumulado"), default=campanha.xp_acumulado))
+    campanha.pontos_de_ficha = pontos
+    campanha.xp_acumulado = xp
+    campanha.save(update_fields=["pontos_de_ficha", "xp_acumulado"])
+
+    total = pontos + xp
+    updated = 0
+    for sheet in CharacterSheetV2.objects.filter(campanha=campanha):
+        pts = dict(sheet.points or {})
+        pts["available"] = total
+        sheet.points = pts
+        sheet.save()  # recompute_points recalcula spent/remaining com o novo available
+        updated += 1
+
+    return JsonResponse({
+        "ok": True,
+        "pontos_de_ficha": pontos,
+        "xp_acumulado": xp,
+        "total": total,
+        "updated": updated,
+    })
+
+
 @csrf_exempt
 @login_required(login_url="gurps:login")
 def save_quick_character(request):
@@ -819,10 +955,17 @@ def save_quick_character(request):
     """
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "JSON invalido"}, status=400)
+    # Aceita JSON (sem imagem) OU multipart/form-data (com upload de imagem no
+    # próprio form). Se vier imagem, criamos o asset na hora e linkamos.
+    image = None
+    if (request.content_type or "").startswith("multipart"):
+        data = request.POST
+        image = request.FILES.get("image")
+    else:
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON invalido"}, status=400)
 
     nome = (data.get("nome") or "").strip()[:30]
     if not nome:
@@ -876,6 +1019,21 @@ def save_quick_character(request):
         secondary_modifiers=sec_mods,
         runtime_stats={"hp_atual": hp_int, "fp_atual": fp_int},
     )
+    # Imagem enviada no próprio form → cria um asset (show=True, slot=2) e linka
+    # esse asset (precede o asset_id do dropdown). Mesmas regras do upload normal
+    # de asset (ImageField). Assim não é preciso criar o asset separado antes.
+    if image is not None:
+        try:
+            new_asset = CampanhaAssets(
+                campanha=campanha, name=candidate[:30], slot=2, show=True,
+                description="",
+            )
+            new_asset.image = image
+            new_asset.save()
+            asset_id_int = new_asset.id
+        except Exception as e:  # noqa: BLE001 — não quebra a ficha se a imagem falhar
+            print(f"[save_quick_character] falha ao criar asset da imagem: {e}")
+
     # Anexa linked_asset_id como atributo de runtime (não é campo do model)
     if asset_id_int is not None:
         rs = char.runtime_stats or {}
@@ -985,3 +1143,33 @@ def journal(request, campanha_id):
         "assets_gm": assets_gm,
     }
     return render(request, "global/journal.html", context)
+
+
+@login_required(login_url="gurps:login")
+def journal_data(request, campanha_id):
+    """JSON do journal pra recarregar sem refresh: personagens + assets atuais.
+
+    GM vê todos os assets slot 1/2 (inclusive show=False); player só show=True.
+    Personagens vêm com avatar_url resolvido (foto OU asset linkado).
+    """
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    is_gm = (campanha.dono_id == request.user.id)
+    chars = _get_all_sheets_for_campanha(campanha)
+    personagens = [{
+        "id": p.id,
+        "nome": p.nome_personagem,
+        "background": (getattr(p, "background", "") or "")[:400],
+        "avatar_url": _resolve_avatar_url(p),
+    } for p in chars]
+    aq = CampanhaAssets.objects.filter(campanha=campanha, slot__in=[1, 2])
+    if not is_gm:
+        aq = aq.filter(show=True)
+    assets = [{
+        "id": a.id,
+        "name": a.name,
+        "description": a.description or "",
+        "image_url": (a.image.url if a.image else None),
+        "show": a.show,
+    } for a in aq.order_by("-id")]
+    return JsonResponse({"ok": True, "is_gm": is_gm,
+                         "personagens": personagens, "assets": assets})

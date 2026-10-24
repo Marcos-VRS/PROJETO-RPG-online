@@ -1,9 +1,221 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-05-31 (Fases 5-6 do tabletop + pendências da players-bar + fix WS auth).
-> **Status:** Tabletop com Fases 1-5 completas + Fase 6 parcial. Muita coisa nova NÃO testada visualmente pelo user (trabalho autônomo). PRIORIDADE ao voltar: testar tudo e reportar bugs com Console (F12).
+> **Última sessão:** 2026-09-12 (Estúdio de Imagem por IA — ComfyUI local na GPU — **entregue e na dist**; + fix do lightbox do journal).
+> **Status:** Refactor estado-na-cena (2026-06-05) segue **uncommitted** e **fora da dist**. Feature de geração de imagem (ComfyUI) **funcionando end-to-end** e empacotada na `dist/roll3d6-setup.exe` (12/set 15:57, 53,7 MB). Nada commitado ainda; runserver/ComfyUI/worker sob controle do Claude.
 >
 > Quando voltar, leia este documento primeiro.
+
+---
+
+## SESSÃO 2026-09-12: Estúdio de Imagem por IA (ComfyUI local) — ENTREGUE
+
+Feature grande aprovada e implementada até o fim (mandato de autonomia do user). Plano completo em **`docs/IMAGE_GEN_PLAN.md`**. Roda Stable Diffusion na GPU do próprio mestre pra gerar **retratos de personagem** (excelentes) e **mapas** (bonitos; layout preciso só com ControlNet no futuro).
+
+### Arquitetura (reusa o padrão do map-gen headless)
+- `gurps/comfyui_client.py` — `status(base_url)` (ping /system_stats) + `generate_png(...)` (monta grafo SDXL, POST /prompt, poll /history, baixa /view). `DEFAULT_URL=http://127.0.0.1:8188`, `DEFAULT_CKPT=sd_xl_turbo_1.0_fp16.safetensors`.
+- Modelo `ImageGenRequest` (**migration 0064**, já aplicada no banco OneDrive): kind (personagem/mapa/cena), prompt, negative, width/height/steps/cfg/seed, status, result_file, result_asset FK, error.
+- Views `gurps/views/image_gen.py` — status/request/req_status/list/png/approve/discard. Aprovar → grava PNG em `campanhas_assets/imagegen_<id>.png` + cria `CampanhaAssets(show=False)`. `SIZE_BY_KIND`: personagem 768×1024, mapa 1024×1024, cena 1024×768.
+- Worker `manage.py imagegen_worker` — pega pending, gera, salva em `media/imagegen/gen_<id>.png`, marca done/failed. Prompt-template por kind.
+- UI **"🎨 Estúdio de Imagem"** no menu ☰ do GM (`interface_jogo.html`): escolhe tipo + prompt, gera, faz poll, mostra prévia, aprova/descarta.
+- **Degradação graciosa:** ComfyUI offline = status "offline", nunca quebra o serviço.
+
+### Empacotamento na dist (verificado)
+- `desktop/launcher.py` sobe o `imagegen_worker` junto do daphne (modo `--imagegen-worker`; import direto do `Command` pra evitar a descoberta de commands que falha em frozen; terminate no shutdown).
+- **Bundle conferido** abrindo o PYZ do `roll3d6.exe`: `gurps.comfyui_client`, `gurps.views.image_gen`, `gurps.management.commands.imagegen_worker` = FOUND; migration 0064 solta em `_internal/gurps/migrations/`.
+
+### Setup no PC do user (ComfyUI portable)
+- `C:\Users\marco\ComfyUI_windows_portable\` — subir com **`iniciar_comfyui.bat`** (`--lowvram --port 8188 --disable-auto-launch`). Checkpoint `sd_xl_turbo_1.0_fp16.safetensors` (6.9GB) em `ComfyUI\models\checkpoints\`. GPU RTX 1000 Ada 6GB → ~10-12s por imagem, cfg~1.6, steps 6.
+- Extrair o 7z do ComfyUI exigiu `7zr.exe` (py7zr não suporta filtro BCJ2).
+
+### Provado funcionando
+- Retrato (768×1024, ~12s) e mapa (~10s) gerados na GPU real; retrato aprovado → asset #129. ComfyUI online, GPU detectada (6141MB VRAM).
+
+### AJUSTE 2026-09-12 (tarde): modelo fotorrealista + presets + IP-Adapter
+Feedback do user: o SDXL-Turbo gerava tudo "como mapa do Super Mário". Ele quer foto realista ESCURA/cinematográfica (referência: retrato "ESDRAS — cozinheiro"). Duas frentes, ambas provadas:
+- **Trocado o modelo** de `sd_xl_turbo` → **`RealVisXL_V5.0_Lightning_fp16.safetensors`** (fotorrealista, ~13s, sampler `dpmpp_sde`/`karras`, cfg 1.5, steps 6). `comfyui_client.pick_checkpoint()` escolhe o RealVis se existir, senão turbo. Negative reforçado contra cartoon/anime/render.
+- **Presets de estilo na UI** (`ig-style`): cinematic_dark (padrão), photoreal, oil, gritty, none — antepõem keywords ao prompt. O worker virou "leve" (só enquadramento) pra não brigar com o estilo.
+- **IP-Adapter (referência de estilo)**: user escolheu "estilo/clima". Extensão `ComfyUI_IPAdapter_plus` + modelos ip-adapter-plus_sdxl_vit-h (847MB) + CLIP-ViT-H (2.5GB). Campo `ImageGenRequest.ref_image`+`ref_weight` (**migration 0065**). UI: input de arquivo + slider de força; envio via FormData (multipart). View aceita multipart/JSON. Worker lê `ref_image` e passa bytes pro `generate_png(ref_image_bytes=...)` que sobe via `/upload/image` e monta grafo com IPAdapterAdvanced (weight_type "style transfer"). PROVADO: cozinheiro como ref → alquimista idosa saiu com a mesma vibe (18s).
+- **Rebuild em andamento** (build6) com tudo isso. Após instalar, o launcher aplica a migration 0065. Modelos/extensão ficam na pasta do ComfyUI (fora do app) — o user já tem.
+
+### Fix junto: lightbox do journal
+- Clicar em qualquer imagem no journal agora abre modal com a imagem grande + texto ao lado (`rd6OpenLightbox` reescrito; listener **delegado** em `document` pra `.journal-thumb` — os per-element se perdiam quando `rd6OpenJournal` reconstruía os cards). Arquivos: game_interface.js/css + interface_jogo.html.
+
+### Para a próxima sessão (instruções ao user)
+1. Instalar `dist/roll3d6-setup.exe` por cima da versão antiga (dados no OneDrive intactos; migrations aditivas).
+2. Dois cliques em `iniciar_comfyui.bat` pra subir o ComfyUI.
+3. Abrir o app (a dist sobe o worker sozinho) → ☰ → "🎨 Estúdio de Imagem".
+
+### AJUSTE 2026-10-10: contexto do journal + acúmulo de aprovados
+Feedback: as imagens saíam "sem contexto". Agora toda geração LÊ O JOURNAL e acumula o que foi aprovado. Decisões do user: (1) **Claude headless escreve o prompt** lendo o journal; (2) **GM escolhe a imagem de referência do journal** na hora.
+- **Novo módulo `gurps/ai_context.py`:** `build_campaign_context(campanha)` monta texto do journal (descrição + regras + `ai_context` acumulado + assets recentes + personagens); `append_approved_context()` acumula; `write_image_prompt_via_claude(ctx, pedido, style, kind)` roda `claude -p` (sonnet, cwd neutro, stdin) e devolve um prompt SDXL coerente com o mundo — **fallback mecânico** se o claude sumir. `STYLE_KEYWORDS` é server-authoritative (espelha o seletor da UI).
+- **Modelos (migration 0066):** `Campanha.ai_context` (TextField); `ImageGenRequest`: `ref_asset` (FK pro asset do journal usado como referência), `style`, `use_context`, `expanded_prompt`.
+- **Worker imagegen:** com `use_context`, monta contexto + chama claude → `expanded_prompt`; senão mecânico. `_resolve_ref` prioriza `ref_asset` (só raster; pula SVG) sobre upload.
+- **Map-gen também lê o journal** (mapgen_worker injeta contexto no prompt do SVG) e acumula no approve.
+- **View nova `imagegen_journal`** lista imagens raster do journal pro seletor. `imagegen_request` aceita style/use_context/ref_asset_id. Approve (imagem E mapa) chama `append_approved_context`.
+- **UI:** checkbox "Ler o journal" (default ON), botão "📖 Referência do journal" (grid de thumbs, clica pra escolher), card mostra "prompt da IA" (expanded_prompt). UI manda prompt CRU + style key (servidor aplica).
+- **PROVADO:** contexto montado da camp 2 (3391 chars) + claude escreveu prompt coerente em 6,1s.
+- **BUG achado+corrigido:** log usava `↳` (fora do cp1252) → `UnicodeEncodeError` derrubava o worker no console dev. Trocado por ASCII.
+- **Pendente:** terminar teste e2e do worker; rebuild dist (migration 0066 + código).
+
+### FEATURE 2026-10-10: Estúdio de Vídeo (AnimateDiff + ffmpeg) — anime recap
+User quer mandar um prompt e gerar um VÍDEO ~90s estilo anime do que aconteceu no RPG, com música, no menu de GM FORA da tela de jogo. Decisões: **local na GPU** (AnimateDiff) + **trilha por clima** (biblioteca). 90s num clipe só não funciona (AnimateDiff é curto) → **montagem**: claude escreve storyboard (N tomadas) → cada tomada é um clipe curto AnimateDiff → ffmpeg costura + trilha.
+- **ComfyUI setup (no PC do user):** nós `ComfyUI-AnimateDiff-Evolved` + `ComfyUI-VideoHelperSuite`; modelos `animatediff_models/AnimateLCM_sd15_t2v.ckpt` + `loras/AnimateLCM_sd15_t2v_lora.safetensors` + checkpoint anime `checkpoints/toonyou_beta6.safetensors`. ffmpeg via `imageio-ffmpeg` (instalado no python do ComfyUI E no .venv/dist). **AnimateDiff usa SD1.5** (não o SDXL).
+- **Grafo** (comfyui_client.generate_clip_mp4): CheckpointLoader(toonyou)+LoraLoaderModelOnly(AnimateLCM lora 0.8)+ADE_AnimateDiffUniformContextOptions(len16,overlap4)+ADE_AnimateDiffLoaderGen1(beta_schedule="lcm")+KSampler(sampler="lcm",sched="sgm_uniform",steps8,cfg1.8)+VAEDecode+VHS_VideoCombine(h264-mp4). **Provado:** clipe 2s/512px em ~104s (1ª carga; depois mais rápido) na RTX 1000 Ada 6GB, SEM OOM, com cara de anime (ToonYou).
+- **Código:** `VideoGenRequest` (migration 0067); `ai_context.write_storyboard_via_claude` (claude escreve JSON {mood, shots[]}; fallback mecânico); `gurps/video_assembly.py` (ffmpeg concat sem recodificar + mux música em loop/-shortest; `pick_music` de media/music/<mood>/); `videogen_worker` (storyboard→clipes→montagem, campo `progress`); views `gurps/views/video_gen.py`; UI = modal "🎬 Estúdio de Vídeo" por campanha em `_lista_carregar_campanha_gm.html` (fora do jogo). Launcher sobe `--videogen-worker` junto.
+- **Música:** biblioteca por clima em `media/music/<clima>/` (user solta as faixas CC0; sem faixa = vídeo sem áudio). FreePD não deu URL fácil; tom de teste gerado pra validar mux.
+- **Tempo:** ~90s de vídeo = ~20 tomadas × ~1min = ~20-40min (user topa demorar).
+- Pendente: terminar teste e2e; rebuild dist (bundlar imageio_ffmpeg).
+
+### Futuro (NÃO nesta entrega)
+ControlNet (mapas com layout preciso), IP-Adapter FaceID (rosto via foto), RIFE (suavizar vídeo), presets de estilo/LoRA, auto-instalar ComfyUI+modelos pra outros mestres.
+
+---
+
+## SESSÃO 2026-08-09: plano de geração de mapas por IA + Fase 1 (show fix)
+
+### Nova feature aprovada: geração de mapas por Claude headless
+Plano completo em **`docs/MAP_GEN_PLAN.md`**. Resumo: GM manda prompt no jogo → PC host dispara `claude -p` (mesma assinatura, sem custo de API, sem terminal preso) → gera SVG na escala do tabletop → fluxo de aprovação no journal → vira asset `show=False`. Degradação graciosa obrigatória (offline/timeout = erro, nunca quebra o serviço). 4 fases definidas.
+
+Capacidade de desenho validada: gerei um SVG de planta baixa medieval (quarto+banheiro+sala/cozinha) como prova — Claude desenha vetor (SVG) muito bem, mas NÃO gera imagem rasterizada/pintada (não é modelo de imagem).
+
+### Fase 1 (fundação) — bug do `show` = na verdade PERDA DE DADOS (corrigido)
+- **Sintoma (user):** desmarcar `show` de um asset o fazia SUMIR do journal do GM.
+- **CAUSA RAIZ (grave):** a convenção antiga (`add/edit_asset_save`) mandava asset com `show=False` pro **`slot=3`**. E o refactor estado-na-cena pôs em `game_interface` um `CampanhaAssets.filter(slot=3).delete()` em todo load do GM (pra limpar "mapas-de-cena em branco"). Como salvar o asset REDIRECIONA pro jogo, o asset ia pro slot=3 e era **DELETADO do banco na hora**. slot=3 tinha DOIS significados conflitantes → perda de dados silenciosa desde o refactor. Evidência: 3 imagens órfãs em `media/campanhas_assets/` (Earth_Shaker, Episódio_22, Agente_especial_James_Jordan) sem linha no banco.
+- **FIX (3 pontos):** (1) removido o `.filter(slot=3).delete()` do `game_interface`; (2) `add_asset_save` sempre `slot=2`; (3) `edit_asset_save` nunca manda pro 3 (resgata legado `slot==3 → 2`). Visibilidade agora é SÓ o campo `show`.
+- **Fix de exibição (mantido):** `assets_gm` (slot 1/2, sem filtro de show) no contexto; modal `#janela-journal-gm` usa `assets_gm` + tag "(oculto dos players)". Player segue com `assets` (show=True). JRNL religado pra abrir a modal.
+- Validado: `py_compile` OK, template OK, server 200.
+- **Recuperação:** 5 assets deletados pelo bug foram recriados na camp 2 (slot=2, show=False) a partir das imagens órfãs em `media/campanhas_assets/`: Earth Shaker (#109), Lucrezia Borgia (#110), Nero (#111), Gilles de Rais (#112), Elizabeth Báthory (#113). Órfãos "superseded" (re-uploads de assets existentes: Episódio_22, Agente_especial, Jhon_D, ciganos) NÃO recriados (duplicariam). Ambíguos (Demonio, WhatsApp, hash.webp) deixados de lado.
+- **Falta o user testar no navegador (Ctrl+F5).**
+
+### Fase 1 — redesign da modal do journal (feito)
+- Modal do journal (GM + player) reconstruída: **75vw × 75vh, responsiva** (media query < 680px → 94vw/88vh), centrada, z-index 1200 (acima do chat). CSS escopado a `#janela-journal-gm/-player.janela` — não afeta as outras modais.
+- Conteúdo agora é **grid de cards** (`repeat(auto-fill, minmax(160px,1fr))`): miniatura (aspect 4:3, object-fit cover) + nome + descrição (clamp 3 linhas). Resolve o "só carrega o nome" (era layout coluna única com imagens gigantes; dados e serving estavam OK — todas as imagens 200, inclusive com acento).
+- **Cabeçalho fixo** com filtro por nome (`rd6FilterJournal(scope)` — antes `filtrarJournal` nem existia). **Lightbox**: clicar na miniatura abre imagem grande por cima (fecha por clique/ESC sem fechar a modal).
+- Assets ocultos: card com `.is-hidden-asset` (opacity) + tag "oculto". Arquivos: interface_jogo.html (2 modais + div lightbox), game_interface.css (bloco JOURNAL MODAL), game_interface.js (filtro+lightbox). collectstatic rodado.
+- **Fix "sem imagem" nos personagens:** cards de Personagens mostravam "sem imagem" pra fichas rápidas (photo vazio) mesmo tendo retrato via `linked_asset_id`. `_resolve_avatar_url` agora também olha `runtime_stats.linked_asset_id`; view anexa `avatar_url` a cada `personagens_journal`; template usa `ps.avatar_url`. 12 fichas recuperam retrato (13 são genuinamente sem foto). Verificado: Demeter/Lester/Electro resolvem pro asset linkado.
+- **Falta:** user testar; (futuro) filtro por seção/tipo, botão "definir como fundo de cena" no card, integração com o fluxo de aprovação de mapas gerados.
+
+### FIX: admin da ficha V2 dava 500
+- **Causa:** `JSONEditorWidget` (pacote `django_json_widget`) estava instalado mas o app NÃO estava no `INSTALLED_APPS` → `TemplateDoesNotExist: django_json_widget.html` → 500 ao abrir a ficha V2 (e MapState) no admin.
+- **Fix:** adicionado `"django_json_widget"` no `INSTALLED_APPS` (project/settings.py). Verificado: admin change de CharacterSheetV2 e MapState = 200.
+
+### FEATURE: editar pontos da campanha (menu do GM)
+- Controle "⚙ Pontos da campanha" no menu ☰ do GM (só is_gm): edita **pontos_de_ficha** (budget de criação) + **xp_acumulado**. Mostra total ao vivo (criação+XP).
+- Endpoint `POST /campanha/<id>/pontos/` (`atualizar_pontos_campanha`, GM only): salva os 2 campos e aplica `available = pontos_de_ficha + xp_acumulado` a TODAS as fichas V2 da campanha, recalculando `remaining` (via recompute_points no save). Retorna nº de fichas atualizadas.
+- Decisões do user: editar pontos_de_ficha + XP; atualizar budget de todas as fichas; controle dentro do jogo.
+- Verificado end-to-end: POST como dono → 200, 22 fichas atualizadas (available=160), depois revertido pro original (75/0). UI: JS inline no template (sem collectstatic), reusa classes quick-char.
+- **JRNL religado:** botões JRNL (GM e player) agora abrem as modais `#janela-journal-gm`/`#janela-journal-player` (antes abriam aba nova). Template compila OK.
+- **Falta na Fase 1:** menu de filtro fixo no topo da modal; miniaturas menores + lightbox (clicar → imagem grande por cima da tela); z-index da modal acima do chat; visual/UX da modal.
+
+---
+
+## SESSÃO 2026-08-08: retomada + revisão do refactor + fix do avatar da ficha rápida (uncommitted)
+
+Sessão de retomada após perda de transcripts antigos (limpeza de 30 dias). Apliquei `cleanupPeriodDays: 3650` no `~/.claude/settings.json` e passei a registrar progresso aqui (durável). Li todo o WIP do refactor estado-na-cena + mapa estrutural do repo.
+
+### FIX: avatar/token da ficha rápida V2 não aparecia
+- **Sintoma (user):** tokens de personagens criados na criação rápida do menu de cena não aparecem com a imagem do asset associado.
+- **Causa raiz:** `info_campanha` é campo só da V1. Na V2 o `linked_asset_id` da ficha rápida só persiste em `runtime_stats["linked_asset_id"]` (`save_quick_character`). Mas `_add_token` (consumers) e `_resolve_avatar_url`/mini (após reload) só olhavam `info_campanha`/atributo direto → nunca achavam o asset. (A mini "funcionava" só no broadcast inicial por causa da injeção manual na linha 964; sumia no reload.)
+- **Fix (2 pontos, aditivos, não afetam V1):**
+  1. `_wrap_v2_as_legacy` (interface_jogo.py) agora inclui `linked_asset_id` no `info_campanha`, puxando de `runtime_stats`. Conserta a mini no reload.
+  2. `_add_token` (consumers.py) agora tem fallback pra `runtime_stats.linked_asset_id` (carrega o char cru, sem wrapper).
+- Validado: ambos compilam (`py_compile`). **Falta testar no navegador.** Tokens JÁ adicionados sem imagem precisam ser removidos+readicionados (o fix vale pra tokens novos).
+
+### FIX: editor da ficha V2 não contava o custo das perícias no total
+- **Sintoma (user):** a ficha não mostra corretamente os pontos gastos; parece não contar o custo das perícias.
+- **Causa raiz:** `sumListCost` (editor.js) resolvia o custo de cada entrada por `manual_cost → custom_cost → computed_cost`. Perícias guardam o custo em **`points`** (não têm computed_cost). Então no editor **toda perícia contava 0** no `skill-cost-display` e no total "pontos gastos". O backend (`cost_skill_entry` lê `points`) sempre calculou certo — por isso o valor SALVO (e o `ver_ficha_v2`) inclui perícias, mas o total AO VIVO do editor não.
+- **Fix:** `sumListCost` agora tem ramo pra skills (`custom_cost ?? points`), casando com o backend. Vantagens/desvantagens inalteradas.
+- **Verificado:** simulei a lógica nova vs. backend nas 32 fichas do banco desktop — bate 100% (lógica antiga dava skills=0 em todas). `collectstatic` rodado. **Falta o user ver no navegador (Ctrl+F5).**
+
+### FIX: não dava pra mudar o nível das vantagens (editor V2)
+- **Sintoma (user):** impossível mudar a quantidade de níveis das vantagens. Instrução: "permita para todos por enquanto".
+- **Causa:** no `editor.js`, `configureLevelInput` deixava o campo de nível **read-only ("—")** exceto pra vantagens `per_level` do catálogo. As vantagens do user são quase todas **manuais** (`is_manual=True`) → nível travado.
+- **Fix:** `configureLevelInput` agora torna o nível editável em TODAS (inclusive manuais). O handler já armazenava `entry.level` pra todas; custo só auto-recalcula pra catálogo per_level (manual continua manual). Só frontend, baixo risco (backend inalterado; level default 1). Nível aparece como "×N" no ver_ficha.
+
+### DIST rebuildada (2026-08-09)
+- Rodado `desktop/build.ps1` (collectstatic --clear + pyinstaller + Inno Setup) → `dist/roll3d6-setup.exe` novo (~53 MB).
+- **Garantias verificadas:** `makemigrations --check` = "No changes detected" (sem migration nova); banco real já em 0062; `app_home()` aponta pro OneDrive (dados reais); instalador NÃO toca em %APPDATA%/OneDrive (só copia app pra %LOCALAPPDATA%\Programs\roll3d6); AppId fixo = upgrade; secret.key reaproveitado. **Instalar por cima é seguro pro banco.**
+- Verificado no bundle: template `interface_jogo.html` (journal-card, Pontos da campanha, atualizar_pontos_campanha), static coletado (game_interface.css), editor.js com fix de nível.
+
+### MAP GEN — Fase 2 (fila + degradação graciosa) ✅ FEITO
+- Modelos `MapGenRequest` + `GenWorkerStatus` (migration **0063**, aditiva, aplicada no banco real). Endpoints `POST /map-gen/<id>/request/` e `GET /map-gen/status/<id>/` em `gurps/views/map_gen.py`. Admin registrado. Detalhes em `MAP_GEN_PLAN.md §Fase 2`.
+- Verificado via test client (offline/online/perm/timeout). Server dev reiniciado com a feature.
+### MAP GEN — Fase 3 (motor headless) ✅ FEITO
+- Command `mapgen_worker` roda `claude -p` (stdin + cwd neutro + shutil.which pro `.CMD` + heartbeat em thread) → gera SVG na escala → status `done`. Verificado com geração real (SVG 1098×1098 válido). Detalhes/gotchas em `MAP_GEN_PLAN.md §Fase 3`.
+- Pedido de teste **#3** ficou `done` com SVG no banco — bom fixture pra construir a Fase 4.
+### MAP GEN — Fase 4 (UI + aprovação) ✅ FEITO
+- Caixa "🗺️ Gerar mapa (IA)" no menu ☰ do GM: prompt → gera → poll → cards com preview + Aprovar/Descartar. Aprovar cria `CampanhaAssets(show=False)` a partir do SVG. Endpoints list/svg/approve/discard em map_gen.py. Verificado (asset #117 criado). Detalhes em `MAP_GEN_PLAN.md §Fase 4`.
+- **Feature de geração de mapas: Fases 1-4 COMPLETAS.** Falta só: rodar o `mapgen_worker` junto do app (hoje comando manual: `python manage.py mapgen_worker`) — no desktop o launcher deve subir junto do daphne. Também: dist nova (esta feature ainda não está na dist).
+- Um mapa demo gerado (asset #117 "sala de pedra", oculto) ficou na camp 2 pro user ver.
+
+### FIX: custo da vantagem no editor — modificadores no manual vs catálogo
+- **Sintoma (user):** vantagem manual com 150 + limitação -80% mostrava 30 mas o total contava 150 (divergência front×backend, aparente "só ao salvar").
+- **Causa:** `recomputeEntryCost` (editor.js) aplicava os modificadores no modo **manual** também; o backend (`cost_advantage_entry`) pro manual retorna `manual_cost` cru (ignora modificadores). Front (30) ≠ backend (150).
+- **Comportamento pedido/implementado:** modo **catálogo (livro)** aplica limitações/ampliações em tempo real (base×(1+%)); modo **manual (caneta)** NÃO recalcula pelos modificadores (custo = valor digitado).
+- **Fix (frontend-only):** `recomputeEntryCost` no manual → `computed_cost = manual_cost` (sem aplicar %); catálogo mantém a aplicação. Backend já estava correto (nenhuma mudança). Verificado: manual 150+(-80%)→150; catálogo base25+(-80%)→5, batendo com o backend. collectstatic feito.
+
+### FEATURE: modal de inserir tokens (múltiplos)
+- **Antes:** `<select>` #map-token-char + botão "+ Adicionar" mal posicionado dentro da janela-mapa (1 token por vez).
+- **Agora:** botão "➕ Adicionar tokens…" (GM-only, guardado por is_gm) abre a modal `#janela-token-picker`: grid de personagens (avatar via `p.avatar_url` + nome), filtro por nome, **checkbox pra seleção múltipla**, seletor de camada, "+ NPC vazio", e "Inserir selecionados (N)". Insere vários de uma vez (cluster perto do centro; GM arrasta). Tudo inline no template (CSS+JS), sem collectstatic/restart.
+- `rd6AddCharToTokenSelect`/`Remove` migradas do `<select>` pros cards do grid (ficha rápida nova entra na hora). Removido o handler morto do botão antigo, **preservando o Delete** (removia token — o `if(!btn)return` bloqueava o registro dele). Verificado: página GM renderiza 200, scripts inline sem erro (node --check), select antigo removido.
+- **Ajuste (user):** removido o "+ NPC vazio"; adicionado o form "+ Nova ficha rápida" DENTRO da modal (igual ao controle de cena). Pra não duplicar IDs, `rd6QuickCharSave(prefix, containerId)` agora é parametrizado — cena usa 'qc'/'quick-char-form', modal usa 'tpqc'/'tpqc-form'. Ficha criada na modal entra no grid na hora (via broadcast character_created → rd6AddCharToTokenSelect) pra já poder virar token.
+- **Upload de imagem no form (user):** o form de ficha rápida (qc + tpqc) agora tem `<input type=file>`. `rd6QuickCharSave` envia **multipart (FormData)**; `save_quick_character` aceita multipart e, se vier imagem, cria um `CampanhaAssets(show=True, slot=2)` na hora e linka (precede o dropdown). Não precisa mais criar asset separado. Mesmas regras do upload normal (ImageField, sem compressão server-side). Verificado end-to-end (asset #119 show=True, avatar resolve). Grid de tokens: **até 4 colunas** responsivas (`minmax(max(110px, (100%-30px)/4), 1fr)`).
+
+### Lote de ajustes (user) — journal reload, grid 4col, chars no topo, map gen sonnet
+1. **Journal recarrega ao abrir:** botão JRNL agora chama `rd6OpenJournal(scope)` → abre a modal E busca `GET /journal-data/<camp>/` (view `journal_data`, JSON: personagens c/ avatar_url + assets; GM vê show=False, player só show=True) → reconstrói os grids (`data-jgrid=personagens/assets`). Personagens/assets novos aparecem sem F5.
+2. **Grid de tokens 4 colunas:** o CSS anterior (`minmax(max(),calc())`) ficava inválido → 1 coluna. Trocado por `repeat(4,minmax(0,1fr))` + media queries (3 col <620px, 2 col <440px).
+3. **Recém-criados no topo:** `rd6AddCharToTokenSelect` usa `insertBefore(lbl, grid.firstChild)`.
+4. **Map gen timeout:** pedido #4 deu "timeout na geração" (opus default lento + prompt complexo > 240s). Fix: worker com `--model` (default **sonnet**, muito mais rápido) + prompt pede eficiência (cap ~20×15m, ~150-400 shapes) + timeout 300s. Verificado: cripta de 3 salas gerou em **131s** OK. **Feature mantida (não desativada).** Worker persistente rodando com sonnet.
+- Tudo verificado (render 200, 0 erros JS, endpoint OK). Só template+Python (sem collectstatic); server reiniciado.
+
+### FIX: basic speed não salvava no editor V2 (locale pt-BR × input number)
+- **Sintoma (user):** gastar ponto em basic speed não salva.
+- **Causa (round-trip):** backend salva OK (float 0.25). Mas o template renderizava `value="0,25"` (vírgula — localização pt-BR do Django em float). `<input type="number">` só aceita ponto → browser trata `0,25` como **inválido e deixa o campo VAZIO** → no próximo save vai vazio → não persiste. Só o basic_speed é afetado (único campo float; os outros secmods são int).
+- **Fix:** `editar_ficha_v2.html` → `{% load l10n %}` + `value="...|default:0|unlocalize"` no `secmod_basic_speed`. Verificado: agora renderiza `value="0.25"` (ponto), válido; save persiste (testado no banco, revertido depois). Só template, sem restart.
+
+### Achados da revisão do refactor estado-na-cena (ainda não corrigidos)
+1. **[MÉDIO] Lost update / race no `campanha.scene_state`:** todas as mutações (token move/add, drawing, vitals, status) fazem read-modify-write do mesmo blob JSON sem `select_for_update`/`transaction.atomic`. O `MapState.version` (guard anterior) foi removido. 2 players movendo tokens ao mesmo tempo → um sobrescreve o outro. Baixa prob. em processo único, mas real. Fix sugerido: `transaction.atomic()` + `select_for_update()` na linha da Campanha em cada load+save.
+2. **[BAIXO] `background_asset_id` órfão** aponta pra asset slot=3 deletado → resolve p/ branco todo load (ok funcionalmente, deixa id morto).
+3. **[BAIXO] DELETE de slot=3 em todo load do GM** (side-effect numa view GET). Rodar 1x/migration.
+4. **[BAIXO] `_light_scene_state` duplicado** (consumers + view) — risco de drift.
+5. **[INFO] `canMoveToken` sem trava de turno** — player move qualquer token seu a qualquer hora (mudança de regra intencional — confirmar).
+6. **[INFO] `print()` de debug** na view (`Aqui estão os assets`, `FICHAS DO PLAYER`) — limpar ao commitar.
+
+### Próximos passos
+- User testar o fix do avatar no navegador.
+- Decidir se ataca o race (#1) antes de commitar.
+- Commitar o WIP (agora 14 arquivos: 12 do refactor + os 2 do fix desta sessão).
+- Rebuildar a dist.
+
+---
+
+## SESSÃO 2026-06-05: refactor estado-na-cena + fixes da tela de jogo (uncommitted)
+
+Tudo abaixo está **uncommitted** e **fora da dist**. Validado: `manage.py check` limpo, view renderiza 200, imports OK. Falta o user testar no navegador (Ctrl+F5) e aprovar.
+
+### Refactor ESTRUTURAL: o save state vive na CENA, não no mapa
+O user pediu que desenhos/tokens/vida fiquem atrelados à **cena**, e o mapa seja só um fundo (branco ou imagem de asset). Detalhes em `TABLETOP_MAP_PLAN.md §0`.
+- **Modelo:** `scene = {…, background_asset_id, tokens, drawings, char_runtime}` tudo em `Campanha.scene_state`. `MapState` virou vestigial.
+- **consumers.py:** handlers `map_token_*`/`map_drawing_*`/`map_switch`/grid/status reescritos pra operar na **cena ativa**. `_persist_scene_state` faz merge preservando os campos pesados (cliente manda cenas leves). Broadcasts sem `asset_id`. scene_state trafega "leve".
+- **view game_interface:** renderiza sempre a cena ativa (fundo + tokens + desenhos + vida). Sem `?asset`. `_build_player_mini(runtime_override=…)`, `adjust_character_vitals` na cena. Limpa blanks slot=3 órfãos.
+- **canvas.js:** sem imagem → branco 10000×10000 (`fitToBlank`).
+- **template:** "Fundo da cena" com **⬜ Em branco**; `rd6OnMapSwitched` recarrega; deletar cena descarta estado (asset enviado fica intacto).
+- **Bug corrigido:** quem entrava via sempre a imagem do título (slot=1) e só via mudança quando o GM trocava de cena. Agora a entrada renderiza a cena ativa.
+
+### Lote de fixes (mesma sessão)
+- **500 no "Ver" da ficha V2:** `ver_ficha_v2.html` usava `{{ it.name|default:it.id }}` — `default` avalia o arg e itens sem `id` lançavam `VariableDoesNotExist`. Trocado por `{% firstof %}`. Validado: 19/19 fichas renderizam.
+- **Itens diversos no equipamento (player):** faltava a seção MISC na `janela-equipamento`. Adicionada (lê `equipment_misc`).
+- **Réguas ao desenhar:** círculo mostra raio (`R Xm`); retângulo mostra `↔` largura e `↕` altura. Escala: metros = px / (√3 × gridSize).
+- **Botão "+ EDIT" → "Cards"** no menu lateral do player.
+- **Enter = Tab** só nas telas de ficha (criar/editar V1 e V2). `criar_ficha_enter.js` reescrito (idempotente, respeita defaultPrevented/IME/textarea); incluído só nas telas de ficha, NÃO global.
+- **Ctrl+Z** desfaz o último desenho do próprio usuário no mapa.
+- **Token da ficha rápida** entra no select "Adicionar token" na hora (sem F5).
+
+### PENDÊNCIAS desta sessão
+- **Rebuildar a dist** (`dist/roll3d6-setup.exe`) com tudo isso — pré-condição pra jogar.
+- **Commitar** o trabalho (uncommitted).
+- Testar no navegador: criar/trocar cenas, fundo branco vs asset, desenhos/tokens/vida por cena, vida não vazando entre cenas.
+- Campanha **sem cena nenhuma** = mapa só-leitura (mostra imagem da campanha) até criar "+ Nova". (Considerar auto-criar "Cena 1" no 1º load do GM.)
 
 ---
 

@@ -25,9 +25,233 @@
                 <h2 class="titulo-campanha">{{ campanha.nome }}</h2>
                 <img class="imagem-miniatura" src="{{ campanha.imagem.url }}" alt="Imagem da Campanha" />
             </a>
+            <button type="button" class="vid-studio-btn"
+                    onclick="rd6OpenVideoStudio({{ campanha.id }}, '{{ campanha.nome|escapejs }}')">
+                🎬 Estúdio de Vídeo
+            </button>
         </li>
         {% endfor %}
     </ul>
+
+    {% csrf_token %}
+
+    <!-- ===== Estúdio de Vídeo (IA · AnimateDiff na GPU) ===== -->
+    <div id="video-studio" class="vs-overlay" hidden>
+        <div class="vs-modal">
+            <div class="vs-head">
+                <span>🎬 Estúdio de Vídeo — <span id="vs-camp-nome"></span></span>
+                <button type="button" class="vs-close" onclick="rd6CloseVideoStudio()">✕</button>
+            </div>
+            <div class="vs-body">
+                <p class="vs-hint">Descreva o que aconteceu no RPG. A IA lê o journal, escreve um
+                    roteiro em cenas e monta um vídeo estilo anime (~90s) com trilha. Leva de
+                    minutos a horas — pode fechar e voltar; o vídeo continua sendo gerado.</p>
+                <textarea id="vs-prompt" rows="3" maxlength="1800"
+                    placeholder="Ex.: 'o grupo invade o castelo, enfrenta o guardião de fogo e resgata a prisioneira'"></textarea>
+                <div class="vs-row">
+                    <label>Estilo:
+                        <select id="vs-style">
+                            <option value="anime">Anime (padrão)</option>
+                            <option value="cinematic_dark">Cinematográfico escuro</option>
+                            <option value="gritty">Grimdark</option>
+                            <option value="oil">Pintura a óleo</option>
+                        </select>
+                    </label>
+                    <label>Duração alvo:
+                        <select id="vs-seconds">
+                            <option value="30">~30s (rápido)</option>
+                            <option value="60">~60s</option>
+                            <option value="90" selected>~90s</option>
+                            <option value="120">~120s</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="vs-music-block">
+                    <label>Música:
+                        <select id="vs-music">
+                            <option value="">Automática (pelo clima da cena)</option>
+                        </select>
+                    </label>
+                    <label class="vs-upload">ou enviar uma música:
+                        <input type="file" id="vs-music-upload" accept="audio/*">
+                    </label>
+                </div>
+                <label class="vs-check"><input type="checkbox" id="vs-context" checked> Ler o journal (coerência com o mundo)</label>
+                <button type="button" class="vs-generate" onclick="rd6VideoSubmit()">Gerar vídeo</button>
+                <p class="vs-status" id="vs-status"></p>
+                <div id="vs-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var RD6_VS_CAMP = null;
+        var _vsPoll = null;
+        function rd6VsCsrf() {
+            var el = document.querySelector('[name=csrfmiddlewaretoken]');
+            return el ? el.value : '';
+        }
+        function rd6OpenVideoStudio(id, nome) {
+            RD6_VS_CAMP = id;
+            document.getElementById('vs-camp-nome').textContent = nome;
+            document.getElementById('video-studio').hidden = false;
+            rd6VsLoadMusic();
+            rd6VideoPoll();
+        }
+        function rd6VsLoadMusic() {
+            var sel = document.getElementById('vs-music');
+            fetch('/videogen/' + RD6_VS_CAMP + '/music/')
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    var tracks = (d && d.tracks) || [];
+                    // mantém só a opção "Automática", repopula o resto agrupado por clima
+                    sel.innerHTML = '<option value="">Automática (pelo clima da cena)</option>';
+                    var byMood = {};
+                    tracks.forEach(function (t) { (byMood[t.mood] = byMood[t.mood] || []).push(t); });
+                    Object.keys(byMood).sort().forEach(function (mood) {
+                        var og = document.createElement('optgroup'); og.label = mood;
+                        byMood[mood].forEach(function (t) {
+                            var o = document.createElement('option'); o.value = t.rel; o.textContent = t.name;
+                            og.appendChild(o);
+                        });
+                        sel.appendChild(og);
+                    });
+                    if (!tracks.length) {
+                        var o = document.createElement('option'); o.disabled = true;
+                        o.textContent = '(nenhuma faixa em media/music/ — envie uma abaixo)';
+                        sel.appendChild(o);
+                    }
+                }).catch(function () {});
+        }
+        function rd6CloseVideoStudio() {
+            document.getElementById('video-studio').hidden = true;
+            if (_vsPoll) { clearTimeout(_vsPoll); _vsPoll = null; }
+        }
+        function rd6VideoSubmit() {
+            var prompt = (document.getElementById('vs-prompt').value || '').trim();
+            var st = document.getElementById('vs-status');
+            if (!prompt) { st.textContent = 'Descreva o que aconteceu primeiro.'; return; }
+            st.textContent = 'Enviando…';
+            var upEl = document.getElementById('vs-music-upload');
+            var upFile = upEl && upEl.files && upEl.files[0];
+            var fd = new FormData();
+            fd.append('prompt', prompt);
+            fd.append('style', document.getElementById('vs-style').value);
+            fd.append('target_seconds', document.getElementById('vs-seconds').value);
+            fd.append('use_context', document.getElementById('vs-context').checked ? '1' : '0');
+            fd.append('music_file', document.getElementById('vs-music').value || '');
+            if (upFile) fd.append('music_upload', upFile);
+            fetch('/videogen/' + RD6_VS_CAMP + '/request/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': rd6VsCsrf() },
+                body: fd
+            }).then(function (r) { return r.json(); }).then(function (d) {
+                if (d && d.ok) {
+                    document.getElementById('vs-prompt').value = '';
+                    if (upEl) upEl.value = '';
+                    st.textContent = d.comfy_online
+                        ? (d.video_models ? 'Na fila — gerando (pode levar bastante). Pode fechar e voltar.'
+                                          : '⚠ Modelos de vídeo não encontrados no ComfyUI.')
+                        : '⚠ ComfyUI offline no host — inicie o ComfyUI. O pedido ficou na fila.';
+                    rd6VideoPoll();
+                } else { st.textContent = (d && d.error) || 'Erro ao enviar.'; }
+            }).catch(function () { st.textContent = 'Falha de rede.'; });
+        }
+        function rd6VideoPoll() {
+            if (!RD6_VS_CAMP) return;
+            fetch('/videogen/' + RD6_VS_CAMP + '/list/')
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (!d || !d.ok) return;
+                    rd6VideoRender(d.requests || [], d);
+                    var active = (d.requests || []).some(function (x) {
+                        return x.status === 'pending' || x.status === 'processing';
+                    });
+                    if (_vsPoll) clearTimeout(_vsPoll);
+                    if (active) _vsPoll = setTimeout(rd6VideoPoll, 5000);
+                }).catch(function () {});
+        }
+        function rd6VsEsc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+        function rd6VideoRender(reqs, d) {
+            var box = document.getElementById('vs-list');
+            var head = (d.comfy && !d.comfy.online)
+                ? '<div class="vs-err">ComfyUI offline no host — inicie-o pra gerar.</div>' : '';
+            var S = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou', approved: 'aprovado' };
+            box.innerHTML = head + (reqs || []).map(function (r) {
+                var h = '<div class="vs-card">';
+                h += '<div class="vs-card-head"><span class="vs-badge ' + r.status + '">' + (S[r.status] || r.status) + '</span>';
+                if (r.music_file) h += '<span class="vs-mood">♪ ' + rd6VsEsc(r.music_file) + '</span>';
+                else if (r.mood) h += '<span class="vs-mood">♪ ' + rd6VsEsc(r.mood) + ' (auto)</span>';
+                h += '</div>';
+                h += '<div class="vs-prompt">' + rd6VsEsc(r.prompt) + '</div>';
+                if (r.status === 'processing' && r.progress) h += '<div class="vs-progress">⏳ ' + rd6VsEsc(r.progress) + '</div>';
+                if (r.expanded_prompt) h += '<details class="vs-xprompt"><summary>roteiro</summary><pre>' + rd6VsEsc(r.expanded_prompt) + '</pre></details>';
+                if (r.status === 'done' && r.has_result) {
+                    h += '<video class="vs-video" src="/videogen/mp4/' + r.id + '/" controls preload="metadata"></video>';
+                    h += '<div class="vs-actions"><button class="vs-approve" onclick="rd6VideoApprove(' + r.id + ')">✓ Aprovar</button><button onclick="rd6VideoDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                } else if (r.status === 'approved' && r.has_result) {
+                    h += '<video class="vs-video" src="/videogen/mp4/' + r.id + '/" controls preload="metadata"></video>';
+                } else if (r.status === 'failed') {
+                    h += '<div class="vs-err">' + rd6VsEsc(r.error || 'falhou') + '</div>';
+                    h += '<div class="vs-actions"><button onclick="rd6VideoDiscard(' + r.id + ')">Remover</button></div>';
+                }
+                return h + '</div>';
+            }).join('');
+        }
+        function rd6VideoApprove(id) {
+            fetch('/videogen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6VsCsrf() } })
+                .then(function () { rd6VideoPoll(); }).catch(function () {});
+        }
+        function rd6VideoDiscard(id) {
+            fetch('/videogen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6VsCsrf() } })
+                .then(function () { rd6VideoPoll(); }).catch(function () {});
+        }
+    </script>
+
+    <style>
+        .vid-studio-btn { display: block; margin: 6px auto 0; background: #7a2ea0; color: #fff;
+            border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+        .vid-studio-btn:hover { background: #9a3ec8; }
+        .vs-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 2000;
+            display: flex; align-items: center; justify-content: center; }
+        .vs-overlay[hidden] { display: none; }
+        .vs-modal { background: #1c1c22; color: #e8e8e8; width: min(620px, 94vw); max-height: 90vh;
+            overflow-y: auto; border-radius: 10px; border: 1px solid #444; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+        .vs-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;
+            border-bottom: 1px solid #333; font-weight: 700; }
+        .vs-close { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; }
+        .vs-body { padding: 14px 16px; }
+        .vs-hint { font-size: 12px; color: #9a9aa5; margin: 0 0 8px; line-height: 1.4; }
+        .vs-body textarea { width: 100%; resize: vertical; font-family: inherit; background: #26262e;
+            color: #e8e8e8; border: 1px solid #444; border-radius: 6px; padding: 8px; }
+        .vs-row { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .vs-row label, .vs-check { font-size: 13px; color: #c0c0cc; display: flex; flex-direction: column; gap: 3px; }
+        .vs-row select { background: #26262e; color: #e8e8e8; border: 1px solid #444; border-radius: 5px; padding: 5px; }
+        .vs-check { flex-direction: row; align-items: center; gap: 6px; margin-top: 8px; }
+        .vs-music-block { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .vs-music-block label { font-size: 13px; color: #c0c0cc; display: flex; flex-direction: column; gap: 3px; }
+        .vs-music-block select { background: #26262e; color: #e8e8e8; border: 1px solid #444; border-radius: 5px; padding: 5px; }
+        .vs-music-block .vs-upload { font-size: 11px; color: #9a9aa5; }
+        .vs-generate { margin-top: 10px; width: 100%; background: #7a2ea0; color: #fff; border: none;
+            border-radius: 6px; padding: 10px; cursor: pointer; font-size: 14px; font-weight: 700; }
+        .vs-generate:hover { background: #9a3ec8; }
+        .vs-status { font-size: 12px; color: #c9a55c; margin: 8px 0; min-height: 16px; }
+        .vs-card { background: #24242c; border: 1px solid #383840; border-radius: 8px; padding: 10px; margin-top: 10px; }
+        .vs-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .vs-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #444; }
+        .vs-badge.processing { background: #3a5a8a; } .vs-badge.done { background: #2e7d46; }
+        .vs-badge.failed { background: #8a2e2e; } .vs-badge.approved { background: #6a4ea0; }
+        .vs-mood { font-size: 11px; color: #c9a55c; }
+        .vs-prompt { font-size: 13px; margin: 4px 0; }
+        .vs-progress { font-size: 12px; color: #7fb0ff; }
+        .vs-xprompt { font-size: 11px; color: #999; margin: 4px 0; }
+        .vs-xprompt pre { white-space: pre-wrap; margin: 4px 0 0; font-size: 10px; line-height: 1.35; }
+        .vs-video { width: 100%; border-radius: 6px; margin-top: 6px; background: #000; }
+        .vs-actions { display: flex; gap: 6px; margin-top: 6px; }
+        .vs-actions button { flex: 1; padding: 6px; border: none; border-radius: 5px; cursor: pointer; background: #3a3a44; color: #eee; }
+        .vs-approve { background: #2e7d46 !important; }
+        .vs-err { font-size: 12px; color: #ff8a8a; margin-top: 4px; }
+    </style>
 
     <script src="{% static 'global/js/menu/filter_campaign_list_gm.js' %}"></script>
 </body>

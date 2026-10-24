@@ -73,6 +73,11 @@ class Campanha(models.Model):
     # Quando vazio (default), todos os personagens da campanha são tratados como presentes.
     scene_state = models.JSONField(blank=True, null=True, default=dict)
 
+    # Contexto acumulado pra geração por IA: cresce a cada item aprovado (imagem
+    # ou mapa). Alimenta os prompts junto com descricao/regras/journal pra manter
+    # coerência de mundo/estilo entre as artes. Ver gurps/ai_context.py.
+    ai_context = models.TextField(blank=True, default="")
+
     # Configuracao do grid hexagonal. GLOBAL por campanha — todos os mapas
     # compartilham a mesma config. Ao trocar mapa, grid nao reseta.
     grid_enabled = models.BooleanField(default=False)
@@ -355,3 +360,188 @@ class UserAsset(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()}: {self.name} ({self.owner_id})"
+
+
+class GenWorkerStatus(models.Model):
+    """Heartbeat do worker de geração de mapas (Claude headless).
+
+    Linha única (singleton, pk=1). O worker atualiza ``last_seen`` a cada tick;
+    o endpoint de pedido usa isso pra saber se o gerador está online. Sem
+    heartbeat recente = gerador offline (degradação graciosa — nunca quebra).
+    """
+    last_seen = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Gen worker status"
+
+    @classmethod
+    def is_online(cls, threshold_seconds: int = 45) -> bool:
+        row = cls.objects.filter(pk=1).first()
+        if not row or not row.last_seen:
+            return False
+        return (timezone.now() - row.last_seen).total_seconds() < threshold_seconds
+
+    @classmethod
+    def beat(cls) -> None:
+        cls.objects.update_or_create(pk=1, defaults={"last_seen": timezone.now()})
+
+    def __str__(self):
+        return f"worker last_seen={self.last_seen}"
+
+
+class MapGenRequest(models.Model):
+    """Pedido de geração de mapa por IA (fila).
+
+    O GM manda um prompt → cria-se um pedido ``pending`` que NUNCA depende do
+    gerador estar de pé (o serviço não quebra). O worker (Fase 3) pega os
+    pending, gera o SVG e marca ``done``. O GM aprova/descarta (Fase 4).
+    """
+    STATUS_CHOICES = [
+        ("pending", "Pendente"),
+        ("processing", "Processando"),
+        ("done", "Pronto (aguardando aprovação)"),
+        ("failed", "Falhou"),
+        ("approved", "Aprovado"),
+        ("discarded", "Descartado"),
+    ]
+    campanha = models.ForeignKey(
+        Campanha, on_delete=models.CASCADE, related_name="mapgen_requests"
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    prompt = models.TextField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
+    grid_size_px = models.IntegerField(default=64)  # snapshot da escala no pedido
+    result_svg = models.TextField(blank=True, default="")  # SVG gerado (Fase 3)
+    result_asset = models.ForeignKey(
+        CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True
+    )  # asset criado após aprovação (Fase 4)
+    error = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"MapGen #{self.id} [{self.status}] {self.prompt[:40]}"
+
+
+class ImageGenRequest(models.Model):
+    """Pedido de geração de imagem por IA local (ComfyUI na GPU do host).
+
+    Serve pra TUDO — retratos de personagem e mapas. O worker `imagegen_worker`
+    pega os pending, chama o ComfyUI, salva o PNG e marca ``done``. O GM aprova
+    (vira CampanhaAssets show=False) ou descarta. Nunca depende do ComfyUI estar
+    de pé (offline = erro amigável, não quebra o serviço).
+    """
+    KIND_CHOICES = [
+        ("personagem", "Personagem"),
+        ("mapa", "Mapa"),
+        ("cena", "Cena"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "Pendente"),
+        ("processing", "Processando"),
+        ("done", "Pronto (aguardando aprovação)"),
+        ("failed", "Falhou"),
+        ("approved", "Aprovado"),
+        ("discarded", "Descartado"),
+    ]
+    campanha = models.ForeignKey(
+        Campanha, on_delete=models.CASCADE, related_name="imagegen_requests"
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    kind = models.CharField(max_length=16, choices=KIND_CHOICES, default="personagem")
+    prompt = models.TextField()
+    negative = models.TextField(blank=True, default="")
+    width = models.IntegerField(default=768)
+    height = models.IntegerField(default=1024)
+    steps = models.IntegerField(default=6)
+    cfg = models.FloatField(default=1.6)
+    seed = models.BigIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
+    result_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
+    result_asset = models.ForeignKey(
+        CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    error = models.TextField(blank=True, default="")
+    # Imagem de referência opcional (IP-Adapter): transfere o estilo/clima dela
+    # pra geração. Ex.: mandar a arte "ESDRAS" e gerar outro personagem com a
+    # mesma vibe. ref_weight controla a força (0=ignora, 1=força total).
+    ref_image = models.ImageField(upload_to="imagegen_refs/", blank=True, null=True)
+    ref_weight = models.FloatField(default=0.7)
+    # Referência escolhida do próprio journal (alternativa ao upload). O worker usa
+    # a imagem desse asset no IP-Adapter se ref_image não vier.
+    ref_asset = models.ForeignKey(
+        CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="+",
+    )
+    # Estilo escolhido na UI (chave do seletor) + se deve ler o journal (contexto).
+    style = models.CharField(max_length=32, blank=True, default="cinematic_dark")
+    use_context = models.BooleanField(default=True)
+    # Prompt final que o claude escreveu a partir do journal (pra o GM ver/depurar).
+    expanded_prompt = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"ImageGen #{self.id} [{self.status}/{self.kind}] {self.prompt[:40]}"
+
+
+class VideoGenRequest(models.Model):
+    """Pedido de geração de VÍDEO por IA local (AnimateDiff na GPU do host).
+
+    Monta um vídeo anime longo (~90s+) por MONTAGEM: o claude lê o journal e
+    escreve um storyboard (várias tomadas), o worker gera cada tomada como um
+    clipe curto (AnimateDiff), o ffmpeg costura tudo + trilha por clima. Mesmo
+    padrão de fila/aprovação do ImageGenRequest; nunca quebra o serviço.
+    """
+    STATUS_CHOICES = [
+        ("pending", "Pendente"),
+        ("processing", "Processando"),
+        ("done", "Pronto (aguardando aprovação)"),
+        ("failed", "Falhou"),
+        ("approved", "Aprovado"),
+        ("discarded", "Descartado"),
+    ]
+    campanha = models.ForeignKey(
+        Campanha, on_delete=models.CASCADE, related_name="videogen_requests"
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    prompt = models.TextField()  # pedido cru do GM
+    style = models.CharField(max_length=32, blank=True, default="anime")
+    use_context = models.BooleanField(default=True)
+    target_seconds = models.IntegerField(default=90)  # duração alvo do vídeo final
+    width = models.IntegerField(default=512)
+    height = models.IntegerField(default=512)
+    fps = models.IntegerField(default=8)
+    steps = models.IntegerField(default=8)
+    cfg = models.FloatField(default=1.8)
+    mood = models.CharField(max_length=32, blank=True, default="")  # pra trilha
+    # Música escolhida pelo GM (rel. ao MEDIA_ROOT, ex. "music/epic/x.mp3").
+    # Vazio = escolha automática pelo clima.
+    music_file = models.CharField(max_length=300, blank=True, default="")
+    # Storyboard que o claude escreveu: [{"prompt": "...", "seconds": 4}, ...]
+    storyboard = models.JSONField(blank=True, null=True, default=list)
+    expanded_prompt = models.TextField(blank=True, default="")  # storyboard legível
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
+    progress = models.CharField(max_length=120, blank=True, default="")  # "tomada 3/20"
+    result_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
+    error = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"VideoGen #{self.id} [{self.status}] {self.prompt[:40]}"
