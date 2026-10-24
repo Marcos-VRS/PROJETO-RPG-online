@@ -119,6 +119,10 @@ _KIND_HINT = {
     "personagem": "a character portrait",
     "mapa": "a top-down tabletop battle map",
     "cena": "an environment / scene illustration",
+    "capa": ("a dramatic cinematic POSTER / title-card background (wide establishing shot, "
+             "strong focal subject, cinematic composition, leave calm negative space at the "
+             "top or bottom for a title to be added later — do NOT draw any text or letters)"),
+    "item": "a single object / item on a simple backdrop, product-shot style",
 }
 
 
@@ -144,7 +148,9 @@ def write_image_prompt_via_claude(context, user_request, style_key, kind,
     instruction = f"""You write prompts for an SDXL image generator used in a tabletop RPG.
 Turn the GM's short request into ONE single-line English image prompt: comma-separated visual descriptors, 40-70 words. Output ONLY the prompt — no preamble, no quotes, no markdown, no explanation.
 
-Make it visually CONSISTENT with the established world below (same era, tone, palette, materials, lighting). This is {_KIND_HINT.get(kind, 'an illustration')}.
+Depict EXACTLY what the GM asks for. Do NOT default to a human/character unless the request is clearly about a person. If the request is an object, place, scene, symbol, map or title card, depict that — not a person.
+This image is {_KIND_HINT.get(kind, 'an illustration')}.
+Make it visually CONSISTENT with the established world below (same era, tone, palette, materials, lighting).
 Desired visual style to bake in: {style or 'realistic, cinematic'}.
 
 === CAMPAIGN JOURNAL (context) ===

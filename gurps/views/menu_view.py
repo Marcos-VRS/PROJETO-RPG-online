@@ -223,6 +223,24 @@ def carregar_campanha_gm(request):
 
 
 @login_required(login_url="gurps:login")
+def imagegen_studio(request, campanha_id):
+    """Página do Estúdio de Imagem (IA), no Menu do GM, seção Assets. GM only."""
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        return redirect("gurps:carregar_campanha_gm")
+    return render(request, "global/imagegen_studio.html", {"campanha": campanha})
+
+
+@login_required(login_url="gurps:login")
+def mapgen_studio(request, campanha_id):
+    """Página do Gerador de Mapa (IA), no Menu do GM, seção Assets. GM only."""
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        return redirect("gurps:carregar_campanha_gm")
+    return render(request, "global/mapgen_studio.html", {"campanha": campanha})
+
+
+@login_required(login_url="gurps:login")
 def carregar_campanha_player(request):
     """Lista campanhas onde o user tem ficha (V2 + V1 legado).
 

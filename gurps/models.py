@@ -440,6 +440,8 @@ class ImageGenRequest(models.Model):
         ("personagem", "Personagem"),
         ("mapa", "Mapa"),
         ("cena", "Cena"),
+        ("capa", "Capa / título"),
+        ("item", "Item / objeto"),
     ]
     STATUS_CHOICES = [
         ("pending", "Pendente"),
@@ -483,6 +485,9 @@ class ImageGenRequest(models.Model):
     # Estilo escolhido na UI (chave do seletor) + se deve ler o journal (contexto).
     style = models.CharField(max_length=32, blank=True, default="cinematic_dark")
     use_context = models.BooleanField(default=True)
+    # Título a escrever POR CIMA da imagem (modo capa). O modelo de IA não escreve
+    # texto legível, então o nome do episódio é sobreposto via Pillow.
+    title = models.CharField(max_length=200, blank=True, default="")
     # Prompt final que o claude escreveu a partir do journal (pra o GM ver/depurar).
     expanded_prompt = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)

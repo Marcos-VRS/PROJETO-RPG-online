@@ -66,8 +66,15 @@ User quer mandar um prompt e gerar um VÍDEO ~90s estilo anime do que aconteceu 
 - **Tempo:** ~90s de vídeo = ~20 tomadas × ~1min = ~20-40min (user topa demorar).
 - Pendente: terminar teste e2e; rebuild dist (bundlar imageio_ffmpeg).
 
+### AJUSTE 2026-10-24: imagem mais inteligente + modo capa + reorg + ComfyUI integrado
+- **Imagem mais esperta:** `write_image_prompt_via_claude` agora instrui "retrate EXATAMENTE o pedido, não assuma pessoa"; `_KIND_HINT` ganhou `capa` (fundo de pôster com espaço p/ texto) e `item`. Resolve "pedi capa e saiu um homem".
+- **Modo Capa com texto:** `ImageGenRequest.kind="capa"` + campo `title` (migration 0069). `gurps/image_overlay.py` (Pillow) escreve o nome do episódio POR CIMA da arte (scrim + contorno, fonte do Windows com fallback; separa "Episódio 7: Título" em linha dourada + título grande). Worker aplica se kind=capa. PROVADO (capa "O Portão Sombrio" ficou nítida).
+- **Reorg:** geradores de IMAGEM e MAPA saíram do ☰ do jogo e viraram PÁGINAS no Menu do GM (seção Assets): `imagegen_studio`/`mapgen_studio` (views em menu_view.py, templates `global/imagegen_studio.html` e `mapgen_studio.html`, links em `menu_carregar_ficha_gm.html`, URLs `/Campanha/<id>/estudio-imagem|gerador-mapa/`). O ☰ do jogo manteve só o **vídeo** + cena. O `<style>` .mg-* ficou (vídeo usa).
+- **ComfyUI integrado:** launcher sobe o ComfyUI junto do app (`_spawn_comfyui`, acha a instalação, não duplica na porta 8188, encerra no fim). User não roda mais o .bat. (Modelos ~25GB continuam na pasta do ComfyUI — não dá pra meter no instalador.)
+- **Música:** seleção funciona (faixa enviada aparece no grupo "Enviadas por você"); upload por geração salva em media/music/uploads/ e passa a listar.
+
 ### Futuro (NÃO nesta entrega)
-ControlNet (mapas com layout preciso), IP-Adapter FaceID (rosto via foto), RIFE (suavizar vídeo), presets de estilo/LoRA, auto-instalar ComfyUI+modelos pra outros mestres.
+ControlNet (mapas com layout preciso), IP-Adapter FaceID (rosto via foto), RIFE (suavizar vídeo), presets de estilo/LoRA, auto-instalar ComfyUI+modelos pra outros mestres, empacotar uma fonte TTF própria pra capa.
 
 ---
 

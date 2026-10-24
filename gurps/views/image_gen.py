@@ -33,6 +33,8 @@ SIZE_BY_KIND = {
     "personagem": (768, 1024),
     "mapa": (1024, 1024),
     "cena": (1024, 768),
+    "capa": (768, 1024),   # pôster/capa (retrato)
+    "item": (768, 768),
 }
 
 
@@ -98,6 +100,7 @@ def imagegen_request(request, campanha_id):
     ref_weight = max(0.0, min(ref_weight, 1.5))
 
     style = (body.get("style") or "cinematic_dark")[:32]
+    title = (body.get("title") or "").strip()[:200]  # texto da capa
     # use_context: default True; "0"/"false"/"" desliga.
     uc_raw = body.get("use_context")
     use_context = True if uc_raw is None else str(uc_raw).lower() not in ("0", "false", "no", "")
@@ -114,7 +117,7 @@ def imagegen_request(request, campanha_id):
         campanha=campanha, requested_by=request.user, kind=kind,
         prompt=prompt, width=width, height=height, status="pending",
         ref_weight=ref_weight, style=style, use_context=use_context,
-        ref_asset=ref_asset,
+        ref_asset=ref_asset, title=title,
     )
     if ref_file is not None:
         req.ref_image = ref_file

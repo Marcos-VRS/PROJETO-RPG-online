@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}?d={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}?d={% now 'U' %}">
+    <title>Gerador de Mapa</title>
+    <style>
+        .st-wrap { max-width: 720px; margin: 0 auto; padding: 16px; color: #e8e8e8; }
+        .st-wrap a.voltar { color: #c9a55c; font-size: 14px; }
+        .st-wrap textarea { width: 100%; background: #26262e; color: #e8e8e8; border: 1px solid #444;
+            border-radius: 6px; padding: 8px; font-family: inherit; box-sizing: border-box; resize: vertical; }
+        .st-gen { width: 100%; background: #2e6da0; color: #fff; border: none; border-radius: 6px;
+            padding: 12px; cursor: pointer; font-size: 15px; font-weight: 700; margin-top: 8px; }
+        .st-gen:hover { background: #3e86c8; }
+        .st-status { color: #c9a55c; font-size: 13px; min-height: 18px; margin: 8px 0; }
+        .st-card { background: #24242c; border: 1px solid #383840; border-radius: 8px; padding: 10px; margin-top: 12px; }
+        .st-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #444; }
+        .st-badge.processing { background: #3a5a8a; } .st-badge.done { background: #2e7d46; } .st-badge.failed { background: #8a2e2e; }
+        .st-prompt { font-size: 13px; margin: 6px 0; }
+        .st-preview { width: 100%; border-radius: 6px; margin-top: 6px; background: #fff; }
+        .st-actions { display: flex; gap: 6px; margin-top: 6px; }
+        .st-actions button { flex: 1; padding: 8px; border: none; border-radius: 5px; cursor: pointer; background: #3a3a44; color: #eee; }
+        .st-approve { background: #2e7d46 !important; }
+        .st-err { color: #ff8a8a; font-size: 12px; }
+    </style>
+</head>
+
+<body>
+    <div class="st-wrap">
+        <a class="voltar" href="{% url 'gurps:carregar_campanha_gm' %}">← voltar</a>
+        <h1 class="titulo-pagina medievalsharp-regular" style="font-size:2rem;">🗺️ Gerador de Mapa — {{ campanha.nome }}</h1>
+        <p style="font-size:13px;color:#9a9aa5;">Descreva o cenário. A IA (Claude) lê o journal e desenha um battle map
+            vetorial (SVG) na escala do tabletop. Para layout preciso é o melhor caminho (texto→imagem fica impreciso).</p>
+        <textarea id="mg-prompt" rows="3" placeholder="Ex.: 'taverna de dois andares com lareira, mesas, balcão e escada'"></textarea>
+        <button type="button" class="st-gen" onclick="rd6MgSubmit()">Gerar mapa</button>
+        <p class="st-status" id="mg-status"></p>
+        <div id="mg-list"></div>
+    </div>
+
+    {% csrf_token %}
+    <script>
+        var RD6_MG_CAMP = {{ campanha.id }};
+        var _mgPoll = null;
+        function rd6Csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
+        function rd6Esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+        function rd6MgSubmit() {
+            var prompt = (document.getElementById('mg-prompt').value || '').trim();
+            var st = document.getElementById('mg-status');
+            if (!prompt) { st.textContent = 'Descreva o mapa primeiro.'; return; }
+            st.textContent = 'Enviando…';
+            fetch('/map-gen/' + RD6_MG_CAMP + '/request/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': rd6Csrf() },
+                body: JSON.stringify({ prompt: prompt })
+            }).then(function (r) { return r.json(); }).then(function (d) {
+                if (d && d.ok) {
+                    document.getElementById('mg-prompt').value = '';
+                    st.textContent = d.worker_online ? 'Gerando… (o Claude desenha o SVG)' : '⚠ Gerador offline — pedido na fila.';
+                    rd6MgPollStart();
+                } else { st.textContent = (d && d.error) || 'Erro.'; }
+            }).catch(function () { st.textContent = 'Falha de rede.'; });
+        }
+        function rd6MgPollStart() {
+            fetch('/map-gen/' + RD6_MG_CAMP + '/list/').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d || !d.ok) return;
+                rd6MgRender(d.requests || []);
+                var active = (d.requests || []).some(function (x) { return x.status === 'pending' || x.status === 'processing'; });
+                if (_mgPoll) clearTimeout(_mgPoll);
+                if (active) _mgPoll = setTimeout(rd6MgPollStart, 5000);
+            }).catch(function () {});
+        }
+        function rd6MgRender(reqs) {
+            var box = document.getElementById('mg-list');
+            var S = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
+            box.innerHTML = (reqs || []).map(function (r) {
+                var h = '<div class="st-card"><span class="st-badge ' + r.status + '">' + (S[r.status] || r.status) + '</span>';
+                h += '<div class="st-prompt">' + rd6Esc(r.prompt) + '</div>';
+                if (r.status === 'done' && r.has_result) {
+                    h += '<img class="st-preview" src="/map-gen/svg/' + r.id + '/" onclick="window.open(this.src)">';
+                    h += '<div class="st-actions"><button class="st-approve" onclick="rd6MgApprove(' + r.id + ')">✓ Aprovar (vira asset)</button><button onclick="rd6MgDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                } else if (r.status === 'failed') {
+                    h += '<div class="st-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="st-actions"><button onclick="rd6MgDiscard(' + r.id + ')">Remover</button></div>';
+                }
+                return h + '</div>';
+            }).join('');
+        }
+        function rd6MgApprove(id) {
+            fetch('/map-gen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } })
+                .then(function (r) { return r.json(); }).then(function (d) {
+                    document.getElementById('mg-status').textContent = (d && d.ok) ? '✓ Aprovado — está no Journal.' : ((d && d.error) || 'Erro.');
+                    rd6MgPollStart();
+                }).catch(function () {});
+        }
+        function rd6MgDiscard(id) {
+            fetch('/map-gen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6MgPollStart(); }).catch(function () {});
+        }
+        rd6MgPollStart();
+    </script>
+</body>
+
+</html>

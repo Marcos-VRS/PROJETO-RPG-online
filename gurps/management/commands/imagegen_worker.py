@@ -143,6 +143,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"#{req.id} FALHOU: {req.error}"))
             return
 
+        # Modo capa: escreve o título por cima da arte (o modelo não escreve texto).
+        if req.kind == "capa" and req.title:
+            from gurps import image_overlay  # noqa: WPS433
+            png = image_overlay.add_title(png, req.title)
+            self.stdout.write(f"  -> título sobreposto: {req.title[:50]!r}")
+
         rel = f"imagegen/gen_{req.id}.png"
         full = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
         os.makedirs(os.path.dirname(full), exist_ok=True)
