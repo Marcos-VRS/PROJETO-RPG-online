@@ -103,7 +103,7 @@ def _run_as_videogen_worker() -> int:
 
     try:
         Command().handle(
-            interval=4.0, url=comfyui_client.DEFAULT_URL, timeout=900,
+            interval=4.0, url=comfyui_client.DEFAULT_URL, timeout=1200,
             claude="claude", model="sonnet", once=False,
         )
     except KeyboardInterrupt:

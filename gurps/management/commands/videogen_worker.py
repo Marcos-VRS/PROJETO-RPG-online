@@ -93,17 +93,31 @@ class Command(BaseCommand):
         # acumulado em GPU pequena; re-tenta se o ComfyUI cair no meio).
         tmpdir = tempfile.mkdtemp(prefix=f"rpgvid_{req.id}_")
         clips = []
+        consecutive_fail = 0
         for i, s in enumerate(shots, 1):
             self._set(req, progress=f"gerando tomada {i}/{len(shots)}")
             self.stdout.write(f"  #{req.id} tomada {i}/{len(shots)}: {s['prompt'][:60]!r}")
             comfyui_client.free_memory(self.base_url)
             mp4 = self._gen_clip(req, s, i, len(shots))
             if mp4 is None:
-                return  # _gen_clip já marcou failed
+                consecutive_fail += 1
+                # Em vez de perder tudo: se já há cenas suficientes OU o ComfyUI
+                # está sofrendo demais (2 falhas seguidas), para e MONTA O PARCIAL.
+                if len(clips) >= 3 or consecutive_fail >= 2:
+                    self.stdout.write(self.style.WARNING(
+                        f"  tomada {i} falhou — montando o parcial com {len(clips)} cena(s) boas."))
+                    break
+                continue
+            consecutive_fail = 0
             cp = os.path.join(tmpdir, f"shot_{i:03d}.mp4")
             with open(cp, "wb") as f:
                 f.write(mp4)
             clips.append(cp)
+
+        if not clips:
+            self._fail(req, "nenhuma cena pôde ser gerada (ComfyUI instável na GPU?).")
+            return
+        partial = len(clips) < len(shots)
 
         # 3) montagem + trilha: música escolhida pelo GM tem prioridade; senão
         # escolhe automática pelo clima.
@@ -121,9 +135,12 @@ class Command(BaseCommand):
             self._fail(req, f"montagem falhou: {e}")
             return
 
-        self._set(req, result_file=rel, status="done", error="", progress="pronto")
+        note = "" if not partial else f" (PARCIAL: {len(clips)} de {len(shots)} cenas — ComfyUI não aguentou todas)"
+        self._set(req, result_file=rel, status="done",
+                  error=("" if not partial else f"parcial: {len(clips)}/{len(shots)} cenas"),
+                  progress=f"pronto ({len(clips)}/{len(shots)} cenas)")
         self.stdout.write(self.style.SUCCESS(
-            f"#{req.id} OK — vídeo montado ({len(clips)} tomadas, musica={bool(music)})."))
+            f"#{req.id} OK — vídeo montado ({len(clips)} tomadas, musica={bool(music)}){note}."))
 
     def _gen_clip(self, req, s, i, n):
         """Gera um clipe com até 2 tentativas. Se o ComfyUI cair (OOM/crash),
@@ -139,12 +156,10 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(
                     f"  tomada {i} tentativa {attempt} falhou: {str(e)[:120]}"))
                 if attempt == 1:
-                    self._set(req, progress=f"tomada {i}: ComfyUI caiu, aguardando voltar...")
+                    self._set(req, progress=f"tomada {i}: ComfyUI instável, aguardando voltar...")
                     comfyui_client.wait_online(self.base_url, timeout=180)
                     comfyui_client.free_memory(self.base_url)
-                else:
-                    self._fail(req, f"tomada {i} falhou após 2 tentativas: {str(e)[:300]}")
-                    return None
+                # attempt 2: desiste DESTA tomada (o _process monta o parcial)
         return None
 
     def _fail(self, req, msg):
