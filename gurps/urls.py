@@ -180,6 +180,7 @@ urlpatterns = [
     path("imagegen/<int:req_id>/discard/", views.imagegen_discard, name="imagegen_discard"),
     path("Campanha/<int:campanha_id>/estudio-imagem/", views.imagegen_studio, name="imagegen_studio"),
     path("Campanha/<int:campanha_id>/gerador-mapa/", views.mapgen_studio, name="mapgen_studio"),
+    path("Campanha/<int:campanha_id>/estudio-video/", views.videogen_studio, name="videogen_studio"),
     path("videogen/<int:campanha_id>/request/", views.videogen_request, name="videogen_request"),
     path("videogen/<int:campanha_id>/list/", views.videogen_list, name="videogen_list"),
     path("videogen/<int:campanha_id>/music/", views.videogen_music, name="videogen_music"),
@@ -187,6 +188,7 @@ urlpatterns = [
     path("videogen/<int:req_id>/approve/", views.videogen_approve, name="videogen_approve"),
     path("videogen/<int:req_id>/discard/", views.videogen_discard, name="videogen_discard"),
     path("videogen/<int:req_id>/resume/", views.videogen_resume, name="videogen_resume"),
+    path("videogen/<int:req_id>/pause/", views.videogen_pause, name="videogen_pause"),
     # GM Tool Box (biblioteca pessoal do user)
     path("toolbox/", views.toolbox_list, name="toolbox_list"),
     path("toolbox/create/", views.toolbox_create, name="toolbox_create"),

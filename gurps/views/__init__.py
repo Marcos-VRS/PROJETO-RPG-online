@@ -20,4 +20,5 @@ from .image_gen import (
 from .video_gen import (
     videogen_request, videogen_list, videogen_mp4,
     videogen_approve, videogen_discard, videogen_music, videogen_resume,
+    videogen_pause,
 )

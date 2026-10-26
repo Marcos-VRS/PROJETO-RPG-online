@@ -540,6 +540,8 @@ class VideoGenRequest(models.Model):
     expanded_prompt = models.TextField(blank=True, default="")  # storyboard legível
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
     progress = models.CharField(max_length=120, blank=True, default="")  # "tomada 3/20"
+    # GM pediu pra pausar: o worker para após a cena atual e monta o parcial.
+    pause_requested = models.BooleanField(default=False)
     result_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     error = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)

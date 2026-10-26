@@ -41,6 +41,7 @@ def _serialize(req):
         "expanded_prompt": req.expanded_prompt or "",
         # Pode retomar se já tem storyboard e não está rodando (parcial/falhou/pronto).
         "can_resume": bool(req.storyboard) and req.status in ("failed", "done"),
+        "pause_requested": bool(req.pause_requested),
         "created_at": req.created_at.isoformat() if req.created_at else None,
     }
 
@@ -161,6 +162,22 @@ def videogen_approve(request, req_id):
     # Acumula no contexto da campanha (o que foi retratado em vídeo também conta).
     ai_context.append_approved_context(
         req.campanha, f"[vídeo] {(req.prompt or '')[:120]} (clima {req.mood})")
+    return JsonResponse({"ok": True})
+
+
+@login_required(login_url="gurps:login")
+def videogen_pause(request, req_id):
+    """GM pede pausa: o worker para após a cena atual e monta o parcial pra ver.
+    Depois dá pra Continuar, Aprovar ou Descartar."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if req.status != "processing":
+        return JsonResponse({"error": "não está gerando"}, status=400)
+    req.pause_requested = True
+    req.save(update_fields=["pause_requested", "updated_at"])
     return JsonResponse({"ok": True})
 
 

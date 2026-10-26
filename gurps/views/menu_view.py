@@ -241,6 +241,15 @@ def mapgen_studio(request, campanha_id):
 
 
 @login_required(login_url="gurps:login")
+def videogen_studio(request, campanha_id):
+    """Página do Estúdio de Vídeo (IA), no Menu do GM, seção Assets. GM only."""
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        return redirect("gurps:carregar_campanha_gm")
+    return render(request, "global/videogen_studio.html", {"campanha": campanha})
+
+
+@login_required(login_url="gurps:login")
 def carregar_campanha_player(request):
     """Lista campanhas onde o user tem ficha (V2 + V1 legado).
 

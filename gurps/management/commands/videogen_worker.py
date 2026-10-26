@@ -81,8 +81,16 @@ class Command(BaseCommand):
                 out[(a.name or "").strip().lower()] = (a.name, path)
         return out
 
+    def _pause_requested(self, req):
+        """Lê do banco se o GM pediu pausa (flag setada pela view, fora do worker)."""
+        from gurps.models import VideoGenRequest  # noqa: WPS433
+        return VideoGenRequest.objects.filter(id=req.id).values_list(
+            "pause_requested", flat=True).first() or False
+
     def _process(self, req):
-        self._set(req, status="processing", progress="montando storyboard...")
+        # Limpa flag de pausa de uma rodada anterior (ex. ao retomar).
+        self._set(req, status="processing", progress="montando storyboard...",
+                  pause_requested=False)
         self.stdout.write(f"#{req.id} video: {req.prompt[:50]!r} (alvo {req.target_seconds}s)")
 
         images_map = self._journal_images(req.campanha)  # {nome_lower: (nome, path)}
@@ -123,11 +131,17 @@ class Command(BaseCommand):
         os.makedirs(clipsdir, exist_ok=True)
         clips = []
         consecutive_fail = 0
+        paused = False
         for i, s in enumerate(shots, 1):
             cp = os.path.join(clipsdir, f"shot_{i:03d}.mp4")
             if os.path.exists(cp) and os.path.getsize(cp) > 0:
                 clips.append(cp)
                 continue  # já gerada antes (resume)
+            # GM pediu pausa? Para aqui (sem começar a próxima) e monta o parcial.
+            if self._pause_requested(req):
+                self.stdout.write(f"  pausa solicitada — montando o parcial com {len(clips)} cena(s).")
+                paused = True
+                break
             self._set(req, progress=f"gerando tomada {i}/{len(shots)}")
             ref_name = (s.get("image") or "").strip().lower()
             ref_bytes = None
@@ -155,7 +169,13 @@ class Command(BaseCommand):
             clips.append(cp)
 
         if not clips:
-            self._fail(req, "nenhuma cena pôde ser gerada (ComfyUI instável na GPU?).")
+            if paused:
+                # pausou antes da 1a cena — deixa retomável, sem marcar erro feio
+                self._set(req, status="failed", pause_requested=False,
+                          error="pausado antes da 1a cena — use Continuar",
+                          progress="pausado (0 cenas)")
+            else:
+                self._fail(req, "nenhuma cena pôde ser gerada (ComfyUI instável na GPU?).")
             return
         partial = len(clips) < len(shots)
 
@@ -175,12 +195,20 @@ class Command(BaseCommand):
             self._fail(req, f"montagem falhou: {e}")
             return
 
-        note = "" if not partial else f" (PARCIAL: {len(clips)} de {len(shots)} cenas — ComfyUI não aguentou todas)"
-        self._set(req, result_file=rel, status="done",
-                  error=("" if not partial else f"parcial: {len(clips)}/{len(shots)} cenas"),
-                  progress=f"pronto ({len(clips)}/{len(shots)} cenas)")
+        if paused:
+            prog = f"pausado — prévia com {len(clips)}/{len(shots)} cenas"
+            err = f"pausado: {len(clips)}/{len(shots)} cenas (use Continuar)"
+        elif partial:
+            prog = f"pronto ({len(clips)}/{len(shots)} cenas)"
+            err = f"parcial: {len(clips)}/{len(shots)} cenas"
+        else:
+            prog = f"pronto ({len(clips)}/{len(shots)} cenas)"
+            err = ""
+        self._set(req, result_file=rel, status="done", error=err, progress=prog,
+                  pause_requested=False)
+        tag = " [PAUSADO]" if paused else (" [PARCIAL]" if partial else "")
         self.stdout.write(self.style.SUCCESS(
-            f"#{req.id} OK — vídeo montado ({len(clips)} tomadas, musica={bool(music)}){note}."))
+            f"#{req.id} OK{tag} — vídeo montado ({len(clips)} tomadas, musica={bool(music)})."))
 
     def _gen_clip(self, req, s, i, n, ref_bytes=None):
         """Gera um clipe com até 2 tentativas. Se vier ref_bytes (retrato do
