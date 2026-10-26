@@ -1,0 +1,107 @@
+# Stack completa V2: Postgres+pgvector, Redis, MinIO, LiveKit, Django (daphne).
+# Paridade dev/prod: este compose serve para WSL2 local e para a VM GCP (com env diferente).
+# Ollama e cloudflared rodam fora do Compose (no host nativo: GPU/cloudflare access).
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: roll3d6-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-roll3d6_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-roll3d6_dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: roll3d6-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: roll3d6-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # console web
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: roll3d6-livekit
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"          # signaling (WebSocket)
+      - "7881:7881"          # TURN/TCP fallback
+      - "7882:7882/udp"      # WebRTC media (TURN/UDP)
+    # Em prod: trocar --dev por --config /etc/livekit.yaml e
+    # montar arquivo com keys/turn/tcp:443 para passar Cloudflare Tunnel.
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roll3d6-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      # Ollama roda no host (GPU). WSL2 enxerga o host via gateway default.
+      # Esta var é sobrescrita em .env quando necessário.
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434/api/generate}
+    extra_hosts:
+      # Permite ${OLLAMA_URL} usar host.docker.internal mesmo em Linux/WSL2.
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - books_data:/app/books
+      - static_data:/app/static
+      - media_data:/app/media
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  books_data:
+  static_data:
+  media_data:

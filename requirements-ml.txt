@@ -1,0 +1,5 @@
+# Dependências pesadas de ML (RAG: embeddings + extração de PDF).
+# Instaladas em ambiente separado quando RAG está ativo.
+# Em Docker, instaladas junto com requirements.txt no Dockerfile.
+sentence-transformers>=3.0,<4
+pymupdf>=1.24,<2

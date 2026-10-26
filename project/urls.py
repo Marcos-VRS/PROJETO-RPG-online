@@ -22,6 +22,7 @@ from django.views.static import serve as static_serve
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("api.urls")),  # API V2 (SPA / Tauri)
     # path("rag/", include("rag.urls")),  # hibernado — ver docs/RAG_ARCHITECTURE.md
     path("", include("gurps.urls")),  # inclui URLs do app "gurps"
     path("accounts/", include("allauth.urls")),  # Inclui as URLs do allauth

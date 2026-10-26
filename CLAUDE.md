@@ -14,6 +14,13 @@ O produto migra de **SaaS hospedado no GCP** para **aplicativo desktop com dois 
 - [Arquitetura RAG — em hibernação até voltar com vector store SQLite-friendly](docs/RAG_ARCHITECTURE.md)
 - [Base de conhecimento GURPS 4e — visão geral + plano de catalogação](docs/GURPS_KNOWLEDGE.md)
 
+### V2 (refatoração — fundação F-1 estrutural mergeada)
+- [Estado da Execução V2 — onde paramos](docs/V2_EXECUTION_STATE.md)
+- [Prompt do Arquiteto V2 — produto, decisões, restrições](docs/PLATFORM_V2_PROMPT.md)
+- [Plano de Execução V2 — fases F-0 → F-11 com passo a passo](docs/PLATFORM_V2_EXECUTION_PLAN.md)
+- [Blueprint reutilizável do chatbot RAG](docs/CHATBOT_BLUEPRINT.md)
+- [Atributos e características secundárias](docs/gurps/attributes.md) — dados em `gurps/data/attributes.json`
+
 ### Tabletop map system (planejamento — 2026-05-24)
 
 - [Plano técnico do tabletop](docs/TABLETOP_MAP_PLAN.md) — arquitetura, modelo de dados, WS protocol, fases
