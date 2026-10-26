@@ -20,7 +20,7 @@
 2. **ComfyUI NÃO está dentro do .exe.** O .exe só INICIA/gerencia o ComfyUI (watchdog); os ~25 GB de ComfyUI+modelos ficam fora. `launcher._find_comfyui()` procura em `%USERPROFILE%\ComfyUI_windows_portable`, `...\Desktop\...`, `C:\ComfyUI_windows_portable` ou na env `ROLL3D6_COMFYUI_HOME`. No PC do trabalho: copiar a pasta `ComfyUI_windows_portable` inteira (com modelos) pra um desses caminhos, senão os estúdios de IA ficam offline (mas o jogo roda normal).
 3. **Multiplayer é single-host (Cloudflare tunnel).** Cada instalação tem seu PRÓPRIO banco local. **Só o GM/host instala e abre o app**; os jogadores abrem o link `*.trycloudflare.com` **no navegador, sem instalar**. (Foi por isso que o amigo que instalou não viu a campanha — abriu um banco vazio. Ele deve usar o LINK, não instalar. Só instala quem vai ser GM da própria mesa.)
 
-### PENDENTE — decidir e implementar: Modo Consistência do vídeo
+### Modo Consistência do vídeo — IMPLEMENTADO (2026-10-26): user escolheu qualidade máxima, tempo não importa; as 5 alavancas ficam SEMPRE ligadas (sem flag, sem migration). Abaixo o plano original. FreeInit não testado ao vivo (ComfyUI não está neste PC).
 **Problema do user:** o vídeo distorce e o personagem muda de aparência de um frame pro outro. **Causa é técnica, não de prompt.** Duas falhas: (1) poucos passos de amostragem (8, por causa do LCM) → deformação; (2) personagem muda de cara por: janelas de contexto (AnimateDiff gera em janelas de 16 frames que se sobrepõem; ao trocar de janela o rosto deriva), IP-Adapter fraco (0.75), e cada cena gerada do zero.
 
 **Solução = 5 alavancas (o "Modo Consistência"):**

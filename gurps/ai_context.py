@@ -241,9 +241,9 @@ def _run_claude_text(instruction, claude_bin="claude", model="sonnet", timeout=1
     return (box.get("out") or "").strip(), True
 
 
-def _fallback_storyboard(user_request, style_key, target_seconds, seconds_per_shot=4):
+def _fallback_storyboard(user_request, style_key, target_seconds, seconds_per_shot=2):
     """Storyboard mecânico se o claude falhar: repete o pedido em N tomadas."""
-    n = max(3, min(round(target_seconds / seconds_per_shot), 40))
+    n = max(3, min(round(target_seconds / seconds_per_shot), 120))
     base = style_keywords(style_key)
     shot_prompt = (f"{base}, {user_request}" if base else user_request)
     shots = [{"prompt": shot_prompt, "seconds": seconds_per_shot} for _ in range(n)]
@@ -259,8 +259,8 @@ def write_storyboard_via_claude(context, user_request, style_key, target_seconds
     Cada 'prompt' é uma linha em inglês pronta pro AnimateDiff (estilo anime +
     descrição da tomada). Fallback mecânico em qualquer erro."""
     style = style_keywords(style_key) or "anime style, cinematic"
-    seconds_per_shot = 4
-    n_shots = max(3, min(round(target_seconds / seconds_per_shot), 40))
+    seconds_per_shot = 2  # Modo Consistência: 1 clipe = 1 janela de 16 frames
+    n_shots = max(3, min(round(target_seconds / seconds_per_shot), 120))
     images = [str(x) for x in (available_images or []) if x]
     if images:
         img_block = (
@@ -277,7 +277,7 @@ def write_storyboard_via_claude(context, user_request, style_key, target_seconds
 Produce a JSON storyboard of about {n_shots} shots that together last ~{target_seconds} seconds, telling what happened, CONSISTENT with the campaign world below (same era, tone, characters, palette).{img_block}
 
 Output ONLY valid JSON, no markdown fences, no comments, shaped exactly:
-{{"mood": "<one of: {', '.join(MOODS)}>", "shots": [{{"prompt": "<english anime image/motion prompt, comma-separated, 20-45 words, include 'anime style' and camera/motion>", "seconds": 4{img_field}}}, ...]}}
+{{"mood": "<one of: {', '.join(MOODS)}>", "shots": [{{"prompt": "<english anime image/motion prompt, comma-separated, 20-45 words, include 'anime style' and camera/motion>", "seconds": 2{img_field}}}, ...]}}
 
 Each shot's prompt must bake in this visual style: {style}.
 Vary the shots (different angles, moments, characters) so the montage feels like an anime episode opening.
@@ -307,7 +307,7 @@ Output only the JSON storyboard."""
                 continue
             secs = s.get("seconds") or seconds_per_shot
             try:
-                secs = max(2, min(int(secs), 6))
+                secs = max(1, min(int(secs), 2))
             except (TypeError, ValueError):
                 secs = seconds_per_shot
             shot = {"prompt": p[:400], "seconds": secs}

@@ -11,6 +11,7 @@ O produto migra de **SaaS hospedado no GCP** para **aplicativo desktop com dois 
 - [Estado da sessão — última parada e plano de continuação](docs/SESSION_STATE.md) — **leia primeiro ao retomar**
 - [Prompt do agente — missão, papel, stack, responsabilidades](docs/AGENT_PROMPT.md)
 - [Arquitetura de distribuição desktop — instalador, launcher, túnel, empacotamento](docs/DESKTOP_DISTRIBUTION.md)
+- [Sincronização com o OneDrive via API — setup Azure, fluxo, limites](docs/ONEDRIVE_SYNC.md)
 - [Arquitetura RAG — em hibernação até voltar com vector store SQLite-friendly](docs/RAG_ARCHITECTURE.md)
 - [Base de conhecimento GURPS 4e — visão geral + plano de catalogação](docs/GURPS_KNOWLEDGE.md)
 

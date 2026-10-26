@@ -60,6 +60,8 @@ for pkg in (
     "django_htmx",
     "django_cleanup",
     "django_json_widget",
+    "rest_framework",
+    "api",
     "twisted",
     "autobahn",
     "gurps",
@@ -134,8 +136,14 @@ except Exception:
 # django-json-widget tem JS/CSS embutidos.
 try:
     datas += collect_data_files("django_json_widget")
+    datas += collect_data_files("rest_framework")
 except Exception:
     pass
+
+# client_id do app Azure (sincronização OneDrive) — arquivo opcional, não é segredo.
+_cid = PROJECT_ROOT / "desktop" / "cloud_client_id.txt"
+if _cid.exists():
+    datas.append((str(_cid), "desktop"))
 
 # imageio-ffmpeg: traz o binário ffmpeg (usado pelo videogen_worker pra montar
 # o vídeo — concat dos clipes + trilha). Sem isso, o worker de vídeo não monta.
@@ -168,6 +176,7 @@ a = Analysis(  # noqa: F821 (PyInstaller global)
     excludes=[
         "tkinter",     # usamos pywebview
         "rag",         # hibernado
+        "project.local_settings",  # override local do dev (Postgres/segredos) — NUNCA no instalador
         "pytest",
         "IPython",
         "jupyter",

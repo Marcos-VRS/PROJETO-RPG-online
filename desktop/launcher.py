@@ -20,7 +20,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-from desktop import lock, runtime_config, server, tunnel, ui
+from desktop import backup, cloud_sync, lock, runtime_config, server, tunnel, ui
 
 
 def _setup_django() -> None:
@@ -258,8 +258,25 @@ def main() -> int:
     else:
         session_lock.acquire()
 
+    # 1.7. Sincronização direta com o OneDrive (API Graph; só liga se configurada).
+    # Ordem: login -> lock remoto -> traz o banco da nuvem -> (backup, migrate).
+    cloud = cloud_sync.CloudSync.from_env(home)
+    if cloud is not None and cloud.ensure_login():
+        if not cloud.acquire_remote_lock():
+            session_lock.release()
+            return 0  # outro PC está com a mesa aberta e o usuário escolheu esperar
+        cloud.pull()
+    else:
+        cloud = None
+
+    # 1.8. Backup obrigatório ANTES do migrate (que pode alterar o schema).
+    backup.backup_now(home, "abertura")
+    backup_stop = backup.start_periodic(home)
+
     # 2. Configura Django, migra, cria admin.
     _setup_django()
+    if cloud is not None:
+        cloud.start_background()
 
     # 3. UI já visível durante boot (status "iniciando").
     api = ui.JsApi()
@@ -327,6 +344,10 @@ def main() -> int:
                 except Exception:  # noqa: BLE001
                     pass
         django_server.stop()
+        backup_stop.set()
+        backup.backup_now(home, "fechamento")
+        if cloud is not None:
+            cloud.shutdown()  # envia banco+mídia e libera o lock remoto
         session_lock.release()
 
     api.set_shutdown(_shutdown)

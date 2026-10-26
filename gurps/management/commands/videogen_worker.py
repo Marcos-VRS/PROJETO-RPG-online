@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--interval", type=float, default=4.0)
         parser.add_argument("--url", default=comfyui_client.DEFAULT_URL)
-        parser.add_argument("--timeout", type=int, default=900, help="timeout por clipe (s)")
+        parser.add_argument("--timeout", type=int, default=3600, help="timeout por clipe (s)")
         parser.add_argument("--claude", default="claude")
         parser.add_argument("--model", default="sonnet")
         parser.add_argument("--once", action="store_true")
@@ -220,7 +220,7 @@ class Command(BaseCommand):
                     prompt=s["prompt"], seconds=s["seconds"], fps=req.fps,
                     width=req.width, height=req.height, steps=req.steps, cfg=req.cfg,
                     base_url=self.base_url, timeout=self.clip_timeout,
-                    ref_image_bytes=ref_bytes, ref_weight=0.7)
+                    ref_image_bytes=ref_bytes)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  tomada {i} tentativa {attempt} falhou: {str(e)[:120]}"))

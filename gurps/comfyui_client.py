@@ -288,22 +288,69 @@ def generate_png(prompt, negative=None, width=768, height=1024, steps=6, cfg=1.5
 VIDEO_CKPT = "toonyou_beta6.safetensors"           # checkpoint anime SD1.5
 VIDEO_MOTION = "AnimateLCM_sd15_t2v.ckpt"          # motion module (AnimateLCM)
 VIDEO_LORA = "AnimateLCM_sd15_t2v_lora.safetensors"  # LCM lora (poucos passos)
-VIDEO_NEGATIVE = ("bad quality, worst quality, low quality, blurry, deformed, disfigured, "
-                  "bad anatomy, extra limbs, watermark, text, signature, jpeg artifacts")
+VIDEO_NEGATIVE = ("bad quality, worst quality, low quality, blurry, deformed, distorted, "
+                  "disfigured, mutated, malformed, bad anatomy, bad proportions, extra limbs, "
+                  "extra fingers, missing limbs, fused fingers, extra faces, duplicate, "
+                  "inconsistent, morphing, watermark, text, signature, jpeg artifacts")
+# Modo Consistência (sempre ligado): 1 clipe = 1 janela de contexto (sem deriva de rosto),
+# mais passos de amostragem, FreeInit e IP-Adapter forte. Custo: clipes bem mais lentos.
+VIDEO_CONTEXT_LENGTH = 16          # frames por janela do AnimateDiff
+VIDEO_MAX_CLIP_SECONDS = 2         # 16 frames @ 8 fps = 1 única janela
+VIDEO_MIN_STEPS = 14
+VIDEO_REF_WEIGHT = 0.85
+VIDEO_FREEINIT_ITERATIONS = 2
 # IP-Adapter SD1.5 (pra o vídeo usar a aparência dos retratos do journal).
 VIDEO_IPADAPTER = "ip-adapter-plus_sd15.safetensors"
 # CLIP vision reusa o ViT-H (CLIP_VISION_MODEL, já definido lá em cima).
+
+
+def _node_defaults(base, class_type):
+    """Lê /object_info/<node> e devolve {input: default} dos inputs obrigatórios,
+    ou None se o nó não existir (custom node ausente/versão antiga)."""
+    try:
+        with urllib.request.urlopen(f"{base}/object_info/{class_type}", timeout=10) as r:
+            info = json.loads(r.read().decode("utf-8")).get(class_type)
+    except Exception:  # noqa: BLE001
+        return None
+    if not info:
+        return None
+    out = {}
+    for name, spec in (info.get("input", {}).get("required") or {}).items():
+        kind, opts = spec[0], (spec[1] if len(spec) > 1 else {})
+        if isinstance(kind, list):
+            out[name] = kind[0]
+        elif isinstance(opts, dict) and "default" in opts:
+            out[name] = opts["default"]
+        else:
+            return None
+    return out
+
+
+def _freeinit_nodes(base, iterations=VIDEO_FREEINIT_ITERATIONS):
+    """Nós do FreeInit (AnimateDiff-Evolved) prontos pra mesclar no grafo, e o id
+    do nó de sample settings. ({}, None) se o ComfyUI não tiver os nós — aí o clipe
+    sai sem FreeInit em vez de falhar."""
+    fi = _node_defaults(base, "ADE_IterationOptsFreeInit")
+    ss = _node_defaults(base, "ADE_AnimateDiffSamplingSettings")
+    if fi is None or ss is None:
+        return {}, None
+    fi["iterations"] = int(iterations)
+    return {
+        "30": {"class_type": "ADE_IterationOptsFreeInit", "inputs": fi},
+        "31": {"class_type": "ADE_AnimateDiffSamplingSettings",
+               "inputs": {**ss, "iteration_opts": ["30", 0]}},
+    }, "31"
 
 
 def _build_animatediff_ipadapter_graph(prompt, negative, width, height, frames, fps, steps,
                                        cfg, seed, ref_image_name, ref_weight=0.75,
                                        ckpt=VIDEO_CKPT, motion=VIDEO_MOTION, lora=VIDEO_LORA,
                                        lora_strength=0.8, context_length=16, context_overlap=4,
-                                       filename_prefix="rpg_clip"):
+                                       filename_prefix="rpg_clip", freeinit=None):
     """Igual ao grafo AnimateDiff, mas com IP-Adapter: a cena nova sai com a
     APARÊNCIA do retrato de referência (imagem do journal já enviada ao ComfyUI).
     O IP-Adapter patcha o modelo ANTES do AnimateDiff."""
-    return {
+    graph = {
         "4": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ckpt}},
         "10": {"class_type": "LoraLoaderModelOnly",
                "inputs": {"model": ["4", 0], "lora_name": lora, "strength_model": lora_strength}},
@@ -337,16 +384,22 @@ def _build_animatediff_ipadapter_graph(prompt, negative, width, height, frames, 
                          "filename_prefix": filename_prefix, "format": "video/h264-mp4",
                          "pingpong": False, "save_output": True}},
     }
+    if freeinit:
+        nodes, ss_id = freeinit
+        if nodes:
+            graph.update(nodes)
+            graph["12"]["inputs"]["sample_settings"] = [ss_id, 0]
+    return graph
 
 
 def _build_animatediff_graph(prompt, negative, width, height, frames, fps, steps, cfg, seed,
                              ckpt=VIDEO_CKPT, motion=VIDEO_MOTION, lora=VIDEO_LORA,
                              lora_strength=0.8, context_length=16, context_overlap=4,
-                             filename_prefix="rpg_clip"):
+                             filename_prefix="rpg_clip", freeinit=None):
     """Grafo AnimateDiff (AnimateLCM) text2video → mp4 via VHS_VideoCombine.
 
     Janelas de contexto (context_length) permitem frames > 16 sem estourar VRAM."""
-    return {
+    graph = {
         "4": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ckpt}},
         "10": {"class_type": "LoraLoaderModelOnly",
                "inputs": {"model": ["4", 0], "lora_name": lora, "strength_model": lora_strength}},
@@ -372,31 +425,40 @@ def _build_animatediff_graph(prompt, negative, width, height, frames, fps, steps
                          "filename_prefix": filename_prefix, "format": "video/h264-mp4",
                          "pingpong": False, "save_output": True}},
     }
+    if freeinit:
+        nodes, ss_id = freeinit
+        if nodes:
+            graph.update(nodes)
+            graph["12"]["inputs"]["sample_settings"] = [ss_id, 0]
+    return graph
 
 
 def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height=512,
-                      steps=8, cfg=1.8, seed=None, base_url=DEFAULT_URL,
+                      steps=VIDEO_MIN_STEPS, cfg=1.8, seed=None, base_url=DEFAULT_URL,
                       ckpt=VIDEO_CKPT, ref_image_bytes=None, ref_image_filename="ref.png",
-                      ref_weight=0.75, timeout=600, poll_interval=2.0, on_beat=None) -> bytes:
+                      ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0, on_beat=None) -> bytes:
     """Gera UM clipe de vídeo (AnimateDiff) e retorna os bytes do mp4.
 
     Se ``ref_image_bytes`` vier, usa IP-Adapter: a cena sai com a aparência do
-    retrato (imagem do journal). frames = seconds*fps. Lança RuntimeError em falha."""
+    retrato (imagem do journal). frames = seconds*fps, limitado a UMA janela de contexto
+    (Modo Consistência). Lança RuntimeError em falha."""
     base = base_url.rstrip("/")
     if negative is None:
         negative = VIDEO_NEGATIVE
     if seed is None:
         seed = uuid.uuid4().int % (2 ** 31)
-    frames = max(8, min(int(round(seconds * fps)), 96))
+    steps = max(int(steps), VIDEO_MIN_STEPS)
+    frames = max(8, min(int(round(seconds * fps)), VIDEO_CONTEXT_LENGTH))
+    fi = _freeinit_nodes(base) if freeinit else None
     client_id = uuid.uuid4().hex
     if ref_image_bytes:
         ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
         graph = _build_animatediff_ipadapter_graph(
             prompt, negative, width, height, frames, fps, steps, cfg, seed,
-            ref_name, ref_weight=ref_weight, ckpt=ckpt)
+            ref_name, ref_weight=ref_weight, ckpt=ckpt, freeinit=fi)
     else:
         graph = _build_animatediff_graph(prompt, negative, width, height, frames, fps,
-                                         steps, cfg, seed, ckpt=ckpt)
+                                         steps, cfg, seed, ckpt=ckpt, freeinit=fi)
     try:
         resp = _http_json(base + "/prompt", {"prompt": graph, "client_id": client_id})
     except urllib.error.HTTPError as e:
