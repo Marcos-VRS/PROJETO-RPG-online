@@ -1,9 +1,45 @@
 # Session State — onde parei e como continuar
 
-> **Última sessão:** 2026-09-12 (Estúdio de Imagem por IA — ComfyUI local na GPU — **entregue e na dist**; + fix do lightbox do journal).
-> **Status:** Refactor estado-na-cena (2026-06-05) segue **uncommitted** e **fora da dist**. Feature de geração de imagem (ComfyUI) **funcionando end-to-end** e empacotada na `dist/roll3d6-setup.exe` (12/set 15:57, 53,7 MB). Nada commitado ainda; runserver/ComfyUI/worker sob controle do Claude.
+> **Última sessão:** 2026-10-26 (Vídeo: pausar+prévia, Estúdio de Vídeo no Menu do GM, imagens do journal via IP-Adapter, botão Continuar — **tudo commitado e na dist**; push pro GitHub; **pendente: decidir e implementar o Modo Consistência do vídeo — PC do trabalho**).
+> **Status:** Branch `feat/estudios-ia`, HEAD `2fbd03b`, **working tree limpo e já no GitHub** (`origin` = github.com/Marcos-VRS/PROJETO-RPG-online, conta marcosvrsdevmail). Dist `dist/roll3d6-setup.exe` (26/out 00:18, 76 MB) com tudo. Falta só decidir o **Modo Consistência** (seção 2026-10-26 abaixo) — vou implementar no PC do trabalho.
 >
-> Quando voltar, leia este documento primeiro.
+> Quando voltar, leia este documento primeiro. **A seção de hoje (2026-10-26) está logo abaixo** — tem o estado atual + o plano técnico pronto do Modo Consistência.
+
+---
+
+## SESSÃO 2026-10-26: estado atual + PLANO do Modo Consistência (continuar no PC do trabalho)
+
+### Onde o projeto está (git + dist)
+- **Branch** `feat/estudios-ia`, **HEAD `2fbd03b`** ("feat(video): Pausar e ver prévia + move o Estúdio de Vídeo pro Menu do GM"), **working tree limpo**.
+- **Já empurrado pro GitHub:** `origin` = `https://github.com/Marcos-VRS/PROJETO-RPG-online.git` (conta **marcosvrsdevmail**). No PC do trabalho: `git clone` + `git checkout feat/estudios-ia`.
+- **Dist pronta:** `dist/roll3d6-setup.exe` (26/out 00:18, **76 MB**). Migrations 0063-0070, `videogen_studio.html` no bundle, vídeo removido do ☰ do jogo e movido pro Menu do GM.
+- Commits da leva: `2fbd03b` (pausar+prévia + estúdio no Menu do GM), `6033d9c` (imagens do journal via IP-Adapter + botão Continuar/resume), `38910f2` (montagem parcial), `059026b` (watchdog ComfyUI + resiliência OOM), `ce3cef4` (imagem esperta + modo Capa + geradores no Menu do GM + ComfyUI integrado).
+
+### Três fatos operacionais (esclarecidos com o user 2026-10-26)
+1. **Banco entre PCs = via OneDrive.** O banco vive em `%OneDrive%\roll3d6\data.sqlite3` (ver `runtime_config.app_home()`). No PC do trabalho: logar na MESMA conta OneDrive, esperar sincronizar a pasta `roll3d6`, aí instalar/abrir. **NUNCA abrir o app nos dois PCs ao mesmo tempo** (OneDrive cria cópia de conflito do .sqlite3 e perde escrita). Há `SessionLock` com heartbeat, mas a regra segura é fechar num, esperar sincronizar (ícone verde), abrir no outro.
+2. **ComfyUI NÃO está dentro do .exe.** O .exe só INICIA/gerencia o ComfyUI (watchdog); os ~25 GB de ComfyUI+modelos ficam fora. `launcher._find_comfyui()` procura em `%USERPROFILE%\ComfyUI_windows_portable`, `...\Desktop\...`, `C:\ComfyUI_windows_portable` ou na env `ROLL3D6_COMFYUI_HOME`. No PC do trabalho: copiar a pasta `ComfyUI_windows_portable` inteira (com modelos) pra um desses caminhos, senão os estúdios de IA ficam offline (mas o jogo roda normal).
+3. **Multiplayer é single-host (Cloudflare tunnel).** Cada instalação tem seu PRÓPRIO banco local. **Só o GM/host instala e abre o app**; os jogadores abrem o link `*.trycloudflare.com` **no navegador, sem instalar**. (Foi por isso que o amigo que instalou não viu a campanha — abriu um banco vazio. Ele deve usar o LINK, não instalar. Só instala quem vai ser GM da própria mesa.)
+
+### PENDENTE — decidir e implementar: Modo Consistência do vídeo
+**Problema do user:** o vídeo distorce e o personagem muda de aparência de um frame pro outro. **Causa é técnica, não de prompt.** Duas falhas: (1) poucos passos de amostragem (8, por causa do LCM) → deformação; (2) personagem muda de cara por: janelas de contexto (AnimateDiff gera em janelas de 16 frames que se sobrepõem; ao trocar de janela o rosto deriva), IP-Adapter fraco (0.75), e cada cena gerada do zero.
+
+**Solução = 5 alavancas (o "Modo Consistência"):**
+| Alavanca | Hoje | Consistência | Onde mexer |
+|---|---|---|---|
+| Duração de cada clipe | até ~4s (várias janelas) | **≤2s = 16 frames @ 8fps = 1 única janela** | `ai_context.write_storyboard_via_claude` (limitar `seconds` dos shots a ≤2) + garantir `frames ≤ context_length` no worker |
+| Passos de amostragem | 8 | **14** | `comfyui_client` KSampler `steps` em `_build_animatediff_*graph` / `generate_clip_mp4` |
+| **FreeInit** | off | **on** | nós do ComfyUI-AnimateDiff-Evolved (iteração FreeInit nas context options / sample settings) — custa passadas extras |
+| Força IP-Adapter | 0.75 | **0.85** | `comfyui_client` const `IPADAPTER` weight em `_build_animatediff_ipadapter_graph` / `generate_clip_mp4(ref_weight=...)` |
+| Negative prompt | básico | **reforçado** (`deformed, distorted, mutated, extra limbs, inconsistent…`) | `comfyui_client.NEGATIVE` (vídeo) |
+
+**Preço (por isso falta o user decidir):** cada clipe 2-3× mais lento (90s de vídeo → ~3h+); ritmo vira mais picotado (mais cortes, estilo trailer/AMV); melhora MUITO mas não fica 100% (AnimateDiff SD1.5 em 6 GB tem limite).
+
+**3 opções oferecidas (user ainda NÃO escolheu):**
+1. **Modo Consistência completo** (as 5 alavancas), escolhível na hora de gerar — máxima qualidade, bem mais lento. → exige flag `consistency` em `VideoGenRequest` (**nova migration**) + checkbox na `videogen_studio.html`.
+2. **Só o ajuste barato** (clipes 2s + 14 passos, sem FreeInit) como PADRÃO — corta bastante o "muda de cara" com pouco custo. → só mudar constantes, **sem migration**.
+3. **Os dois** (ajuste barato padrão + botão opcional pro completo).
+
+**Ao retomar:** perguntar ao user qual opção (1/2/3). Se 1 ou 3, criar migration 0071 (`VideoGenRequest.consistency`) + UI. Se 2, só ajustar constantes no `comfyui_client` e o cap de `seconds` no storyboard.
 
 ---
 
