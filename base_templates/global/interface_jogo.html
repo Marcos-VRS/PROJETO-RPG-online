@@ -321,12 +321,22 @@
                         if (r.expanded_prompt) h += '<details class="mg-xprompt"><summary>roteiro</summary><div>' + rd6Esc(r.expanded_prompt) + '</div></details>';
                         if ((r.status === 'done' || r.status === 'approved') && r.has_result) {
                             h += '<video src="/videogen/mp4/' + r.id + '/" controls preload="metadata" style="width:100%;border-radius:6px;margin-top:6px;background:#000"></video>';
-                            if (r.status === 'done') h += '<div class="mg-actions"><button class="mg-approve" onclick="rd6VideoApprove(' + r.id + ')">✓ Aprovar</button><button onclick="rd6VideoDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                            if (r.status === 'done') {
+                                h += '<div class="mg-actions"><button class="mg-approve" onclick="rd6VideoApprove(' + r.id + ')">✓ Aprovar</button>';
+                                if (r.can_resume) h += '<button onclick="rd6VideoResume(' + r.id + ')">▶ Continuar</button>';
+                                h += '<button onclick="rd6VideoDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                            }
                         } else if (r.status === 'failed') {
-                            h += '<div class="mg-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="mg-actions"><button onclick="rd6VideoDiscard(' + r.id + ')">Remover</button></div>';
+                            h += '<div class="mg-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="mg-actions">';
+                            if (r.can_resume) h += '<button class="mg-approve" onclick="rd6VideoResume(' + r.id + ')">▶ Continuar de onde parou</button>';
+                            h += '<button onclick="rd6VideoDiscard(' + r.id + ')">Remover</button></div>';
                         }
                         return h + '</div>';
                     }).join('');
+                }
+                function rd6VideoResume(id) {
+                    fetch('/videogen/' + id + '/resume/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })
+                        .then(function () { rd6VideoPoll(); }).catch(function () {});
                 }
                 function rd6VideoApprove(id) {
                     fetch('/videogen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6GetCsrf() } })

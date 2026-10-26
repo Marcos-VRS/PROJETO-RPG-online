@@ -64,52 +64,92 @@ class Command(BaseCommand):
             setattr(req, k, v)
         req.save(update_fields=list(fields.keys()) + ["updated_at"])
 
+    def _journal_images(self, campanha):
+        """{nome_lower: caminho} das imagens RASTER do journal (retratos/assets),
+        pra o IP-Adapter usar a aparência dos personagens no vídeo."""
+        from gurps.models import CampanhaAssets  # noqa: WPS433
+        out = {}
+        for a in (CampanhaAssets.objects.filter(campanha=campanha, slot__in=[1, 2])
+                  .order_by("-id")):
+            if not a.image or (a.image.name or "").lower().endswith(".svg"):
+                continue
+            try:
+                path = a.image.path
+            except Exception:  # noqa: BLE001
+                continue
+            if os.path.exists(path):
+                out[(a.name or "").strip().lower()] = (a.name, path)
+        return out
+
     def _process(self, req):
         self._set(req, status="processing", progress="montando storyboard...")
         self.stdout.write(f"#{req.id} video: {req.prompt[:50]!r} (alvo {req.target_seconds}s)")
 
-        # 1) contexto do journal + storyboard via claude
-        ctx = ""
-        if req.use_context:
-            try:
-                ctx = ai_context.build_campaign_context(req.campanha)
-            except Exception as e:  # noqa: BLE001
-                self.stdout.write(self.style.WARNING(f"  contexto falhou: {e}"))
-        board, used = ai_context.write_storyboard_via_claude(
-            ctx, req.prompt, req.style, req.target_seconds,
-            claude_bin=self.claude_bin, model=self.claude_model)
-        shots = board.get("shots") or []
-        mood = board.get("mood") or "epic"
-        if not shots:
-            self._fail(req, "storyboard vazio")
-            return
-        human = "\n".join(f"{i+1}. ({s['seconds']}s) {s['prompt']}" for i, s in enumerate(shots))
-        self._set(req, storyboard=shots, mood=mood,
-                  expanded_prompt=f"[clima: {mood}] ({'claude' if used else 'mecanico'})\n" + human,
-                  progress=f"0/{len(shots)} tomadas")
-        self.stdout.write(f"  storyboard: {len(shots)} tomadas, clima={mood} ({'claude' if used else 'mecanico'})")
+        images_map = self._journal_images(req.campanha)  # {nome_lower: (nome, path)}
 
-        # 2) gera cada tomada (libera VRAM antes de cada uma pra evitar OOM
-        # acumulado em GPU pequena; re-tenta se o ComfyUI cair no meio).
-        tmpdir = tempfile.mkdtemp(prefix=f"rpgvid_{req.id}_")
+        # 1) storyboard: RETOMA o existente (resume) ou pede um novo ao claude.
+        if req.storyboard:
+            shots = req.storyboard
+            mood = req.mood or "epic"
+            self.stdout.write(f"  RETOMANDO storyboard existente ({len(shots)} tomadas).")
+        else:
+            ctx = ""
+            if req.use_context:
+                try:
+                    ctx = ai_context.build_campaign_context(req.campanha)
+                except Exception as e:  # noqa: BLE001
+                    self.stdout.write(self.style.WARNING(f"  contexto falhou: {e}"))
+            board, used = ai_context.write_storyboard_via_claude(
+                ctx, req.prompt, req.style, req.target_seconds,
+                available_images=[n for (n, _p) in images_map.values()],
+                claude_bin=self.claude_bin, model=self.claude_model)
+            shots = board.get("shots") or []
+            mood = board.get("mood") or "epic"
+            if not shots:
+                self._fail(req, "storyboard vazio")
+                return
+            human = "\n".join(
+                f"{i+1}. ({s['seconds']}s)" + (f" [{s['image']}]" if s.get('image') else "")
+                + f" {s['prompt']}" for i, s in enumerate(shots))
+            self._set(req, storyboard=shots, mood=mood,
+                      expanded_prompt=f"[clima: {mood}] ({'claude' if used else 'mecanico'})\n" + human,
+                      progress=f"0/{len(shots)} tomadas")
+            self.stdout.write(f"  storyboard: {len(shots)} tomadas, clima={mood}")
+
+        # 2) gera cada tomada. Clipes ficam em disco (media/videogen/clips/<id>/)
+        # pra permitir RETOMAR sem refazer as que já saíram. Libera VRAM antes de
+        # cada uma; re-tenta se o ComfyUI cair; monta o parcial se faltar.
+        clipsdir = os.path.join(settings.MEDIA_ROOT, "videogen", "clips", str(req.id))
+        os.makedirs(clipsdir, exist_ok=True)
         clips = []
         consecutive_fail = 0
         for i, s in enumerate(shots, 1):
+            cp = os.path.join(clipsdir, f"shot_{i:03d}.mp4")
+            if os.path.exists(cp) and os.path.getsize(cp) > 0:
+                clips.append(cp)
+                continue  # já gerada antes (resume)
             self._set(req, progress=f"gerando tomada {i}/{len(shots)}")
-            self.stdout.write(f"  #{req.id} tomada {i}/{len(shots)}: {s['prompt'][:60]!r}")
+            ref_name = (s.get("image") or "").strip().lower()
+            ref_bytes = None
+            if ref_name and ref_name in images_map:
+                try:
+                    with open(images_map[ref_name][1], "rb") as fh:
+                        ref_bytes = fh.read()
+                except Exception:  # noqa: BLE001
+                    ref_bytes = None
+            self.stdout.write(
+                f"  #{req.id} tomada {i}/{len(shots)}"
+                + (f" [img:{s.get('image')}]" if ref_bytes else "") + f": {s['prompt'][:50]!r}")
             comfyui_client.free_memory(self.base_url)
-            mp4 = self._gen_clip(req, s, i, len(shots))
+            mp4 = self._gen_clip(req, s, i, len(shots), ref_bytes)
             if mp4 is None:
                 consecutive_fail += 1
-                # Em vez de perder tudo: se já há cenas suficientes OU o ComfyUI
-                # está sofrendo demais (2 falhas seguidas), para e MONTA O PARCIAL.
                 if len(clips) >= 3 or consecutive_fail >= 2:
                     self.stdout.write(self.style.WARNING(
-                        f"  tomada {i} falhou — montando o parcial com {len(clips)} cena(s) boas."))
+                        f"  tomada {i} falhou — montando o parcial com {len(clips)} cena(s)."))
                     break
                 continue
             consecutive_fail = 0
-            cp = os.path.join(tmpdir, f"shot_{i:03d}.mp4")
             with open(cp, "wb") as f:
                 f.write(mp4)
             clips.append(cp)
@@ -142,16 +182,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"#{req.id} OK — vídeo montado ({len(clips)} tomadas, musica={bool(music)}){note}."))
 
-    def _gen_clip(self, req, s, i, n):
-        """Gera um clipe com até 2 tentativas. Se o ComfyUI cair (OOM/crash),
-        espera ele voltar (o launcher reinicia) e tenta de novo. Retorna os bytes
-        do mp4, ou None (e marca failed) se falhar de vez."""
+    def _gen_clip(self, req, s, i, n, ref_bytes=None):
+        """Gera um clipe com até 2 tentativas. Se vier ref_bytes (retrato do
+        journal), usa IP-Adapter pra cena sair com a aparência do personagem.
+        Se o ComfyUI cair, espera voltar e tenta de novo. Retorna bytes ou None."""
         for attempt in (1, 2):
             try:
                 return comfyui_client.generate_clip_mp4(
                     prompt=s["prompt"], seconds=s["seconds"], fps=req.fps,
                     width=req.width, height=req.height, steps=req.steps, cfg=req.cfg,
-                    base_url=self.base_url, timeout=self.clip_timeout)
+                    base_url=self.base_url, timeout=self.clip_timeout,
+                    ref_image_bytes=ref_bytes, ref_weight=0.7)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  tomada {i} tentativa {attempt} falhou: {str(e)[:120]}"))

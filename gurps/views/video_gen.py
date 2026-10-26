@@ -39,6 +39,8 @@ def _serialize(req):
         "target_seconds": req.target_seconds,
         "has_result": bool(req.result_file),
         "expanded_prompt": req.expanded_prompt or "",
+        # Pode retomar se já tem storyboard e não está rodando (parcial/falhou/pronto).
+        "can_resume": bool(req.storyboard) and req.status in ("failed", "done"),
         "created_at": req.created_at.isoformat() if req.created_at else None,
     }
 
@@ -163,6 +165,25 @@ def videogen_approve(request, req_id):
 
 
 @login_required(login_url="gurps:login")
+def videogen_resume(request, req_id):
+    """Retoma um vídeo parcial/falho: re-enfileira (status=pending) mantendo o
+    storyboard e as cenas já geradas — o worker só gera as que faltam e remonta."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if not req.storyboard:
+        return JsonResponse({"error": "sem storyboard pra retomar"}, status=400)
+    req.status = "pending"
+    req.error = ""
+    req.progress = "retomando..."
+    req.save(update_fields=["status", "error", "progress", "updated_at"])
+    comfy = comfyui_client.status()
+    return JsonResponse({"ok": True, "comfy_online": comfy.get("online", False)})
+
+
+@login_required(login_url="gurps:login")
 def videogen_discard(request, req_id):
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
@@ -171,4 +192,11 @@ def videogen_discard(request, req_id):
         return JsonResponse({"error": "sem permissão"}, status=403)
     req.status = "discarded"
     req.save(update_fields=["status", "updated_at"])
+    # limpa as cenas persistidas (não vai mais retomar)
+    import shutil
+    clipsdir = os.path.join(settings.MEDIA_ROOT, "videogen", "clips", str(req.id))
+    try:
+        shutil.rmtree(clipsdir, ignore_errors=True)
+    except Exception:  # noqa: BLE001
+        pass
     return JsonResponse({"ok": True})

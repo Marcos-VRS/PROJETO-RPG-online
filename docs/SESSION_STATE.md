@@ -73,8 +73,14 @@ User quer mandar um prompt e gerar um VÍDEO ~90s estilo anime do que aconteceu 
 - **ComfyUI integrado:** launcher sobe o ComfyUI junto do app (`_spawn_comfyui`, acha a instalação, não duplica na porta 8188, encerra no fim). User não roda mais o .bat. (Modelos ~25GB continuam na pasta do ComfyUI — não dá pra meter no instalador.)
 - **Música:** seleção funciona (faixa enviada aparece no grupo "Enviadas por você"); upload por geração salva em media/music/uploads/ e passa a listar.
 
+### FEATURE 2026-10-24/25: vídeo usa as imagens do journal (IP-Adapter) + retomar + robustez
+- **Vídeo usa os RETRATOS do journal** (pedido nº1 do user). IP-Adapter SD1.5 no AnimateDiff: cenas novas saem com a APARÊNCIA dos personagens. Modelo `ipadapter/ip-adapter-plus_sd15.safetensors` (94MB) + CLIP-ViT-H (já tinha). `comfyui_client._build_animatediff_ipadapter_graph` + `generate_clip_mp4(ref_image_bytes=...)`. PROVADO: ref Berserker → cena nova anime do personagem correndo na chuva, 42s/16fr, sem OOM. weight_type "linear", weight 0.7.
+- **Storyboard atribui imagem por cena**: `write_storyboard_via_claude(available_images=[nomes])` — o claude põe `"image":"<nome do personagem>"` nas cenas; o worker resolve nome→asset (`_journal_images`) e usa como referência IP-Adapter. Cenas sem personagem = txt2vid.
+- **Retomar (botão Continuar)**: clipes agora persistem em `media/videogen/clips/<id>/shot_NNN.mp4` (não mais tempdir). O worker, se `req.storyboard` já existe, RETOMA: reusa o storyboard e pula as cenas cujo arquivo já existe, gerando só as faltantes e remontando. View `videogen_resume` (status→pending), botão "▶ Continuar" nos cards parcial/falho. `_serialize` tem `can_resume`. Discard limpa a pasta de clipes.
+- **Robustez (rodadas anteriores, já na dist):** watchdog reinicia ComfyUI se cair; free_memory entre clipes; retry por clipe; **montagem parcial** (não perde tudo); timeout 1200s; log em `<home>/logs/comfyui.log`.
+
 ### Futuro (NÃO nesta entrega)
-ControlNet (mapas com layout preciso), IP-Adapter FaceID (rosto via foto), RIFE (suavizar vídeo), presets de estilo/LoRA, auto-instalar ComfyUI+modelos pra outros mestres, empacotar uma fonte TTF própria pra capa.
+ControlNet (mapas com layout preciso), I2V (animar o próprio retrato), RIFE (suavizar vídeo), presets de estilo/LoRA, auto-instalar ComfyUI+modelos pra outros mestres, empacotar fonte TTF própria pra capa.
 
 ---
 

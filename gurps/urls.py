@@ -186,6 +186,7 @@ urlpatterns = [
     path("videogen/mp4/<int:req_id>/", views.videogen_mp4, name="videogen_mp4"),
     path("videogen/<int:req_id>/approve/", views.videogen_approve, name="videogen_approve"),
     path("videogen/<int:req_id>/discard/", views.videogen_discard, name="videogen_discard"),
+    path("videogen/<int:req_id>/resume/", views.videogen_resume, name="videogen_resume"),
     # GM Tool Box (biblioteca pessoal do user)
     path("toolbox/", views.toolbox_list, name="toolbox_list"),
     path("toolbox/create/", views.toolbox_create, name="toolbox_create"),

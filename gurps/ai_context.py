@@ -251,6 +251,7 @@ def _fallback_storyboard(user_request, style_key, target_seconds, seconds_per_sh
 
 
 def write_storyboard_via_claude(context, user_request, style_key, target_seconds,
+                                available_images=None,
                                 claude_bin="claude", model="sonnet", timeout=150):
     """Pede ao claude um STORYBOARD (várias tomadas) pra um vídeo anime coerente
     com o journal. Retorna (dict {mood, shots:[{prompt, seconds}]}, usou_claude).
@@ -260,14 +261,26 @@ def write_storyboard_via_claude(context, user_request, style_key, target_seconds
     style = style_keywords(style_key) or "anime style, cinematic"
     seconds_per_shot = 4
     n_shots = max(3, min(round(target_seconds / seconds_per_shot), 40))
-    instruction = f"""You are a storyboard director for a SHORT ANIME-STYLE recap video of a tabletop RPG scene.
-Produce a JSON storyboard of about {n_shots} shots that together last ~{target_seconds} seconds, telling what happened, CONSISTENT with the campaign world below (same era, tone, characters, palette).
+    images = [str(x) for x in (available_images or []) if x]
+    if images:
+        img_block = (
+            "\nAVAILABLE CHARACTER IMAGES (use their EXACT names): "
+            + ", ".join(images[:30])
+            + "\nFor shots that feature a specific character, set that shot's \"image\" to the "
+              "character's EXACT name from the list above, so the video uses that character's look. "
+              "For wide/establishing/scenery shots with no single character, use \"image\": \"\".")
+        img_field = ', "image": "<exact character image name from the list, or empty>"'
+    else:
+        img_block = ""
+        img_field = ""
+    instruction = f"""You are a storyboard director for a SHORT ANIME-STYLE recap/opening video of a tabletop RPG.
+Produce a JSON storyboard of about {n_shots} shots that together last ~{target_seconds} seconds, telling what happened, CONSISTENT with the campaign world below (same era, tone, characters, palette).{img_block}
 
 Output ONLY valid JSON, no markdown fences, no comments, shaped exactly:
-{{"mood": "<one of: {', '.join(MOODS)}>", "shots": [{{"prompt": "<english anime image/motion prompt, comma-separated, 20-45 words, include 'anime style' and camera/motion>", "seconds": 4}}, ...]}}
+{{"mood": "<one of: {', '.join(MOODS)}>", "shots": [{{"prompt": "<english anime image/motion prompt, comma-separated, 20-45 words, include 'anime style' and camera/motion>", "seconds": 4{img_field}}}, ...]}}
 
 Each shot's prompt must bake in this visual style: {style}.
-Vary the shots (different angles, moments, characters) so the montage feels like an anime episode recap.
+Vary the shots (different angles, moments, characters) so the montage feels like an anime episode opening.
 
 === CAMPAIGN JOURNAL (context) ===
 {context or '(no extra context yet)'}
@@ -297,7 +310,11 @@ Output only the JSON storyboard."""
                 secs = max(2, min(int(secs), 6))
             except (TypeError, ValueError):
                 secs = seconds_per_shot
-            clean.append({"prompt": p[:400], "seconds": secs})
+            shot = {"prompt": p[:400], "seconds": secs}
+            img = (s.get("image") or "").strip()
+            if img:
+                shot["image"] = img[:200]
+            clean.append(shot)
         if not clean:
             return _fallback_storyboard(user_request, style_key, target_seconds, seconds_per_shot)
         mood = (data.get("mood") or "epic").strip().lower()
