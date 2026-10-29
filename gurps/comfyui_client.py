@@ -396,6 +396,55 @@ def _build_animatediff_ipadapter_graph(prompt, negative, width, height, frames, 
     return graph
 
 
+def _build_animatediff_init_graph(prompt, negative, width, height, frames, fps, steps, cfg,
+                                  seed, image_name, denoise=0.6,
+                                  ckpt=VIDEO_CKPT, motion=VIDEO_MOTION, lora=VIDEO_LORA,
+                                  lora_strength=0.8, context_length=16, context_overlap=4,
+                                  filename_prefix="rpg_clip", freeinit=None):
+    """img2vid: ANIMA a própria imagem. A imagem vira o latente inicial (VAEEncode
+    repetido em todos os frames) e o KSampler só adiciona movimento com
+    ``denoise`` < 1 — quanto menor, mais fiel à imagem. Sem IP-Adapter: a
+    fidelidade vem do latente inicial, não de 'inventar no estilo'."""
+    graph = {
+        "4": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ckpt}},
+        "10": {"class_type": "LoraLoaderModelOnly",
+               "inputs": {"model": ["4", 0], "lora_name": lora, "strength_model": lora_strength}},
+        "20": {"class_type": "LoadImage", "inputs": {"image": image_name}},
+        "24": {"class_type": "ImageScale",
+               "inputs": {"image": ["20", 0], "upscale_method": "lanczos",
+                          "width": int(width), "height": int(height), "crop": "center"}},
+        "25": {"class_type": "VAEEncode", "inputs": {"pixels": ["24", 0], "vae": ["4", 2]}},
+        "26": {"class_type": "RepeatLatentBatch",
+               "inputs": {"samples": ["25", 0], "amount": int(frames)}},
+        "11": {"class_type": "ADE_AnimateDiffUniformContextOptions",
+               "inputs": {"context_length": int(context_length), "context_stride": 1,
+                          "context_overlap": int(context_overlap), "context_schedule": "uniform",
+                          "closed_loop": False}},
+        "12": {"class_type": "ADE_AnimateDiffLoaderGen1",
+               "inputs": {"model": ["10", 0], "model_name": motion,
+                          "beta_schedule": "lcm", "context_options": ["11", 0]}},
+        "6": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["4", 1]}},
+        "7": {"class_type": "CLIPTextEncode", "inputs": {"text": negative, "clip": ["4", 1]}},
+        "3": {"class_type": "KSampler",
+              "inputs": {"seed": int(seed), "steps": int(steps), "cfg": float(cfg),
+                         "sampler_name": "lcm", "scheduler": "sgm_uniform",
+                         "denoise": float(denoise),
+                         "model": ["12", 0], "positive": ["6", 0],
+                         "negative": ["7", 0], "latent_image": ["26", 0]}},
+        "8": {"class_type": "VAEDecode", "inputs": {"samples": ["3", 0], "vae": ["4", 2]}},
+        "9": {"class_type": "VHS_VideoCombine",
+              "inputs": {"images": ["8", 0], "frame_rate": int(fps), "loop_count": 0,
+                         "filename_prefix": filename_prefix, "format": "video/h264-mp4",
+                         "pingpong": False, "save_output": True}},
+    }
+    if freeinit:
+        nodes, ss_id = freeinit
+        if nodes:
+            graph.update(nodes)
+            graph["12"]["inputs"]["sample_settings"] = [ss_id, 0]
+    return graph
+
+
 def _build_animatediff_graph(prompt, negative, width, height, frames, fps, steps, cfg, seed,
                              ckpt=VIDEO_CKPT, motion=VIDEO_MOTION, lora=VIDEO_LORA,
                              lora_strength=0.8, context_length=16, context_overlap=4,
@@ -441,7 +490,8 @@ def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height
                       steps=VIDEO_MIN_STEPS, cfg=1.8, seed=None, base_url=DEFAULT_URL,
                       ckpt=VIDEO_CKPT, ref_image_bytes=None, ref_image_filename="ref.png",
                       ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0,
-                      on_beat=None, max_frames=VIDEO_CONTEXT_LENGTH) -> bytes:
+                      on_beat=None, max_frames=VIDEO_CONTEXT_LENGTH,
+                      animate=False, denoise=0.6) -> bytes:
     """Gera UM clipe de vídeo (AnimateDiff) e retorna os bytes do mp4.
 
     Se ``ref_image_bytes`` vier, usa IP-Adapter: a cena sai com a aparência do
@@ -458,7 +508,13 @@ def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height
     frames = max(8, min(int(round(seconds * fps)), int(max_frames)))
     fi = _freeinit_nodes(base) if freeinit else None
     client_id = uuid.uuid4().hex
-    if ref_image_bytes:
+    if ref_image_bytes and animate:
+        # img2vid: anima a PRÓPRIA imagem (fiel), controlado por denoise.
+        ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
+        graph = _build_animatediff_init_graph(
+            prompt, negative, width, height, frames, fps, steps, cfg, seed,
+            ref_name, denoise=denoise, ckpt=ckpt, freeinit=fi)
+    elif ref_image_bytes:
         ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
         graph = _build_animatediff_ipadapter_graph(
             prompt, negative, width, height, frames, fps, steps, cfg, seed,

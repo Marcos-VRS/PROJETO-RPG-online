@@ -596,6 +596,14 @@ class VideoBeat(models.Model):
         CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="+",
     )
+    # Como usar a imagem de referência:
+    #  "style"   = IP-Adapter (pega o estilo e INVENTA uma cena nova) — padrão antigo
+    #  "animate" = anima a PRÓPRIA imagem (img2vid: a imagem é o quadro base)
+    REF_MODE_CHOICES = [("style", "Estilo (inventa em cima)"), ("animate", "Animar a imagem (fiel)")]
+    ref_mode = models.CharField(max_length=10, choices=REF_MODE_CHOICES, default="style")
+    # Fidelidade no modo "animate": 1.0 = mais fiel (movimento sutil) → 0.0 = mais
+    # movimento (afasta mais da imagem). A view mapeia pra denoise do KSampler.
+    fidelity = models.FloatField(default=0.6)
     seed = models.BigIntegerField(null=True, blank=True)  # base; sub-clipes = seed+i
     clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")

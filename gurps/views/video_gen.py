@@ -87,6 +87,8 @@ def _serialize_beat(b):
         "expanded_prompt": b.expanded_prompt or "",
         "ref_asset_id": b.ref_asset_id,
         "ref_asset_name": (b.ref_asset.name if b.ref_asset_id else ""),
+        "ref_mode": b.ref_mode,
+        "fidelity": b.fidelity,
         "status": b.status,
         "progress": b.progress or "",
         "error": b.error or "",
@@ -304,6 +306,14 @@ def videogen_beat_update(request, beat_id):
         changed = True
     if "ref_asset_id" in body:
         beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
+    if "ref_mode" in body:
+        beat.ref_mode = "animate" if body.get("ref_mode") == "animate" else "style"; changed = True
+    if "fidelity" in body:
+        try:
+            beat.fidelity = min(1.0, max(0.0, float(body.get("fidelity"))))
+            changed = True
+        except (TypeError, ValueError):
+            pass
     if "transition" in body:
         beat.transition = "crossfade" if body.get("transition") == "crossfade" else "cut"
     if "transition_ms" in body:

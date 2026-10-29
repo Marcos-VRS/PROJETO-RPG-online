@@ -282,9 +282,10 @@ class Command(BaseCommand):
         except Exception:  # noqa: BLE001
             return None, ""
 
-    def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None):
+    def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None,
+                 animate=False, denoise=0.6):
         """Gera UM pedaço contínuo do beat (com retry + espera o ComfyUI voltar).
-        Retorna bytes ou None."""
+        Se animate=True, ANIMA a própria imagem (img2vid, fiel). Retorna bytes ou None."""
         if max_frames is None:
             max_frames = comfyui_client.VIDEO_BEAT_MAX_FRAMES
         for attempt in (1, 2):
@@ -294,7 +295,8 @@ class Command(BaseCommand):
                     width=project.width, height=project.height,
                     steps=project.steps, cfg=project.cfg, seed=seed,
                     base_url=self.base_url, timeout=self.clip_timeout,
-                    ref_image_bytes=ref_bytes, max_frames=max_frames)
+                    ref_image_bytes=ref_bytes, max_frames=max_frames,
+                    animate=animate, denoise=denoise, freeinit=not animate)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  sub-clipe tentativa {attempt} falhou: {str(e)[:120]}"))
@@ -345,6 +347,13 @@ class Command(BaseCommand):
         while remaining > 0:
             chunks.append(min(remaining, max_f))
             remaining -= min(remaining, max_f)
+        # Modo "animar a imagem" (fiel): a imagem vira o quadro base (img2vid).
+        # fidelity 1.0 -> denoise ~0.35 (bem fiel); 0.0 -> ~0.9 (mais movimento).
+        animate = (beat.ref_mode == "animate") and (ref_bytes is not None)
+        fidelity = min(1.0, max(0.0, beat.fidelity if beat.fidelity is not None else 0.6))
+        denoise = round(0.9 - 0.55 * fidelity, 3)
+        if animate:
+            self.stdout.write(f"  modo ANIMAR imagem (fiel), denoise={denoise}")
         bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
                             f"beat_{beat.id}")
         os.makedirs(bdir, exist_ok=True)
@@ -354,7 +363,7 @@ class Command(BaseCommand):
                            if len(chunks) > 1 else "gerando o beat..."))
             comfyui_client.free_memory(self.base_url)
             mp4 = self._gen_one(project, expanded, fcount / fps, base_seed, ref_bytes,
-                                max_frames=max_f)
+                                max_frames=max_f, animate=animate, denoise=denoise)
             if mp4 is None:
                 if parts:  # usa o que já saiu
                     break

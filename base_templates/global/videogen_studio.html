@@ -208,7 +208,7 @@
             return JSON.stringify([p.status, p.has_result, p.progress,
                 (p.comfy && p.comfy.online) || false,
                 (p.beats || []).map(function (b) {
-                    return [b.id, b.status, b.progress, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.transition, b.transition_ms, b.error];
+                    return [b.id, b.status, b.progress, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.transition, b.transition_ms, b.error];
                 })]);
         }
 
@@ -406,7 +406,22 @@
                         + '<option value="crossfade"' + (b.transition === 'crossfade' ? ' selected' : '') + '>crossfade</option></select></label>'
                         + '<label class="st-field" style="margin:4px 0;">Crossfade (ms): <input type="number" min="100" max="3000" step="100" value="' + b.transition_ms + '" onchange="vgBeatPatch(' + b.id + ',{transition_ms:this.value})"></label></div>';
                 }
-                h += '<div class="st-row"><div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div></div>';
+                h += '<div class="st-row"><div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div>';
+                if (b.ref_asset_id) {
+                    h += '<label class="st-field" style="margin:4px 0;">Usar a imagem como:'
+                        + '<select onchange="vgBeatPatch(' + b.id + ',{ref_mode:this.value})">'
+                        + '<option value="style"' + (b.ref_mode !== 'animate' ? ' selected' : '') + '>estilo (inventa em cima)</option>'
+                        + '<option value="animate"' + (b.ref_mode === 'animate' ? ' selected' : '') + '>animar a imagem (fiel)</option></select></label>';
+                }
+                h += '</div>';
+                if (b.ref_asset_id && b.ref_mode === 'animate') {
+                    var pct = Math.round((b.fidelity == null ? 0.6 : b.fidelity) * 100);
+                    h += '<label class="st-field" style="margin:4px 0;">Fidelidade à imagem: <b id="bfv-' + b.id + '">' + pct + '%</b>'
+                        + '<input type="range" min="0" max="100" value="' + pct + '" style="width:100%"'
+                        + ' oninput="var e=document.getElementById(\'bfv-' + b.id + '\');if(e)e.textContent=this.value+\'%\'"'
+                        + ' onchange="vgBeatPatch(' + b.id + ',{fidelity:(this.value/100)})">'
+                        + '<span class="st-mini">← mais fiel (pouco movimento) · mais movimento →</span></label>';
+                }
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
