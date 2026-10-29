@@ -177,6 +177,27 @@ def _mux_music(ff, silent, music_path, out_path) -> tuple[bool, str]:
                  "-c:a", "aac", "-b:a", "192k", "-shortest", out_path])
 
 
+def mux_music_segment(video_path, music_path, start_ms, out_path, ffmpeg=None) -> bool:
+    """Sobrepõe no vídeo o TRECHO da música a partir de start_ms (cortado no
+    tamanho do vídeo). Usado pra o preview do beat tocar o som certo. Se falhar,
+    copia o vídeo sem áudio (nunca quebra). Retorna True se saiu com áudio."""
+    ff = ffmpeg or get_ffmpeg()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    start = max(0, int(start_ms)) / 1000.0
+    ok, _err = _run([ff, "-y", "-i", video_path, "-ss", f"{start:.3f}", "-i", music_path,
+                     "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
+                     "-c:a", "aac", "-b:a", "192k", "-shortest", out_path])
+    if ok:
+        return True
+    # fallback: sem áudio (copia o vídeo)
+    try:
+        import shutil
+        shutil.copyfile(video_path, out_path)
+    except Exception:  # noqa: BLE001
+        pass
+    return False
+
+
 def assemble_with_transitions(clip_paths, out_path, transitions, music_path=None,
                               fps=8, ffmpeg=None) -> None:
     """Monta os beats na ordem dada, aplicando a transição de cada um em relação

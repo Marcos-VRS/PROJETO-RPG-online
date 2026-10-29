@@ -296,6 +296,10 @@ VIDEO_NEGATIVE = ("bad quality, worst quality, low quality, blurry, deformed, di
 # mais passos de amostragem, FreeInit e IP-Adapter forte. Custo: clipes bem mais lentos.
 VIDEO_CONTEXT_LENGTH = 16          # frames por janela do AnimateDiff
 VIDEO_MAX_CLIP_SECONDS = 2         # 16 frames @ 8 fps = 1 única janela
+# Beat contínuo: o AnimateDiff gera o beat inteiro de uma vez usando a janela
+# DESLIZANTE (overlap entre janelas = continuidade; mantém a roupa/aparência).
+# Teto de frames por geração pra caber nos 6GB e não demorar demais.
+VIDEO_BEAT_MAX_FRAMES = 48         # 6s @ 8 fps
 VIDEO_MIN_STEPS = 14
 VIDEO_REF_WEIGHT = 0.85
 VIDEO_FREEINIT_ITERATIONS = 2
@@ -436,19 +440,22 @@ def _build_animatediff_graph(prompt, negative, width, height, frames, fps, steps
 def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height=512,
                       steps=VIDEO_MIN_STEPS, cfg=1.8, seed=None, base_url=DEFAULT_URL,
                       ckpt=VIDEO_CKPT, ref_image_bytes=None, ref_image_filename="ref.png",
-                      ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0, on_beat=None) -> bytes:
+                      ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0,
+                      on_beat=None, max_frames=VIDEO_CONTEXT_LENGTH) -> bytes:
     """Gera UM clipe de vídeo (AnimateDiff) e retorna os bytes do mp4.
 
     Se ``ref_image_bytes`` vier, usa IP-Adapter: a cena sai com a aparência do
-    retrato (imagem do journal). frames = seconds*fps, limitado a UMA janela de contexto
-    (Modo Consistência). Lança RuntimeError em falha."""
+    retrato (imagem do journal). frames = seconds*fps, limitado a ``max_frames``.
+    Com max_frames > VIDEO_CONTEXT_LENGTH o AnimateDiff usa a janela DESLIZANTE
+    (overlap = continuidade, mantém a aparência ao longo do beat). Lança
+    RuntimeError em falha."""
     base = base_url.rstrip("/")
     if negative is None:
         negative = VIDEO_NEGATIVE
     if seed is None:
         seed = uuid.uuid4().int % (2 ** 31)
     steps = max(int(steps), VIDEO_MIN_STEPS)
-    frames = max(8, min(int(round(seconds * fps)), VIDEO_CONTEXT_LENGTH))
+    frames = max(8, min(int(round(seconds * fps)), int(max_frames)))
     fi = _freeinit_nodes(base) if freeinit else None
     client_id = uuid.uuid4().hex
     if ref_image_bytes:

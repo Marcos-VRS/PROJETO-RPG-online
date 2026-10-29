@@ -282,9 +282,11 @@ class Command(BaseCommand):
         except Exception:  # noqa: BLE001
             return None, ""
 
-    def _gen_one(self, project, prompt, seconds, seed, ref_bytes):
-        """Gera UM sub-clipe de 2s (com retry + espera o ComfyUI voltar).
+    def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None):
+        """Gera UM pedaço contínuo do beat (com retry + espera o ComfyUI voltar).
         Retorna bytes ou None."""
+        if max_frames is None:
+            max_frames = comfyui_client.VIDEO_BEAT_MAX_FRAMES
         for attempt in (1, 2):
             try:
                 return comfyui_client.generate_clip_mp4(
@@ -292,7 +294,7 @@ class Command(BaseCommand):
                     width=project.width, height=project.height,
                     steps=project.steps, cfg=project.cfg, seed=seed,
                     base_url=self.base_url, timeout=self.clip_timeout,
-                    ref_image_bytes=ref_bytes)
+                    ref_image_bytes=ref_bytes, max_frames=max_frames)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  sub-clipe tentativa {attempt} falhou: {str(e)[:120]}"))
@@ -326,46 +328,68 @@ class Command(BaseCommand):
         self._set_beat(beat, expanded_prompt=expanded)
         self.stdout.write(f"  prompt ({'claude' if used else 'mecanico'}): {expanded[:70]!r}")
 
-        # 2) beat = N sub-clipes de 2s encadeados (mesma referencia; seed+i).
-        n_sub = max(1, min(round((beat.duration_ms or 2000) / 2000.0), 15))
+        # 2) beat CONTÍNUO: uma geração (janela deslizante do AnimateDiff) com a
+        # MESMA seed em todos os pedaços — trava a aparência/roupa ao longo do
+        # beat. Só divide em pedaços se passar do teto de frames por geração.
+        import random  # noqa: WPS433
+        import shutil  # noqa: WPS433
+        fps = project.fps or 8
+        max_f = comfyui_client.VIDEO_BEAT_MAX_FRAMES
+        total_frames = max(8, int(round((beat.duration_ms or 2000) / 1000.0 * fps)))
         base_seed = beat.seed
         if base_seed is None:
-            import random
             base_seed = random.randint(1, 2 ** 31 - 1)
             self._set_beat(beat, seed=base_seed)
+        chunks = []
+        remaining = total_frames
+        while remaining > 0:
+            chunks.append(min(remaining, max_f))
+            remaining -= min(remaining, max_f)
         bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
                             f"beat_{beat.id}")
         os.makedirs(bdir, exist_ok=True)
-        subs = []
-        for j in range(n_sub):
-            self._set_beat(beat, progress=f"gerando {j+1}/{n_sub}")
+        parts = []
+        for idx, fcount in enumerate(chunks):
+            self._set_beat(beat, progress=(f"gerando {idx+1}/{len(chunks)}"
+                           if len(chunks) > 1 else "gerando o beat..."))
             comfyui_client.free_memory(self.base_url)
-            mp4 = self._gen_one(project, expanded, 2, (base_seed + j) % (2 ** 31), ref_bytes)
+            mp4 = self._gen_one(project, expanded, fcount / fps, base_seed, ref_bytes,
+                                max_frames=max_f)
             if mp4 is None:
-                if subs:  # usa o que já saiu
+                if parts:  # usa o que já saiu
                     break
-                self._fail_beat(beat, "ComfyUI instavel — nenhum sub-clipe gerado.")
+                self._fail_beat(beat, "ComfyUI instavel — nada gerado.")
                 return
-            sp = os.path.join(bdir, f"sub_{j:03d}.mp4")
+            sp = os.path.join(bdir, f"part_{idx:03d}.mp4")
             with open(sp, "wb") as f:
                 f.write(mp4)
-            subs.append(sp)
+            parts.append(sp)
 
-        # 3) junta os sub-clipes num clipe do beat.
+        # 3) junta os pedaços num vídeo mudo, depois sobrepõe o TRECHO da música
+        # [start_ms, dur] pra o preview do beat tocar com som.
         rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
         out = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+        silent = os.path.join(bdir, "silent.mp4")
         try:
-            if len(subs) == 1:
-                import shutil
-                shutil.copyfile(subs[0], out)
+            if len(parts) == 1:
+                shutil.copyfile(parts[0], silent)
             else:
-                video_assembly.assemble(subs, out)  # concat sem musica
+                video_assembly.assemble(parts, silent)  # concat sem música
         except Exception as e:  # noqa: BLE001
             self._fail_beat(beat, f"juncao do beat falhou: {e}")
             return
+        music = None
+        if project.music_file:
+            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
+        has_audio = False
+        if music:
+            has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
+        else:
+            shutil.copyfile(silent, out)
         self._set_beat(beat, clip_file=rel, status="done",
-                       progress=f"pronto ({len(subs)} clipe(s) de 2s)")
-        self.stdout.write(self.style.SUCCESS(f"beat #{beat.id} OK ({len(subs)} sub-clipes)."))
+                       progress=f"pronto ({total_frames} frames" + (", com som" if has_audio else "") + ")")
+        self.stdout.write(self.style.SUCCESS(
+            f"beat #{beat.id} OK ({total_frames} frames, {len(parts)} pedaco(s), som={has_audio})."))
 
     def _assemble_project(self, req):
         """Monta o vídeo final do projeto de beats: clipes na ordem + transições

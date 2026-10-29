@@ -108,6 +108,7 @@
             <!-- editor aberto -->
             <div id="vg-editor" class="st-hide">
                 <a class="voltar" href="#" onclick="vgCloseProject();return false;">← todos os projetos</a>
+                <button type="button" style="float:right;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-size:13px;" onclick="vgRefresh()">🔄 Atualizar</button>
                 <div class="st-card">
                     <div class="st-row">
                         <div><b id="ed-title">Projeto</b><div class="st-mini" id="ed-audio"></div></div>
@@ -202,6 +203,14 @@
         var _proj = null;         // projeto aberto (detalhe)
         var _journal = [];        // imagens do journal [{id,name,url}]
         var _refBeatId = null;    // beat em edição no modal de referência
+        var _lastSig = null;      // assinatura do estado (re-renderiza só quando muda)
+        function vgSig(p) {
+            return JSON.stringify([p.status, p.has_result, p.progress,
+                (p.comfy && p.comfy.online) || false,
+                (p.beats || []).map(function (b) {
+                    return [b.id, b.status, b.progress, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.transition, b.transition_ms, b.error];
+                })]);
+        }
 
         function csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
         function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
@@ -317,7 +326,8 @@
                 document.getElementById('vg-editor').classList.remove('st-hide');
                 vgFillTheme();
                 vgRenderEditor();
-                vgScheduleEditorPoll();
+                _lastSig = vgSig(d.project);
+                vgSchedulePoll();
             }).catch(function () {});
         }
         function vgCloseProject() {
@@ -464,15 +474,25 @@
         function vgRefresh() {
             if (!_proj) return;
             fetch('/videogen/project/' + _proj.id + '/').then(function (r) { return r.json(); }).then(function (d) {
-                if (d && d.ok) { _proj = d.project; vgComfyBadge(d.project.comfy, d.project.video_models); vgRenderEditor(); }
-            }).catch(function () {});
+                if (d && d.ok) {
+                    _proj = d.project;
+                    vgComfyBadge(d.project.comfy, d.project.video_models);
+                    // re-renderiza só se o estado mudou (não apaga o que você está digitando)
+                    var sig = vgSig(d.project);
+                    if (sig !== _lastSig) { _lastSig = sig; vgRenderEditor(); }
+                }
+                vgSchedulePoll();  // reagenda SEMPRE com o dado NOVO (consertou a tela travada)
+            }).catch(function () { vgSchedulePoll(); });  // erro de rede transitório: segue tentando
         }
-        function vgScheduleEditorPoll() {
+        function vgSchedulePoll() {
             if (_poll) clearTimeout(_poll);
-            var active = _proj && ((_proj.beats || []).some(function (b) { return b.status === 'pending' || b.status === 'processing'; })
-                || _proj.status === 'pending' || _proj.status === 'processing');
-            if (active) _poll = setTimeout(function () { vgRefresh(); vgScheduleEditorPoll(); }, 5000);
+            if (!_proj) return;
+            var active = (_proj.beats || []).some(function (b) { return b.status === 'pending' || b.status === 'processing'; })
+                || _proj.status === 'pending' || _proj.status === 'processing';
+            // Enquanto gera: 4s. Parado: um heartbeat lento de 20s pra nunca ficar preso num estado velho.
+            _poll = setTimeout(vgRefresh, active ? 4000 : 20000);
         }
+        function vgScheduleEditorPoll() { vgSchedulePoll(); }  // compat
 
         // ---------- modal de referência ----------
         function vgRefOpen(beatId) {
