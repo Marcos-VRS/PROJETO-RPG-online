@@ -189,6 +189,17 @@ urlpatterns = [
     path("videogen/<int:req_id>/discard/", views.videogen_discard, name="videogen_discard"),
     path("videogen/<int:req_id>/resume/", views.videogen_resume, name="videogen_resume"),
     path("videogen/<int:req_id>/pause/", views.videogen_pause, name="videogen_pause"),
+    # Editor de beats (cena por cena na timeline do áudio)
+    path("videogen/<int:campanha_id>/project/create/", views.videogen_project_create, name="videogen_project_create"),
+    path("videogen/<int:campanha_id>/projects/", views.videogen_projects, name="videogen_projects"),
+    path("videogen/project/<int:req_id>/", views.videogen_project_detail, name="videogen_project_detail"),
+    path("videogen/project/<int:req_id>/beat/add/", views.videogen_beat_add, name="videogen_beat_add"),
+    path("videogen/project/<int:req_id>/beat/reorder/", views.videogen_beat_reorder, name="videogen_beat_reorder"),
+    path("videogen/project/<int:req_id>/assemble/", views.videogen_project_assemble, name="videogen_project_assemble"),
+    path("videogen/beat/<int:beat_id>/update/", views.videogen_beat_update, name="videogen_beat_update"),
+    path("videogen/beat/<int:beat_id>/delete/", views.videogen_beat_delete, name="videogen_beat_delete"),
+    path("videogen/beat/<int:beat_id>/generate/", views.videogen_beat_generate, name="videogen_beat_generate"),
+    path("videogen/beat/<int:beat_id>/mp4/", views.videogen_beat_mp4, name="videogen_beat_mp4"),
     # GM Tool Box (biblioteca pessoal do user)
     path("toolbox/", views.toolbox_list, name="toolbox_list"),
     path("toolbox/create/", views.toolbox_create, name="toolbox_create"),

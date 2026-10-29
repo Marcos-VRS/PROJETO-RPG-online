@@ -91,6 +91,24 @@ def _run(cmd) -> tuple[bool, str]:
         return False, str(exc)
 
 
+def media_duration_ms(path, ffmpeg=None) -> int:
+    """Duração de um áudio/vídeo em ms, lendo a saída do ffmpeg (sem ffprobe,
+    que não vem com o imageio-ffmpeg). Retorna 0 se não conseguir."""
+    import re
+    ff = ffmpeg or get_ffmpeg()
+    try:
+        p = subprocess.run([ff, "-i", path], stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, timeout=60)
+        txt = (p.stderr or b"").decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001
+        return 0
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+)\.(\d+)", txt)
+    if not m:
+        return 0
+    h, mn, s, cs = m.groups()
+    return int(((int(h) * 3600 + int(mn) * 60 + int(s)) * 100 + int(cs)) * 10)
+
+
 def assemble(clip_paths, out_path, music_path=None, ffmpeg=None) -> None:
     """Concatena os clipes (mesmo codec/params → concat sem recodificar) e, se
     houver, sobrepõe a música (em loop, cortada no tamanho do vídeo). Lança
@@ -135,6 +153,129 @@ def assemble(clip_paths, out_path, music_path=None, ffmpeg=None) -> None:
     _cleanup(listfile, silent)
     if not ok:
         raise RuntimeError("ffmpeg mux de áudio falhou: " + err)
+
+
+def _concat_copy(ff, clip_paths, out_path) -> tuple[bool, str]:
+    """Concatena clipes sem recodificar (concat demuxer). Fallback reencode."""
+    listfile = os.path.join(tempfile.gettempdir(),
+                            f"rpg_seg_{os.getpid()}_{random.randint(0, 1 << 30)}.txt")
+    with open(listfile, "w", encoding="utf-8") as f:
+        for c in clip_paths:
+            f.write("file '" + c.replace("\\", "/").replace("'", "'\\''") + "'\n")
+    ok, err = _run([ff, "-y", "-f", "concat", "-safe", "0", "-i", listfile,
+                    "-c", "copy", out_path])
+    if not ok:
+        ok, err = _run([ff, "-y", "-f", "concat", "-safe", "0", "-i", listfile,
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path])
+    _cleanup(listfile)
+    return ok, err
+
+
+def _mux_music(ff, silent, music_path, out_path) -> tuple[bool, str]:
+    return _run([ff, "-y", "-i", silent, "-stream_loop", "-1", "-i", music_path,
+                 "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
+                 "-c:a", "aac", "-b:a", "192k", "-shortest", out_path])
+
+
+def assemble_with_transitions(clip_paths, out_path, transitions, music_path=None,
+                              fps=8, ffmpeg=None) -> None:
+    """Monta os beats na ordem dada, aplicando a transição de cada um em relação
+    ao anterior. `transitions[i]` = {"type": "cut"|"crossfade", "ms": int} descreve
+    como o clipe i ENTRA (transitions[0] é ignorado). Cortes secos viram concat
+    rápido; crossfades usam o filtro xfade do ffmpeg. Lança RuntimeError em falha.
+    """
+    if not clip_paths:
+        raise RuntimeError("sem clipes pra montar")
+    ff = ffmpeg or get_ffmpeg()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    transitions = list(transitions or [])
+    while len(transitions) < len(clip_paths):
+        transitions.append({"type": "cut", "ms": 0})
+
+    # 1) Agrupa clipes ligados por CORTE SECO em segmentos (concat rápido); um
+    # CROSSFADE quebra o segmento e vira uma junção xfade entre segmentos.
+    segments = [[clip_paths[0]]]
+    xfades = []  # segundos de crossfade entre segment[k-1] e segment[k]
+    for i in range(1, len(clip_paths)):
+        t = transitions[i] or {}
+        if (t.get("type") == "crossfade") and int(t.get("ms") or 0) > 0:
+            segments.append([clip_paths[i]])
+            xfades.append(max(0.1, int(t["ms"]) / 1000.0))
+        else:
+            segments[-1].append(clip_paths[i])
+
+    tmp = []
+    try:
+        # Sem nenhum crossfade: é um único segmento = concat simples.
+        if len(segments) == 1:
+            if not music_path:
+                ok, err = _concat_copy(ff, segments[0], out_path)
+                if not ok:
+                    raise RuntimeError("ffmpeg concat falhou: " + err)
+                return
+            silent = out_path + ".silent.mp4"
+            tmp.append(silent)
+            ok, err = _concat_copy(ff, segments[0], silent)
+            if not ok:
+                raise RuntimeError("ffmpeg concat falhou: " + err)
+            ok, err = _mux_music(ff, silent, music_path, out_path)
+            if not ok:
+                raise RuntimeError("ffmpeg mux de áudio falhou: " + err)
+            return
+
+        # 2) Concatena cada segmento num arquivo real (cortes secos internos).
+        seg_files = []
+        for idx, seg in enumerate(segments):
+            if len(seg) == 1:
+                sf = seg[0]
+            else:
+                sf = os.path.join(tempfile.gettempdir(),
+                                  f"rpg_segf_{os.getpid()}_{idx}.mp4")
+                tmp.append(sf)
+                ok, err = _concat_copy(ff, seg, sf)
+                if not ok:
+                    raise RuntimeError("ffmpeg concat de segmento falhou: " + err)
+            seg_files.append(sf)
+
+        # 3) Crossfade PAR A PAR, materializando cada intermediário. O xfade
+        # encadeado num filtergraph só falha porque o output intermediário não
+        # tem duração no config; materializar em arquivo real resolve (o offset é
+        # medido do arquivo). Cada passo é um xfade simples de 2 entradas.
+        merged = seg_files[0]
+        merged_tmp = False
+        for k in range(1, len(seg_files)):
+            d = xfades[k - 1]
+            dur = media_duration_ms(merged, ff) / 1000.0
+            if dur <= 0:
+                dur = 2.0
+            offset = max(0.1, dur - d)
+            nxt = os.path.join(tempfile.gettempdir(),
+                               f"rpg_xf_{os.getpid()}_{k}.mp4")
+            # xfade cru de 2 entradas (clipes são uniformes: mesmo tamanho/fps/encoder).
+            # Normalizar com fps/setsar/setpts quebra o config do xfade neste build.
+            fg = f"[0:v][1:v]xfade=transition=fade:duration={d:.3f}:offset={offset:.3f}[out]"
+            ok, err = _run([ff, "-y", "-i", merged, "-i", seg_files[k],
+                            "-filter_complex", fg, "-map", "[out]",
+                            "-c:v", "libx264", "-pix_fmt", "yuv420p", nxt])
+            if merged_tmp:
+                _cleanup(merged)
+            if not ok:
+                _cleanup(nxt)
+                raise RuntimeError("ffmpeg xfade falhou: " + err)
+            merged, merged_tmp = nxt, True
+            tmp.append(nxt)
+
+        if not music_path:
+            import shutil
+            shutil.move(merged, out_path)
+            if merged in tmp:
+                tmp.remove(merged)
+        else:
+            ok, err = _mux_music(ff, merged, music_path, out_path)
+            if not ok:
+                raise RuntimeError("ffmpeg mux de áudio falhou: " + err)
+    finally:
+        _cleanup(*tmp)
 
 
 def _cleanup(*paths):

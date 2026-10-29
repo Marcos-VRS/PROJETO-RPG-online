@@ -509,6 +509,7 @@ class VideoGenRequest(models.Model):
     padrão de fila/aprovação do ImageGenRequest; nunca quebra o serviço.
     """
     STATUS_CHOICES = [
+        ("editing", "Editando beats"),
         ("pending", "Pendente"),
         ("processing", "Processando"),
         ("done", "Pronto (aguardando aprovação)"),
@@ -516,12 +517,18 @@ class VideoGenRequest(models.Model):
         ("approved", "Aprovado"),
         ("discarded", "Descartado"),
     ]
+    # "auto" = storyboard automático (o claude escreve tudo; fluxo antigo).
+    # "beats" = editor de beats (o GM dita cena por cena na timeline do áudio).
+    MODE_CHOICES = [("auto", "Storyboard automático"), ("beats", "Editor de beats")]
     campanha = models.ForeignKey(
         Campanha, on_delete=models.CASCADE, related_name="videogen_requests"
     )
     requested_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
+    mode = models.CharField(max_length=8, choices=MODE_CHOICES, default="auto")
+    # Duração do áudio escolhido (minutagem base pra alinhar os beats na timeline).
+    audio_duration_ms = models.IntegerField(default=0)
     prompt = models.TextField()  # pedido cru do GM
     style = models.CharField(max_length=32, blank=True, default="anime")
     use_context = models.BooleanField(default=True)
@@ -552,3 +559,51 @@ class VideoGenRequest(models.Model):
 
     def __str__(self):
         return f"VideoGen #{self.id} [{self.status}] {self.prompt[:40]}"
+
+
+class VideoBeat(models.Model):
+    """Um BEAT (cena) de um projeto de vídeo em modo editor.
+
+    O GM dita cena por cena na timeline do áudio. Cada beat tem um prompt
+    (cumulativo: o claude lê os beats anteriores pra manter coerência), uma
+    imagem de referência opcional do journal, uma duração (fatia do áudio) e um
+    clipe gerado. Beat longo = vários clipes de 2s encadeados (Modo Consistência).
+    Transição controla como ele entra em relação ao beat anterior na montagem.
+    """
+    STATUS_CHOICES = [
+        ("empty", "Sem clipe (não gerado)"),
+        ("pending", "Na fila"),
+        ("processing", "Gerando"),
+        ("done", "Pronto"),
+        ("failed", "Falhou"),
+    ]
+    TRANSITION_CHOICES = [("cut", "Corte seco"), ("crossfade", "Crossfade")]
+
+    project = models.ForeignKey(
+        VideoGenRequest, on_delete=models.CASCADE, related_name="beats"
+    )
+    order = models.IntegerField(default=0)  # sequência na montagem (0 = primeiro)
+    duration_ms = models.IntegerField(default=2000)  # fatia do áudio que este beat ocupa
+    user_prompt = models.TextField(blank=True, default="")  # o que o GM ditou
+    correction = models.TextField(blank=True, default="")  # instrução de correção p/ regerar
+    expanded_prompt = models.TextField(blank=True, default="")  # prompt cumulativo (claude)
+    ref_asset = models.ForeignKey(
+        CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="+",
+    )
+    seed = models.BigIntegerField(null=True, blank=True)  # base; sub-clipes = seed+i
+    clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")
+    progress = models.CharField(max_length=120, blank=True, default="")
+    error = models.TextField(blank=True, default="")
+    # Transição DESTE beat em relação ao anterior (o 1º beat ignora).
+    transition = models.CharField(max_length=10, choices=TRANSITION_CHOICES, default="cut")
+    transition_ms = models.IntegerField(default=500)  # duração do crossfade
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"Beat #{self.id} (proj {self.project_id}) ord={self.order} [{self.status}]"

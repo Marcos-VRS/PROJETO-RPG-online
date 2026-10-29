@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}?d={% now 'U' %}">
     <title>Estúdio de Vídeo</title>
     <style>
-        .st-wrap { max-width: 720px; margin: 0 auto; padding: 16px; color: #e8e8e8; }
+        .st-wrap { max-width: 820px; margin: 0 auto; padding: 16px; color: #e8e8e8; }
         .st-wrap a.voltar { color: #c9a55c; font-size: 14px; }
         .st-field { display: block; margin: 10px 0; font-size: 14px; color: #c0c0cc; }
-        .st-field select, .st-field input[type=text], .st-wrap textarea {
+        .st-field select, .st-field input[type=text], .st-field input[type=number], .st-wrap textarea {
             width: 100%; background: #26262e; color: #e8e8e8; border: 1px solid #444;
             border-radius: 6px; padding: 8px; font-family: inherit; box-sizing: border-box; }
         .st-wrap textarea { resize: vertical; }
@@ -24,17 +24,37 @@
         .st-status { color: #c9a55c; font-size: 13px; min-height: 18px; margin: 8px 0; }
         .st-card { background: #24242c; border: 1px solid #383840; border-radius: 8px; padding: 10px; margin-top: 12px; }
         .st-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #444; }
-        .st-badge.processing { background: #3a5a8a; } .st-badge.done { background: #2e7d46; }
-        .st-badge.failed { background: #8a2e2e; } .st-badge.approved { background: #6a4ea0; }
+        .st-badge.processing, .st-badge.pending { background: #3a5a8a; } .st-badge.done { background: #2e7d46; }
+        .st-badge.failed { background: #8a2e2e; } .st-badge.approved { background: #6a4ea0; } .st-badge.empty { background: #555; }
         .st-prompt { font-size: 13px; margin: 6px 0; }
         .st-xprompt { font-size: 11px; color: #999; } .st-xprompt pre { white-space: pre-wrap; margin: 3px 0 0; font-size: 10px; line-height: 1.35; }
-        .st-video { width: 100%; border-radius: 6px; margin-top: 6px; background: #000; }
+        .st-video { width: 100%; border-radius: 6px; margin-top: 6px; background: #000; max-height: 320px; }
         .st-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-        .st-actions button { flex: 1; min-width: 110px; padding: 8px; border: none; border-radius: 5px; cursor: pointer; background: #3a3a44; color: #eee; }
-        .st-approve { background: #2e7d46 !important; }
+        .st-actions button { flex: 1; min-width: 90px; padding: 8px; border: none; border-radius: 5px; cursor: pointer; background: #3a3a44; color: #eee; font-size: 13px; }
+        .st-approve { background: #2e7d46 !important; } .st-danger { background: #6a2e2e !important; }
         .st-err { color: #ff8a8a; font-size: 12px; }
         .st-mood { font-size: 11px; color: #c9a55c; margin-left: 6px; }
         .st-prog { font-size: 12px; color: #7fb0ff; }
+        .st-tabs { display: flex; gap: 8px; margin: 14px 0 4px; }
+        .st-tab { flex: 1; text-align: center; padding: 10px; border-radius: 6px; cursor: pointer; background: #26262e; border: 1px solid #383840; color: #cfcfd6; font-weight: 700; }
+        .st-tab.on { background: #3a2650; border-color: #7a2ea0; color: #fff; }
+        .st-timeline { height: 26px; border-radius: 6px; background: #1c1c22; border: 1px solid #383840; display: flex; overflow: hidden; margin: 6px 0; }
+        .st-tl-seg { height: 100%; border-right: 1px solid #0008; font-size: 10px; color: #0009; display: flex; align-items: center; justify-content: center; min-width: 2px; }
+        .st-beat { border-left: 4px solid #7a2ea0; }
+        .st-beat.empty { border-left-color: #666; } .st-beat.done { border-left-color: #2e7d46; } .st-beat.failed { border-left-color: #8a2e2e; }
+        .st-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .st-row > * { flex: 1; min-width: 120px; }
+        .st-mini { font-size: 12px; color: #9a9aa5; }
+        .st-reftip { display: inline-block; margin-top: 4px; font-size: 12px; color: #c9a55c; }
+        .st-refgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 8px; max-height: 320px; overflow: auto; }
+        .st-refgrid figure { margin: 0; cursor: pointer; border: 2px solid transparent; border-radius: 6px; padding: 3px; background: #1c1c22; }
+        .st-refgrid figure:hover { border-color: #7a2ea0; }
+        .st-refgrid img { width: 100%; height: 70px; object-fit: cover; border-radius: 4px; }
+        .st-refgrid figcaption { font-size: 10px; color: #bbb; text-align: center; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .st-modal { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; z-index: 50; }
+        .st-modal.on { display: flex; }
+        .st-modal-box { background: #22222a; border: 1px solid #444; border-radius: 10px; padding: 16px; max-width: 560px; width: 92%; }
+        .st-hide { display: none !important; }
     </style>
 </head>
 
@@ -42,62 +62,370 @@
     <div class="st-wrap">
         <a class="voltar" href="{% url 'gurps:carregar_campanha_gm' %}">← voltar</a>
         <h1 class="titulo-pagina medievalsharp-regular" style="font-size:2rem;">🎬 Estúdio de Vídeo — {{ campanha.nome }}</h1>
-        <p style="font-size:13px;color:#9a9aa5;">Descreva o que aconteceu. A IA lê o journal, escreve um roteiro em cenas
-            e monta um vídeo estilo anime usando os retratos dos personagens. Leva de minutos a horas — pode fechar e
-            voltar; dá pra <b>pausar e ver a prévia</b> e <b>continuar de onde parou</b>.</p>
+        <p class="st-mini" id="vg-comfy"></p>
 
-        <label class="st-field">O que aconteceu:
-            <textarea id="vg-prompt" rows="3" placeholder="Ex.: 'abertura de anime com os personagens do grupo em cenas de ação'"></textarea>
-        </label>
-        <label class="st-field">Estilo:
-            <select id="vg-style">
-                <option value="anime">Anime (padrão)</option>
-                <option value="cinematic_dark">Cinematográfico escuro</option>
-                <option value="gritty">Grimdark</option>
-                <option value="oil">Pintura a óleo</option>
-            </select>
-        </label>
-        <label class="st-field">Duração alvo:
-            <select id="vg-seconds">
-                <option value="30">~30s (rápido)</option>
-                <option value="60">~60s</option>
-                <option value="90" selected>~90s</option>
-                <option value="120">~120s</option>
-            </select>
-        </label>
-        <label class="st-field">Música:
-            <select id="vg-music"><option value="">Automática (pelo clima da cena)</option></select>
-        </label>
-        <label class="st-field" style="font-size:12px;">…ou enviar uma música:
-            <input type="file" id="vg-music-upload" accept="audio/*">
-        </label>
-        <label class="st-field st-check"><input type="checkbox" id="vg-context" checked> Ler o journal (coerência com o mundo)</label>
-        <button type="button" class="st-gen" onclick="rd6VideoSubmit()">Gerar vídeo</button>
-        <p class="st-status" id="vg-status"></p>
-        <div id="vg-list"></div>
+        <div class="st-tabs">
+            <div class="st-tab on" id="tab-beats" onclick="vgTab('beats')">🎞️ Editor de beats (cena por cena)</div>
+            <div class="st-tab" id="tab-auto" onclick="vgTab('auto')">⚡ Modo rápido (automático)</div>
+        </div>
+
+        <!-- ================= EDITOR DE BEATS ================= -->
+        <div id="pane-beats">
+            <!-- lista / criar projeto -->
+            <div id="vg-proj-home">
+                <p style="font-size:13px;color:#9a9aa5;">Monte o vídeo <b>cena por cena (beat a beat)</b> na linha do tempo da música:
+                    escolha o áudio, crie cada beat com seu prompt (cada beat lê os anteriores pra manter coerência),
+                    gere, corrija, reordene — e no fim mande <b>montar</b> com as transições.</p>
+                <div class="st-card">
+                    <h3 style="margin:0 0 6px;">➕ Novo projeto</h3>
+                    <label class="st-field">Música (a duração dela ancora os beats):
+                        <select id="np-music"><option value="">— escolha uma faixa —</option></select>
+                    </label>
+                    <label class="st-field" style="font-size:12px;">…ou enviar uma música:
+                        <input type="file" id="np-music-upload" accept="audio/*">
+                    </label>
+                    <div class="st-row">
+                        <label class="st-field">Estilo:
+                            <select id="np-style">
+                                <option value="anime">Anime (padrão)</option>
+                                <option value="cinematic_dark">Cinematográfico escuro</option>
+                                <option value="gritty">Grimdark</option>
+                                <option value="oil">Pintura a óleo</option>
+                            </select>
+                        </label>
+                        <label class="st-field st-check" style="align-self:end;"><input type="checkbox" id="np-context" checked> Ler o journal</label>
+                    </div>
+                    <label class="st-field">Ideia geral do vídeo (opcional):
+                        <textarea id="np-prompt" rows="2" placeholder="Ex.: 'abertura de anime do grupo, da cidade portuária à batalha final'"></textarea>
+                    </label>
+                    <button type="button" class="st-gen" onclick="vgProjCreate()">Criar projeto</button>
+                    <p class="st-status" id="np-status"></p>
+                </div>
+                <h3 style="margin-top:18px;">Projetos</h3>
+                <div id="vg-proj-list"><p class="st-mini">carregando…</p></div>
+            </div>
+
+            <!-- editor aberto -->
+            <div id="vg-editor" class="st-hide">
+                <a class="voltar" href="#" onclick="vgCloseProject();return false;">← todos os projetos</a>
+                <div class="st-card">
+                    <div class="st-row">
+                        <div><b id="ed-title">Projeto</b><div class="st-mini" id="ed-audio"></div></div>
+                        <div style="text-align:right;"><span class="st-mini" id="ed-fill"></span></div>
+                    </div>
+                    <div class="st-timeline" id="ed-timeline"></div>
+                </div>
+                <div id="ed-beats"></div>
+                <button type="button" class="st-gen" style="background:#2a5a7a;margin-top:10px;" onclick="vgBeatAdd()">➕ Adicionar beat</button>
+                <button type="button" class="st-gen" style="margin-top:8px;" onclick="vgAssemble()">🎬 Montar vídeo (com as transições)</button>
+                <p class="st-status" id="ed-status"></p>
+                <div id="ed-final"></div>
+            </div>
+        </div>
+
+        <!-- ================= MODO RÁPIDO (LEGADO) ================= -->
+        <div id="pane-auto" class="st-hide">
+            <p style="font-size:13px;color:#9a9aa5;">Descreva o que aconteceu. A IA lê o journal, escreve um roteiro
+                e monta um vídeo anime sozinha. Dá pra <b>pausar e ver a prévia</b> e <b>continuar de onde parou</b>.</p>
+            <label class="st-field">O que aconteceu:
+                <textarea id="vg-prompt" rows="3" placeholder="Ex.: 'abertura de anime com os personagens do grupo em cenas de ação'"></textarea>
+            </label>
+            <label class="st-field">Estilo:
+                <select id="vg-style">
+                    <option value="anime">Anime (padrão)</option>
+                    <option value="cinematic_dark">Cinematográfico escuro</option>
+                    <option value="gritty">Grimdark</option>
+                    <option value="oil">Pintura a óleo</option>
+                </select>
+            </label>
+            <label class="st-field">Duração alvo:
+                <select id="vg-seconds">
+                    <option value="30">~30s (rápido)</option>
+                    <option value="60">~60s</option>
+                    <option value="90" selected>~90s</option>
+                    <option value="120">~120s</option>
+                </select>
+            </label>
+            <label class="st-field">Música:
+                <select id="vg-music"><option value="">Automática (pelo clima da cena)</option></select>
+            </label>
+            <label class="st-field" style="font-size:12px;">…ou enviar uma música:
+                <input type="file" id="vg-music-upload" accept="audio/*">
+            </label>
+            <label class="st-field st-check"><input type="checkbox" id="vg-context" checked> Ler o journal (coerência com o mundo)</label>
+            <button type="button" class="st-gen" onclick="rd6VideoSubmit()">Gerar vídeo</button>
+            <p class="st-status" id="vg-status"></p>
+            <div id="vg-list"></div>
+        </div>
+    </div>
+
+    <!-- modal do seletor de referência do journal -->
+    <div class="st-modal" id="ref-modal">
+        <div class="st-modal-box">
+            <div class="st-row"><b>Imagem de referência do journal</b>
+                <button class="st-actions" style="flex:0;min-width:60px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:6px 10px;cursor:pointer;" onclick="vgRefClose()">fechar</button></div>
+            <p class="st-mini">Clique numa imagem pra travar a aparência do personagem neste beat (IP-Adapter), ou remova.</p>
+            <div class="st-actions"><button onclick="vgRefPick(null)">✕ Sem referência</button></div>
+            <div class="st-refgrid" id="ref-grid"></div>
+        </div>
     </div>
 
     {% csrf_token %}
     <script>
-        var RD6_VG_CAMP = {{ campanha.id }};
-        var _vgPoll = null;
-        function rd6Csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
-        function rd6Esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
-        function rd6VgLoadMusic() {
-            var sel = document.getElementById('vg-music');
-            fetch('/videogen/' + RD6_VG_CAMP + '/music/').then(function (r) { return r.json(); }).then(function (d) {
+        var CAMP = {{ campanha.id }};
+        var _poll = null, _vgPoll = null;
+        var _proj = null;         // projeto aberto (detalhe)
+        var _journal = [];        // imagens do journal [{id,name,url}]
+        var _refBeatId = null;    // beat em edição no modal de referência
+
+        function csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
+        function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+        function post(url, body) {
+            var opt = { method: 'POST', headers: { 'X-CSRFToken': csrf() } };
+            if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+            return fetch(url, opt).then(function (r) { return r.json(); });
+        }
+        function mmss(ms) { var s = Math.round((ms || 0) / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+
+        function vgTab(which) {
+            document.getElementById('tab-beats').classList.toggle('on', which === 'beats');
+            document.getElementById('tab-auto').classList.toggle('on', which === 'auto');
+            document.getElementById('pane-beats').classList.toggle('st-hide', which !== 'beats');
+            document.getElementById('pane-auto').classList.toggle('st-hide', which !== 'auto');
+            if (which === 'auto') rd6VideoPoll();
+        }
+
+        function vgComfyBadge(comfy, models) {
+            var el = document.getElementById('vg-comfy');
+            if (comfy && comfy.online && models) { el.innerHTML = '🟢 ComfyUI pronto (geração de vídeo disponível).'; }
+            else if (comfy && comfy.online && !models) { el.innerHTML = '🟠 ComfyUI online, mas faltam os modelos de vídeo no host.'; }
+            else { el.innerHTML = '🟠 ComfyUI iniciando/offline — ele sobe junto do app; se você acabou de abrir, aguarde o boot (os pedidos ficam na fila e geram quando ele voltar).'; }
+        }
+
+        // ---------- música (compartilhada) ----------
+        function loadMusic() {
+            fetch('/videogen/' + CAMP + '/music/').then(function (r) { return r.json(); }).then(function (d) {
                 var tracks = (d && d.tracks) || [];
-                sel.innerHTML = '<option value="">Automática (pelo clima da cena)</option>';
-                var byMood = {};
-                tracks.forEach(function (t) { (byMood[t.mood] = byMood[t.mood] || []).push(t); });
-                Object.keys(byMood).sort().forEach(function (mood) {
-                    var og = document.createElement('optgroup');
-                    og.label = (mood === 'uploads') ? 'Enviadas por você' : mood;
-                    byMood[mood].forEach(function (t) { var o = document.createElement('option'); o.value = t.rel; o.textContent = t.name; og.appendChild(o); });
-                    sel.appendChild(og);
+                [['np-music', '— escolha uma faixa —'], ['vg-music', 'Automática (pelo clima da cena)']].forEach(function (pair) {
+                    var sel = document.getElementById(pair[0]); if (!sel) return;
+                    sel.innerHTML = '<option value="">' + pair[1] + '</option>';
+                    var byMood = {};
+                    tracks.forEach(function (t) { (byMood[t.mood] = byMood[t.mood] || []).push(t); });
+                    Object.keys(byMood).sort().forEach(function (mood) {
+                        var og = document.createElement('optgroup');
+                        og.label = (mood === 'uploads') ? 'Enviadas por você' : mood;
+                        byMood[mood].forEach(function (t) { var o = document.createElement('option'); o.value = t.rel; o.textContent = t.name; og.appendChild(o); });
+                        sel.appendChild(og);
+                    });
                 });
             }).catch(function () {});
         }
+        function loadJournal() {
+            fetch('/imagegen/' + CAMP + '/journal/').then(function (r) { return r.json(); }).then(function (d) {
+                _journal = (d && d.items) || [];
+            }).catch(function () {});
+        }
+
+        // ---------- criar / listar projetos ----------
+        function vgProjCreate() {
+            var st = document.getElementById('np-status'); st.textContent = 'Criando…';
+            var fd = new FormData();
+            fd.append('style', document.getElementById('np-style').value);
+            fd.append('use_context', document.getElementById('np-context').checked ? '1' : '0');
+            fd.append('prompt', document.getElementById('np-prompt').value || '');
+            fd.append('music_file', document.getElementById('np-music').value || '');
+            var up = document.getElementById('np-music-upload');
+            if (up && up.files && up.files[0]) fd.append('music_upload', up.files[0]);
+            fetch('/videogen/' + CAMP + '/project/create/', { method: 'POST', headers: { 'X-CSRFToken': csrf() }, body: fd })
+                .then(function (r) { return r.json(); }).then(function (d) {
+                    if (d && d.ok) { st.textContent = ''; vgOpenProject(d.project.id); }
+                    else { st.textContent = (d && d.error) || 'erro ao criar.'; }
+                }).catch(function () { st.textContent = 'falha de rede.'; });
+        }
+        function vgLoadProjects() {
+            fetch('/videogen/' + CAMP + '/projects/').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d || !d.ok) return;
+                vgComfyBadge(d.comfy, d.video_models);
+                var box = document.getElementById('vg-proj-list');
+                var ps = d.projects || [];
+                if (!ps.length) { box.innerHTML = '<p class="st-mini">nenhum projeto ainda.</p>'; return; }
+                box.innerHTML = ps.map(function (p) {
+                    var S = { editing: 'editando', pending: 'na fila', processing: 'montando', done: 'pronto', failed: 'falhou', approved: 'aprovado' };
+                    return '<div class="st-card"><span class="st-badge ' + p.status + '">' + (S[p.status] || p.status) + '</span> '
+                        + '<b>' + esc(p.prompt || 'projeto') + '</b>'
+                        + '<div class="st-mini">🎵 ' + esc(p.music_file || '—') + ' · ' + (p.beats ? p.beats.length : 0) + ' beats · áudio ' + mmss(p.audio_duration_ms) + '</div>'
+                        + '<div class="st-actions"><button onclick="vgOpenProject(' + p.id + ')">abrir</button>'
+                        + '<button class="st-danger" onclick="vgProjDiscard(' + p.id + ')">excluir</button></div></div>';
+                }).join('');
+            }).catch(function () {});
+        }
+        function vgProjDiscard(id) {
+            if (!confirm('Excluir este projeto e seus clipes?')) return;
+            post('/videogen/' + id + '/discard/').then(function () { vgLoadProjects(); }).catch(function () {});
+        }
+
+        // ---------- abrir / renderizar editor ----------
+        function vgOpenProject(id) {
+            fetch('/videogen/project/' + id + '/').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d || !d.ok) return;
+                _proj = d.project;
+                vgComfyBadge(d.project.comfy, d.project.video_models);
+                document.getElementById('vg-proj-home').classList.add('st-hide');
+                document.getElementById('vg-editor').classList.remove('st-hide');
+                vgRenderEditor();
+                vgScheduleEditorPoll();
+            }).catch(function () {});
+        }
+        function vgCloseProject() {
+            _proj = null;
+            if (_poll) { clearTimeout(_poll); _poll = null; }
+            document.getElementById('vg-editor').classList.add('st-hide');
+            document.getElementById('vg-proj-home').classList.remove('st-hide');
+            vgLoadProjects();
+        }
+        function durOptions(ms) {
+            var opts = [1000, 2000, 3000, 4000, 6000, 8000, 10000, 12000, 16000, 20000];
+            return opts.map(function (v) { return '<option value="' + v + '"' + (v === ms ? ' selected' : '') + '>' + (v / 1000) + 's</option>'; }).join('');
+        }
+        function vgRenderEditor() {
+            var p = _proj; if (!p) return;
+            document.getElementById('ed-title').textContent = p.prompt || 'Projeto de vídeo';
+            document.getElementById('ed-audio').textContent = '🎵 ' + (p.music_file || '—') + ' · duração do áudio ' + mmss(p.audio_duration_ms);
+            var fill = document.getElementById('ed-fill');
+            fill.textContent = 'beats: ' + mmss(p.used_ms) + ' / ' + mmss(p.audio_duration_ms);
+            // timeline proporcional
+            var tl = document.getElementById('ed-timeline'); tl.innerHTML = '';
+            var total = Math.max(p.audio_duration_ms || 0, p.used_ms || 1);
+            (p.beats || []).forEach(function (b, i) {
+                var seg = document.createElement('div');
+                seg.className = 'st-tl-seg';
+                seg.style.width = (100 * b.duration_ms / total) + '%';
+                seg.style.background = b.status === 'done' ? '#2e7d46' : (b.status === 'failed' ? '#8a2e2e' : '#7a2ea0');
+                seg.title = 'beat ' + (i + 1) + ' (' + (b.duration_ms / 1000) + 's)';
+                seg.textContent = (i + 1);
+                tl.appendChild(seg);
+            });
+            // cards dos beats
+            var box = document.getElementById('ed-beats');
+            var S = { empty: 'sem clipe', pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
+            box.innerHTML = (p.beats || []).map(function (b, i) {
+                var h = '<div class="st-card st-beat ' + b.status + '">';
+                h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span></div>';
+                h += '<div style="text-align:right;"><button class="st-actions" style="min-width:34px;flex:0;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;" onclick="vgBeatMove(' + b.id + ',-1)">↑</button> '
+                    + '<button class="st-actions" style="min-width:34px;flex:0;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;" onclick="vgBeatMove(' + b.id + ',1)">↓</button></div></div>';
+                // transição (menos no primeiro)
+                if (i > 0) {
+                    h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Transição: '
+                        + '<select onchange="vgBeatPatch(' + b.id + ',{transition:this.value})">'
+                        + '<option value="cut"' + (b.transition === 'cut' ? ' selected' : '') + '>corte seco</option>'
+                        + '<option value="crossfade"' + (b.transition === 'crossfade' ? ' selected' : '') + '>crossfade</option></select></label>'
+                        + '<label class="st-field" style="margin:4px 0;">Crossfade (ms): <input type="number" min="100" max="3000" step="100" value="' + b.transition_ms + '" onchange="vgBeatPatch(' + b.id + ',{transition_ms:this.value})"></label></div>';
+                }
+                h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Duração: <select onchange="vgBeatPatch(' + b.id + ',{duration_ms:this.value})">' + durOptions(b.duration_ms) + '</select></label>'
+                    + '<div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div></div>';
+                h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
+                    + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
+                h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
+                    + '<input type="text" id="bc-' + b.id + '" placeholder="ex.: menos escuro, câmera mais aberta" value="' + esc(b.correction) + '"></label>';
+                if (b.progress) h += '<div class="st-prog">⏳ ' + esc(b.progress) + '</div>';
+                if (b.error) h += '<div class="st-err">' + esc(b.error) + '</div>';
+                if (b.has_clip) h += '<video class="st-video" src="/videogen/beat/' + b.id + '/mp4/?t=' + encodeURIComponent(b.status + b.progress) + '" controls preload="metadata"></video>';
+                if (b.expanded_prompt) h += '<details class="st-xprompt"><summary>prompt da IA</summary><pre>' + esc(b.expanded_prompt) + '</pre></details>';
+                var busy = (b.status === 'pending' || b.status === 'processing');
+                h += '<div class="st-actions">'
+                    + '<button onclick="vgBeatSave(' + b.id + ')">💾 salvar</button>'
+                    + '<button class="st-approve" ' + (busy ? 'disabled' : '') + ' onclick="vgBeatGen(' + b.id + ')">' + (b.has_clip ? '♻️ regerar' : '▶️ gerar') + '</button>'
+                    + '<button class="st-danger" onclick="vgBeatDelete(' + b.id + ')">🗑️</button></div>';
+                return h + '</div>';
+            }).join('') || '<p class="st-mini">nenhum beat ainda — adicione o primeiro.</p>';
+            // vídeo final
+            var fin = document.getElementById('ed-final');
+            if (p.status === 'processing') { fin.innerHTML = '<div class="st-card"><div class="st-prog">⏳ ' + esc(p.progress || 'montando…') + '</div></div>'; }
+            else if (p.has_result) {
+                fin.innerHTML = '<div class="st-card"><b>Vídeo montado</b>' + (p.error ? ' <span class="st-err">' + esc(p.error) + '</span>' : '')
+                    + '<video class="st-video" src="/videogen/mp4/' + p.id + '/?t=' + encodeURIComponent(p.progress) + '" controls preload="metadata"></video>'
+                    + '<div class="st-actions"><button class="st-approve" onclick="vgApprove()">✓ Aprovar</button>'
+                    + '<button onclick="vgAssemble()">♻️ Remontar</button></div></div>';
+            } else { fin.innerHTML = ''; }
+        }
+
+        // ---------- ações de beat ----------
+        function vgBeatAdd() {
+            post('/videogen/project/' + _proj.id + '/beat/add/', { duration_ms: 2000, user_prompt: '', transition: 'cut' })
+                .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+        }
+        function vgBeatSave(id) {
+            var body = {
+                user_prompt: (document.getElementById('bp-' + id) || {}).value || '',
+                correction: (document.getElementById('bc-' + id) || {}).value || ''
+            };
+            post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+        }
+        function vgBeatPatch(id, body) { post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {}); }
+        function vgBeatDelete(id) { if (!confirm('Apagar este beat?')) return; post('/videogen/beat/' + id + '/delete/').then(function () { vgRefresh(); }).catch(function () {}); }
+        function vgBeatGen(id) {
+            // salva o texto atual antes de gerar
+            var body = {
+                user_prompt: (document.getElementById('bp-' + id) || {}).value || '',
+                correction: (document.getElementById('bc-' + id) || {}).value || ''
+            };
+            post('/videogen/beat/' + id + '/update/', body).then(function () {
+                return post('/videogen/beat/' + id + '/generate/');
+            }).then(function (d) {
+                if (d && d.error) { document.getElementById('ed-status').textContent = d.error; }
+                vgRefresh(); vgScheduleEditorPoll();
+            }).catch(function () {});
+        }
+        function vgBeatMove(id, dir) {
+            var beats = (_proj.beats || []).slice();
+            var idx = beats.findIndex(function (b) { return b.id === id; });
+            var j = idx + dir;
+            if (idx < 0 || j < 0 || j >= beats.length) return;
+            var tmp = beats[idx]; beats[idx] = beats[j]; beats[j] = tmp;
+            post('/videogen/project/' + _proj.id + '/beat/reorder/', { order: beats.map(function (b) { return b.id; }) })
+                .then(function (d) { if (d && d.ok) { _proj = d.project; vgRenderEditor(); } }).catch(function () {});
+        }
+        function vgAssemble() {
+            document.getElementById('ed-status').textContent = 'Montando…';
+            post('/videogen/project/' + _proj.id + '/assemble/').then(function (d) {
+                if (d && d.error) document.getElementById('ed-status').textContent = d.error;
+                else document.getElementById('ed-status').textContent = 'Montagem na fila.';
+                vgRefresh(); vgScheduleEditorPoll();
+            }).catch(function () {});
+        }
+        function vgApprove() { post('/videogen/' + _proj.id + '/approve/').then(function () { vgRefresh(); }).catch(function () {}); }
+
+        function vgRefresh() {
+            if (!_proj) return;
+            fetch('/videogen/project/' + _proj.id + '/').then(function (r) { return r.json(); }).then(function (d) {
+                if (d && d.ok) { _proj = d.project; vgComfyBadge(d.project.comfy, d.project.video_models); vgRenderEditor(); }
+            }).catch(function () {});
+        }
+        function vgScheduleEditorPoll() {
+            if (_poll) clearTimeout(_poll);
+            var active = _proj && ((_proj.beats || []).some(function (b) { return b.status === 'pending' || b.status === 'processing'; })
+                || _proj.status === 'pending' || _proj.status === 'processing');
+            if (active) _poll = setTimeout(function () { vgRefresh(); vgScheduleEditorPoll(); }, 5000);
+        }
+
+        // ---------- modal de referência ----------
+        function vgRefOpen(beatId) {
+            _refBeatId = beatId;
+            var grid = document.getElementById('ref-grid');
+            grid.innerHTML = _journal.length ? _journal.map(function (it) {
+                return '<figure onclick="vgRefPick(' + it.id + ')"><img src="' + it.url + '" alt=""><figcaption>' + esc(it.name) + '</figcaption></figure>';
+            }).join('') : '<p class="st-mini">nenhuma imagem raster no journal ainda.</p>';
+            document.getElementById('ref-modal').classList.add('on');
+        }
+        function vgRefClose() { document.getElementById('ref-modal').classList.remove('on'); _refBeatId = null; }
+        function vgRefPick(assetId) {
+            if (_refBeatId == null) return;
+            post('/videogen/beat/' + _refBeatId + '/update/', { ref_asset_id: assetId })
+                .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+            vgRefClose();
+        }
+
+        // ================= MODO RÁPIDO (LEGADO) =================
         function rd6VideoSubmit() {
             var prompt = (document.getElementById('vg-prompt').value || '').trim();
             var st = document.getElementById('vg-status');
@@ -112,20 +440,18 @@
             fd.append('use_context', document.getElementById('vg-context').checked ? '1' : '0');
             fd.append('music_file', document.getElementById('vg-music').value || '');
             if (upFile) fd.append('music_upload', upFile);
-            fetch('/videogen/' + RD6_VG_CAMP + '/request/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() }, body: fd })
+            fetch('/videogen/' + CAMP + '/request/', { method: 'POST', headers: { 'X-CSRFToken': csrf() }, body: fd })
                 .then(function (r) { return r.json(); }).then(function (d) {
                     if (d && d.ok) {
                         document.getElementById('vg-prompt').value = '';
                         if (upEl) upEl.value = '';
-                        st.textContent = d.comfy_online
-                            ? (d.video_models ? 'Na fila — gerando. Pode pausar pra ver a prévia.' : '⚠ Modelos de vídeo não encontrados no ComfyUI.')
-                            : '⚠ ComfyUI offline no host — o pedido ficou na fila.';
+                        st.textContent = d.comfy_online ? 'Na fila — gerando.' : '⚠ ComfyUI offline — o pedido ficou na fila.';
                         rd6VideoPoll();
                     } else { st.textContent = (d && d.error) || 'Erro ao enviar.'; }
                 }).catch(function () { st.textContent = 'Falha de rede.'; });
         }
         function rd6VideoPoll() {
-            fetch('/videogen/' + RD6_VG_CAMP + '/list/').then(function (r) { return r.json(); }).then(function (d) {
+            fetch('/videogen/' + CAMP + '/list/').then(function (r) { return r.json(); }).then(function (d) {
                 if (!d || !d.ok) return;
                 rd6VideoRender(d.requests || [], d);
                 var active = (d.requests || []).some(function (x) { return x.status === 'pending' || x.status === 'processing'; });
@@ -135,19 +461,18 @@
         }
         function rd6VideoRender(reqs, d) {
             var box = document.getElementById('vg-list');
-            var head = (d.comfy && !d.comfy.online) ? '<div class="st-err">ComfyUI offline no host.</div>' : '';
             var S = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou', approved: 'aprovado' };
-            box.innerHTML = head + (reqs || []).map(function (r) {
+            box.innerHTML = (reqs || []).map(function (r) {
                 var h = '<div class="st-card"><span class="st-badge ' + r.status + '">' + (S[r.status] || r.status) + '</span>';
-                if (r.music_file) h += '<span class="st-mood">♪ ' + rd6Esc(r.music_file) + '</span>';
-                else if (r.mood) h += '<span class="st-mood">♪ ' + rd6Esc(r.mood) + ' (auto)</span>';
-                h += '<div class="st-prompt">' + rd6Esc(r.prompt) + '</div>';
+                if (r.music_file) h += '<span class="st-mood">♪ ' + esc(r.music_file) + '</span>';
+                else if (r.mood) h += '<span class="st-mood">♪ ' + esc(r.mood) + ' (auto)</span>';
+                h += '<div class="st-prompt">' + esc(r.prompt) + '</div>';
                 if (r.status === 'processing') {
-                    if (r.progress) h += '<div class="st-prog">⏳ ' + rd6Esc(r.progress) + '</div>';
-                    if (r.pause_requested) h += '<div style="font-size:11px;color:#c9a55c">⏸ pausando… (termina a cena atual e monta a prévia)</div>';
+                    if (r.progress) h += '<div class="st-prog">⏳ ' + esc(r.progress) + '</div>';
+                    if (r.pause_requested) h += '<div style="font-size:11px;color:#c9a55c">⏸ pausando…</div>';
                     else h += '<div class="st-actions"><button onclick="rd6VideoPause(' + r.id + ')">⏸ Pausar e ver prévia</button></div>';
                 }
-                if (r.expanded_prompt) h += '<details class="st-xprompt"><summary>roteiro</summary><pre>' + rd6Esc(r.expanded_prompt) + '</pre></details>';
+                if (r.expanded_prompt) h += '<details class="st-xprompt"><summary>roteiro</summary><pre>' + esc(r.expanded_prompt) + '</pre></details>';
                 if ((r.status === 'done' || r.status === 'approved') && r.has_result) {
                     h += '<video class="st-video" src="/videogen/mp4/' + r.id + '/" controls preload="metadata"></video>';
                     if (r.status === 'done') {
@@ -156,19 +481,20 @@
                         h += '<button onclick="rd6VideoDiscard(' + r.id + ')">✕ Descartar</button></div>';
                     }
                 } else if (r.status === 'failed') {
-                    h += '<div class="st-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="st-actions">';
+                    h += '<div class="st-err">' + esc(r.error || 'falhou') + '</div><div class="st-actions">';
                     if (r.can_resume) h += '<button class="st-approve" onclick="rd6VideoResume(' + r.id + ')">▶ Continuar de onde parou</button>';
                     h += '<button onclick="rd6VideoDiscard(' + r.id + ')">Remover</button></div>';
                 }
                 return h + '</div>';
             }).join('');
         }
-        function rd6VideoPause(id) { fetch('/videogen/' + id + '/pause/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6VideoPoll(); }).catch(function () {}); }
-        function rd6VideoResume(id) { fetch('/videogen/' + id + '/resume/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6VideoPoll(); }).catch(function () {}); }
-        function rd6VideoApprove(id) { fetch('/videogen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6VideoPoll(); }).catch(function () {}); }
-        function rd6VideoDiscard(id) { fetch('/videogen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6VideoPoll(); }).catch(function () {}); }
-        rd6VgLoadMusic();
-        rd6VideoPoll();
+        function rd6VideoPause(id) { post('/videogen/' + id + '/pause/').then(function () { rd6VideoPoll(); }).catch(function () {}); }
+        function rd6VideoResume(id) { post('/videogen/' + id + '/resume/').then(function () { rd6VideoPoll(); }).catch(function () {}); }
+        function rd6VideoApprove(id) { post('/videogen/' + id + '/approve/').then(function () { rd6VideoPoll(); }).catch(function () {}); }
+        function rd6VideoDiscard(id) { post('/videogen/' + id + '/discard/').then(function () { rd6VideoPoll(); }).catch(function () {}); }
+
+        // init
+        loadMusic(); loadJournal(); vgLoadProjects();
     </script>
 </body>
 

@@ -7,6 +7,28 @@
 
 ---
 
+## SESSÃO 2026-10-29 (tarde): Editor de Beats do vídeo — IMPLEMENTADO (5 fases)
+Feature grande aprovada com autonomia total ("faça até o final"). Decisões travadas do user: beat de qualquer tamanho feito de vários clipes de 2s (mesma referência; seed+i por sub-clipe) · editar um beat regenera SÓ ele · crossfade ajustável + corte seco (ffmpeg xfade) · áudio escolhido ANTES, beats na timeline.
+- **Modelo (migration 0071, aplicada):** `VideoGenRequest` ganhou `mode` ("auto"|"beats") + `audio_duration_ms` + status "editing". Novo modelo **`VideoBeat`** (project FK, order, duration_ms, user_prompt, correction, expanded_prompt, ref_asset FK, seed, clip_file, status, transition cut/crossfade + transition_ms).
+- **ai_context.write_beat_prompt_via_claude():** prompt CUMULATIVO — lê o journal + os prompts expandidos dos beats anteriores (ordem) + correção; fallback mecânico sem claude.
+- **video_assembly:** `media_duration_ms()` (duração via ffmpeg, sem ffprobe) + `assemble_with_transitions()` (corte seco = concat rápido; crossfade = xfade PAR A PAR materializando cada intermediário — o xfade encadeado num filtergraph só falha porque o output intermediário não tem duração no config; xfade CRU de 2 entradas, sem normalização fps/setsar que quebra o config neste ffmpeg 7.1).
+- **videogen_worker:** loop pega beats pending primeiro (curto), depois projetos pending (mode beats → `_assemble_project`; auto → fluxo antigo). `_process_beat`: prompt cumulativo → N sub-clipes de 2s (seed+i, mesma ref) → junta no clipe do beat.
+- **views/video_gen.py + urls:** project/create (exige música; mede a minutagem), projects, project/<id>, beat add/update/delete/reorder/generate/mp4, project/assemble. `_serialize_project`/`_serialize_beat`.
+- **UI `videogen_studio.html`:** reescrita com 2 abas — **Editor de beats** (padrão: timeline proporcional, cards por beat com duração/transição/referência do journal/prompt/correção/preview/reordenar ↑↓/gerar/regerar/apagar, botão Montar, preview final aprovar/remontar) + **Modo rápido** (fluxo antigo preservado). Selo do ComfyUI agora diz "iniciando/offline — sobe junto do app" em vez de só "offline".
+- **BUG corrigido:** `0 or -1` (zero é falsy) fazia o 2º beat nascer com ordem 0 → troquei por `Max("order")`.
+- **Testado SEM GPU (scratchpad/test_beats.py):** montagem corte/crossfade/misto (durações certas), fallback do prompt, e CRUD/reorder/serialização na DB real (projeto descartável, limpo no fim). A geração por GPU reusa o `generate_clip_mp4` já provado — validar um beat ao vivo após instalar.
+- Pendente: dist nova fechando com tudo isso; ComfyUI confirmado online (0.35.0) e sobe junto do app (boot lento = "offline" temporário).
+
+---
+
+## SESSÃO 2026-10-29: dist nova (Modo Consistência + backup + cloud_sync empacotados)
+- **Pull/fetch:** nada novo após `8301990` (26/out). O "trabalho do outro PC" = o próprio commit `8301990` (Modo Consistência + backup + sync OneDrive via Graph). Branch `main`, HEAD `8301990`.
+- **Build do desktop quebrou num venv limpo:** `ModuleNotFoundError: No module named 'rest_framework'` no `collectstatic`. O merge da fundação V2 adicionou `rest_framework` + `api` ao `INSTALLED_APPS` (settings.py:109-110) e novos pins no `requirements.txt` (DRF 3.15.2, channels_redis, psycopg, numpy, pgvector, redis). **Fix:** `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` antes de buildar. (requirements-ml.txt é o pesado do ComfyUI; não é necessário pro build do app.)
+- **Graph sync (cloud_sync) sai DESLIGADO nesta dist** — decisão do user. Falta o `client_id` do Azure (`desktop/cloud_client_id.txt`). App funciona local; pra ligar, concluir o setup do `docs/ONEDRIVE_SYNC.md` e rebuildar.
+- **"Banco parece local" (esclarecido):** sem `ROLL3D6_DESKTOP_HOME`, o Django usa `BASE_DIR/db.sqlite3` (dev, settings.py:199). A dist sempre seta a env → usa `%OneDrive%\roll3d6\data.sqlite3`. O "local" que o user viu era um runserver/manage.py rodado sem a env.
+
+---
+
 ## SESSÃO 2026-10-26: estado atual + PLANO do Modo Consistência (continuar no PC do trabalho)
 
 ### Onde o projeto está (git + dist)

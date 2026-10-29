@@ -323,3 +323,60 @@ Output only the JSON storyboard."""
         return {"mood": mood, "shots": clean[:40]}, True
     except Exception:  # noqa: BLE001
         return _fallback_storyboard(user_request, style_key, target_seconds, seconds_per_shot)
+
+
+def write_beat_prompt_via_claude(context, project_request, prior_beats, this_prompt,
+                                 correction="", style_key="anime", ref_name="",
+                                 claude_bin="claude", model="sonnet", timeout=120):
+    """Escreve o prompt de UM beat (cena), de forma CUMULATIVA.
+
+    `prior_beats` é a lista (em ordem) dos prompts expandidos dos beats anteriores,
+    pra o claude manter coerência (mesmos personagens/look/paleta/continuidade).
+    `this_prompt` é o que o GM ditou pra ESTE beat; `correction` é uma instrução
+    opcional pra corrigir uma tentativa anterior. `ref_name` é o nome da imagem de
+    referência do journal (personagem) se houver. Retorna (prompt, usou_claude);
+    fallback mecânico em qualquer erro."""
+    style = style_keywords(style_key) or "anime style, cinematic"
+    prior = [str(p).strip() for p in (prior_beats or []) if str(p).strip()]
+    if prior:
+        prior_block = "\n".join(f"  {i+1}. {p}" for i, p in enumerate(prior[-20:]))
+        story_so_far = f"\n=== BEATS SO FAR (the video up to now, in order) ===\n{prior_block}\n"
+    else:
+        story_so_far = "\n(This is the FIRST beat of the video.)\n"
+    ref_block = ""
+    if ref_name:
+        ref_block = (f"\nThis beat features the character \"{ref_name}\" — keep their established "
+                     "appearance EXACTLY (face, hair, outfit, colors).")
+    corr_block = ""
+    if (correction or "").strip():
+        corr_block = (f"\n=== CORRECTION (the previous attempt at THIS beat was wrong; fix it) ===\n"
+                      f"{correction.strip()}\n")
+    instruction = f"""You write ONE shot prompt for a single beat (scene) of a SHORT ANIME-STYLE recap video of a tabletop RPG.
+Output ONLY one single-line English image/motion prompt: comma-separated descriptors, 20-45 words, include 'anime style' and a camera/motion cue. No preamble, no quotes, no markdown.
+
+The beat must be VISUALLY CONSISTENT with the beats so far (same era, tone, palette, characters, continuity) and with the campaign world below.{ref_block}
+Bake in this visual style: {style}.
+{story_so_far}{corr_block}
+=== CAMPAIGN JOURNAL (context) ===
+{context or '(no extra context yet)'}
+
+=== OVERALL VIDEO (what the GM wants the whole video to be) ===
+{project_request or '(not specified)'}
+
+=== THIS BEAT (what the GM dictated for this scene) ===
+{this_prompt}
+
+Now output only the final single-line anime shot prompt for THIS beat."""
+
+    out, ok = _run_claude_text(instruction, claude_bin, model, timeout)
+    if not ok or not out:
+        base = style_keywords(style_key)
+        mech = (f"{base}, {this_prompt}" if base else this_prompt).strip()
+        return mech[:400], False
+    lines = [ln.strip() for ln in out.splitlines() if ln.strip()]
+    prompt = " ".join(lines).strip().strip('`"\' ').strip()
+    if len(prompt) < 10:
+        base = style_keywords(style_key)
+        mech = (f"{base}, {this_prompt}" if base else this_prompt).strip()
+        return mech[:400], False
+    return prompt[:400], True

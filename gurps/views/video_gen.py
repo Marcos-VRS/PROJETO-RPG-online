@@ -20,11 +20,13 @@ from django.shortcuts import get_object_or_404
 from django.utils.text import get_valid_filename
 
 from gurps import ai_context, comfyui_client, video_assembly
-from gurps.models import Campanha, VideoGenRequest
+from gurps.models import Campanha, CampanhaAssets, VideoBeat, VideoGenRequest
 
 PROMPT_MAX = 2000
 STYLE_CHOICES = {"anime", "cinematic_dark", "photoreal", "oil", "gritty", "none"}
 AUDIO_EXTS = (".mp3", ".m4a", ".ogg", ".wav", ".opus", ".flac")
+BEAT_MIN_MS = 1000
+BEAT_MAX_MS = 20000
 
 
 def _serialize(req):
@@ -44,6 +46,325 @@ def _serialize(req):
         "pause_requested": bool(req.pause_requested),
         "created_at": req.created_at.isoformat() if req.created_at else None,
     }
+
+
+def _gm_or_403(campanha_id, request):
+    """Devolve (campanha, None) se o user é o GM; (None, JsonResponse 403/404)."""
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        return None, JsonResponse({"error": "só o GM pode isso"}, status=403)
+    return campanha, None
+
+
+def _save_music_choice(request, body):
+    """Resolve a música escolhida (upload novo > faixa existente). Retorna o rel
+    sob MEDIA_ROOT ou ''. Reusado pelo modo rápido e pelo editor de beats."""
+    music_upload = request.FILES.get("music_upload") if request.FILES else None
+    if music_upload is not None and music_upload.name.lower().endswith(AUDIO_EXTS):
+        safe = get_valid_filename(music_upload.name) or "musica.mp3"
+        rel = "music/uploads/" + safe
+        dest = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "wb") as f:
+            for chunk in music_upload.chunks():
+                f.write(chunk)
+        return rel
+    chosen = (body.get("music_file") or "").strip()
+    if chosen and video_assembly.resolve_music_rel(settings.MEDIA_ROOT, chosen):
+        return chosen
+    return ""
+
+
+def _serialize_beat(b):
+    return {
+        "id": b.id,
+        "order": b.order,
+        "duration_ms": b.duration_ms,
+        "user_prompt": b.user_prompt or "",
+        "correction": b.correction or "",
+        "expanded_prompt": b.expanded_prompt or "",
+        "ref_asset_id": b.ref_asset_id,
+        "ref_asset_name": (b.ref_asset.name if b.ref_asset_id else ""),
+        "status": b.status,
+        "progress": b.progress or "",
+        "error": b.error or "",
+        "has_clip": bool(b.clip_file),
+        "transition": b.transition,
+        "transition_ms": b.transition_ms,
+    }
+
+
+def _serialize_project(req, with_beats=True):
+    beats = list(req.beats.order_by("order", "id")) if with_beats else []
+    used_ms = sum(b.duration_ms for b in beats) if with_beats else 0
+    return {
+        "id": req.id,
+        "mode": req.mode,
+        "status": req.status,
+        "prompt": req.prompt,
+        "style": req.style,
+        "use_context": req.use_context,
+        "music_file": os.path.basename(req.music_file) if req.music_file else "",
+        "music_rel": req.music_file or "",
+        "audio_duration_ms": req.audio_duration_ms,
+        "used_ms": used_ms,
+        "progress": req.progress,
+        "error": req.error,
+        "has_result": bool(req.result_file),
+        "created_at": req.created_at.isoformat() if req.created_at else None,
+        "beats": [_serialize_beat(b) for b in beats] if with_beats else [],
+    }
+
+
+@login_required(login_url="gurps:login")
+def videogen_project_create(request, campanha_id):
+    """Cria um PROJETO de vídeo em modo editor de beats. Exige escolher/subir o
+    áudio (a minutagem dele ancora os beats na timeline)."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    campanha, err = _gm_or_403(campanha_id, request)
+    if err:
+        return err
+    body = request.POST if (request.content_type or "").startswith("multipart/") else _json_body(request)
+    if body is None:
+        return JsonResponse({"error": "corpo inválido"}, status=400)
+    style = body.get("style") if body.get("style") in STYLE_CHOICES else "anime"
+    uc_raw = body.get("use_context")
+    use_context = True if uc_raw is None else str(uc_raw).lower() not in ("0", "false", "no", "")
+    prompt = (body.get("prompt") or "").strip()[:PROMPT_MAX]
+    music_file = _save_music_choice(request, body)
+    if not music_file:
+        return JsonResponse({"error": "escolha ou envie uma música primeiro (a minutagem dela ancora os beats)"}, status=400)
+    audio_ms = 0
+    mpath = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, music_file)
+    if mpath:
+        audio_ms = video_assembly.media_duration_ms(mpath)
+    req = VideoGenRequest.objects.create(
+        campanha=campanha, requested_by=request.user, prompt=prompt or "(vídeo por beats)",
+        style=style, use_context=use_context, mode="beats", status="editing",
+        music_file=music_file, audio_duration_ms=audio_ms)
+    return JsonResponse({"ok": True, "project": _serialize_project(req)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_projects(request, campanha_id):
+    """Lista os projetos de vídeo em modo beats (pro painel do estúdio)."""
+    campanha, err = _gm_or_403(campanha_id, request)
+    if err:
+        return err
+    qs = (VideoGenRequest.objects.filter(campanha=campanha, mode="beats")
+          .exclude(status="discarded").order_by("-created_at")[:20])
+    comfy = comfyui_client.status()
+    return JsonResponse({
+        "ok": True, "comfy": comfy,
+        "video_models": comfyui_client.video_pick_checkpoint() if comfy.get("online") else False,
+        "projects": [_serialize_project(r) for r in qs],
+    })
+
+
+@login_required(login_url="gurps:login")
+def videogen_project_detail(request, req_id):
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    comfy = comfyui_client.status()
+    data = _serialize_project(req)
+    data["comfy"] = comfy
+    data["video_models"] = comfyui_client.video_pick_checkpoint() if comfy.get("online") else False
+    return JsonResponse({"ok": True, "project": data})
+
+
+def _reactivate_if_terminal(req):
+    """Se o projeto já foi montado/falhou, volta pra 'editing' ao mexer num beat."""
+    if req.mode == "beats" and req.status in ("done", "failed", "approved"):
+        req.status = "editing"
+        req.save(update_fields=["status", "updated_at"])
+
+
+def _resolve_ref_asset(campanha, body):
+    rid = body.get("ref_asset_id")
+    if not rid:
+        return None
+    try:
+        return CampanhaAssets.objects.filter(campanha=campanha, id=int(rid)).first()
+    except (TypeError, ValueError):
+        return None
+
+
+def _clamp_ms(v, default):
+    try:
+        return max(BEAT_MIN_MS, min(int(v), BEAT_MAX_MS))
+    except (TypeError, ValueError):
+        return default
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_add(request, req_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or request.POST
+    from django.db.models import Max  # noqa: WPS433
+    mx = req.beats.aggregate(m=Max("order"))["m"]
+    nxt = 0 if mx is None else mx + 1
+    beat = VideoBeat.objects.create(
+        project=req, order=nxt,
+        duration_ms=_clamp_ms(body.get("duration_ms"), 2000),
+        user_prompt=(body.get("user_prompt") or "").strip()[:PROMPT_MAX],
+        ref_asset=_resolve_ref_asset(req.campanha, body),
+        transition=("crossfade" if body.get("transition") == "crossfade" else "cut"),
+        transition_ms=_clamp_transition(body.get("transition_ms")),
+    )
+    _reactivate_if_terminal(req)
+    return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_update(request, beat_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or request.POST
+    changed = False
+    if "user_prompt" in body:
+        beat.user_prompt = (body.get("user_prompt") or "").strip()[:PROMPT_MAX]; changed = True
+    if "correction" in body:
+        beat.correction = (body.get("correction") or "").strip()[:PROMPT_MAX]; changed = True
+    if "duration_ms" in body:
+        beat.duration_ms = _clamp_ms(body.get("duration_ms"), beat.duration_ms); changed = True
+    if "ref_asset_id" in body:
+        beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
+    if "transition" in body:
+        beat.transition = "crossfade" if body.get("transition") == "crossfade" else "cut"
+    if "transition_ms" in body:
+        beat.transition_ms = _clamp_transition(body.get("transition_ms"))
+    # Mudou o conteúdo da cena? marca pra regerar (mantém o clipe antigo p/ preview).
+    if changed and beat.status in ("done", "failed"):
+        beat.status = "empty"
+    beat.save()
+    _reactivate_if_terminal(beat.project)
+    return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_delete(request, beat_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    project = beat.project
+    if project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    import shutil
+    bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id), f"beat_{beat.id}")
+    shutil.rmtree(bdir, ignore_errors=True)
+    clip = os.path.join(settings.MEDIA_ROOT, (beat.clip_file or "").replace("/", os.sep))
+    if beat.clip_file and os.path.exists(clip):
+        try:
+            os.remove(clip)
+        except OSError:
+            pass
+    beat.delete()
+    # reindexa a ordem
+    for i, b in enumerate(project.beats.order_by("order", "id")):
+        if b.order != i:
+            b.order = i
+            b.save(update_fields=["order"])
+    _reactivate_if_terminal(project)
+    return JsonResponse({"ok": True})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_reorder(request, req_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or {}
+    ids = body.get("order") or []
+    pos = {int(i): n for n, i in enumerate(ids)}
+    for b in req.beats.all():
+        if b.id in pos and b.order != pos[b.id]:
+            b.order = pos[b.id]
+            b.save(update_fields=["order"])
+    _reactivate_if_terminal(req)
+    return JsonResponse({"ok": True, "project": _serialize_project(req)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_generate(request, beat_id):
+    """Enfileira a geração (ou regeração) de UM beat. Só aquele beat regenera."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if not (beat.user_prompt or "").strip() and not (beat.project.prompt or "").strip():
+        return JsonResponse({"error": "descreva a cena do beat primeiro"}, status=400)
+    beat.status = "pending"
+    beat.error = ""
+    beat.progress = "na fila"
+    beat.save(update_fields=["status", "error", "progress", "updated_at"])
+    _reactivate_if_terminal(beat.project)
+    comfy = comfyui_client.status()
+    return JsonResponse({"ok": True, "comfy_online": comfy.get("online", False),
+                         "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_mp4(request, beat_id):
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return HttpResponse(status=403)
+    if not beat.clip_file:
+        return HttpResponse(status=404)
+    full = os.path.join(settings.MEDIA_ROOT, beat.clip_file.replace("/", os.sep))
+    if not os.path.exists(full):
+        return HttpResponse(status=404)
+    resp = FileResponse(open(full, "rb"), content_type="video/mp4")
+    resp["Cache-Control"] = "no-store"
+    resp["Accept-Ranges"] = "bytes"
+    return resp
+
+
+@login_required(login_url="gurps:login")
+def videogen_project_assemble(request, req_id):
+    """Monta o vídeo final do projeto (clipes dos beats na ordem + transições +
+    trilha). Enfileira pro worker (status=pending, mode=beats)."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    done = req.beats.filter(status="done").exclude(clip_file="").count()
+    if done == 0:
+        return JsonResponse({"error": "gere ao menos um beat antes de montar"}, status=400)
+    req.status = "pending"
+    req.error = ""
+    req.progress = "montagem na fila"
+    req.save(update_fields=["status", "error", "progress", "updated_at"])
+    comfy = comfyui_client.status()
+    return JsonResponse({"ok": True, "comfy_online": comfy.get("online", False)})
+
+
+def _clamp_transition(v):
+    try:
+        return max(100, min(int(v), 3000))
+    except (TypeError, ValueError):
+        return 500
+
+
+def _json_body(request):
+    if (request.content_type or "").startswith("application/json"):
+        try:
+            return json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return None
+    return None
 
 
 @login_required(login_url="gurps:login")
@@ -121,7 +442,7 @@ def videogen_list(request, campanha_id):
     campanha = get_object_or_404(Campanha, id=campanha_id)
     if campanha.dono_id != request.user.id:
         return JsonResponse({"error": "sem permissão"}, status=403)
-    qs = (VideoGenRequest.objects.filter(campanha=campanha)
+    qs = (VideoGenRequest.objects.filter(campanha=campanha, mode="auto")
           .exclude(status="discarded").order_by("-created_at")[:20])
     comfy = comfyui_client.status()
     return JsonResponse({
@@ -211,9 +532,10 @@ def videogen_discard(request, req_id):
     req.save(update_fields=["status", "updated_at"])
     # limpa as cenas persistidas (não vai mais retomar)
     import shutil
-    clipsdir = os.path.join(settings.MEDIA_ROOT, "videogen", "clips", str(req.id))
-    try:
-        shutil.rmtree(clipsdir, ignore_errors=True)
-    except Exception:  # noqa: BLE001
-        pass
+    for d in (os.path.join(settings.MEDIA_ROOT, "videogen", "clips", str(req.id)),
+              os.path.join(settings.MEDIA_ROOT, "videobeats", str(req.id))):
+        try:
+            shutil.rmtree(d, ignore_errors=True)
+        except Exception:  # noqa: BLE001
+            pass
     return JsonResponse({"ok": True})

@@ -17,7 +17,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from gurps import ai_context, comfyui_client, video_assembly
-from gurps.models import VideoGenRequest
+from gurps.models import VideoBeat, VideoGenRequest
 
 
 class Command(BaseCommand):
@@ -46,6 +46,14 @@ class Command(BaseCommand):
             f"modelos_video={has_models}). Ctrl+C pra parar."))
         try:
             while True:
+                # Beats pendentes (modo editor) têm prioridade — são tarefas curtas.
+                beat = (VideoBeat.objects.filter(status="pending")
+                        .select_related("project").order_by("created_at").first())
+                if beat is not None:
+                    self._process_beat(beat)
+                    if once:
+                        break
+                    continue
                 req = (VideoGenRequest.objects.filter(status="pending")
                        .order_by("created_at").first())
                 if req is None:
@@ -53,7 +61,10 @@ class Command(BaseCommand):
                         break
                     time.sleep(interval)
                     continue
-                self._process(req)
+                if req.mode == "beats":
+                    self._assemble_project(req)
+                else:
+                    self._process(req)
                 if once:
                     break
         except KeyboardInterrupt:
@@ -236,3 +247,163 @@ class Command(BaseCommand):
         req.error = str(msg)[:500]
         req.save(update_fields=["status", "error", "updated_at"])
         self.stdout.write(self.style.ERROR(f"#{req.id} FALHOU: {req.error}"))
+
+    # ===================================================================== #
+    # Modo EDITOR DE BEATS: gera um beat (cena) e monta o projeto.
+    # ===================================================================== #
+    def _set_beat(self, beat, **fields):
+        for k, v in fields.items():
+            setattr(beat, k, v)
+        beat.save(update_fields=list(fields.keys()) + ["updated_at"])
+
+    def _fail_beat(self, beat, msg):
+        beat.status = "failed"
+        beat.error = str(msg)[:500]
+        beat.save(update_fields=["status", "error", "updated_at"])
+        self.stdout.write(self.style.ERROR(f"beat #{beat.id} FALHOU: {beat.error}"))
+
+    def _resolve_beat_ref(self, beat):
+        """(bytes, nome) da imagem de referência do journal, ou (None, '')."""
+        a = beat.ref_asset
+        if not a or not getattr(a, "image", None):
+            return None, ""
+        name = (a.image.name or "")
+        if name.lower().endswith(".svg"):
+            return None, ""
+        try:
+            path = a.image.path
+        except Exception:  # noqa: BLE001
+            return None, ""
+        if not os.path.exists(path):
+            return None, ""
+        try:
+            with open(path, "rb") as fh:
+                return fh.read(), (a.name or "")
+        except Exception:  # noqa: BLE001
+            return None, ""
+
+    def _gen_one(self, project, prompt, seconds, seed, ref_bytes):
+        """Gera UM sub-clipe de 2s (com retry + espera o ComfyUI voltar).
+        Retorna bytes ou None."""
+        for attempt in (1, 2):
+            try:
+                return comfyui_client.generate_clip_mp4(
+                    prompt=prompt, seconds=seconds, fps=project.fps,
+                    width=project.width, height=project.height,
+                    steps=project.steps, cfg=project.cfg, seed=seed,
+                    base_url=self.base_url, timeout=self.clip_timeout,
+                    ref_image_bytes=ref_bytes)
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(
+                    f"  sub-clipe tentativa {attempt} falhou: {str(e)[:120]}"))
+                if attempt == 1:
+                    comfyui_client.wait_online(self.base_url, timeout=180)
+                    comfyui_client.free_memory(self.base_url)
+        return None
+
+    def _process_beat(self, beat):
+        project = beat.project
+        self._set_beat(beat, status="processing", progress="escrevendo o prompt...", error="")
+        self.stdout.write(f"beat #{beat.id} (proj {project.id}, ordem {beat.order}): "
+                          f"{(beat.user_prompt or '')[:50]!r}")
+
+        # 1) prompt CUMULATIVO: lê o journal + os beats anteriores já prontos.
+        ref_bytes, ref_name = self._resolve_beat_ref(beat)
+        ctx = ""
+        if project.use_context:
+            try:
+                ctx = ai_context.build_campaign_context(project.campanha)
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(f"  contexto falhou: {e}"))
+        priors = [b.expanded_prompt for b in
+                  VideoBeat.objects.filter(project=project, order__lt=beat.order,
+                                           status="done").order_by("order")
+                  if (b.expanded_prompt or "").strip()]
+        expanded, used = ai_context.write_beat_prompt_via_claude(
+            ctx, project.prompt, priors, beat.user_prompt or project.prompt,
+            correction=beat.correction, style_key=project.style, ref_name=ref_name,
+            claude_bin=self.claude_bin, model=self.claude_model)
+        self._set_beat(beat, expanded_prompt=expanded)
+        self.stdout.write(f"  prompt ({'claude' if used else 'mecanico'}): {expanded[:70]!r}")
+
+        # 2) beat = N sub-clipes de 2s encadeados (mesma referencia; seed+i).
+        n_sub = max(1, min(round((beat.duration_ms or 2000) / 2000.0), 12))
+        base_seed = beat.seed
+        if base_seed is None:
+            import random
+            base_seed = random.randint(1, 2 ** 31 - 1)
+            self._set_beat(beat, seed=base_seed)
+        bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
+                            f"beat_{beat.id}")
+        os.makedirs(bdir, exist_ok=True)
+        subs = []
+        for j in range(n_sub):
+            self._set_beat(beat, progress=f"gerando {j+1}/{n_sub}")
+            comfyui_client.free_memory(self.base_url)
+            mp4 = self._gen_one(project, expanded, 2, (base_seed + j) % (2 ** 31), ref_bytes)
+            if mp4 is None:
+                if subs:  # usa o que já saiu
+                    break
+                self._fail_beat(beat, "ComfyUI instavel — nenhum sub-clipe gerado.")
+                return
+            sp = os.path.join(bdir, f"sub_{j:03d}.mp4")
+            with open(sp, "wb") as f:
+                f.write(mp4)
+            subs.append(sp)
+
+        # 3) junta os sub-clipes num clipe do beat.
+        rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
+        out = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+        try:
+            if len(subs) == 1:
+                import shutil
+                shutil.copyfile(subs[0], out)
+            else:
+                video_assembly.assemble(subs, out)  # concat sem musica
+        except Exception as e:  # noqa: BLE001
+            self._fail_beat(beat, f"juncao do beat falhou: {e}")
+            return
+        self._set_beat(beat, clip_file=rel, status="done",
+                       progress=f"pronto ({len(subs)} clipe(s) de 2s)")
+        self.stdout.write(self.style.SUCCESS(f"beat #{beat.id} OK ({len(subs)} sub-clipes)."))
+
+    def _assemble_project(self, req):
+        """Monta o vídeo final do projeto de beats: clipes na ordem + transições
+        (corte/crossfade) + trilha."""
+        self._set(req, status="processing", progress="montando o video...", error="")
+        beats = list(VideoBeat.objects.filter(project=req, status="done")
+                     .exclude(clip_file="").order_by("order"))
+        if not beats:
+            self._fail(req, "nenhum beat pronto pra montar — gere os beats antes.")
+            return
+        clips, transitions = [], []
+        for i, b in enumerate(beats):
+            full = os.path.join(settings.MEDIA_ROOT, b.clip_file.replace("/", os.sep))
+            if not os.path.exists(full):
+                continue
+            clips.append(full)
+            if i == 0:
+                transitions.append({"type": "cut", "ms": 0})
+            else:
+                transitions.append({"type": b.transition, "ms": int(b.transition_ms or 0)})
+        if not clips:
+            self._fail(req, "os clipes dos beats sumiram do disco — regere os beats.")
+            return
+
+        music = None
+        if req.music_file:
+            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, req.music_file)
+        if not music:
+            music = video_assembly.pick_music(settings.MEDIA_ROOT, req.mood or "epic")
+        rel = f"videogen/vid_{req.id}.mp4"
+        out = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+        try:
+            video_assembly.assemble_with_transitions(
+                clips, out, transitions, music_path=music, fps=req.fps)
+        except Exception as e:  # noqa: BLE001
+            self._fail(req, f"montagem falhou: {e}")
+            return
+        self._set(req, result_file=rel, status="done", error="",
+                  progress=f"pronto ({len(clips)} beats, musica={bool(music)})")
+        self.stdout.write(self.style.SUCCESS(
+            f"#{req.id} PROJETO montado ({len(clips)} beats, musica={bool(music)})."))
