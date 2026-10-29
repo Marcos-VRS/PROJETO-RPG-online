@@ -107,6 +107,7 @@ def _serialize_project(req, with_beats=True):
         "status": req.status,
         "prompt": req.prompt,
         "style": req.style,
+        "render_style": req.render_style,
         "use_context": req.use_context,
         "music_file": os.path.basename(req.music_file) if req.music_file else "",
         "music_rel": req.music_file or "",
@@ -133,6 +134,7 @@ def videogen_project_create(request, campanha_id):
     if body is None:
         return JsonResponse({"error": "corpo inválido"}, status=400)
     style = body.get("style") if body.get("style") in STYLE_CHOICES else "anime"
+    render_style = "realism" if body.get("render_style") == "realism" else "anime"
     uc_raw = body.get("use_context")
     use_context = True if uc_raw is None else str(uc_raw).lower() not in ("0", "false", "no", "")
     prompt = (body.get("prompt") or "").strip()[:PROMPT_MAX]
@@ -145,8 +147,8 @@ def videogen_project_create(request, campanha_id):
         audio_ms = video_assembly.media_duration_ms(mpath)
     req = VideoGenRequest.objects.create(
         campanha=campanha, requested_by=request.user, prompt=prompt or "(vídeo por beats)",
-        style=style, use_context=use_context, mode="beats", status="editing",
-        music_file=music_file, audio_duration_ms=audio_ms)
+        style=style, render_style=render_style, use_context=use_context, mode="beats",
+        status="editing", music_file=music_file, audio_duration_ms=audio_ms)
     return JsonResponse({"ok": True, "project": _serialize_project(req)})
 
 
@@ -198,6 +200,9 @@ def videogen_project_update(request, req_id):
     if body.get("style") in STYLE_CHOICES:
         req.style = body.get("style")
         fields.append("style")
+    if body.get("render_style") in ("anime", "realism"):
+        req.render_style = body.get("render_style")
+        fields.append("render_style")
     if "use_context" in body:
         req.use_context = str(body.get("use_context")).lower() not in ("0", "false", "no", "")
         fields.append("use_context")
@@ -467,6 +472,7 @@ def videogen_request(request, campanha_id):
     if not prompt:
         return JsonResponse({"error": "descreva o que aconteceu (prompt vazio)"}, status=400)
     style = body.get("style") if body.get("style") in STYLE_CHOICES else "anime"
+    render_style = "realism" if body.get("render_style") == "realism" else "anime"
     uc_raw = body.get("use_context")
     use_context = True if uc_raw is None else str(uc_raw).lower() not in ("0", "false", "no", "")
     try:
@@ -496,8 +502,8 @@ def videogen_request(request, campanha_id):
     has_models = comfyui_client.video_pick_checkpoint() if comfy.get("online") else False
     req = VideoGenRequest.objects.create(
         campanha=campanha, requested_by=request.user, prompt=prompt,
-        style=style, use_context=use_context, target_seconds=target, status="pending",
-        music_file=music_file,
+        style=style, render_style=render_style, use_context=use_context,
+        target_seconds=target, status="pending", music_file=music_file,
     )
     return JsonResponse({
         "ok": True, "id": req.id, "status": req.status,

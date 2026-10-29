@@ -95,6 +95,12 @@
                         </label>
                         <label class="st-field st-check" style="align-self:end;"><input type="checkbox" id="np-context" checked> Ler o journal</label>
                     </div>
+                    <label class="st-field">Arte (define se o vídeo sai desenho ou foto):
+                        <select id="np-render">
+                            <option value="anime">🎨 Anime / desenho (ToonYou)</option>
+                            <option value="realism">📷 Realista / foto (Realistic Vision)</option>
+                        </select>
+                    </label>
                     <label class="st-field">Ideia geral do vídeo (opcional):
                         <textarea id="np-prompt" rows="2" placeholder="Ex.: 'abertura de anime do grupo, da cidade portuária à batalha final'"></textarea>
                     </label>
@@ -129,6 +135,12 @@
                         </label>
                         <label class="st-field st-check" style="align-self:end;"><input type="checkbox" id="te-context"> Ler o journal</label>
                     </div>
+                    <label class="st-field">Arte (define se o vídeo sai desenho ou foto):
+                        <select id="te-render">
+                            <option value="anime">🎨 Anime / desenho (ToonYou)</option>
+                            <option value="realism">📷 Realista / foto (Realistic Vision)</option>
+                        </select>
+                    </label>
                     <label class="st-field">Música (trocar a faixa re-mede a minutagem):
                         <select id="te-music"><option value="">— manter a atual —</option></select>
                     </label>
@@ -283,6 +295,7 @@
             var st = document.getElementById('np-status'); st.textContent = 'Criando…';
             var fd = new FormData();
             fd.append('style', document.getElementById('np-style').value);
+            fd.append('render_style', document.getElementById('np-render').value);
             fd.append('use_context', document.getElementById('np-context').checked ? '1' : '0');
             fd.append('prompt', document.getElementById('np-prompt').value || '');
             fd.append('music_file', document.getElementById('np-music').value || '');
@@ -340,6 +353,7 @@
         function vgFillTheme() {
             var p = _proj; if (!p) return;
             document.getElementById('te-style').value = p.style || 'anime';
+            document.getElementById('te-render').value = p.render_style || 'anime';
             document.getElementById('te-context').checked = !!p.use_context;
             document.getElementById('te-prompt').value = (p.prompt === '(vídeo por beats)') ? '' : (p.prompt || '');
             var m = document.getElementById('te-music'); if (m) m.value = '';
@@ -350,6 +364,7 @@
             var fd = new FormData();
             fd.append('prompt', document.getElementById('te-prompt').value || '');
             fd.append('style', document.getElementById('te-style').value);
+            fd.append('render_style', document.getElementById('te-render').value);
             fd.append('use_context', document.getElementById('te-context').checked ? '1' : '0');
             fd.append('music_file', document.getElementById('te-music').value || '');
             var up = document.getElementById('te-music-upload');
@@ -369,7 +384,7 @@
         function vgRenderEditor() {
             var p = _proj; if (!p) return;
             document.getElementById('ed-title').textContent = p.prompt || 'Projeto de vídeo';
-            document.getElementById('ed-audio').textContent = '🎵 ' + (p.music_file || '—') + ' · duração do áudio ' + mmss(p.audio_duration_ms);
+            document.getElementById('ed-audio').textContent = '🎵 ' + (p.music_file || '—') + ' · duração do áudio ' + mmss(p.audio_duration_ms) + ' · ' + ((p.render_style === 'realism') ? '📷 realista' : '🎨 anime');
             var fill = document.getElementById('ed-fill');
             fill.textContent = 'coberto até ' + mmss(p.used_ms) + ' / ' + mmss(p.audio_duration_ms);
             // timeline ABSOLUTA: cada beat ocupa [start,end] da música

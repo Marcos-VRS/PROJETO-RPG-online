@@ -531,6 +531,12 @@ class VideoGenRequest(models.Model):
     audio_duration_ms = models.IntegerField(default=0)
     prompt = models.TextField()  # pedido cru do GM
     style = models.CharField(max_length=32, blank=True, default="anime")
+    # Estilo de RENDERIZAÇÃO (qual checkpoint SD1.5 desenha os pixels):
+    # "anime" = ToonYou (desenho); "realism" = Realistic Vision (foto). O img2vid
+    # preserva o enquadramento/movimento, mas a ARTE vem do checkpoint.
+    RENDER_STYLE_CHOICES = [("anime", "Anime"), ("realism", "Realista")]
+    render_style = models.CharField(max_length=16, choices=RENDER_STYLE_CHOICES,
+                                    default="anime")
     use_context = models.BooleanField(default=True)
     target_seconds = models.IntegerField(default=90)  # duração alvo do vídeo final
     width = models.IntegerField(default=512)

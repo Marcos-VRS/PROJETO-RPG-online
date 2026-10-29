@@ -7,6 +7,18 @@
 
 ---
 
+## SESSÃO 2026-10-29 (noite): Preset de ARTE anime x realismo — IMPLEMENTADO
+Feedback do user após testar o img2vid: consistência ótima, mas a arte continua "boneco/desenho" e a imagem fornecida é hiper-realista. **Causa raiz: a arte vem do CHECKPOINT, não do prompt.** O único SD1.5 era o ToonYou (anime); o RealVisXL realista é SDXL — incompatível com o motion module AnimateLCM (SD1.5). Não dá pra forçar realismo só com prompt.
+- **Baixados (na pasta do ComfyUI):** `models/checkpoints/realisticVision_v51.safetensors` (Realistic Vision V5.1, SD1.5 fp16, ~2,1 GB) + `models/vae/vae-ft-mse-840000-ema-pruned.safetensors` (VAE SD1.5, 334 MB — o checkpoint é noVAE, sem VAE explícita a cor sai lavada). Fora do repo/bundle (modelos ficam na GPU do host, como os outros).
+- **Modelo (migration 0074, aplicada):** `VideoGenRequest.render_style` ("anime"|"realism", default anime). Por PROJETO (o vídeo inteiro é uniforme).
+- **comfyui_client:** `video_style_models(style)` → (ckpt, vae), cai gracioso pro anime se o realista não existir; `available_vaes()`; os 3 graph builders (base/ipadapter/init-img2vid) aceitam `vae=` → inserem nó VAELoader "40" e roteiam VAEEncode+VAEDecode nele. Constantes `VIDEO_CKPT_REALISM`, `VIDEO_VAE_REALISM`, `VIDEO_REALISM_POSITIVE`/`VIDEO_REALISM_NEGATIVE` (reforço foto + anti-desenho).
+- **worker:** `_process_beat` e `_gen_clip` escolhem ckpt/vae pelo `render_style` e, no realismo, prefixam o positive com termos de foto e anexam o anti-desenho ao negative. AnimateLCM lora+lcm sampler funcionam com qualquer SD1.5 → resto do pipeline inalterado.
+- **views:** create/update/serialize aceitam e devolvem `render_style` (tema geral editável).
+- **UI `videogen_studio.html`:** seletor "Arte: 🎨 anime / 📷 realista" no Novo projeto e no ⚙️ Tema geral; badge no cabeçalho do editor mostra a arte ativa.
+- **Testado sem GPU (test_beats.py):** novo `test_realism_vae_graph` (troca de checkpoint + VAELoader roteando encode/decode; sem vae usa a do checkpoint). Tudo passou. check limpo. **Validar 1 beat realista ao vivo após instalar** (ComfyUI relê os modelos no boot).
+
+---
+
 ## SESSÃO 2026-10-29 (tarde): Editor de Beats do vídeo — IMPLEMENTADO (5 fases)
 Feature grande aprovada com autonomia total ("faça até o final"). Decisões travadas do user: beat de qualquer tamanho feito de vários clipes de 2s (mesma referência; seed+i por sub-clipe) · editar um beat regenera SÓ ele · crossfade ajustável + corte seco (ffmpeg xfade) · áudio escolhido ANTES, beats na timeline.
 - **Modelo (migration 0071, aplicada):** `VideoGenRequest` ganhou `mode` ("auto"|"beats") + `audio_duration_ms` + status "editing". Novo modelo **`VideoBeat`** (project FK, order, duration_ms, user_prompt, correction, expanded_prompt, ref_asset FK, seed, clip_file, status, transition cut/crossfade + transition_ms).

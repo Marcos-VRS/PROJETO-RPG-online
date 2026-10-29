@@ -225,12 +225,17 @@ class Command(BaseCommand):
         """Gera um clipe com até 2 tentativas. Se vier ref_bytes (retrato do
         journal), usa IP-Adapter pra cena sair com a aparência do personagem.
         Se o ComfyUI cair, espera voltar e tenta de novo. Retorna bytes ou None."""
+        ckpt, vae = comfyui_client.video_style_models(req.render_style, self.base_url)
+        prompt, negative = s["prompt"], comfyui_client.VIDEO_NEGATIVE
+        if (req.render_style or "") == "realism":
+            prompt = comfyui_client.VIDEO_REALISM_POSITIVE + ", " + s["prompt"]
+            negative = comfyui_client.VIDEO_NEGATIVE + ", " + comfyui_client.VIDEO_REALISM_NEGATIVE
         for attempt in (1, 2):
             try:
                 return comfyui_client.generate_clip_mp4(
-                    prompt=s["prompt"], seconds=s["seconds"], fps=req.fps,
+                    prompt=prompt, negative=negative, seconds=s["seconds"], fps=req.fps,
                     width=req.width, height=req.height, steps=req.steps, cfg=req.cfg,
-                    base_url=self.base_url, timeout=self.clip_timeout,
+                    base_url=self.base_url, timeout=self.clip_timeout, ckpt=ckpt, vae=vae,
                     ref_image_bytes=ref_bytes)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
@@ -283,18 +288,20 @@ class Command(BaseCommand):
             return None, ""
 
     def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None,
-                 animate=False, denoise=0.6):
+                 animate=False, denoise=0.6, ckpt=comfyui_client.VIDEO_CKPT,
+                 vae=None, negative=None):
         """Gera UM pedaço contínuo do beat (com retry + espera o ComfyUI voltar).
-        Se animate=True, ANIMA a própria imagem (img2vid, fiel). Retorna bytes ou None."""
+        Se animate=True, ANIMA a própria imagem (img2vid, fiel). ``ckpt``/``vae``
+        vêm do preset de render (anime x realismo). Retorna bytes ou None."""
         if max_frames is None:
             max_frames = comfyui_client.VIDEO_BEAT_MAX_FRAMES
         for attempt in (1, 2):
             try:
                 return comfyui_client.generate_clip_mp4(
-                    prompt=prompt, seconds=seconds, fps=project.fps,
+                    prompt=prompt, negative=negative, seconds=seconds, fps=project.fps,
                     width=project.width, height=project.height,
                     steps=project.steps, cfg=project.cfg, seed=seed,
-                    base_url=self.base_url, timeout=self.clip_timeout,
+                    base_url=self.base_url, timeout=self.clip_timeout, ckpt=ckpt, vae=vae,
                     ref_image_bytes=ref_bytes, max_frames=max_frames,
                     animate=animate, denoise=denoise, freeinit=not animate)
             except Exception as e:  # noqa: BLE001
@@ -330,6 +337,15 @@ class Command(BaseCommand):
         self._set_beat(beat, expanded_prompt=expanded)
         self.stdout.write(f"  prompt ({'claude' if used else 'mecanico'}): {expanded[:70]!r}")
 
+        # Preset de RENDER (anime x realismo): escolhe o checkpoint/VAE e reforça
+        # o prompt/negative. É o checkpoint que define a arte (foto x desenho).
+        ckpt, vae = comfyui_client.video_style_models(project.render_style, self.base_url)
+        gen_prompt, gen_negative = expanded, comfyui_client.VIDEO_NEGATIVE
+        if (project.render_style or "") == "realism":
+            gen_prompt = comfyui_client.VIDEO_REALISM_POSITIVE + ", " + expanded
+            gen_negative = comfyui_client.VIDEO_NEGATIVE + ", " + comfyui_client.VIDEO_REALISM_NEGATIVE
+            self.stdout.write(f"  preset REALISMO (ckpt={ckpt}, vae={vae})")
+
         # 2) beat CONTÍNUO: uma geração (janela deslizante do AnimateDiff) com a
         # MESMA seed em todos os pedaços — trava a aparência/roupa ao longo do
         # beat. Só divide em pedaços se passar do teto de frames por geração.
@@ -362,8 +378,9 @@ class Command(BaseCommand):
             self._set_beat(beat, progress=(f"gerando {idx+1}/{len(chunks)}"
                            if len(chunks) > 1 else "gerando o beat..."))
             comfyui_client.free_memory(self.base_url)
-            mp4 = self._gen_one(project, expanded, fcount / fps, base_seed, ref_bytes,
-                                max_frames=max_f, animate=animate, denoise=denoise)
+            mp4 = self._gen_one(project, gen_prompt, fcount / fps, base_seed, ref_bytes,
+                                max_frames=max_f, animate=animate, denoise=denoise,
+                                ckpt=ckpt, vae=vae, negative=gen_negative)
             if mp4 is None:
                 if parts:  # usa o que já saiu
                     break
