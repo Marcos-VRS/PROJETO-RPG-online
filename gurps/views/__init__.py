@@ -22,6 +22,7 @@ from .video_gen import (
     videogen_approve, videogen_discard, videogen_music, videogen_resume,
     videogen_pause,
     videogen_project_create, videogen_projects, videogen_project_detail,
+    videogen_project_update,
     videogen_beat_add, videogen_beat_update, videogen_beat_delete,
     videogen_beat_reorder, videogen_beat_generate, videogen_beat_mp4,
     videogen_project_assemble,

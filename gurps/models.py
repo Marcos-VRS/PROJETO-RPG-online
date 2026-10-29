@@ -582,8 +582,13 @@ class VideoBeat(models.Model):
     project = models.ForeignKey(
         VideoGenRequest, on_delete=models.CASCADE, related_name="beats"
     )
-    order = models.IntegerField(default=0)  # sequência na montagem (0 = primeiro)
-    duration_ms = models.IntegerField(default=2000)  # fatia do áudio que este beat ocupa
+    order = models.IntegerField(default=0)  # sequência (derivada de start_ms)
+    # O beat é um TRECHO da música: de start_ms até end_ms (timestamps). A
+    # montagem usa a ordem cronológica. duration_ms = end-start (mantido em sync
+    # pela view; é o que decide o tamanho do clipe/quantos sub-clipes de 2s).
+    start_ms = models.IntegerField(default=0)
+    end_ms = models.IntegerField(default=2000)
+    duration_ms = models.IntegerField(default=2000)  # = end_ms - start_ms
     user_prompt = models.TextField(blank=True, default="")  # o que o GM ditou
     correction = models.TextField(blank=True, default="")  # instrução de correção p/ regerar
     expanded_prompt = models.TextField(blank=True, default="")  # prompt cumulativo (claude)

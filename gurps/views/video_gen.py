@@ -26,7 +26,7 @@ PROMPT_MAX = 2000
 STYLE_CHOICES = {"anime", "cinematic_dark", "photoreal", "oil", "gritty", "none"}
 AUDIO_EXTS = (".mp3", ".m4a", ".ogg", ".wav", ".opus", ".flac")
 BEAT_MIN_MS = 1000
-BEAT_MAX_MS = 20000
+BEAT_MAX_MS = 30000
 
 
 def _serialize(req):
@@ -79,6 +79,8 @@ def _serialize_beat(b):
     return {
         "id": b.id,
         "order": b.order,
+        "start_ms": b.start_ms,
+        "end_ms": b.end_ms,
         "duration_ms": b.duration_ms,
         "user_prompt": b.user_prompt or "",
         "correction": b.correction or "",
@@ -95,8 +97,8 @@ def _serialize_beat(b):
 
 
 def _serialize_project(req, with_beats=True):
-    beats = list(req.beats.order_by("order", "id")) if with_beats else []
-    used_ms = sum(b.duration_ms for b in beats) if with_beats else 0
+    beats = list(req.beats.order_by("start_ms", "id")) if with_beats else []
+    used_ms = max((b.end_ms for b in beats), default=0) if with_beats else 0
     return {
         "id": req.id,
         "mode": req.mode,
@@ -174,6 +176,40 @@ def videogen_project_detail(request, req_id):
     return JsonResponse({"ok": True, "project": data})
 
 
+@login_required(login_url="gurps:login")
+def videogen_project_update(request, req_id):
+    """Edita o TEMA GERAL do projeto depois de criado: ideia geral, estilo, ler
+    journal e a música (troca a faixa — re-mede a minutagem). Não mexe nos beats
+    já gerados; o prompt/estilo valem pras próximas gerações."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if req.status in ("pending", "processing"):
+        return JsonResponse({"error": "aguarde a montagem terminar pra editar o tema"}, status=400)
+    body = request.POST if (request.content_type or "").startswith("multipart/") else (_json_body(request) or {})
+    fields = []
+    if "prompt" in body:
+        req.prompt = (body.get("prompt") or "").strip()[:PROMPT_MAX] or "(vídeo por beats)"
+        fields.append("prompt")
+    if body.get("style") in STYLE_CHOICES:
+        req.style = body.get("style")
+        fields.append("style")
+    if "use_context" in body:
+        req.use_context = str(body.get("use_context")).lower() not in ("0", "false", "no", "")
+        fields.append("use_context")
+    newmusic = _save_music_choice(request, body)
+    if newmusic:
+        req.music_file = newmusic
+        mpath = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, newmusic)
+        req.audio_duration_ms = video_assembly.media_duration_ms(mpath) if mpath else req.audio_duration_ms
+        fields += ["music_file", "audio_duration_ms"]
+    if fields:
+        req.save(update_fields=fields + ["updated_at"])
+    return JsonResponse({"ok": True, "project": _serialize_project(req)})
+
+
 def _reactivate_if_terminal(req):
     """Se o projeto já foi montado/falhou, volta pra 'editing' ao mexer num beat."""
     if req.mode == "beats" and req.status in ("done", "failed", "approved"):
@@ -191,11 +227,35 @@ def _resolve_ref_asset(campanha, body):
         return None
 
 
-def _clamp_ms(v, default):
-    try:
-        return max(BEAT_MIN_MS, min(int(v), BEAT_MAX_MS))
-    except (TypeError, ValueError):
-        return default
+def _beat_times(body, cur_start, cur_end, audio_ms):
+    """Normaliza (start_ms, end_ms) do beat: >=0, dentro do áudio, e com a
+    duração entre BEAT_MIN e BEAT_MAX."""
+    def _as_int(key, default):
+        v = body.get(key)
+        if v is None or v == "":
+            return default
+        try:
+            return int(float(v))
+        except (TypeError, ValueError):
+            return default
+    start = max(0, _as_int("start_ms", cur_start))
+    end = _as_int("end_ms", cur_end)
+    if audio_ms and audio_ms > 0:
+        start = min(start, max(0, audio_ms - BEAT_MIN_MS))
+        end = min(end, audio_ms)
+    if end < start + BEAT_MIN_MS:
+        end = start + BEAT_MIN_MS
+    if end - start > BEAT_MAX_MS:
+        end = start + BEAT_MAX_MS
+    return start, end
+
+
+def _resequence(project):
+    """Reindexa `order` pela ordem cronológica (start_ms) — a montagem segue isso."""
+    for i, b in enumerate(project.beats.order_by("start_ms", "id")):
+        if b.order != i:
+            b.order = i
+            b.save(update_fields=["order"])
 
 
 @login_required(login_url="gurps:login")
@@ -207,17 +267,21 @@ def videogen_beat_add(request, req_id):
         return JsonResponse({"error": "sem permissão"}, status=403)
     body = _json_body(request) or request.POST
     from django.db.models import Max  # noqa: WPS433
-    mx = req.beats.aggregate(m=Max("order"))["m"]
-    nxt = 0 if mx is None else mx + 1
+    # por padrão o novo beat começa onde o último terminou (contíguo na música)
+    prev_end = req.beats.aggregate(m=Max("end_ms"))["m"] or 0
+    audio = req.audio_duration_ms or 0
+    dft_start = prev_end if not audio else min(prev_end, max(0, audio - BEAT_MIN_MS))
+    start, end = _beat_times(body, dft_start, dft_start + 2000, audio)
     beat = VideoBeat.objects.create(
-        project=req, order=nxt,
-        duration_ms=_clamp_ms(body.get("duration_ms"), 2000),
+        project=req, order=0, start_ms=start, end_ms=end, duration_ms=end - start,
         user_prompt=(body.get("user_prompt") or "").strip()[:PROMPT_MAX],
         ref_asset=_resolve_ref_asset(req.campanha, body),
         transition=("crossfade" if body.get("transition") == "crossfade" else "cut"),
         transition_ms=_clamp_transition(body.get("transition_ms")),
     )
+    _resequence(req)
     _reactivate_if_terminal(req)
+    beat.refresh_from_db()
     return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
 
 
@@ -234,8 +298,10 @@ def videogen_beat_update(request, beat_id):
         beat.user_prompt = (body.get("user_prompt") or "").strip()[:PROMPT_MAX]; changed = True
     if "correction" in body:
         beat.correction = (body.get("correction") or "").strip()[:PROMPT_MAX]; changed = True
-    if "duration_ms" in body:
-        beat.duration_ms = _clamp_ms(body.get("duration_ms"), beat.duration_ms); changed = True
+    if "start_ms" in body or "end_ms" in body:
+        start, end = _beat_times(body, beat.start_ms, beat.end_ms, beat.project.audio_duration_ms)
+        beat.start_ms, beat.end_ms, beat.duration_ms = start, end, end - start
+        changed = True
     if "ref_asset_id" in body:
         beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
     if "transition" in body:
@@ -246,7 +312,9 @@ def videogen_beat_update(request, beat_id):
     if changed and beat.status in ("done", "failed"):
         beat.status = "empty"
     beat.save()
+    _resequence(beat.project)
     _reactivate_if_terminal(beat.project)
+    beat.refresh_from_db()
     return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
 
 

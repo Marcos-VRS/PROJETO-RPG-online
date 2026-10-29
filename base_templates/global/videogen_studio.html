@@ -38,8 +38,8 @@
         .st-tabs { display: flex; gap: 8px; margin: 14px 0 4px; }
         .st-tab { flex: 1; text-align: center; padding: 10px; border-radius: 6px; cursor: pointer; background: #26262e; border: 1px solid #383840; color: #cfcfd6; font-weight: 700; }
         .st-tab.on { background: #3a2650; border-color: #7a2ea0; color: #fff; }
-        .st-timeline { height: 26px; border-radius: 6px; background: #1c1c22; border: 1px solid #383840; display: flex; overflow: hidden; margin: 6px 0; }
-        .st-tl-seg { height: 100%; border-right: 1px solid #0008; font-size: 10px; color: #0009; display: flex; align-items: center; justify-content: center; min-width: 2px; }
+        .st-timeline { position: relative; height: 26px; border-radius: 6px; background: #1c1c22; border: 1px solid #383840; overflow: hidden; margin: 6px 0; }
+        .st-tl-seg { height: 100%; box-sizing: border-box; border: 1px solid #0008; font-size: 10px; color: #fff; display: flex; align-items: center; justify-content: center; min-width: 2px; }
         .st-beat { border-left: 4px solid #7a2ea0; }
         .st-beat.empty { border-left-color: #666; } .st-beat.done { border-left-color: #2e7d46; } .st-beat.failed { border-left-color: #8a2e2e; }
         .st-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -115,6 +115,31 @@
                     </div>
                     <div class="st-timeline" id="ed-timeline"></div>
                 </div>
+                <details class="st-card" id="ed-theme">
+                    <summary style="cursor:pointer;font-weight:700;">⚙️ Tema geral do projeto (editar)</summary>
+                    <div class="st-row">
+                        <label class="st-field">Estilo:
+                            <select id="te-style">
+                                <option value="anime">Anime (padrão)</option>
+                                <option value="cinematic_dark">Cinematográfico escuro</option>
+                                <option value="gritty">Grimdark</option>
+                                <option value="oil">Pintura a óleo</option>
+                            </select>
+                        </label>
+                        <label class="st-field st-check" style="align-self:end;"><input type="checkbox" id="te-context"> Ler o journal</label>
+                    </div>
+                    <label class="st-field">Música (trocar a faixa re-mede a minutagem):
+                        <select id="te-music"><option value="">— manter a atual —</option></select>
+                    </label>
+                    <label class="st-field" style="font-size:12px;">…ou enviar uma música:
+                        <input type="file" id="te-music-upload" accept="audio/*">
+                    </label>
+                    <label class="st-field">Ideia geral do vídeo:
+                        <textarea id="te-prompt" rows="2"></textarea>
+                    </label>
+                    <button type="button" class="st-gen" style="background:#2a5a7a;" onclick="vgProjSave()">💾 Salvar tema geral</button>
+                    <p class="st-status" id="te-status"></p>
+                </details>
                 <div id="ed-beats"></div>
                 <button type="button" class="st-gen" style="background:#2a5a7a;margin-top:10px;" onclick="vgBeatAdd()">➕ Adicionar beat</button>
                 <button type="button" class="st-gen" style="margin-top:8px;" onclick="vgAssemble()">🎬 Montar vídeo (com as transições)</button>
@@ -186,6 +211,24 @@
             return fetch(url, opt).then(function (r) { return r.json(); });
         }
         function mmss(ms) { var s = Math.round((ms || 0) / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+        // "m:ss" ou "m:ss.d" a partir de ms (campo editável do beat)
+        function stamp(ms) {
+            ms = Math.max(0, Math.round(ms || 0));
+            var s = Math.floor(ms / 1000), d = Math.round((ms % 1000) / 100);
+            var base = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+            return d ? base + '.' + d : base;
+        }
+        // interpreta "1:05", "1:05.5", "0:30" ou "90" (segundos) -> ms; null se inválido
+        function parseStamp(txt) {
+            txt = (txt || '').trim(); if (!txt) return null;
+            var parts = txt.split(':');
+            var val;
+            if (parts.length === 2) { val = parseInt(parts[0], 10) * 60 + parseFloat(parts[1]); }
+            else if (parts.length === 1) { val = parseFloat(parts[0]); }
+            else return null;
+            if (isNaN(val) || val < 0) return null;
+            return Math.round(val * 1000);
+        }
 
         function vgTab(which) {
             document.getElementById('tab-beats').classList.toggle('on', which === 'beats');
@@ -206,7 +249,7 @@
         function loadMusic() {
             fetch('/videogen/' + CAMP + '/music/').then(function (r) { return r.json(); }).then(function (d) {
                 var tracks = (d && d.tracks) || [];
-                [['np-music', '— escolha uma faixa —'], ['vg-music', 'Automática (pelo clima da cena)']].forEach(function (pair) {
+                [['np-music', '— escolha uma faixa —'], ['vg-music', 'Automática (pelo clima da cena)'], ['te-music', '— manter a atual —']].forEach(function (pair) {
                     var sel = document.getElementById(pair[0]); if (!sel) return;
                     sel.innerHTML = '<option value="">' + pair[1] + '</option>';
                     var byMood = {};
@@ -272,6 +315,7 @@
                 vgComfyBadge(d.project.comfy, d.project.video_models);
                 document.getElementById('vg-proj-home').classList.add('st-hide');
                 document.getElementById('vg-editor').classList.remove('st-hide');
+                vgFillTheme();
                 vgRenderEditor();
                 vgScheduleEditorPoll();
             }).catch(function () {});
@@ -283,25 +327,52 @@
             document.getElementById('vg-proj-home').classList.remove('st-hide');
             vgLoadProjects();
         }
-        function durOptions(ms) {
-            var opts = [1000, 2000, 3000, 4000, 6000, 8000, 10000, 12000, 16000, 20000];
-            return opts.map(function (v) { return '<option value="' + v + '"' + (v === ms ? ' selected' : '') + '>' + (v / 1000) + 's</option>'; }).join('');
+        function vgFillTheme() {
+            var p = _proj; if (!p) return;
+            document.getElementById('te-style').value = p.style || 'anime';
+            document.getElementById('te-context').checked = !!p.use_context;
+            document.getElementById('te-prompt').value = (p.prompt === '(vídeo por beats)') ? '' : (p.prompt || '');
+            var m = document.getElementById('te-music'); if (m) m.value = '';
+            document.getElementById('te-status').textContent = 'música atual: ' + (p.music_file || '—');
+        }
+        function vgProjSave() {
+            var st = document.getElementById('te-status'); st.textContent = 'Salvando…';
+            var fd = new FormData();
+            fd.append('prompt', document.getElementById('te-prompt').value || '');
+            fd.append('style', document.getElementById('te-style').value);
+            fd.append('use_context', document.getElementById('te-context').checked ? '1' : '0');
+            fd.append('music_file', document.getElementById('te-music').value || '');
+            var up = document.getElementById('te-music-upload');
+            if (up && up.files && up.files[0]) fd.append('music_upload', up.files[0]);
+            fetch('/videogen/project/' + _proj.id + '/update/', { method: 'POST', headers: { 'X-CSRFToken': csrf() }, body: fd })
+                .then(function (r) { return r.json(); }).then(function (d) {
+                    if (d && d.ok) { _proj = d.project; if (up) up.value = ''; vgFillTheme(); vgRenderEditor(); st.textContent = 'Tema salvo.'; }
+                    else { st.textContent = (d && d.error) || 'erro ao salvar.'; }
+                }).catch(function () { st.textContent = 'falha de rede.'; });
+        }
+        function vgBeatTime(id) {
+            var s = parseStamp((document.getElementById('bs-' + id) || {}).value);
+            var e = parseStamp((document.getElementById('be-' + id) || {}).value);
+            if (s == null || e == null) { vgRefresh(); return; }  // inválido: volta ao salvo
+            vgBeatPatch(id, { start_ms: s, end_ms: e });
         }
         function vgRenderEditor() {
             var p = _proj; if (!p) return;
             document.getElementById('ed-title').textContent = p.prompt || 'Projeto de vídeo';
             document.getElementById('ed-audio').textContent = '🎵 ' + (p.music_file || '—') + ' · duração do áudio ' + mmss(p.audio_duration_ms);
             var fill = document.getElementById('ed-fill');
-            fill.textContent = 'beats: ' + mmss(p.used_ms) + ' / ' + mmss(p.audio_duration_ms);
-            // timeline proporcional
+            fill.textContent = 'coberto até ' + mmss(p.used_ms) + ' / ' + mmss(p.audio_duration_ms);
+            // timeline ABSOLUTA: cada beat ocupa [start,end] da música
             var tl = document.getElementById('ed-timeline'); tl.innerHTML = '';
             var total = Math.max(p.audio_duration_ms || 0, p.used_ms || 1);
             (p.beats || []).forEach(function (b, i) {
                 var seg = document.createElement('div');
                 seg.className = 'st-tl-seg';
-                seg.style.width = (100 * b.duration_ms / total) + '%';
+                seg.style.position = 'absolute';
+                seg.style.left = (100 * b.start_ms / total) + '%';
+                seg.style.width = Math.max(1.2, 100 * (b.end_ms - b.start_ms) / total) + '%';
                 seg.style.background = b.status === 'done' ? '#2e7d46' : (b.status === 'failed' ? '#8a2e2e' : '#7a2ea0');
-                seg.title = 'beat ' + (i + 1) + ' (' + (b.duration_ms / 1000) + 's)';
+                seg.title = 'beat ' + (i + 1) + ': ' + stamp(b.start_ms) + '→' + stamp(b.end_ms);
                 seg.textContent = (i + 1);
                 tl.appendChild(seg);
             });
@@ -310,9 +381,13 @@
             var S = { empty: 'sem clipe', pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
             box.innerHTML = (p.beats || []).map(function (b, i) {
                 var h = '<div class="st-card st-beat ' + b.status + '">';
-                h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span></div>';
-                h += '<div style="text-align:right;"><button class="st-actions" style="min-width:34px;flex:0;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;" onclick="vgBeatMove(' + b.id + ',-1)">↑</button> '
-                    + '<button class="st-actions" style="min-width:34px;flex:0;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;" onclick="vgBeatMove(' + b.id + ',1)">↓</button></div></div>';
+                h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span>'
+                    + ' <span class="st-mini">(' + (((b.end_ms - b.start_ms) / 1000).toFixed(1)) + 's)</span></div></div>';
+                // trecho da música: de X:XX até Y:YY
+                h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Da música — de (m:ss):'
+                    + '<input type="text" id="bs-' + b.id + '" value="' + stamp(b.start_ms) + '" onchange="vgBeatTime(' + b.id + ')"></label>'
+                    + '<label class="st-field" style="margin:4px 0;">até (m:ss):'
+                    + '<input type="text" id="be-' + b.id + '" value="' + stamp(b.end_ms) + '" onchange="vgBeatTime(' + b.id + ')"></label></div>';
                 // transição (menos no primeiro)
                 if (i > 0) {
                     h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Transição: '
@@ -321,8 +396,7 @@
                         + '<option value="crossfade"' + (b.transition === 'crossfade' ? ' selected' : '') + '>crossfade</option></select></label>'
                         + '<label class="st-field" style="margin:4px 0;">Crossfade (ms): <input type="number" min="100" max="3000" step="100" value="' + b.transition_ms + '" onchange="vgBeatPatch(' + b.id + ',{transition_ms:this.value})"></label></div>';
                 }
-                h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Duração: <select onchange="vgBeatPatch(' + b.id + ',{duration_ms:this.value})">' + durOptions(b.duration_ms) + '</select></label>'
-                    + '<div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div></div>';
+                h += '<div class="st-row"><div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div></div>';
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
@@ -351,7 +425,8 @@
 
         // ---------- ações de beat ----------
         function vgBeatAdd() {
-            post('/videogen/project/' + _proj.id + '/beat/add/', { duration_ms: 2000, user_prompt: '', transition: 'cut' })
+            // sem tempos: o servidor coloca o beat logo após o último (contíguo na música)
+            post('/videogen/project/' + _proj.id + '/beat/add/', { user_prompt: '', transition: 'cut' })
                 .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
         }
         function vgBeatSave(id) {
@@ -375,15 +450,6 @@
                 if (d && d.error) { document.getElementById('ed-status').textContent = d.error; }
                 vgRefresh(); vgScheduleEditorPoll();
             }).catch(function () {});
-        }
-        function vgBeatMove(id, dir) {
-            var beats = (_proj.beats || []).slice();
-            var idx = beats.findIndex(function (b) { return b.id === id; });
-            var j = idx + dir;
-            if (idx < 0 || j < 0 || j >= beats.length) return;
-            var tmp = beats[idx]; beats[idx] = beats[j]; beats[j] = tmp;
-            post('/videogen/project/' + _proj.id + '/beat/reorder/', { order: beats.map(function (b) { return b.id; }) })
-                .then(function (d) { if (d && d.ok) { _proj = d.project; vgRenderEditor(); } }).catch(function () {});
         }
         function vgAssemble() {
             document.getElementById('ed-status').textContent = 'Montando…';

@@ -316,8 +316,8 @@ class Command(BaseCommand):
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(f"  contexto falhou: {e}"))
         priors = [b.expanded_prompt for b in
-                  VideoBeat.objects.filter(project=project, order__lt=beat.order,
-                                           status="done").order_by("order")
+                  VideoBeat.objects.filter(project=project, start_ms__lt=beat.start_ms,
+                                           status="done").order_by("start_ms", "id")
                   if (b.expanded_prompt or "").strip()]
         expanded, used = ai_context.write_beat_prompt_via_claude(
             ctx, project.prompt, priors, beat.user_prompt or project.prompt,
@@ -327,7 +327,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  prompt ({'claude' if used else 'mecanico'}): {expanded[:70]!r}")
 
         # 2) beat = N sub-clipes de 2s encadeados (mesma referencia; seed+i).
-        n_sub = max(1, min(round((beat.duration_ms or 2000) / 2000.0), 12))
+        n_sub = max(1, min(round((beat.duration_ms or 2000) / 2000.0), 15))
         base_seed = beat.seed
         if base_seed is None:
             import random
@@ -372,7 +372,7 @@ class Command(BaseCommand):
         (corte/crossfade) + trilha."""
         self._set(req, status="processing", progress="montando o video...", error="")
         beats = list(VideoBeat.objects.filter(project=req, status="done")
-                     .exclude(clip_file="").order_by("order"))
+                     .exclude(clip_file="").order_by("start_ms", "id"))
         if not beats:
             self._fail(req, "nenhum beat pronto pra montar — gere os beats antes.")
             return

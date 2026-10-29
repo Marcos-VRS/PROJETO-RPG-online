@@ -193,6 +193,7 @@ urlpatterns = [
     path("videogen/<int:campanha_id>/project/create/", views.videogen_project_create, name="videogen_project_create"),
     path("videogen/<int:campanha_id>/projects/", views.videogen_projects, name="videogen_projects"),
     path("videogen/project/<int:req_id>/", views.videogen_project_detail, name="videogen_project_detail"),
+    path("videogen/project/<int:req_id>/update/", views.videogen_project_update, name="videogen_project_update"),
     path("videogen/project/<int:req_id>/beat/add/", views.videogen_beat_add, name="videogen_beat_add"),
     path("videogen/project/<int:req_id>/beat/reorder/", views.videogen_beat_reorder, name="videogen_beat_reorder"),
     path("videogen/project/<int:req_id>/assemble/", views.videogen_project_assemble, name="videogen_project_assemble"),
