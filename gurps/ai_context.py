@@ -327,6 +327,7 @@ Output only the JSON storyboard."""
 
 def write_beat_prompt_via_claude(context, project_request, prior_beats, this_prompt,
                                  correction="", style_key="anime", ref_name="",
+                                 render_style="anime",
                                  claude_bin="claude", model="sonnet", timeout=120):
     """Escreve o prompt de UM beat (cena), de forma CUMULATIVA.
 
@@ -334,9 +335,25 @@ def write_beat_prompt_via_claude(context, project_request, prior_beats, this_pro
     pra o claude manter coerência (mesmos personagens/look/paleta/continuidade).
     `this_prompt` é o que o GM ditou pra ESTE beat; `correction` é uma instrução
     opcional pra corrigir uma tentativa anterior. `ref_name` é o nome da imagem de
-    referência do journal (personagem) se houver. Retorna (prompt, usou_claude);
-    fallback mecânico em qualquer erro."""
-    style = style_keywords(style_key) or "anime style, cinematic"
+    referência do journal (personagem) se houver. `render_style` ("anime"|"realism")
+    decide se o prompt pede ARTE de anime ou live-action FOTORREALISTA — sem isso o
+    claude escreve "anime style" mesmo num projeto realista e briga com o checkpoint.
+    Retorna (prompt, usou_claude); fallback mecânico em qualquer erro."""
+    realism = (render_style or "").lower() == "realism"
+    # Em realismo, ignora o preset anime de style_keywords: o "look" é fotorrealista.
+    if realism:
+        style = "photorealistic, cinematic, natural lighting, realistic film still"
+        medium = "PHOTOREALISTIC LIVE-ACTION"
+        look_token = "photorealistic"
+        ban = (" Do NOT use the words 'anime', 'cartoon', 'cel shaded', 'illustration', "
+               "'drawing' or 'stylized' — this is a live-action, photoreal video of real people.")
+        final_word = "photorealistic"
+    else:
+        style = style_keywords(style_key) or "anime style, cinematic"
+        medium = "ANIME-STYLE"
+        look_token = "anime style"
+        ban = ""
+        final_word = "anime"
     prior = [str(p).strip() for p in (prior_beats or []) if str(p).strip()]
     if prior:
         prior_block = "\n".join(f"  {i+1}. {p}" for i, p in enumerate(prior[-20:]))
@@ -351,8 +368,8 @@ def write_beat_prompt_via_claude(context, project_request, prior_beats, this_pro
     if (correction or "").strip():
         corr_block = (f"\n=== CORRECTION (the previous attempt at THIS beat was wrong; fix it) ===\n"
                       f"{correction.strip()}\n")
-    instruction = f"""You write ONE shot prompt for a single beat (scene) of a SHORT ANIME-STYLE recap video of a tabletop RPG.
-Output ONLY one single-line English image/motion prompt: comma-separated descriptors, 20-45 words, include 'anime style' and a camera/motion cue. No preamble, no quotes, no markdown.
+    instruction = f"""You write ONE shot prompt for a single beat (scene) of a SHORT {medium} recap video of a tabletop RPG.
+Output ONLY one single-line English image/motion prompt: comma-separated descriptors, 20-45 words, include '{look_token}' and a camera/motion cue. No preamble, no quotes, no markdown.{ban}
 
 The beat must be VISUALLY CONSISTENT with the beats so far (same era, tone, palette, characters, continuity) and with the campaign world below.{ref_block}
 Bake in this visual style: {style}.
@@ -366,17 +383,15 @@ Bake in this visual style: {style}.
 === THIS BEAT (what the GM dictated for this scene) ===
 {this_prompt}
 
-Now output only the final single-line anime shot prompt for THIS beat."""
+Now output only the final single-line {final_word} shot prompt for THIS beat."""
 
     out, ok = _run_claude_text(instruction, claude_bin, model, timeout)
     if not ok or not out:
-        base = style_keywords(style_key)
-        mech = (f"{base}, {this_prompt}" if base else this_prompt).strip()
+        mech = (f"{style}, {this_prompt}" if style else this_prompt).strip()
         return mech[:400], False
     lines = [ln.strip() for ln in out.splitlines() if ln.strip()]
     prompt = " ".join(lines).strip().strip('`"\' ').strip()
     if len(prompt) < 10:
-        base = style_keywords(style_key)
-        mech = (f"{base}, {this_prompt}" if base else this_prompt).strip()
+        mech = (f"{style}, {this_prompt}" if style else this_prompt).strip()
         return mech[:400], False
     return prompt[:400], True

@@ -12,6 +12,7 @@ Uso:
 import os
 import tempfile
 import time
+import traceback
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -50,7 +51,15 @@ class Command(BaseCommand):
                 beat = (VideoBeat.objects.filter(status="pending")
                         .select_related("project").order_by("created_at").first())
                 if beat is not None:
-                    self._process_beat(beat)
+                    # RESILIÊNCIA: um beat que explode NÃO pode derrubar o worker.
+                    # Antes, uma exceção aqui subia pelo loop e matava o processo
+                    # (launcher não reinicia + log no DEVNULL) → o próximo beat
+                    # ficava órfão em "preparando" pra sempre, sem erro visível.
+                    # Agora o erro é gravado no próprio beat e o worker segue.
+                    try:
+                        self._process_beat(beat)
+                    except Exception as e:  # noqa: BLE001
+                        self._safe_fail_beat(beat, e)
                     if once:
                         break
                     continue
@@ -61,10 +70,13 @@ class Command(BaseCommand):
                         break
                     time.sleep(interval)
                     continue
-                if req.mode == "beats":
-                    self._assemble_project(req)
-                else:
-                    self._process(req)
+                try:
+                    if req.mode == "beats":
+                        self._assemble_project(req)
+                    else:
+                        self._process(req)
+                except Exception as e:  # noqa: BLE001
+                    self._safe_fail_req(req, e)
                 if once:
                     break
         except KeyboardInterrupt:
@@ -267,6 +279,27 @@ class Command(BaseCommand):
         beat.save(update_fields=["status", "error", "updated_at"])
         self.stdout.write(self.style.ERROR(f"beat #{beat.id} FALHOU: {beat.error}"))
 
+    def _safe_fail_beat(self, beat, exc):
+        """Marca o beat como falho por uma exceção NÃO tratada e loga o traceback,
+        sem deixar o worker morrer. Último recurso do loop principal."""
+        tb = traceback.format_exc()
+        self.stdout.write(self.style.ERROR(f"beat #{beat.id} EXCEÇÃO não tratada:\n{tb}"))
+        try:
+            VideoBeat.objects.filter(id=beat.id).update(
+                status="failed", error=f"{type(exc).__name__}: {exc}"[:500])
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _safe_fail_req(self, req, exc):
+        """Idem para um VideoGenRequest (modo auto / montagem)."""
+        tb = traceback.format_exc()
+        self.stdout.write(self.style.ERROR(f"#{req.id} EXCEÇÃO não tratada:\n{tb}"))
+        try:
+            VideoGenRequest.objects.filter(id=req.id).update(
+                status="failed", error=f"{type(exc).__name__}: {exc}"[:500])
+        except Exception:  # noqa: BLE001
+            pass
+
     def _resolve_beat_ref(self, beat):
         """(bytes, nome) da imagem de referência do journal, ou (None, '')."""
         a = beat.ref_asset
@@ -339,6 +372,7 @@ class Command(BaseCommand):
         expanded, used = ai_context.write_beat_prompt_via_claude(
             ctx, project.prompt, priors, beat.user_prompt or project.prompt,
             correction=beat.correction, style_key=project.style, ref_name=ref_name,
+            render_style=project.render_style,
             claude_bin=self.claude_bin, model=self.claude_model)
         self._set_beat(beat, expanded_prompt=expanded)
         self.stdout.write(f"  prompt ({'claude' if used else 'mecanico'}): {expanded[:70]!r}")

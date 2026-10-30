@@ -111,8 +111,13 @@ def _run_as_videogen_worker() -> int:
     return 0
 
 
-def _spawn_worker(project_root: Path, home: Path, flag: str):
-    """Sobe um worker como subprocess (ao lado do daphne). Genérico pro flag dado."""
+def _spawn_worker(project_root: Path, home: Path, flag: str, log_name: str | None = None):
+    """Sobe um worker como subprocess (ao lado do daphne). Genérico pro flag dado.
+
+    Se log_name for dado, stdout/stderr do worker vão pra <home>/logs/<log_name>
+    (modo append) — essencial pra diagnosticar um crash do worker, que antes
+    sumia no DEVNULL e deixava beats órfãos em "preparando" sem erro visível.
+    """
     if getattr(sys, "frozen", False):
         cmd = [sys.executable, flag]
     else:
@@ -120,13 +125,22 @@ def _spawn_worker(project_root: Path, home: Path, flag: str):
     env = dict(os.environ)
     env["ROLL3D6_DESKTOP_HOME"] = str(home)
     env.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+    env.setdefault("PYTHONUNBUFFERED", "1")  # log sai na hora, não em buffer
     creationflags = 0
     if os.name == "nt":
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    log_fh = subprocess.DEVNULL
+    if log_name:
+        try:
+            logdir = Path(home) / "logs"
+            logdir.mkdir(parents=True, exist_ok=True)
+            log_fh = open(logdir / log_name, "a", encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            log_fh = subprocess.DEVNULL
     try:
         return subprocess.Popen(
             cmd, cwd=str(project_root), env=env, creationflags=creationflags,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stdout=log_fh, stderr=subprocess.STDOUT,
         )
     except Exception:  # noqa: BLE001
         return None
@@ -232,6 +246,21 @@ def _start_comfyui_watchdog(home: "Path | None", state: dict):
     threading.Thread(target=_loop, daemon=True).start()
 
 
+def _start_worker_watchdog(states: list):
+    """Thread: reinicia um worker (imagem/vídeo) que caiu. Cada item de `states`
+    é {'proc': Popen|None, 'spawn': callable, 'name': str}. Antes, um worker que
+    crashava ficava morto pra sempre e os jobs pendentes jamais eram pegos —
+    beat eternamente em "preparando". Agora ele volta sozinho em até ~15s."""
+    def _loop():
+        while True:
+            time.sleep(15)
+            for st in states:
+                proc = st.get("proc")
+                if proc is not None and proc.poll() is not None:  # morreu
+                    st["proc"] = st["spawn"]()
+    threading.Thread(target=_loop, daemon=True).start()
+
+
 def main() -> int:
     # Modo daphne: o subprocess que serve HTTP.
     if len(sys.argv) >= 2 and sys.argv[1] == "--daphne":
@@ -299,9 +328,16 @@ def main() -> int:
     _start_comfyui_watchdog(home, comfy_state)
 
     # Workers do Estúdio de Imagem e de Vídeo (ComfyUI). Ociosos se o ComfyUI
-    # não estiver de pé.
+    # não estiver de pé. O de vídeo loga em logs/videogen.log (crash não some).
     imagegen_proc = _spawn_imagegen_worker(project_root, home)
-    videogen_proc = _spawn_worker(project_root, home, "--videogen-worker")
+    videogen_proc = _spawn_worker(project_root, home, "--videogen-worker", log_name="videogen.log")
+    # Watchdog: se um worker cair, reinicia sozinho (jobs pendentes não ficam órfãos).
+    _start_worker_watchdog([
+        {"proc": imagegen_proc, "name": "imagegen",
+         "spawn": lambda: _spawn_imagegen_worker(project_root, home)},
+        {"proc": videogen_proc, "name": "videogen",
+         "spawn": lambda: _spawn_worker(project_root, home, "--videogen-worker", log_name="videogen.log")},
+    ])
 
     def _boot_async():
         if not server.wait_ready(port, timeout=30):

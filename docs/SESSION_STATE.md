@@ -7,6 +7,15 @@
 
 ---
 
+## SESSÃO 2026-10-30: Worker de vídeo morria calado (beat eterno em "preparando") — CORRIGIDO
+User: "recebi um erro e está como preparando; você consegue ver o que está acontecendo em tempo real?". Eu NÃO vejo a tela — diagnostiquei pelos processos + banco (OneDrive) + logs que eu mantenho.
+- **Causa raiz:** o `--videogen-worker` NÃO estava no process list (só `--daphne` e `--imagegen-worker`). Beat `pending` sem worker vivo = "preparando" pra sempre. Três falhas combinadas: (1) `videogen_worker.handle()` chamava `_process_beat`/`_assemble_project`/`_process` **sem try/except** → qualquer exceção (claude do prompt, OOM no POST, ffmpeg) MATAVA o processo inteiro; (2) o launcher não reiniciava worker caído (só o ComfyUI tinha watchdog); (3) `_spawn_worker` mandava stdout/stderr pro DEVNULL → crash sem rastro (= "erro sem erro visível").
+- **Correções:** (1) loop do worker envolve cada dispatch em try/except → novos `_safe_fail_beat`/`_safe_fail_req` gravam o erro no item (status `failed`) + traceback no log e o worker **sobrevive**; (2) `launcher._start_worker_watchdog([...])` reinicia imagegen+videogen em ~15s se caírem; (3) `_spawn_worker(..., log_name="videogen.log")` → `<home>/logs/videogen.log` (append) + `PYTHONUNBUFFERED=1`.
+- **Bônus (ataca o "boneco"):** `ai_context.write_beat_prompt_via_claude` cravava "ANIME-STYLE"/"anime style" na instrução pro claude **mesmo em projeto realista** → o prompt saía "Anime style opening shot…" brigando com o checkpoint foto. Agora a função tem param `render_style`: em realismo o medium vira "PHOTOREALISTIC LIVE-ACTION", exige token `photorealistic`, bane "anime/cartoon/cel shaded/illustration/drawing/stylized"; worker passa `render_style=project.render_style`. (A `write_storyboard_via_claude` do modo auto ainda é anime-only — TODO.)
+- **Validação:** subi um worker stand-in do dev (eu mantenho os workers) contra o banco do OneDrive → **beat 21 gerou OK** (done, 40 frames, com som; barra de % confirmada subindo 0→100 batendo com o ComfyUI, ~10s/passo morno). `py_compile` + `manage.py check` limpos; `test_beats.py` + `test_prompt_style.py` (novo, valida a troca de medium anime↔realismo sem GPU/claude) todos passando. Dist refeita + commit + push.
+
+---
+
 ## SESSÃO 2026-10-29 (noite): Preset de ARTE anime x realismo — IMPLEMENTADO
 Feedback do user após testar o img2vid: consistência ótima, mas a arte continua "boneco/desenho" e a imagem fornecida é hiper-realista. **Causa raiz: a arte vem do CHECKPOINT, não do prompt.** O único SD1.5 era o ToonYou (anime); o RealVisXL realista é SDXL — incompatível com o motion module AnimateLCM (SD1.5). Não dá pra forçar realismo só com prompt.
 - **Baixados (na pasta do ComfyUI):** `models/checkpoints/realisticVision_v51.safetensors` (Realistic Vision V5.1, SD1.5 fp16, ~2,1 GB) + `models/vae/vae-ft-mse-840000-ema-pruned.safetensors` (VAE SD1.5, 334 MB — o checkpoint é noVAE, sem VAE explícita a cor sai lavada). Fora do repo/bundle (modelos ficam na GPU do host, como os outros).
