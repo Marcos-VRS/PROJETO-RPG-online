@@ -605,11 +605,20 @@ class VideoBeat(models.Model):
     # Como usar a imagem de referência:
     #  "style"   = IP-Adapter (pega o estilo e INVENTA uma cena nova) — padrão antigo
     #  "animate" = anima a PRÓPRIA imagem (img2vid: a imagem é o quadro base)
-    REF_MODE_CHOICES = [("style", "Estilo (inventa em cima)"), ("animate", "Animar a imagem (fiel)")]
+    #  "svd"     = dá VIDA à própria imagem (Stable Video Diffusion): o quadro 1 é
+    #              a imagem de verdade, com movimento de câmera/ambiente; ignora texto.
+    REF_MODE_CHOICES = [
+        ("svd", "Dar vida (fiel — SVD)"),
+        ("animate", "Animar com ajustes (img2vid)"),
+        ("style", "Recriar (só estilo)"),
+    ]
     ref_mode = models.CharField(max_length=10, choices=REF_MODE_CHOICES, default="style")
     # Fidelidade no modo "animate": 1.0 = mais fiel (movimento sutil) → 0.0 = mais
     # movimento (afasta mais da imagem). A view mapeia pra denoise do KSampler.
     fidelity = models.FloatField(default=0.6)
+    # Quantidade de movimento no modo "svd": 0.0 = sutil → 1.0 = bastante
+    # (vira o motion_bucket_id do SVD). Só usado quando ref_mode == "svd".
+    svd_motion = models.FloatField(default=0.4)
     seed = models.BigIntegerField(null=True, blank=True)  # base; sub-clipes = seed+i
     clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")

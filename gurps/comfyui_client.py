@@ -346,6 +346,37 @@ VIDEO_FREEINIT_ITERATIONS = 2
 VIDEO_IPADAPTER = "ip-adapter-plus_sd15.safetensors"
 # CLIP vision reusa o ViT-H (CLIP_VISION_MODEL, já definido lá em cima).
 
+# ---- SVD (Stable Video Diffusion): modo "Dar vida (fiel)" ----
+# Ao contrário do AnimateDiff, o SVD usa a PRÓPRIA imagem como quadro 1 de verdade
+# e anima a partir dela (movimento de câmera/ambiente). NÃO obedece texto — é o
+# motor pra quando a imagem JÁ está do jeito da cena. Validado na RTX 1000 Ada 6GB
+# com --lowvram: 14 frames a 576x768 ~130s, sem OOM.
+VIDEO_SVD_CKPT = "svd-fp16.safetensors"   # modelo SVD fp16 (14 frames), em models/checkpoints
+VIDEO_SVD_FRAMES = 14                      # o SVD base gera 14 frames
+VIDEO_SVD_FPS = 7                          # fps nativo de condicionamento do SVD
+VIDEO_SVD_STEPS = 20
+VIDEO_SVD_MIN_CFG = 1.0
+VIDEO_SVD_CFG = 2.5
+# Caixa de resolução segura pros 6GB (mantém a proporção da imagem, múltiplo de 64).
+VIDEO_SVD_MAX_W = 768
+VIDEO_SVD_MAX_H = 768
+
+
+def svd_available(base_url: str = DEFAULT_URL) -> bool:
+    """True se o modelo do SVD estiver instalado no ComfyUI (models/checkpoints)."""
+    return VIDEO_SVD_CKPT in available_checkpoints(base_url)
+
+
+def svd_dims_for(img_w: int, img_h: int) -> tuple:
+    """(W, H) múltiplos de 64 que mantêm a proporção da imagem dentro da caixa
+    segura dos 6GB. Protege contra OOM sem distorcer (nada de forçar quadrado)."""
+    img_w = max(1, int(img_w or 1))
+    img_h = max(1, int(img_h or 1))
+    scale = min(VIDEO_SVD_MAX_W / img_w, VIDEO_SVD_MAX_H / img_h, 1.0)
+    w = max(64, int(round(img_w * scale / 64)) * 64)
+    h = max(64, int(round(img_h * scale / 64)) * 64)
+    return w, h
+
 
 def _node_defaults(base, class_type):
     """Lê /object_info/<node> e devolve {input: default} dos inputs obrigatórios,
@@ -684,3 +715,106 @@ def video_pick_checkpoint(base_url: str = DEFAULT_URL) -> bool:
     """True se os modelos de vídeo (ToonYou + AnimateLCM) estão disponíveis."""
     avail = available_checkpoints(base_url)
     return VIDEO_CKPT in avail
+
+
+def _build_svd_graph(image_name, width, height, frames, fps, motion_bucket,
+                     augmentation, steps, min_cfg, cfg, seed):
+    """Grafo SVD: a imagem é o quadro 1 de verdade; o modelo anima a partir dela.
+    ImageOnlyCheckpointLoader -> (SVD_img2vid_Conditioning) -> VideoLinearCFGGuidance
+    -> KSampler -> VAEDecode -> VHS_VideoCombine(mp4). Validado na 6GB com lowvram."""
+    return {
+        "loader": {"class_type": "ImageOnlyCheckpointLoader",
+                   "inputs": {"ckpt_name": VIDEO_SVD_CKPT}},
+        "img": {"class_type": "LoadImage", "inputs": {"image": image_name}},
+        "scale": {"class_type": "ImageScale",
+                  "inputs": {"image": ["img", 0], "upscale_method": "lanczos",
+                             "width": width, "height": height, "crop": "center"}},
+        "cond": {"class_type": "SVD_img2vid_Conditioning",
+                 "inputs": {"clip_vision": ["loader", 1], "init_image": ["scale", 0],
+                            "vae": ["loader", 2], "width": width, "height": height,
+                            "video_frames": frames, "motion_bucket_id": motion_bucket,
+                            "fps": fps, "augmentation_level": augmentation}},
+        "guide": {"class_type": "VideoLinearCFGGuidance",
+                  "inputs": {"model": ["loader", 0], "min_cfg": min_cfg}},
+        "ks": {"class_type": "KSampler",
+               "inputs": {"model": ["guide", 0], "positive": ["cond", 0],
+                          "negative": ["cond", 1], "latent_image": ["cond", 2],
+                          "seed": seed, "steps": steps, "cfg": cfg,
+                          "sampler_name": "euler", "scheduler": "karras", "denoise": 1.0}},
+        "vaed": {"class_type": "VAEDecode",
+                 "inputs": {"samples": ["ks", 0], "vae": ["loader", 2]}},
+        "out": {"class_type": "VHS_VideoCombine",
+                "inputs": {"images": ["vaed", 0], "frame_rate": fps, "loop_count": 0,
+                           "filename_prefix": "svd_beat", "format": "video/h264-mp4",
+                           "pingpong": False, "save_output": True}},
+    }
+
+
+def generate_svd_mp4(ref_image_bytes, ref_image_filename="ref.png", width=576, height=768,
+                     motion=0.5, base_url=DEFAULT_URL, timeout=1200, poll_interval=2.0,
+                     on_progress=None, seed=None) -> bytes:
+    """Gera UM clipe SVD (modo FIEL) a partir da imagem e retorna os bytes do mp4.
+
+    ``motion`` é 0..1 (0 = movimento sutil, 1 = bastante) e vira o motion_bucket_id.
+    width/height já devem vir múltiplos de 64 e dentro da caixa segura dos 6GB
+    (use ``svd_dims_for``). Não usa prompt — o SVD ignora texto. Lança RuntimeError
+    em falha. Retorna um clipe curto (VIDEO_SVD_FRAMES frames @ VIDEO_SVD_FPS)."""
+    base = base_url.rstrip("/")
+    if seed is None:
+        seed = uuid.uuid4().int % (2 ** 31)
+    motion = min(1.0, max(0.0, float(motion if motion is not None else 0.5)))
+    motion_bucket = int(round(40 + motion * 140))   # 40 (sutil) .. 180 (muito)
+    client_id = uuid.uuid4().hex
+    prog_stop, prog_thread = (None, None)
+    if on_progress:
+        prog_stop, prog_thread = _start_progress_ws(base, client_id, on_progress)
+    ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
+    graph = _build_svd_graph(ref_name, int(width), int(height), VIDEO_SVD_FRAMES,
+                             VIDEO_SVD_FPS, motion_bucket, 0.0, VIDEO_SVD_STEPS,
+                             VIDEO_SVD_MIN_CFG, VIDEO_SVD_CFG, seed)
+    try:
+        resp = _http_json(base + "/prompt", {"prompt": graph, "client_id": client_id})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:500] if hasattr(e, "read") else ""
+        raise RuntimeError(f"ComfyUI recusou o SVD (HTTP {e.code}): {body}")
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"Falha ao enviar SVD pro ComfyUI: {e}")
+    prompt_id = resp.get("prompt_id")
+    if not prompt_id:
+        raise RuntimeError(f"ComfyUI não retornou prompt_id (SVD): {resp}")
+
+    start = time.monotonic()
+    out = None
+    try:
+        while time.monotonic() - start < timeout:
+            try:
+                with urllib.request.urlopen(base + "/history/" + prompt_id, timeout=10) as r:
+                    hist = json.loads(r.read().decode("utf-8"))
+            except Exception:  # noqa: BLE001
+                time.sleep(poll_interval)
+                continue
+            entry = hist.get(prompt_id)
+            if entry:
+                st = (entry.get("status") or {})
+                if st.get("status_str") == "error":
+                    raise RuntimeError("ComfyUI reportou erro ao gerar o SVD (possível OOM).")
+                for node_out in (entry.get("outputs") or {}).values():
+                    vids = node_out.get("gifs") or node_out.get("videos") or []
+                    if vids:
+                        out = vids[0]
+                        break
+                if out:
+                    break
+            time.sleep(poll_interval)
+    finally:
+        if prog_stop is not None:
+            prog_stop.set()
+
+    if not out:
+        raise RuntimeError("Timeout esperando o clipe SVD do ComfyUI.")
+    qs = urllib.parse.urlencode({
+        "filename": out.get("filename", ""), "subfolder": out.get("subfolder", ""),
+        "type": out.get("type", "output"),
+    })
+    with urllib.request.urlopen(base + "/view?" + qs, timeout=120) as r:
+        return r.read()

@@ -177,6 +177,40 @@ def _mux_music(ff, silent, music_path, out_path) -> tuple[bool, str]:
                  "-c:a", "aac", "-b:a", "192k", "-shortest", out_path])
 
 
+def fit_to_duration(src_path, dur_ms, out_path, fps=8, ffmpeg=None) -> bool:
+    """Encaixa um clipe CURTO (ex. SVD ~2s) na duração do beat sem corte brusco.
+
+    Faz um BOOMERANG (vai-e-volta: original + reverso) pra o loop ser suave, e
+    repete até preencher dur_ms, cortando no tamanho exato. Reencoda em yuv420p/fps.
+    Retorna True se gerou. Em falha, copia o src cru (nunca quebra)."""
+    ff = ffmpeg or get_ffmpeg()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    dur_s = max(0.3, int(dur_ms or 0) / 1000.0)
+    src_ms = media_duration_ms(src_path, ff) or 1000
+    boom = out_path + ".boom.mp4"
+    # 1) boomerang (original + reverso) — movimento de ida e volta, loop sem salto.
+    okb, _e = _run([ff, "-y", "-i", src_path,
+                    "-filter_complex", "[0:v]reverse[r];[0:v][r]concat=n=2:v=1[v]",
+                    "-map", "[v]", "-an", "-r", str(fps), "-pix_fmt", "yuv420p", boom])
+    base = boom if okb else src_path
+    boom_ms = (src_ms * 2) if okb else src_ms
+    # 2) loop o boomerang até passar da duração e corta exato.
+    import math
+    loops = max(0, math.ceil(dur_s * 1000.0 / max(1, boom_ms)) - 1)
+    ok, _err = _run([ff, "-y", "-stream_loop", str(loops), "-i", base,
+                     "-t", f"{dur_s:.3f}", "-an", "-r", str(fps),
+                     "-pix_fmt", "yuv420p", out_path])
+    _cleanup(boom)
+    if ok:
+        return True
+    try:
+        import shutil
+        shutil.copyfile(src_path, out_path)
+    except Exception:  # noqa: BLE001
+        pass
+    return False
+
+
 def mux_music_segment(video_path, music_path, start_ms, out_path, ffmpeg=None) -> bool:
     """Sobrepõe no vídeo o TRECHO da música a partir de start_ms (cortado no
     tamanho do vídeo). Usado pra o preview do beat tocar o som certo. Se falhar,
