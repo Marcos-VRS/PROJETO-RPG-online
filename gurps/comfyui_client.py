@@ -388,7 +388,10 @@ VIDEO_WAN_UNET = "wan2.2_ti2v_5B_fp16.safetensors"       # models/diffusion_mode
 VIDEO_WAN_CLIP = "umt5_xxl_fp8_e4m3fn_scaled.safetensors"  # models/text_encoders
 VIDEO_WAN_VAE = "wan2.2_vae.safetensors"                 # models/vae
 VIDEO_WAN_FPS = 24                 # fps nativo do Wan 5B
-VIDEO_WAN_LENGTH = 49              # 49 frames ~2s @ 24fps (teto seguro p/ 6GB)
+VIDEO_WAN_LENGTH = 49              # 49 frames ~2s @ 24fps (fallback)
+VIDEO_WAN_MAX_LENGTH = 81          # teto de frames por geração no 6GB (ajustável;
+                                   # ~3.4s @24fps. O resto do beat é preenchido com
+                                   # retime, nunca congelando o último quadro).
 VIDEO_WAN_STEPS = 20
 VIDEO_WAN_CFG = 5.0
 VIDEO_WAN_SHIFT = 8.0              # ModelSamplingSD3 shift (recomendado p/ Wan)
@@ -410,6 +413,18 @@ def wan_available(base_url: str = DEFAULT_URL) -> bool:
         return False
     return (VIDEO_WAN_UNET in unet and VIDEO_WAN_CLIP in clip
             and VIDEO_WAN_VAE in available_vaes(base_url))
+
+
+def wan_length_for(duration_ms, fps: int = VIDEO_WAN_FPS,
+                   max_length: int = VIDEO_WAN_MAX_LENGTH) -> int:
+    """Nº de frames pra COBRIR a duração do beat no fps nativo do Wan, limitado ao
+    teto seguro do 6GB. Ajusta pra (4k+1) — requisito do latente temporal do Wan
+    (o VAE comprime o tempo por 4). Beats curtos ganham a ação inteira em frames
+    reais; beats longos vão até o teto e o resto é esticado (retime) no encaixe."""
+    want = max(1, int(round((int(duration_ms or 2000) / 1000.0) * fps)))
+    want = min(want, int(max_length))
+    n = max(1, round((want - 1) / 4.0))     # snap pra 4k+1 (49, 53, ... 81)
+    return max(5, int(n * 4 + 1))
 
 
 def wan_dims_for(img_w: int, img_h: int) -> tuple:

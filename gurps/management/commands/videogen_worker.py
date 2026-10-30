@@ -495,13 +495,18 @@ class Command(BaseCommand):
             seed = random.randint(1, 2 ** 31 - 1)
             self._set_beat(beat, seed=seed)
 
+        # frames proporcionais à duração do beat (até o teto seguro do 6GB) pra a
+        # ação cobrir o beat em movimento REAL; o resto, se faltar, é esticado.
+        length = comfyui_client.wan_length_for(beat.duration_ms or 2000)
+        self.stdout.write(f"  Wan {length} frames @ {comfyui_client.VIDEO_WAN_FPS}fps "
+                          f"(~{length / comfyui_client.VIDEO_WAN_FPS:.1f}s de ação real)")
         comfyui_client.free_memory(self.base_url)
         self._set_beat(beat, progress="gerando a ação (Wan, pode levar minutos)...")
         try:
             mp4 = comfyui_client.generate_wan_mp4(
                 ref_bytes, wan_prompt, ref_image_filename=(ref_name or "ref") + ".png",
-                width=w, height=h, base_url=self.base_url, on_progress=_cb, seed=seed,
-                timeout=max(self.clip_timeout, 3600))
+                width=w, height=h, length=length, base_url=self.base_url,
+                on_progress=_cb, seed=seed, timeout=max(self.clip_timeout, 3600))
         except Exception as e:  # noqa: BLE001
             self._fail_beat(beat, f"Wan falhou: {e}")
             return
@@ -516,9 +521,9 @@ class Command(BaseCommand):
         fps = project.fps or 8
         silent = _os.path.join(bdir, "silent.mp4")
         try:
-            # "hold": faz a ação uma vez e congela o último quadro pra preencher o beat.
+            # "stretch": estica a ação pra durar o beat inteiro (sem congelar quadro).
             video_assembly.fit_to_duration(raw, beat.duration_ms or 2000, silent,
-                                           fps=fps, mode="hold")
+                                           fps=fps, mode="stretch")
         except Exception as e:  # noqa: BLE001
             self._fail_beat(beat, f"encaixe na duração falhou: {e}")
             return

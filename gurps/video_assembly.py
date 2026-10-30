@@ -181,15 +181,29 @@ def fit_to_duration(src_path, dur_ms, out_path, fps=8, ffmpeg=None, mode="boomer
     """Encaixa um clipe CURTO (ex. SVD/Wan ~2s) na duração do beat.
 
     mode="boomerang" (SVD): vai-e-volta (original + reverso) + loop até preencher —
-      movimento ambiente que repete sem salto. mode="hold" (Wan/ação dirigida): toca
-      a ação UMA vez e CONGELA o último quadro pra preencher (a ação não desanda).
+      movimento ambiente que repete sem salto. mode="stretch" (Wan/ação dirigida):
+      ESTICA o clipe (retime) pra a ação durar o beat inteiro, sem congelar quadro.
+      mode="hold" (legado): toca a ação 1x e congela o último quadro pra preencher.
     Corta no tamanho exato, reencoda yuv420p/fps. Em falha, copia o src cru."""
     ff = ffmpeg or get_ffmpeg()
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     dur_s = max(0.3, int(dur_ms or 0) / 1000.0)
     src_ms = media_duration_ms(src_path, ff) or 1000
 
-    if mode == "hold":
+    if mode == "stretch":
+        # retime: remapeia os timestamps pra o clipe durar exatamente dur_s. A ação
+        # acontece do começo ao fim do beat (câmera lenta leve se o clipe for mais
+        # curto), sem nenhum quadro morto. Fator >1 desacelera, <1 acelera.
+        factor = dur_s / max(0.1, src_ms / 1000.0)
+        ok, _err = _run([ff, "-y", "-i", src_path,
+                         "-vf", f"setpts={factor:.4f}*PTS",
+                         "-an", "-r", str(fps), "-t", f"{dur_s:.3f}",
+                         "-pix_fmt", "yuv420p", out_path])
+        if ok:
+            return True
+        # fallback: cai pro hold abaixo se o retime falhar
+
+    if mode in ("hold", "stretch"):
         # toca uma vez; se o beat for maior, segura o último frame (tpad) até dur_s.
         ok, _err = _run([ff, "-y", "-i", src_path,
                          "-vf", f"tpad=stop_mode=clone:stop_duration={max(0.0, dur_s):.3f},"
