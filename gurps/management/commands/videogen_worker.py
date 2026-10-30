@@ -289,18 +289,23 @@ class Command(BaseCommand):
 
     def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None,
                  animate=False, denoise=0.6, ckpt=comfyui_client.VIDEO_CKPT,
-                 vae=None, negative=None):
+                 vae=None, negative=None, cfg=None, steps=None):
         """Gera UM pedaço contínuo do beat (com retry + espera o ComfyUI voltar).
         Se animate=True, ANIMA a própria imagem (img2vid, fiel). ``ckpt``/``vae``
-        vêm do preset de render (anime x realismo). Retorna bytes ou None."""
+        vêm do preset de render (anime x realismo); ``cfg``/``steps`` sobem no
+        modo animar pra a ação pedida de fato acontecer. Retorna bytes ou None."""
         if max_frames is None:
             max_frames = comfyui_client.VIDEO_BEAT_MAX_FRAMES
+        if cfg is None:
+            cfg = project.cfg
+        if steps is None:
+            steps = project.steps
         for attempt in (1, 2):
             try:
                 return comfyui_client.generate_clip_mp4(
                     prompt=prompt, negative=negative, seconds=seconds, fps=project.fps,
                     width=project.width, height=project.height,
-                    steps=project.steps, cfg=project.cfg, seed=seed,
+                    steps=steps, cfg=cfg, seed=seed,
                     base_url=self.base_url, timeout=self.clip_timeout, ckpt=ckpt, vae=vae,
                     ref_image_bytes=ref_bytes, max_frames=max_frames,
                     animate=animate, denoise=denoise, freeinit=not animate)
@@ -364,12 +369,29 @@ class Command(BaseCommand):
             chunks.append(min(remaining, max_f))
             remaining -= min(remaining, max_f)
         # Modo "animar a imagem" (fiel): a imagem vira o quadro base (img2vid).
-        # fidelity 1.0 -> denoise ~0.35 (bem fiel); 0.0 -> ~0.9 (mais movimento).
+        # O slider de fidelidade é o eixo FIEL <-> MOVIMENTO (são opostos: um
+        # quadro idêntico à imagem não pode se mexer). Mínimo 0.50 mesmo no
+        # máximo de fidelidade, pra SEMPRE sobrar margem pra a ação acontecer.
+        # fidelity 1.0 -> denoise 0.50 (bem fiel, pouco movimento);
+        # fidelity 0.0 -> denoise 0.90 (segue bem a ação pedida).
         animate = (beat.ref_mode == "animate") and (ref_bytes is not None)
         fidelity = min(1.0, max(0.0, beat.fidelity if beat.fidelity is not None else 0.6))
-        denoise = round(0.9 - 0.55 * fidelity, 3)
+        denoise = round(0.9 - 0.40 * fidelity, 3)
+        anim_cfg, anim_steps = project.cfg, project.steps
         if animate:
-            self.stdout.write(f"  modo ANIMAR imagem (fiel), denoise={denoise}")
+            # Pra a AÇÃO pedida (levantar a mão, carregar um poder) de fato
+            # acontecer, a ação precisa LIDERAR o prompt e o CFG/passos sobem
+            # (o LCM em cfg 1.8 quase não obedece o texto). A instrução do GM
+            # (correção tem prioridade sobre o pedido do beat) vai na frente.
+            action = (beat.correction or beat.user_prompt or "").strip()
+            if action:
+                gen_prompt = (action + ", (dynamic motion:1.2), the subject performs "
+                              "this action, glowing magical energy, smooth animation, "
+                              + gen_prompt)
+            anim_cfg = max(project.cfg or 1.8, 2.8)
+            anim_steps = max(project.steps or 14, 18)
+            self.stdout.write(f"  modo ANIMAR imagem: denoise={denoise}, cfg={anim_cfg}, "
+                              f"steps={anim_steps}, acao={action[:40]!r}")
         bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
                             f"beat_{beat.id}")
         os.makedirs(bdir, exist_ok=True)
@@ -380,7 +402,8 @@ class Command(BaseCommand):
             comfyui_client.free_memory(self.base_url)
             mp4 = self._gen_one(project, gen_prompt, fcount / fps, base_seed, ref_bytes,
                                 max_frames=max_f, animate=animate, denoise=denoise,
-                                ckpt=ckpt, vae=vae, negative=gen_negative)
+                                ckpt=ckpt, vae=vae, negative=gen_negative,
+                                cfg=anim_cfg, steps=anim_steps)
             if mp4 is None:
                 if parts:  # usa o que já saiu
                     break

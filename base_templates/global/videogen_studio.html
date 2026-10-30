@@ -435,7 +435,8 @@
                         + '<input type="range" min="0" max="100" value="' + pct + '" style="width:100%"'
                         + ' oninput="var e=document.getElementById(\'bfv-' + b.id + '\');if(e)e.textContent=this.value+\'%\'"'
                         + ' onchange="vgBeatPatch(' + b.id + ',{fidelity:(this.value/100)})">'
-                        + '<span class="st-mini">← mais fiel (pouco movimento) · mais movimento →</span></label>';
+                        + '<span class="st-mini">← mais fiel (quase parado) · mais movimento →</span>'
+                        + '<span class="st-mini" style="display:block;opacity:.8;">Pra o personagem FAZER uma ação (levantar a mão, carregar um poder), puxe pro lado do movimento — 100% fiel = a imagem não se mexe.</span></label>';
                 }
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';

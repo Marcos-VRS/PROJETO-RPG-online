@@ -16,6 +16,7 @@ Feedback do user após testar o img2vid: consistência ótima, mas a arte contin
 - **views:** create/update/serialize aceitam e devolvem `render_style` (tema geral editável).
 - **UI `videogen_studio.html`:** seletor "Arte: 🎨 anime / 📷 realista" no Novo projeto e no ⚙️ Tema geral; badge no cabeçalho do editor mostra a arte ativa.
 - **Testado sem GPU (test_beats.py):** novo `test_realism_vae_graph` (troca de checkpoint + VAELoader roteando encode/decode; sem vae usa a do checkpoint). Tudo passou. check limpo. **Validar 1 beat realista ao vivo após instalar** (ComfyUI relê os modelos no boot).
+- **Follow-up (mesma noite): img2vid fiel x AÇÃO.** User testou e disse "perto da imagem mas não perfeitamente igual + a ação pedida (levantar mão, carregar poder) não aconteceu". São objetivos OPOSTOS (quadro idêntico não se mexe) e eu tinha orientado o slider no máximo (denoise ~0.35, parado). Recalibrado: `denoise = 0.9 - 0.40*fidelity` (mín 0.50); no modo animate o **cfg sobe pra ≥2.8 e steps ≥18** e a AÇÃO (correção/pedido do beat) lidera o prompt com ênfase de movimento. `_gen_one` ganhou cfg/steps. UI do slider explica o trade-off. Dist nova + commit.
 
 ---
 
