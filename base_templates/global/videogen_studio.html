@@ -35,6 +35,10 @@
         .st-err { color: #ff8a8a; font-size: 12px; }
         .st-mood { font-size: 11px; color: #c9a55c; margin-left: 6px; }
         .st-prog { font-size: 12px; color: #7fb0ff; }
+        .st-bar { height: 8px; border-radius: 5px; background: #2a2a33; overflow: hidden; margin: 4px 0 2px; }
+        .st-bar-fill { height: 100%; background: linear-gradient(90deg,#3a7bd5,#4fd1c5); transition: width .4s ease; }
+        .st-bar.indet .st-bar-fill { width: 35%; animation: st-indet 1.1s ease-in-out infinite; }
+        @keyframes st-indet { 0% { margin-left: -35%; } 100% { margin-left: 100%; } }
         .st-tabs { display: flex; gap: 8px; margin: 14px 0 4px; }
         .st-tab { flex: 1; text-align: center; padding: 10px; border-radius: 6px; cursor: pointer; background: #26262e; border: 1px solid #383840; color: #cfcfd6; font-weight: 700; }
         .st-tab.on { background: #3a2650; border-color: #7a2ea0; color: #fff; }
@@ -220,7 +224,7 @@
             return JSON.stringify([p.status, p.has_result, p.progress,
                 (p.comfy && p.comfy.online) || false,
                 (p.beats || []).map(function (b) {
-                    return [b.id, b.status, b.progress, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.transition, b.transition_ms, b.error];
+                    return [b.id, b.status, b.progress, b.progress_pct, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.transition, b.transition_ms, b.error];
                 })]);
         }
 
@@ -403,7 +407,7 @@
             });
             // cards dos beats
             var box = document.getElementById('ed-beats');
-            var S = { empty: 'sem clipe', pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
+            var S = { empty: 'sem clipe', pending: 'preparando', processing: 'gerando', done: 'pronto', failed: 'falhou' };
             box.innerHTML = (p.beats || []).map(function (b, i) {
                 var h = '<div class="st-card st-beat ' + b.status + '">';
                 h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span>'
@@ -442,7 +446,17 @@
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
                     + '<input type="text" id="bc-' + b.id + '" placeholder="ex.: menos escuro, câmera mais aberta" value="' + esc(b.correction) + '"></label>';
-                if (b.progress) h += '<div class="st-prog">⏳ ' + esc(b.progress) + '</div>';
+                if (b.status === 'pending' || b.status === 'processing') {
+                    var pc = (b.progress_pct == null ? -1 : b.progress_pct);
+                    var lbl = esc(b.progress || (b.status === 'pending' ? 'preparando…' : 'gerando…'));
+                    if (pc >= 0) {
+                        h += '<div class="st-prog">⏳ ' + lbl + '</div>'
+                            + '<div class="st-bar"><div class="st-bar-fill" style="width:' + Math.max(2, pc) + '%"></div></div>';
+                    } else {
+                        // sem % ainda (preparando / escrevendo o prompt): barra indeterminada
+                        h += '<div class="st-prog">⏳ ' + lbl + '</div><div class="st-bar indet"><div class="st-bar-fill"></div></div>';
+                    }
+                } else if (b.progress) { h += '<div class="st-prog">⏳ ' + esc(b.progress) + '</div>'; }
                 if (b.error) h += '<div class="st-err">' + esc(b.error) + '</div>';
                 if (b.has_clip) h += '<video class="st-video" src="/videogen/beat/' + b.id + '/mp4/?t=' + encodeURIComponent(b.status + b.progress) + '" controls preload="metadata"></video>';
                 if (b.expanded_prompt) h += '<details class="st-xprompt"><summary>prompt da IA</summary><pre>' + esc(b.expanded_prompt) + '</pre></details>';

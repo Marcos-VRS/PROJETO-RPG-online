@@ -289,7 +289,7 @@ class Command(BaseCommand):
 
     def _gen_one(self, project, prompt, seconds, seed, ref_bytes, max_frames=None,
                  animate=False, denoise=0.6, ckpt=comfyui_client.VIDEO_CKPT,
-                 vae=None, negative=None, cfg=None, steps=None):
+                 vae=None, negative=None, cfg=None, steps=None, on_progress=None):
         """Gera UM pedaço contínuo do beat (com retry + espera o ComfyUI voltar).
         Se animate=True, ANIMA a própria imagem (img2vid, fiel). ``ckpt``/``vae``
         vêm do preset de render (anime x realismo); ``cfg``/``steps`` sobem no
@@ -308,7 +308,8 @@ class Command(BaseCommand):
                     steps=steps, cfg=cfg, seed=seed,
                     base_url=self.base_url, timeout=self.clip_timeout, ckpt=ckpt, vae=vae,
                     ref_image_bytes=ref_bytes, max_frames=max_frames,
-                    animate=animate, denoise=denoise, freeinit=not animate)
+                    animate=animate, denoise=denoise, freeinit=not animate,
+                    on_progress=on_progress)
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  sub-clipe tentativa {attempt} falhou: {str(e)[:120]}"))
@@ -395,6 +396,26 @@ class Command(BaseCommand):
         bdir = os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
                             f"beat_{beat.id}")
         os.makedirs(bdir, exist_ok=True)
+        nchunks = len(chunks)
+        VideoBeat.objects.filter(id=beat.id).update(progress_pct=0)
+        # % REAL combinando o passo da amostragem (via WebSocket do ComfyUI) com
+        # o pedaço atual; monotônica (nunca volta — o FreeInit repassa a amostragem).
+        prog_state = {"pct": -1}
+
+        def _mk_cb(ci):
+            def cb(frac):
+                overall = (ci + max(0.0, min(1.0, frac))) / nchunks
+                pct = int(overall * 100)
+                if pct <= prog_state["pct"]:
+                    return
+                prog_state["pct"] = pct
+                label = f"gerando {pct}%" + (f" (parte {ci+1}/{nchunks})" if nchunks > 1 else "")
+                try:
+                    VideoBeat.objects.filter(id=beat.id).update(progress=label, progress_pct=pct)
+                except Exception:  # noqa: BLE001
+                    pass
+            return cb
+
         parts = []
         for idx, fcount in enumerate(chunks):
             self._set_beat(beat, progress=(f"gerando {idx+1}/{len(chunks)}"
@@ -403,7 +424,7 @@ class Command(BaseCommand):
             mp4 = self._gen_one(project, gen_prompt, fcount / fps, base_seed, ref_bytes,
                                 max_frames=max_f, animate=animate, denoise=denoise,
                                 ckpt=ckpt, vae=vae, negative=gen_negative,
-                                cfg=anim_cfg, steps=anim_steps)
+                                cfg=anim_cfg, steps=anim_steps, on_progress=_mk_cb(idx))
             if mp4 is None:
                 if parts:  # usa o que já saiu
                     break
@@ -435,7 +456,7 @@ class Command(BaseCommand):
             has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
         else:
             shutil.copyfile(silent, out)
-        self._set_beat(beat, clip_file=rel, status="done",
+        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
                        progress=f"pronto ({total_frames} frames" + (", com som" if has_audio else "") + ")")
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK ({total_frames} frames, {len(parts)} pedaco(s), som={has_audio})."))

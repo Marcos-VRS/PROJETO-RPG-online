@@ -534,12 +534,63 @@ def _build_animatediff_graph(prompt, negative, width, height, frames, fps, steps
     return graph
 
 
+def _start_progress_ws(base, client_id, on_progress):
+    """Abre um WebSocket no ComfyUI e repassa o progresso REAL da amostragem
+    (evento 'progress' = passo atual/total) via ``on_progress(frac)`` (0..1).
+    Roda numa thread daemon; se a lib/conexão falhar, simplesmente não atualiza
+    (a geração continua normal, só sem %). Retorna (stop_event, thread) ou (None, None)."""
+    try:
+        import threading  # noqa: WPS433
+        import websocket  # websocket-client  # noqa: WPS433
+    except Exception:  # noqa: BLE001
+        return None, None
+    ws_url = (base.replace("https://", "wss://").replace("http://", "ws://")
+              + "/ws?clientId=" + client_id)
+    stop = threading.Event()
+
+    def _run():
+        try:
+            ws = websocket.create_connection(ws_url, timeout=5)
+        except Exception:  # noqa: BLE001
+            return
+        try:
+            while not stop.is_set():
+                try:
+                    ws.settimeout(1.0)
+                    msg = ws.recv()
+                except Exception:  # noqa: BLE001
+                    continue
+                if not msg or isinstance(msg, (bytes, bytearray)):
+                    continue
+                try:
+                    data = json.loads(msg)
+                except Exception:  # noqa: BLE001
+                    continue
+                if data.get("type") == "progress":
+                    d = data.get("data") or {}
+                    mx = d.get("max") or 0
+                    if mx:
+                        try:
+                            on_progress(min(1.0, (d.get("value") or 0) / mx))
+                        except Exception:  # noqa: BLE001
+                            pass
+        finally:
+            try:
+                ws.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    return stop, t
+
+
 def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height=512,
                       steps=VIDEO_MIN_STEPS, cfg=1.8, seed=None, base_url=DEFAULT_URL,
                       ckpt=VIDEO_CKPT, ref_image_bytes=None, ref_image_filename="ref.png",
                       ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0,
                       on_beat=None, max_frames=VIDEO_CONTEXT_LENGTH,
-                      animate=False, denoise=0.6, vae=None) -> bytes:
+                      animate=False, denoise=0.6, vae=None, on_progress=None) -> bytes:
     """Gera UM clipe de vídeo (AnimateDiff) e retorna os bytes do mp4.
 
     Se ``ref_image_bytes`` vier, usa IP-Adapter: a cena sai com a aparência do
@@ -556,6 +607,11 @@ def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height
     frames = max(8, min(int(round(seconds * fps)), int(max_frames)))
     fi = _freeinit_nodes(base) if freeinit else None
     client_id = uuid.uuid4().hex
+    # Progresso REAL via WebSocket (passo/total da amostragem). Começa ANTES de
+    # enviar o prompt pra não perder os primeiros eventos. Opcional e tolerante.
+    prog_stop, prog_thread = (None, None)
+    if on_progress:
+        prog_stop, prog_thread = _start_progress_ws(base, client_id, on_progress)
     if ref_image_bytes and animate:
         # img2vid: anima a PRÓPRIA imagem (fiel), controlado por denoise.
         ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
@@ -583,32 +639,36 @@ def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height
 
     start = time.monotonic()
     out = None
-    while time.monotonic() - start < timeout:
-        if on_beat:
+    try:
+        while time.monotonic() - start < timeout:
+            if on_beat:
+                try:
+                    on_beat()
+                except Exception:  # noqa: BLE001
+                    pass
             try:
-                on_beat()
+                with urllib.request.urlopen(base + "/history/" + prompt_id, timeout=10) as r:
+                    hist = json.loads(r.read().decode("utf-8"))
             except Exception:  # noqa: BLE001
-                pass
-        try:
-            with urllib.request.urlopen(base + "/history/" + prompt_id, timeout=10) as r:
-                hist = json.loads(r.read().decode("utf-8"))
-        except Exception:  # noqa: BLE001
-            time.sleep(poll_interval)
-            continue
-        entry = hist.get(prompt_id)
-        if entry:
-            st = (entry.get("status") or {})
-            if st.get("status_str") == "error":
-                raise RuntimeError("ComfyUI reportou erro ao gerar o clipe.")
-            outs = entry.get("outputs") or {}
-            for node_out in outs.values():
-                vids = node_out.get("gifs") or node_out.get("videos") or []
-                if vids:
-                    out = vids[0]
+                time.sleep(poll_interval)
+                continue
+            entry = hist.get(prompt_id)
+            if entry:
+                st = (entry.get("status") or {})
+                if st.get("status_str") == "error":
+                    raise RuntimeError("ComfyUI reportou erro ao gerar o clipe.")
+                outs = entry.get("outputs") or {}
+                for node_out in outs.values():
+                    vids = node_out.get("gifs") or node_out.get("videos") or []
+                    if vids:
+                        out = vids[0]
+                        break
+                if out:
                     break
-            if out:
-                break
-        time.sleep(poll_interval)
+            time.sleep(poll_interval)
+    finally:
+        if prog_stop is not None:
+            prog_stop.set()
 
     if not out:
         raise RuntimeError("Timeout esperando o clipe do ComfyUI.")

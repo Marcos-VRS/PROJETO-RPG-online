@@ -614,6 +614,9 @@ class VideoBeat(models.Model):
     clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")
     progress = models.CharField(max_length=120, blank=True, default="")
+    # % da geração (0..100); -1 = sem info ainda. Vem do progresso REAL do ComfyUI
+    # (passo/total da amostragem) via WebSocket, combinado com os pedaços do beat.
+    progress_pct = models.IntegerField(default=-1)
     error = models.TextField(blank=True, default="")
     # Transição DESTE beat em relação ao anterior (o 1º beat ignora).
     transition = models.CharField(max_length=10, choices=TRANSITION_CHOICES, default="cut")

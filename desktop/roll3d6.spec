@@ -153,6 +153,11 @@ try:
 except Exception:
     pass
 
+# websocket-client: o videogen_worker lê o progresso REAL do ComfyUI (passo/total
+# da amostragem) por WebSocket pra mostrar a % do beat. Import lazy no client —
+# reforçamos aqui pra o PyInstaller não deixar de fora.
+hidden_imports += ["websocket"]
+
 # cloudflared.exe — se existir no perfil do dev em build time, bundleia
 # pra evitar download no primeiro launch.
 import os

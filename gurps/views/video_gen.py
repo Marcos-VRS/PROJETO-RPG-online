@@ -91,6 +91,7 @@ def _serialize_beat(b):
         "fidelity": b.fidelity,
         "status": b.status,
         "progress": b.progress or "",
+        "progress_pct": b.progress_pct,
         "error": b.error or "",
         "has_clip": bool(b.clip_file),
         "transition": b.transition,
@@ -390,8 +391,9 @@ def videogen_beat_generate(request, beat_id):
         return JsonResponse({"error": "descreva a cena do beat primeiro"}, status=400)
     beat.status = "pending"
     beat.error = ""
-    beat.progress = "na fila"
-    beat.save(update_fields=["status", "error", "progress", "updated_at"])
+    beat.progress = "preparando…"
+    beat.progress_pct = -1  # zera % de uma geração anterior
+    beat.save(update_fields=["status", "error", "progress", "progress_pct", "updated_at"])
     _reactivate_if_terminal(beat.project)
     comfy = comfyui_client.status()
     return JsonResponse({"ok": True, "comfy_online": comfy.get("online", False),
