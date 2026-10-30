@@ -7,6 +7,17 @@
 
 ---
 
+## SESSÃO 2026-10-30 (noite): Modo "Ação dirigida" via Wan 2.2 5B — 4º modo (imagem+TEXTO→vídeo)
+User testou o SVD e o img2vid e os dois falharam no objetivo real: SVD só mexe a câmera (ignora texto), img2vid redesenha o personagem errado. O que ele quer: dar uma imagem + instrução de ação ("homem sentado leva a mão ao rosto acendendo magia vermelho-sangue na mão e nos olhos") e o personagem EXECUTAR mantendo a aparência. Isso exige motor de **imagem+TEXTO→vídeo** (não SVD, não img2vid).
+- **Pesquisa + viabilidade:** 6GB é o limite, mas a RAM é o fator decisivo — **a máquina tem 63,5 GB** (muito acima dos 32 recomendados). Nós nativos do Wan já existem no ComfyUI (`WanImageToVideo`, `Wan22ImageToVideoLatent`), SEM plugin. GGUF não instalado, mas com 63GB RAM o modelo nativo fp8 roda com `--lowvram`.
+- **Modelo baixado** (Comfy-Org repackaged, não-gated, ~17GB) na pasta do ComfyUI: `models/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors` (9,3GB), `models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors` (6,3GB), `models/vae/wan2.2_vae.safetensors` (1,3GB). Ficam na GPU do host (não bundlado), como SVD/realism.
+- **PROVADO no caso exato do user:** smoke test (480x640, 49 frames, 20 passos uni_pc, cfg 5, shift 8, fp8) na RTX 1000 6GB + lowvram: **a ação ACONTECEU** (mão sobe ao rosto, magia vermelho-sangue acende) **mantendo o personagem** (frames comparados). Custo: **~25 min/clipe** (lento; user ok, gera de madrugada). Ressalva: a magia saiu grande/cobriu o rosto — ajustável pelo texto do beat. VRAM ~5,4/6GB, 100% GPU, sem OOM.
+- **4º modo `VideoBeat.ref_mode="wan"` (migration 0077):** "🎬 Ação dirigida". O texto da Cena (ou correção) É a ação. Código: `comfyui_client` VIDEO_WAN_*, `wan_available()`, `wan_dims_for()` (mult 16, caixa 640), `_build_wan_graph()`, `generate_wan_mp4()` (progresso via WS). `ai_context.write_wan_motion_prompt()` (claude traduz/expande a ação PT→EN de movimento, pedindo manter a identidade). `video_assembly.fit_to_duration(mode="hold")` (ação acontece 1x e CONGELA o último quadro — não desanda, diferente do boomerang do SVD). `videogen_worker._process_beat_wan()`. views aceita "wan". UI: 4º modo no seletor + aviso (a Cena é a ação; é lento).
+- **Testes:** smoke GPU ok (ação provada); `test_wan_glue.py` (dims, tradutor claude, fit hold→5s) ok; test_beats.py regressão + check limpos. Grafo do Wan idêntico ao smoke provado; worker resiliente grava erro se algo falhar (não derruba).
+- **Resumo dos 4 modos por beat:** 📌 svd (fiel, só câmera) · 🎬 wan (ação dirigida, lento) · 🔀 animate (img2vid, mesclar) · 🎨 style (recriar). Próximos: afinar intensidade da magia via prompt; RIFE; auto-instalar modelos pra outros mestres.
+
+---
+
 ## SESSÃO 2026-10-30 (tarde): Modo "Dar vida (fiel)" via SVD — 3 modos por beat
 User raciocinou junto: quer, POR BEAT, escolher o que fazer com a imagem de referência, e MESCLAR. Às vezes a imagem já está exatamente como a cena deve ser (só dar vida), às vezes quer ajustar a cena/personagem. Pediu parametrização simples. Tempo não é problema (tem uma semana, pode gerar de madrugada) — prioridade é QUALIDADE.
 - **Entendimento do problema (importante):** AnimateDiff img2vid NÃO move a imagem — repinta uma nova inspirada nela, quadro a quadro (o checkpoint nunca viu o personagem → deriva). "Idêntico" e "faz uma ação nova" são fisicamente opostos (ação = pixels novos). Por isso o meio-termo decepcionava. Solução: motores diferentes por objetivo.

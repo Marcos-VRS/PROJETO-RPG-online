@@ -438,6 +438,106 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK (SVD {w}x{h}, som={has_audio})."))
 
+    def _process_beat_wan(self, beat, ref_bytes, ref_name):
+        """Modo AÇÃO DIRIGIDA (Wan): a imagem é o quadro 1 e o modelo FAZ a ação
+        descrita na Cena, mantendo o personagem. Lento (~min). O texto da Cena
+        (ou a correção) é a ação; o claude traduz/expande pra inglês de movimento."""
+        import os as _os  # noqa: WPS433
+        import shutil  # noqa: WPS433
+        from io import BytesIO  # noqa: WPS433
+        project = beat.project
+        self._set_beat(beat, status="processing", progress="escrevendo a ação...",
+                       error="", progress_pct=0)
+        self.stdout.write(f"beat #{beat.id} (proj {project.id}, ordem {beat.order}): Wan ação dirigida")
+
+        if not comfyui_client.wan_available(self.base_url):
+            self._fail_beat(beat, "Modelo do Wan (wan2.2_ti2v_5B + umt5 + vae) não está instalado no ComfyUI.")
+            return
+
+        action = (beat.correction or beat.user_prompt or project.prompt or "").strip()
+        ctx = ""
+        if project.use_context:
+            try:
+                ctx = ai_context.build_campaign_context(project.campanha)
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(f"  contexto falhou: {e}"))
+        wan_prompt, used = ai_context.write_wan_motion_prompt(
+            ctx, action, ref_name=ref_name, render_style=project.render_style,
+            claude_bin=self.claude_bin, model=self.claude_model)
+        self._set_beat(beat, expanded_prompt=wan_prompt)
+        self.stdout.write(f"  prompt Wan ({'claude' if used else 'mecanico'}): {wan_prompt[:80]!r}")
+
+        try:
+            from PIL import Image  # noqa: WPS433
+            with Image.open(BytesIO(ref_bytes)) as im:
+                iw, ih = im.size
+        except Exception:  # noqa: BLE001
+            iw, ih = 480, 640
+        w, h = comfyui_client.wan_dims_for(iw, ih)
+
+        VideoBeat.objects.filter(id=beat.id).update(progress_pct=0)
+        prog_state = {"pct": -1}
+
+        def _cb(frac):
+            pct = int(max(0.0, min(1.0, frac)) * 100)
+            if pct <= prog_state["pct"]:
+                return
+            prog_state["pct"] = pct
+            try:
+                VideoBeat.objects.filter(id=beat.id).update(
+                    progress=f"gerando a ação {pct}%", progress_pct=pct)
+            except Exception:  # noqa: BLE001
+                pass
+
+        seed = beat.seed
+        if seed is None:
+            import random  # noqa: WPS433
+            seed = random.randint(1, 2 ** 31 - 1)
+            self._set_beat(beat, seed=seed)
+
+        comfyui_client.free_memory(self.base_url)
+        self._set_beat(beat, progress="gerando a ação (Wan, pode levar minutos)...")
+        try:
+            mp4 = comfyui_client.generate_wan_mp4(
+                ref_bytes, wan_prompt, ref_image_filename=(ref_name or "ref") + ".png",
+                width=w, height=h, base_url=self.base_url, on_progress=_cb, seed=seed,
+                timeout=max(self.clip_timeout, 3600))
+        except Exception as e:  # noqa: BLE001
+            self._fail_beat(beat, f"Wan falhou: {e}")
+            return
+
+        bdir = _os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
+                             f"beat_{beat.id}")
+        _os.makedirs(bdir, exist_ok=True)
+        raw = _os.path.join(bdir, "wan_raw.mp4")
+        with open(raw, "wb") as f:
+            f.write(mp4)
+
+        fps = project.fps or 8
+        silent = _os.path.join(bdir, "silent.mp4")
+        try:
+            # "hold": faz a ação uma vez e congela o último quadro pra preencher o beat.
+            video_assembly.fit_to_duration(raw, beat.duration_ms or 2000, silent,
+                                           fps=fps, mode="hold")
+        except Exception as e:  # noqa: BLE001
+            self._fail_beat(beat, f"encaixe na duração falhou: {e}")
+            return
+
+        rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
+        out = _os.path.join(settings.MEDIA_ROOT, rel.replace("/", _os.sep))
+        music = None
+        if project.music_file:
+            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
+        has_audio = False
+        if music:
+            has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
+        else:
+            shutil.copyfile(silent, out)
+        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
+                       progress="pronto (ação/Wan" + (", com som" if has_audio else "") + ")")
+        self.stdout.write(self.style.SUCCESS(
+            f"beat #{beat.id} OK (Wan {w}x{h}, som={has_audio})."))
+
     def _process_beat(self, beat):
         project = beat.project
         self._set_beat(beat, status="processing", progress="escrevendo o prompt...", error="")
@@ -452,6 +552,11 @@ class Command(BaseCommand):
         # do claude. Precisa da imagem; sem ela, cai pro fluxo normal.
         if (beat.ref_mode or "") == "svd" and ref_bytes is not None:
             self._process_beat_svd(beat, ref_bytes, ref_name)
+            return
+        # Modo "Ação dirigida" = Wan: a imagem é o quadro 1 E o modelo OBEDECE o
+        # texto da cena (faz a ação) mantendo o personagem. Lento. Precisa da imagem.
+        if (beat.ref_mode or "") == "wan" and ref_bytes is not None:
+            self._process_beat_wan(beat, ref_bytes, ref_name)
             return
 
         ctx = ""

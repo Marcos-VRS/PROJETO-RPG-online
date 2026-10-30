@@ -395,3 +395,45 @@ Now output only the final single-line {final_word} shot prompt for THIS beat."""
         mech = (f"{style}, {this_prompt}" if style else this_prompt).strip()
         return mech[:400], False
     return prompt[:400], True
+
+
+def write_wan_motion_prompt(context, action_text, ref_name="", render_style="realism",
+                            claude_bin="claude", model="sonnet", timeout=120):
+    """Transforma a instrução do GM (PT) numa frase de MOVIMENTO em inglês pro Wan
+    (imagem + texto -> vídeo com ação). O Wan parte da imagem como quadro 1 e
+    OBEDECE o texto, então a frase precisa: (1) descrever a cena da imagem pra
+    manter continuidade, (2) descrever a AÇÃO com verbos de movimento claros,
+    (3) pedir que a identidade/aparência do personagem seja mantida.
+    Retorna (prompt_en, usou_claude); fallback = o texto cru num scaffold inglês."""
+    action_text = (action_text or "").strip()
+    realism = (render_style or "").lower() != "anime"
+    look = ("photorealistic, cinematic, realistic film, natural lighting"
+            if realism else "anime style, cel shaded, cinematic")
+    ref_block = (f" The main subject is \"{ref_name}\"; keep their exact face, hair, beard, "
+                 "outfit and the background from the starting image." if ref_name else
+                 " Keep the subject's exact appearance and the background from the starting image.")
+    instruction = f"""You write ONE English video-motion prompt for an image-to-video model (Wan).
+The video STARTS from a given still image and must ANIMATE the action described below while
+keeping the SAME character and scene as the starting image.{ref_block}
+
+Output ONLY one single line: comma-separated, 30-60 words. Describe (a) the scene/subject briefly
+(so it matches the image), then (b) the ACTION as clear motion with verbs (what moves, how), then
+(c) style cues. Bake in: {look}, smooth natural motion, consistent character, detailed.
+No preamble, no quotes, no markdown.
+
+=== CAMPAIGN CONTEXT (optional) ===
+{context or '(none)'}
+
+=== THE ACTION THE GM WANTS (translate to English, make it concrete motion) ===
+{action_text or '(subtle motion, the subject breathes and the camera slowly pushes in)'}
+
+Now output only the final single-line English motion prompt."""
+    out, ok = _run_claude_text(instruction, claude_bin, model, timeout)
+    if not ok or not out:
+        mech = f"{action_text}, {look}, smooth natural motion, consistent character, detailed"
+        return mech.strip()[:500], False
+    prompt = " ".join(ln.strip() for ln in out.splitlines() if ln.strip()).strip('`"\' ').strip()
+    if len(prompt) < 10:
+        mech = f"{action_text}, {look}, smooth natural motion, consistent character, detailed"
+        return mech.strip()[:500], False
+    return prompt[:500], True

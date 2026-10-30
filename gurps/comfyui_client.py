@@ -378,6 +378,51 @@ def svd_dims_for(img_w: int, img_h: int) -> tuple:
     return w, h
 
 
+# ---- Wan 2.2 TI2V-5B: modo "Ação dirigida" (imagem + TEXTO -> vídeo) ----
+# Diferente do SVD (que ignora texto) e do img2vid (que repinta e erra o
+# personagem), o Wan pega a imagem como quadro 1 E OBEDECE o prompt de ação,
+# mantendo o personagem. É o motor pra "ele leva a mão ao rosto com magia".
+# Validado na RTX 1000 Ada 6GB (--lowvram + 63GB RAM): 480x640, 49 frames,
+# 20 passos ~25min. Lento, mas FAZ a ação mantendo a aparência.
+VIDEO_WAN_UNET = "wan2.2_ti2v_5B_fp16.safetensors"       # models/diffusion_models
+VIDEO_WAN_CLIP = "umt5_xxl_fp8_e4m3fn_scaled.safetensors"  # models/text_encoders
+VIDEO_WAN_VAE = "wan2.2_vae.safetensors"                 # models/vae
+VIDEO_WAN_FPS = 24                 # fps nativo do Wan 5B
+VIDEO_WAN_LENGTH = 49              # 49 frames ~2s @ 24fps (teto seguro p/ 6GB)
+VIDEO_WAN_STEPS = 20
+VIDEO_WAN_CFG = 5.0
+VIDEO_WAN_SHIFT = 8.0              # ModelSamplingSD3 shift (recomendado p/ Wan)
+VIDEO_WAN_MAX_W = 640             # caixa segura p/ 6GB (lado maior)
+VIDEO_WAN_MAX_H = 640
+VIDEO_WAN_NEGATIVE = ("blurry, low quality, distorted, deformed face, extra limbs, "
+                      "extra fingers, morphing, flicker, cartoon, anime, text, watermark, "
+                      "static, still image, worst quality, jpeg artifacts")
+
+
+def wan_available(base_url: str = DEFAULT_URL) -> bool:
+    """True se o conjunto do Wan (modelo + text encoder + VAE) está instalado."""
+    try:
+        with urllib.request.urlopen(base_url.rstrip("/") + "/object_info/UNETLoader", timeout=8) as r:
+            unet = json.loads(r.read())["UNETLoader"]["input"]["required"]["unet_name"][0]
+        with urllib.request.urlopen(base_url.rstrip("/") + "/object_info/CLIPLoader", timeout=8) as r:
+            clip = json.loads(r.read())["CLIPLoader"]["input"]["required"]["clip_name"][0]
+    except Exception:  # noqa: BLE001
+        return False
+    return (VIDEO_WAN_UNET in unet and VIDEO_WAN_CLIP in clip
+            and VIDEO_WAN_VAE in available_vaes(base_url))
+
+
+def wan_dims_for(img_w: int, img_h: int) -> tuple:
+    """(W, H) múltiplos de 16 que mantêm a proporção da imagem dentro da caixa
+    segura dos 6GB pro Wan (lado maior <= 640). Evita OOM sem distorcer."""
+    img_w = max(1, int(img_w or 1))
+    img_h = max(1, int(img_h or 1))
+    scale = min(VIDEO_WAN_MAX_W / img_w, VIDEO_WAN_MAX_H / img_h, 1.0)
+    w = max(16, int(round(img_w * scale / 16)) * 16)
+    h = max(16, int(round(img_h * scale / 16)) * 16)
+    return w, h
+
+
 def _node_defaults(base, class_type):
     """Lê /object_info/<node> e devolve {input: default} dos inputs obrigatórios,
     ou None se o nó não existir (custom node ausente/versão antiga)."""
@@ -817,4 +862,109 @@ def generate_svd_mp4(ref_image_bytes, ref_image_filename="ref.png", width=576, h
         "type": out.get("type", "output"),
     })
     with urllib.request.urlopen(base + "/view?" + qs, timeout=120) as r:
+        return r.read()
+
+
+def _build_wan_graph(image_name, prompt, negative, width, height, length, steps,
+                     cfg, shift, seed, fps):
+    """Grafo Wan 2.2 TI2V-5B: imagem (quadro 1) + TEXTO -> vídeo com a ação pedida,
+    mantendo o personagem. UNETLoader(fp8)->ModelSamplingSD3->KSampler; CLIPLoader
+    (umt5, type wan)->2x encode; Wan22ImageToVideoLatent encaixa a imagem."""
+    return {
+        "unet": {"class_type": "UNETLoader",
+                 "inputs": {"unet_name": VIDEO_WAN_UNET, "weight_dtype": "fp8_e4m3fn"}},
+        "shift": {"class_type": "ModelSamplingSD3",
+                  "inputs": {"model": ["unet", 0], "shift": shift}},
+        "clip": {"class_type": "CLIPLoader",
+                 "inputs": {"clip_name": VIDEO_WAN_CLIP, "type": "wan"}},
+        "vae": {"class_type": "VAELoader", "inputs": {"vae_name": VIDEO_WAN_VAE}},
+        "pos": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["clip", 0]}},
+        "neg": {"class_type": "CLIPTextEncode", "inputs": {"text": negative, "clip": ["clip", 0]}},
+        "img": {"class_type": "LoadImage", "inputs": {"image": image_name}},
+        "scale": {"class_type": "ImageScale",
+                  "inputs": {"image": ["img", 0], "upscale_method": "lanczos",
+                             "width": width, "height": height, "crop": "center"}},
+        "lat": {"class_type": "Wan22ImageToVideoLatent",
+                "inputs": {"vae": ["vae", 0], "width": width, "height": height,
+                           "length": length, "batch_size": 1, "start_image": ["scale", 0]}},
+        "ks": {"class_type": "KSampler",
+               "inputs": {"model": ["shift", 0], "positive": ["pos", 0],
+                          "negative": ["neg", 0], "latent_image": ["lat", 0],
+                          "seed": seed, "steps": steps, "cfg": cfg,
+                          "sampler_name": "uni_pc", "scheduler": "simple", "denoise": 1.0}},
+        "dec": {"class_type": "VAEDecode", "inputs": {"samples": ["ks", 0], "vae": ["vae", 0]}},
+        "out": {"class_type": "VHS_VideoCombine",
+                "inputs": {"images": ["dec", 0], "frame_rate": fps, "loop_count": 0,
+                           "filename_prefix": "wan_beat", "format": "video/h264-mp4",
+                           "pingpong": False, "save_output": True}},
+    }
+
+
+def generate_wan_mp4(ref_image_bytes, prompt, ref_image_filename="ref.png", negative=None,
+                     width=480, height=640, length=VIDEO_WAN_LENGTH, steps=VIDEO_WAN_STEPS,
+                     cfg=VIDEO_WAN_CFG, base_url=DEFAULT_URL, timeout=3600, poll_interval=3.0,
+                     on_progress=None, seed=None) -> bytes:
+    """Gera UM clipe Wan (modo AÇÃO DIRIGIDA) e retorna os bytes do mp4.
+
+    ``prompt`` descreve a cena + a AÇÃO (em inglês, de preferência). A imagem é o
+    quadro 1; o Wan obedece o texto mantendo o personagem. LENTO (~min no 6GB).
+    width/height já devem vir múltiplos de 16 (use ``wan_dims_for``)."""
+    base = base_url.rstrip("/")
+    if negative is None:
+        negative = VIDEO_WAN_NEGATIVE
+    if seed is None:
+        seed = uuid.uuid4().int % (2 ** 31)
+    client_id = uuid.uuid4().hex
+    prog_stop, prog_thread = (None, None)
+    if on_progress:
+        prog_stop, prog_thread = _start_progress_ws(base, client_id, on_progress)
+    ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
+    graph = _build_wan_graph(ref_name, prompt, negative, int(width), int(height),
+                             int(length), int(steps), cfg, VIDEO_WAN_SHIFT, seed,
+                             VIDEO_WAN_FPS)
+    try:
+        resp = _http_json(base + "/prompt", {"prompt": graph, "client_id": client_id})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:500] if hasattr(e, "read") else ""
+        raise RuntimeError(f"ComfyUI recusou o Wan (HTTP {e.code}): {body}")
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"Falha ao enviar Wan pro ComfyUI: {e}")
+    prompt_id = resp.get("prompt_id")
+    if not prompt_id:
+        raise RuntimeError(f"ComfyUI não retornou prompt_id (Wan): {resp}")
+
+    start = time.monotonic()
+    out = None
+    try:
+        while time.monotonic() - start < timeout:
+            try:
+                with urllib.request.urlopen(base + "/history/" + prompt_id, timeout=10) as r:
+                    hist = json.loads(r.read().decode("utf-8"))
+            except Exception:  # noqa: BLE001
+                time.sleep(poll_interval)
+                continue
+            entry = hist.get(prompt_id)
+            if entry:
+                st = (entry.get("status") or {})
+                if st.get("status_str") == "error":
+                    raise RuntimeError("ComfyUI reportou erro ao gerar o Wan (possível OOM).")
+                for node_out in (entry.get("outputs") or {}).values():
+                    vids = node_out.get("gifs") or node_out.get("videos") or []
+                    if vids:
+                        out = vids[0]
+                        break
+                if out:
+                    break
+            time.sleep(poll_interval)
+    finally:
+        if prog_stop is not None:
+            prog_stop.set()
+
+    if not out:
+        raise RuntimeError("Timeout esperando o clipe Wan do ComfyUI.")
+    qs = urllib.parse.urlencode({
+        "filename": out.get("filename", ""), "subfolder": out.get("subfolder", ""),
+        "type": out.get("type", "output"),
+    })
+    with urllib.request.urlopen(base + "/view?" + qs, timeout=180) as r:
         return r.read()

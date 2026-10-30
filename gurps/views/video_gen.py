@@ -315,7 +315,7 @@ def videogen_beat_update(request, beat_id):
         beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
     if "ref_mode" in body:
         rm = body.get("ref_mode")
-        beat.ref_mode = rm if rm in ("svd", "animate", "style") else "style"; changed = True
+        beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style") else "style"; changed = True
     if "fidelity" in body:
         try:
             beat.fidelity = min(1.0, max(0.0, float(body.get("fidelity"))))

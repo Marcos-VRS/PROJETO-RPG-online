@@ -430,10 +430,14 @@
                     h += '<label class="st-field" style="margin:4px 0;">O que fazer com a imagem:'
                         + '<select onchange="vgBeatPatch(' + b.id + ',{ref_mode:this.value})">'
                         + '<option value="svd"' + (b.ref_mode === 'svd' ? ' selected' : '') + '>📌 Dar vida (fiel) — a imagem já está certa</option>'
+                        + '<option value="wan"' + (b.ref_mode === 'wan' ? ' selected' : '') + '>🎬 Ação dirigida — o personagem FAZ a ação (lento)</option>'
                         + '<option value="animate"' + (b.ref_mode === 'animate' ? ' selected' : '') + '>🔀 Animar com ajustes — mexer na cena/ação</option>'
-                        + '<option value="style"' + (b.ref_mode !== 'svd' && b.ref_mode !== 'animate' ? ' selected' : '') + '>🎨 Recriar — imagem só como estilo</option></select></label>';
+                        + '<option value="style"' + (b.ref_mode !== 'svd' && b.ref_mode !== 'wan' && b.ref_mode !== 'animate' ? ' selected' : '') + '>🎨 Recriar — imagem só como estilo</option></select></label>';
                 }
                 h += '</div>';
+                if (b.ref_asset_id && b.ref_mode === 'wan') {
+                    h += '<div class="st-field" style="margin:4px 0;"><span class="st-mini" style="display:block;opacity:.85;">🎬 A imagem é o quadro 1 e o personagem <b>executa a ação que você escrever na “Cena”</b> abaixo (ex.: “ele leva a mão ao rosto acendendo magia vermelho-sangue na mão e nos olhos”), mantendo a aparência. É o modo mais <b>lento</b> (alguns minutos por beat). Quanto mais concreta a ação (o que se move, como), melhor.</span></div>';
+                }
                 if (b.ref_asset_id && b.ref_mode === 'svd') {
                     var mpct = Math.round((b.svd_motion == null ? 0.4 : b.svd_motion) * 100);
                     h += '<label class="st-field" style="margin:4px 0;">Quantidade de movimento: <b id="bmv-' + b.id + '">' + mpct + '%</b>'

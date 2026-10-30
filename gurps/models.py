@@ -607,8 +607,12 @@ class VideoBeat(models.Model):
     #  "animate" = anima a PRÓPRIA imagem (img2vid: a imagem é o quadro base)
     #  "svd"     = dá VIDA à própria imagem (Stable Video Diffusion): o quadro 1 é
     #              a imagem de verdade, com movimento de câmera/ambiente; ignora texto.
+    #  "wan"     = AÇÃO DIRIGIDA (Wan 2.2 i2v): a imagem é o quadro 1 E o modelo
+    #              OBEDECE o texto da cena (ex. "leva a mão ao rosto com magia"),
+    #              mantendo o personagem. Lento (~min/clipe). O texto da Cena é a ação.
     REF_MODE_CHOICES = [
         ("svd", "Dar vida (fiel — SVD)"),
+        ("wan", "Ação dirigida (Wan)"),
         ("animate", "Animar com ajustes (img2vid)"),
         ("style", "Recriar (só estilo)"),
     ]
