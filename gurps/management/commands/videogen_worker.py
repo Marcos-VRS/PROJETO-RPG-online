@@ -391,6 +391,39 @@ class Command(BaseCommand):
                     comfyui_client.free_memory(self.base_url)
         return None
 
+    def _finalize_clip(self, beat, silent, rel, out, label):
+        """Fecho comum dos modos: (1) queima a LEGENDA FIXA por cima do clipe mudo
+        se o beat tiver caption_text; (2) sobrepõe o trecho da trilha; (3) salva e
+        marca 'done'. O `silent` (clipe-base SEM legenda) fica no disco pra permitir
+        re-queimar o texto depois sem re-rodar o modelo (ver videogen_beat_caption)."""
+        import shutil  # noqa: WPS433
+        project = beat.project
+        src = silent
+        has_caption = bool((beat.caption_text or "").strip())
+        if has_caption:
+            capped = silent + ".cap.mp4"
+            try:
+                video_assembly.burn_caption(
+                    silent, beat.caption_text, capped,
+                    position=beat.caption_position or "bottom")
+                src = capped
+            except Exception as e:  # noqa: BLE001 — legenda nunca derruba o beat
+                self.stdout.write(self.style.WARNING(
+                    f"beat #{beat.id}: legenda falhou ({str(e)[:80]}); segue sem ela."))
+                src = silent
+        music = None
+        if project.music_file:
+            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
+        has_audio = False
+        if music:
+            has_audio = video_assembly.mux_music_segment(src, music, beat.start_ms, out)
+        else:
+            shutil.copyfile(src, out)
+        extra = (", com som" if has_audio else "") + (", com legenda" if has_caption else "")
+        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
+                       progress=f"pronto ({label}{extra})")
+        return has_audio
+
     def _process_beat_svd(self, beat, ref_bytes, ref_name):
         """Modo FIEL (SVD): dá vida à própria imagem. Sem prompt/claude. Gera o
         clipe curto do SVD, encaixa na duração do beat (boomerang+loop) e sobrepõe
@@ -465,16 +498,7 @@ class Command(BaseCommand):
 
         rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
         out = _os.path.join(settings.MEDIA_ROOT, rel.replace("/", _os.sep))
-        music = None
-        if project.music_file:
-            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
-        has_audio = False
-        if music:
-            has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
-        else:
-            shutil.copyfile(silent, out)
-        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
-                       progress="pronto (fiel/SVD" + (", com som" if has_audio else "") + ")")
+        has_audio = self._finalize_clip(beat, silent, rel, out, "fiel/SVD")
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK (SVD {w}x{h}, som={has_audio})."))
 
@@ -570,16 +594,7 @@ class Command(BaseCommand):
 
         rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
         out = _os.path.join(settings.MEDIA_ROOT, rel.replace("/", _os.sep))
-        music = None
-        if project.music_file:
-            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
-        has_audio = False
-        if music:
-            has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
-        else:
-            shutil.copyfile(silent, out)
-        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
-                       progress="pronto (ação/Wan" + (", com som" if has_audio else "") + ")")
+        has_audio = self._finalize_clip(beat, silent, rel, out, "ação/Wan")
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK (Wan {w}x{h}, som={has_audio})."))
 
@@ -790,16 +805,7 @@ class Command(BaseCommand):
         except Exception as e:  # noqa: BLE001
             self._fail_beat(beat, f"juncao do beat falhou: {e}")
             return
-        music = None
-        if project.music_file:
-            music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
-        has_audio = False
-        if music:
-            has_audio = video_assembly.mux_music_segment(silent, music, beat.start_ms, out)
-        else:
-            shutil.copyfile(silent, out)
-        self._set_beat(beat, clip_file=rel, status="done", progress_pct=100,
-                       progress=f"pronto ({total_frames} frames" + (", com som" if has_audio else "") + ")")
+        has_audio = self._finalize_clip(beat, silent, rel, out, f"{total_frames} frames")
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK ({total_frames} frames, {len(parts)} pedaco(s), som={has_audio})."))
 

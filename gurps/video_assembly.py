@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import random
+import shutil
 import subprocess
 import tempfile
 
@@ -363,3 +364,102 @@ def _cleanup(*paths):
             os.remove(p)
         except Exception:  # noqa: BLE001
             pass
+
+
+# ----------------------------------------------------------------------------
+# LEGENDA FIXA (texto "queimado" por cima do clipe via ffmpeg drawtext)
+#
+# Modelos de vídeo por IA não mantêm texto estável (as letras morfam/piscam a
+# cada quadro). A solução correta é a IA cuidar só da CENA e o texto ser um
+# overlay de verdade: pixel-perfeito, fixo e legível, sem tremer. Como o app é
+# Windows-only, usamos uma fonte do próprio sistema (não redistribuímos nada).
+# ----------------------------------------------------------------------------
+
+# Fontes presentes em todo Windows 11 (negrito primeiro: lê melhor sobre vídeo).
+_WIN_FONT_CANDIDATES = (
+    "arialbd.ttf", "segoeuib.ttf", "verdanab.ttf", "impact.ttf",
+    "arial.ttf", "segoeui.ttf", "verdana.ttf", "tahoma.ttf",
+)
+
+
+def resolve_caption_font() -> str | None:
+    """Caminho de uma fonte .ttf do sistema pra desenhar a legenda. Tenta uma
+    lista de fontes sempre presentes no Windows; None se não achar nenhuma (o
+    drawtext então cai na fonte default do ffmpeg)."""
+    base = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts")
+    for name in _WIN_FONT_CANDIDATES:
+        p = os.path.join(base, name)
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def _ff_escape_path(p: str) -> str:
+    """Escapa um caminho do Windows pra uso DENTRO de um filtro do ffmpeg: as
+    barras viram '/', e o ':' do drive é escapado (senão o ffmpeg o lê como
+    separador de opções do filtro)."""
+    return p.replace("\\", "/").replace(":", "\\:")
+
+
+def _wrap_caption(text: str, max_chars: int = 26) -> str:
+    """Quebra o texto em linhas de ~max_chars (o drawtext não quebra sozinho),
+    respeitando palavras e quebras já existentes."""
+    out_lines = []
+    for para in str(text or "").replace("\r", "").split("\n"):
+        words = para.split()
+        if not words:
+            out_lines.append("")
+            continue
+        cur = ""
+        for w in words:
+            if cur and len(cur) + 1 + len(w) > max_chars:
+                out_lines.append(cur)
+                cur = w
+            else:
+                cur = (cur + " " + w).strip()
+        if cur:
+            out_lines.append(cur)
+    return "\n".join(out_lines)
+
+
+def burn_caption(src_path, text, out_path, position="bottom", ffmpeg=None,
+                 fontfile=None) -> bool:
+    """Queima `text` por cima do vídeo `src_path`, gerando `out_path`. O texto
+    fica FIXO (centralizado em x; topo/centro/base em y), com contorno + caixa
+    translúcida pra ler em qualquer fundo. Reencoda h264/yuv420p (mantém o fps do
+    src). Retorna True se queimou; se algo falhar ou o texto for vazio, copia o
+    src cru e retorna False (nunca quebra o beat)."""
+    text = (text or "").strip()
+    ff = ffmpeg or get_ffmpeg()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    if not text:
+        shutil.copyfile(src_path, out_path)
+        return False
+    font = fontfile or resolve_caption_font()
+    wrapped = _wrap_caption(text)
+    # textfile (em vez de text=) pra não sofrer com escaping do conteúdo do GM
+    # (aspas, %, dois-pontos, acentos). Só o CAMINHO do textfile precisa escapar.
+    tf = os.path.join(tempfile.gettempdir(),
+                      f"rpg_cap_{os.getpid()}_{random.randint(0, 1 << 30)}.txt")
+    with open(tf, "w", encoding="utf-8") as f:
+        f.write(wrapped)
+    y_expr = {
+        "top": "(h*0.07)",
+        "center": "(h-text_h)/2",
+        "bottom": "h-text_h-(h*0.07)",
+    }.get(position or "bottom", "h-text_h-(h*0.07)")
+    draw = (
+        "drawtext=textfile='" + _ff_escape_path(tf) + "'"
+        + (":fontfile='" + _ff_escape_path(font) + "'" if font else "")
+        + ":fontcolor=white:fontsize=h/13:line_spacing=6"
+        + ":borderw=4:bordercolor=black@0.95"
+        + ":box=1:boxcolor=black@0.45:boxborderw=16"
+        + ":x=(w-text_w)/2:y=" + y_expr
+    )
+    ok, _err = _run([ff, "-y", "-i", src_path, "-vf", draw,
+                     "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path])
+    _cleanup(tf)
+    if not ok:
+        shutil.copyfile(src_path, out_path)
+        return False
+    return True

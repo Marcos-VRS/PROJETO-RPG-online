@@ -105,6 +105,9 @@ def _serialize_beat(b):
         "edit_error": b.edit_error or "",
         "edit_approved": b.edit_approved,
         "has_edit_result": bool(b.edit_result_file),
+        # LEGENDA FIXA (texto queimado por cima do clipe via ffmpeg).
+        "caption_text": b.caption_text or "",
+        "caption_position": b.caption_position or "bottom",
     }
 
 
@@ -319,6 +322,14 @@ def videogen_beat_update(request, beat_id):
         # Só o texto da edição; não marca o beat pra regerar o vídeo (edição é à parte).
         beat.edit_instruction = (body.get("edit_instruction") or "").strip()[:PROMPT_MAX]
         beat.save(update_fields=["edit_instruction", "updated_at"])
+    if "caption_text" in body:
+        # Legenda fixa: NÃO marca pra regerar (é queimada por cima; ver /caption/).
+        beat.caption_text = (body.get("caption_text") or "").strip()[:300]
+        beat.save(update_fields=["caption_text", "updated_at"])
+    if "caption_position" in body:
+        cp = body.get("caption_position")
+        beat.caption_position = cp if cp in ("top", "center", "bottom") else "bottom"
+        beat.save(update_fields=["caption_position", "updated_at"])
     if "start_ms" in body or "end_ms" in body:
         start, end = _beat_times(body, beat.start_ms, beat.end_ms, beat.project.audio_duration_ms)
         beat.start_ms, beat.end_ms, beat.duration_ms = start, end, end - start
@@ -529,6 +540,57 @@ def videogen_beat_edit_revert(request, beat_id):
     beat.save(update_fields=["edit_approved", "edit_status", "edit_progress",
                              "status", "updated_at"])
     return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_caption(request, beat_id):
+    """LEGENDA FIXA: salva o texto/posição e QUEIMA por cima do clipe-base mudo
+    (beat_<id>/silent.mp4) que já existe — sem re-rodar o modelo (~1-3s). Texto
+    vazio volta o clipe ao estado sem legenda. Se o beat ainda não foi gerado (ou
+    o clipe-base sumiu), só guarda o texto; ele será queimado na próxima geração."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or request.POST
+    if "caption_text" in body:
+        beat.caption_text = (body.get("caption_text") or "").strip()[:300]
+    if "caption_position" in body:
+        cp = body.get("caption_position")
+        beat.caption_position = cp if cp in ("top", "center", "bottom") else beat.caption_position
+    beat.save(update_fields=["caption_text", "caption_position", "updated_at"])
+
+    bdir = os.path.join(settings.MEDIA_ROOT, "videobeats",
+                        str(beat.project_id), f"beat_{beat.id}")
+    silent = os.path.join(bdir, "silent.mp4")
+    out = os.path.join(settings.MEDIA_ROOT, "videobeats",
+                       str(beat.project_id), f"beat_{beat.id}.mp4")
+    base_missing = bool(beat.clip_file) and not os.path.isfile(silent)
+    reburned = False
+    if beat.clip_file and os.path.isfile(silent):
+        try:
+            project = beat.project
+            src = silent
+            if (beat.caption_text or "").strip():
+                capped = silent + ".cap.mp4"
+                video_assembly.burn_caption(
+                    silent, beat.caption_text, capped,
+                    position=beat.caption_position or "bottom")
+                src = capped
+            music = None
+            if project.music_file:
+                music = video_assembly.resolve_music_rel(settings.MEDIA_ROOT, project.music_file)
+            if music:
+                video_assembly.mux_music_segment(src, music, beat.start_ms, out)
+            else:
+                import shutil
+                shutil.copyfile(src, out)
+            reburned = True
+        except Exception as e:  # noqa: BLE001
+            return JsonResponse({"error": f"falha ao aplicar a legenda: {e}"}, status=500)
+    return JsonResponse({"ok": True, "reburned": reburned, "base_missing": base_missing,
+                         "beat": _serialize_beat(beat)})
 
 
 @login_required(login_url="gurps:login")

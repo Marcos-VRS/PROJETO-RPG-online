@@ -206,6 +206,7 @@ urlpatterns = [
     path("videogen/beat/<int:beat_id>/edit/discard/", views.videogen_beat_edit_discard, name="videogen_beat_edit_discard"),
     path("videogen/beat/<int:beat_id>/edit/revert/", views.videogen_beat_edit_revert, name="videogen_beat_edit_revert"),
     path("videogen/beat/<int:beat_id>/edit/image/", views.videogen_beat_edit_image, name="videogen_beat_edit_image"),
+    path("videogen/beat/<int:beat_id>/caption/", views.videogen_beat_caption, name="videogen_beat_caption"),
     # GM Tool Box (biblioteca pessoal do user)
     path("toolbox/", views.toolbox_list, name="toolbox_list"),
     path("toolbox/create/", views.toolbox_create, name="toolbox_create"),

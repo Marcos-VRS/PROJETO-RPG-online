@@ -463,7 +463,7 @@
                         + '<summary style="cursor:pointer;font-weight:700;">✨ Edição aditiva da imagem — mantém o personagem, só soma o que pedir</summary>';
                     if (b.edit_approved) h += '<div class="st-mini" style="color:#7fd67f;margin:4px 0;">✓ este beat está usando a imagem EDITADA como referência.</div>';
                     h += '<label class="st-field" style="margin:4px 0;">O que acrescentar:'
-                        + '<textarea rows="2" id="be-' + b.id + '" placeholder="ex.: acenda os olhos de vermelho-sangue e ponha magia vermelha na mão, sem cobrir o rosto">' + esc(b.edit_instruction) + '</textarea></label>';
+                        + '<textarea rows="2" id="bei-' + b.id + '" placeholder="ex.: acenda os olhos de vermelho-sangue e ponha magia vermelha na mão, sem cobrir o rosto">' + esc(b.edit_instruction) + '</textarea></label>';
                     if (es === 'queued' || es === 'processing') {
                         var epc = (b.edit_progress_pct == null ? -1 : b.edit_progress_pct);
                         var elbl = esc(b.edit_progress || 'editando…');
@@ -481,6 +481,21 @@
                     if (b.edit_approved) h += '<button onclick="vgEditRevert(' + b.id + ')">↩ voltar ao original</button>';
                     h += '</div><span class="st-mini" style="display:block;opacity:.8;">Lento (~min no seu 6GB). Depois de APROVAR, anime com 📌/🎬.</span></details>';
                 }
+                // LEGENDA FIXA: texto queimado por cima do clipe (fixo, legível, NÃO treme).
+                var capOpen = (b.caption_text && b.caption_text.trim()) ? ' open' : '';
+                var cpos = b.caption_position || 'bottom';
+                h += '<details class="st-edit" style="margin:4px 0;border:1px solid #383840;border-radius:6px;padding:6px;"' + capOpen + '>'
+                    + '<summary style="cursor:pointer;font-weight:700;">📝 Texto na tela (legenda fixa)</summary>'
+                    + '<div class="st-mini" style="opacity:.85;margin:4px 0;">A IA não escreve texto estável no vídeo (as letras tremem/somem). Este texto é sobreposto DEPOIS — fixo e legível. A cena pode tremer à vontade embaixo que o texto não mexe.</div>'
+                    + '<label class="st-field" style="margin:4px 0;">Texto:'
+                    + '<textarea rows="2" id="bcap-' + b.id + '" placeholder="ex.: Capítulo II — A Queda">' + esc(b.caption_text || '') + '</textarea></label>'
+                    + '<label class="st-field" style="margin:4px 0;">Posição: '
+                    + '<select id="bcappos-' + b.id + '">'
+                    + '<option value="top"' + (cpos === 'top' ? ' selected' : '') + '>topo</option>'
+                    + '<option value="center"' + (cpos === 'center' ? ' selected' : '') + '>centro</option>'
+                    + '<option value="bottom"' + (cpos === 'bottom' ? ' selected' : '') + '>base</option></select></label>'
+                    + '<div class="st-actions"><button onclick="vgCaptionApply(' + b.id + ')">📝 aplicar legenda' + (b.has_clip ? '' : ' (ao gerar)') + '</button></div>'
+                    + '<span class="st-mini" style="display:block;opacity:.8;">Aplica por cima do clipe que já existe, na hora — sem re-rodar o modelo. Apagar o texto remove a legenda.</span></details>';
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
@@ -497,7 +512,7 @@
                     }
                 } else if (b.progress) { h += '<div class="st-prog">⏳ ' + esc(b.progress) + '</div>'; }
                 if (b.error) h += '<div class="st-err">' + esc(b.error) + '</div>';
-                if (b.has_clip) h += '<video class="st-video" src="/videogen/beat/' + b.id + '/mp4/?t=' + encodeURIComponent(b.status + b.progress) + '" controls preload="metadata"></video>';
+                if (b.has_clip) h += '<video class="st-video" src="/videogen/beat/' + b.id + '/mp4/?t=' + encodeURIComponent(b.status + b.progress + (b.caption_text || '') + (b.caption_position || '')) + '" controls preload="metadata"></video>';
                 if (b.expanded_prompt) h += '<details class="st-xprompt"><summary>prompt da IA</summary><pre>' + esc(b.expanded_prompt) + '</pre></details>';
                 var busy = (b.status === 'pending' || b.status === 'processing');
                 h += '<div class="st-actions">'
@@ -528,13 +543,29 @@
                 user_prompt: (document.getElementById('bp-' + id) || {}).value || '',
                 correction: (document.getElementById('bc-' + id) || {}).value || ''
             };
-            var be = document.getElementById('be-' + id);
+            var be = document.getElementById('bei-' + id);
             if (be) body.edit_instruction = be.value || '';
+            var cap = document.getElementById('bcap-' + id);
+            if (cap) body.caption_text = cap.value || '';
+            var cpos = document.getElementById('bcappos-' + id);
+            if (cpos) body.caption_position = cpos.value || 'bottom';
             post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+        }
+        // ---------- legenda fixa (texto queimado por cima do clipe) ----------
+        function vgCaptionApply(id) {
+            var t = (document.getElementById('bcap-' + id) || {}).value || '';
+            var pos = (document.getElementById('bcappos-' + id) || {}).value || 'bottom';
+            var st = document.getElementById('ed-status');
+            if (st) st.textContent = 'Aplicando a legenda…';
+            post('/videogen/beat/' + id + '/caption/', { caption_text: t, caption_position: pos }).then(function (d) {
+                if (st) st.textContent = (d && d.reburned) ? 'Legenda aplicada no clipe.'
+                    : ((d && d.base_missing) ? 'Texto salvo — gere/regere o beat pra queimar a legenda.' : 'Texto salvo.');
+                vgRefresh();
+            }).catch(function () { if (st) st.textContent = 'Falha ao aplicar a legenda.'; });
         }
         // ---------- edição aditiva da imagem (Flux Kontext) ----------
         function vgEditRun(id) {
-            var be = document.getElementById('be-' + id);
+            var be = document.getElementById('bei-' + id);
             var txt = be ? (be.value || '') : '';
             if (!txt.trim()) { document.getElementById('ed-status').textContent = 'Descreva o que acrescentar à imagem.'; return; }
             post('/videogen/beat/' + id + '/edit/', { edit_instruction: txt }).then(function (d) {

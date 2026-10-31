@@ -26,6 +26,6 @@ from .video_gen import (
     videogen_beat_add, videogen_beat_update, videogen_beat_delete,
     videogen_beat_reorder, videogen_beat_generate, videogen_beat_mp4,
     videogen_beat_edit, videogen_beat_edit_approve, videogen_beat_edit_discard,
-    videogen_beat_edit_revert, videogen_beat_edit_image,
+    videogen_beat_edit_revert, videogen_beat_edit_image, videogen_beat_caption,
     videogen_project_assemble,
 )

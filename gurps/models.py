@@ -645,6 +645,14 @@ class VideoBeat(models.Model):
     edit_error = models.TextField(blank=True, default="")
     edit_result_file = models.CharField(max_length=300, blank=True, default="")  # rel. MEDIA_ROOT
     edit_approved = models.BooleanField(default=False)  # usar a imagem editada como referência
+    # LEGENDA FIXA: um texto "queimado" POR CIMA do clipe via ffmpeg (fixo, legível,
+    # NÃO treme). Modelos de vídeo por IA não conseguem manter texto estável (as
+    # letras morfam/piscam quadro a quadro), então a IA cuida só da CENA e o texto é
+    # sobreposto na montagem. Trocar o texto re-queima sobre o clipe-base mudo
+    # (beat_<id>/silent.mp4) SEM re-rodar o modelo — ver videogen_beat_caption.
+    CAPTION_POS_CHOICES = [("top", "Topo"), ("center", "Centro"), ("bottom", "Base")]
+    caption_text = models.CharField(max_length=300, blank=True, default="")
+    caption_position = models.CharField(max_length=8, choices=CAPTION_POS_CHOICES, default="bottom")
     clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")
     progress = models.CharField(max_length=120, blank=True, default="")
