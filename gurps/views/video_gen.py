@@ -97,6 +97,14 @@ def _serialize_beat(b):
         "has_clip": bool(b.clip_file),
         "transition": b.transition,
         "transition_ms": b.transition_ms,
+        # EDIÇÃO ADITIVA (Flux Kontext): passo separado com aprovação.
+        "edit_instruction": b.edit_instruction or "",
+        "edit_status": b.edit_status or "",
+        "edit_progress": b.edit_progress or "",
+        "edit_progress_pct": b.edit_progress_pct,
+        "edit_error": b.edit_error or "",
+        "edit_approved": b.edit_approved,
+        "has_edit_result": bool(b.edit_result_file),
     }
 
 
@@ -307,6 +315,10 @@ def videogen_beat_update(request, beat_id):
         beat.user_prompt = (body.get("user_prompt") or "").strip()[:PROMPT_MAX]; changed = True
     if "correction" in body:
         beat.correction = (body.get("correction") or "").strip()[:PROMPT_MAX]; changed = True
+    if "edit_instruction" in body:
+        # Só o texto da edição; não marca o beat pra regerar o vídeo (edição é à parte).
+        beat.edit_instruction = (body.get("edit_instruction") or "").strip()[:PROMPT_MAX]
+        beat.save(update_fields=["edit_instruction", "updated_at"])
     if "start_ms" in body or "end_ms" in body:
         start, end = _beat_times(body, beat.start_ms, beat.end_ms, beat.project.audio_duration_ms)
         beat.start_ms, beat.end_ms, beat.duration_ms = start, end, end - start
@@ -421,6 +433,117 @@ def videogen_beat_mp4(request, beat_id):
     resp = FileResponse(open(full, "rb"), content_type="video/mp4")
     resp["Cache-Control"] = "no-store"
     resp["Accept-Ranges"] = "bytes"
+    return resp
+
+
+# --- EDIÇÃO ADITIVA da imagem (Flux Kontext) — passo separado com aprovação ---
+
+@login_required(login_url="gurps:login")
+def videogen_beat_edit(request, beat_id):
+    """Enfileira a EDIÇÃO ADITIVA da imagem do beat (soma o que o GM pediu, mantém
+    o resto). O worker gera e deixa em 'ready' pra aprovação; não aplica sozinho."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or request.POST
+    if "edit_instruction" in body:
+        beat.edit_instruction = (body.get("edit_instruction") or "").strip()[:PROMPT_MAX]
+    if not (beat.edit_instruction or "").strip():
+        return JsonResponse({"error": "descreva o que acrescentar à imagem"}, status=400)
+    has_ref = bool(beat.ref_asset_id) or (beat.edit_approved and beat.edit_result_file)
+    if not has_ref:
+        return JsonResponse({"error": "escolha uma imagem de referência primeiro"}, status=400)
+    beat.edit_status = "queued"
+    beat.edit_error = ""
+    beat.edit_progress = "preparando…"
+    beat.edit_progress_pct = -1
+    beat.save(update_fields=["edit_instruction", "edit_status", "edit_error",
+                             "edit_progress", "edit_progress_pct", "updated_at"])
+    comfy = comfyui_client.status()
+    return JsonResponse({"ok": True, "comfy_online": comfy.get("online", False),
+                         "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_edit_approve(request, beat_id):
+    """Aprova a imagem editada: ela passa a ser a referência do beat (o asset
+    original fica intacto). Se o beat já tinha clipe, marca pra regerar."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if beat.edit_status != "ready" or not beat.edit_result_file:
+        return JsonResponse({"error": "não há imagem editada pra aprovar"}, status=400)
+    beat.edit_approved = True
+    beat.edit_status = "approved"
+    beat.edit_progress = "aprovada"
+    if beat.status in ("done", "failed"):
+        beat.status = "empty"  # a referência mudou → regerar o clipe
+    beat.save(update_fields=["edit_approved", "edit_status", "edit_progress",
+                             "status", "updated_at"])
+    return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_edit_discard(request, beat_id):
+    """Descarta a imagem editada pendente (não aprovada). Mantém a referência atual."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    # remove o arquivo só se NÃO for o que está aprovado em uso
+    if beat.edit_result_file and not beat.edit_approved:
+        full = os.path.join(settings.MEDIA_ROOT, beat.edit_result_file.replace("/", os.sep))
+        if os.path.exists(full):
+            try:
+                os.remove(full)
+            except OSError:
+                pass
+        beat.edit_result_file = ""
+    beat.edit_status = "approved" if beat.edit_approved else ""
+    beat.edit_progress = ""
+    beat.edit_error = ""
+    beat.edit_progress_pct = -1
+    beat.save(update_fields=["edit_result_file", "edit_status", "edit_progress",
+                             "edit_error", "edit_progress_pct", "updated_at"])
+    return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_edit_revert(request, beat_id):
+    """Volta a usar a imagem ORIGINAL (desfaz a aprovação). Não apaga nada."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    beat.edit_approved = False
+    beat.edit_status = "ready" if beat.edit_result_file else ""
+    beat.edit_progress = ""
+    if beat.status in ("done", "failed"):
+        beat.status = "empty"
+    beat.save(update_fields=["edit_approved", "edit_status", "edit_progress",
+                             "status", "updated_at"])
+    return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_edit_image(request, beat_id):
+    """Serve o PNG da imagem editada (pra preview no editor)."""
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return HttpResponse(status=403)
+    if not beat.edit_result_file:
+        return HttpResponse(status=404)
+    full = os.path.join(settings.MEDIA_ROOT, beat.edit_result_file.replace("/", os.sep))
+    if not os.path.exists(full):
+        return HttpResponse(status=404)
+    resp = FileResponse(open(full, "rb"), content_type="image/png")
+    resp["Cache-Control"] = "no-store"
     return resp
 
 

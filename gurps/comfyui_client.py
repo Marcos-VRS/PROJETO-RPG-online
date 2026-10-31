@@ -983,3 +983,121 @@ def generate_wan_mp4(ref_image_bytes, prompt, ref_image_filename="ref.png", nega
     })
     with urllib.request.urlopen(base + "/view?" + qs, timeout=180) as r:
         return r.read()
+
+
+# ---------------------------------------------------------------------------
+# EDIÇÃO ADITIVA de imagem (Flux.1 Kontext dev, GGUF) — mantém a imagem e SOMA a
+# mudança pedida por TEXTO (acender os olhos, pôr magia na mão) sem redesenhar o
+# personagem. Validado na RTX 1000 Ada 6GB (--lowvram + 63GB RAM): Q4_K_S, 20
+# passos, ~11 min/imagem. Usa o nó UnetLoaderGGUF (custom node ComfyUI-GGUF) +
+# nós nativos do Kontext (FluxKontextImageScale, ReferenceLatent, FluxGuidance).
+VIDEO_KONTEXT_UNET = "flux1-kontext-dev-Q4_K_S.gguf"       # models/unet (GGUF)
+VIDEO_KONTEXT_CLIP_L = "clip_l.safetensors"                # models/text_encoders
+VIDEO_KONTEXT_T5 = "t5xxl_fp8_e4m3fn_scaled.safetensors"   # models/text_encoders
+VIDEO_KONTEXT_VAE = "ae.safetensors"                       # models/vae (VAE do Flux)
+VIDEO_KONTEXT_STEPS = 20
+VIDEO_KONTEXT_GUIDANCE = 2.5
+
+
+def kontext_available(base_url: str = DEFAULT_URL) -> bool:
+    """True se o Flux Kontext dá pra rodar: nó GGUF carregado + o modelo na lista
+    + o VAE do Flux instalado. (Os text encoders são checados na geração.)"""
+    try:
+        with urllib.request.urlopen(base_url.rstrip("/") + "/object_info/UnetLoaderGGUF", timeout=8) as r:
+            d = json.loads(r.read())
+        node = d.get("UnetLoaderGGUF")
+        if not node:                    # nó ausente -> ComfyUI devolve {} (vazio)
+            return False
+        unet = node["input"]["required"]["unet_name"][0]
+    except Exception:  # noqa: BLE001
+        return False
+    return (VIDEO_KONTEXT_UNET in unet and VIDEO_KONTEXT_VAE in available_vaes(base_url))
+
+
+def _build_kontext_graph(image_name: str, instruction: str, seed: int,
+                         steps: int = VIDEO_KONTEXT_STEPS,
+                         guidance: float = VIDEO_KONTEXT_GUIDANCE) -> dict:
+    """Grafo do Flux Kontext (GGUF): a imagem é a referência (ReferenceLatent) e o
+    texto diz o que SOMAR; tudo fora do pedido é mantido. Validado no 6GB."""
+    return {
+        "1": {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": VIDEO_KONTEXT_UNET}},
+        "2": {"class_type": "DualCLIPLoader",
+              "inputs": {"clip_name1": VIDEO_KONTEXT_CLIP_L, "clip_name2": VIDEO_KONTEXT_T5, "type": "flux"}},
+        "3": {"class_type": "VAELoader", "inputs": {"vae_name": VIDEO_KONTEXT_VAE}},
+        "4": {"class_type": "LoadImage", "inputs": {"image": image_name}},
+        "5": {"class_type": "FluxKontextImageScale", "inputs": {"image": ["4", 0]}},
+        "6": {"class_type": "VAEEncode", "inputs": {"pixels": ["5", 0], "vae": ["3", 0]}},
+        "7": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": instruction}},
+        "8": {"class_type": "ReferenceLatent", "inputs": {"conditioning": ["7", 0], "latent": ["6", 0]}},
+        "9": {"class_type": "FluxGuidance", "inputs": {"conditioning": ["8", 0], "guidance": float(guidance)}},
+        "10": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["7", 0]}},
+        "11": {"class_type": "KSampler",
+               "inputs": {"model": ["1", 0], "positive": ["9", 0], "negative": ["10", 0],
+                          "latent_image": ["6", 0], "seed": int(seed), "steps": int(steps),
+                          "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}},
+        "12": {"class_type": "VAEDecode", "inputs": {"samples": ["11", 0], "vae": ["3", 0]}},
+        "13": {"class_type": "SaveImage", "inputs": {"images": ["12", 0], "filename_prefix": "kontext_edit"}},
+    }
+
+
+def generate_kontext_edit(ref_image_bytes, instruction, ref_image_filename="ref.png",
+                          base_url=DEFAULT_URL, timeout=1800, poll_interval=3.0,
+                          on_progress=None, seed=None, steps=VIDEO_KONTEXT_STEPS,
+                          guidance=VIDEO_KONTEXT_GUIDANCE) -> bytes:
+    """Edita a imagem SOMANDO o que ``instruction`` pedir (em inglês, de preferência),
+    mantendo o personagem/cena. Retorna os bytes do PNG editado. LENTO (~min no 6GB)."""
+    base = base_url.rstrip("/")
+    if seed is None:
+        seed = uuid.uuid4().int % (2 ** 31)
+    client_id = uuid.uuid4().hex
+    prog_stop = None
+    if on_progress:
+        prog_stop, _ = _start_progress_ws(base, client_id, on_progress)
+    name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
+    graph = _build_kontext_graph(name, instruction, seed, steps, guidance)
+    try:
+        resp = _http_json(base + "/prompt", {"prompt": graph, "client_id": client_id})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:500] if hasattr(e, "read") else ""
+        raise RuntimeError(f"ComfyUI recusou o Kontext (HTTP {e.code}): {body}")
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"Falha ao enviar o Kontext pro ComfyUI: {e}")
+    prompt_id = resp.get("prompt_id")
+    if not prompt_id:
+        raise RuntimeError(f"ComfyUI não retornou prompt_id (Kontext): {resp}")
+
+    start = time.monotonic()
+    out = None
+    try:
+        while time.monotonic() - start < timeout:
+            try:
+                with urllib.request.urlopen(base + "/history/" + prompt_id, timeout=10) as r:
+                    hist = json.loads(r.read().decode("utf-8"))
+            except Exception:  # noqa: BLE001
+                time.sleep(poll_interval)
+                continue
+            entry = hist.get(prompt_id)
+            if entry:
+                st = (entry.get("status") or {})
+                if st.get("status_str") == "error":
+                    raise RuntimeError("ComfyUI reportou erro ao editar (possível OOM).")
+                for node_out in (entry.get("outputs") or {}).values():
+                    imgs = node_out.get("images") or []
+                    if imgs:
+                        out = imgs[0]
+                        break
+                if out:
+                    break
+            time.sleep(poll_interval)
+    finally:
+        if prog_stop is not None:
+            prog_stop.set()
+
+    if not out:
+        raise RuntimeError("Timeout esperando a imagem editada do ComfyUI.")
+    qs = urllib.parse.urlencode({
+        "filename": out.get("filename", ""), "subfolder": out.get("subfolder", ""),
+        "type": out.get("type", "output"),
+    })
+    with urllib.request.urlopen(base + "/view?" + qs, timeout=180) as r:
+        return r.read()

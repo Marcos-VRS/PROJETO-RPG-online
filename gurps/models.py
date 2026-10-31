@@ -624,6 +624,27 @@ class VideoBeat(models.Model):
     # (vira o motion_bucket_id do SVD). Só usado quando ref_mode == "svd".
     svd_motion = models.FloatField(default=0.4)
     seed = models.BigIntegerField(null=True, blank=True)  # base; sub-clipes = seed+i
+    # EDIÇÃO ADITIVA da imagem de referência (Flux Kontext): mantém a imagem e SOMA
+    # a mudança pedida (acender os olhos, pôr magia na mão) sem redesenhar o
+    # personagem. É um PASSO SEPARADO com aprovação: gera -> "ready" -> o GM aprova
+    # -> a imagem editada vira a referência do beat. NÃO-DESTRUTIVO: o asset
+    # original nunca é apagado; a aprovação é só um flag + um arquivo local do beat.
+    # Edições sucessivas empilham (a fonte passa a ser a imagem já aprovada).
+    EDIT_STATUS_CHOICES = [
+        ("", "Sem edição"),
+        ("queued", "Na fila"),
+        ("processing", "Editando"),
+        ("ready", "Aguardando aprovação"),
+        ("approved", "Aprovada"),
+        ("failed", "Falhou"),
+    ]
+    edit_instruction = models.TextField(blank=True, default="")      # o que SOMAR (PT)
+    edit_status = models.CharField(max_length=12, default="")
+    edit_progress = models.CharField(max_length=120, blank=True, default="")
+    edit_progress_pct = models.IntegerField(default=-1)
+    edit_error = models.TextField(blank=True, default="")
+    edit_result_file = models.CharField(max_length=300, blank=True, default="")  # rel. MEDIA_ROOT
+    edit_approved = models.BooleanField(default=False)  # usar a imagem editada como referência
     clip_file = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="empty")
     progress = models.CharField(max_length=120, blank=True, default="")

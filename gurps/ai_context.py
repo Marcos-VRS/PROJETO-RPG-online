@@ -437,3 +437,38 @@ Now output only the final single-line English motion prompt."""
         mech = f"{action_text}, {look}, smooth natural motion, consistent character, detailed"
         return mech.strip()[:500], False
     return prompt[:500], True
+
+
+def write_kontext_edit_prompt(edit_text, ref_name="", render_style="realism",
+                              claude_bin="claude", model="sonnet", timeout=120):
+    """Transforma a instrução do GM (PT) numa frase de EDIÇÃO ADITIVA em inglês pro
+    Flux Kontext. A edição deve SOMAR o que o GM pediu (acender os olhos, pôr magia
+    na mão) e MANTER todo o resto (rosto, pose, roupa, fundo) idêntico — por isso a
+    frase sempre reforça "keep ... exactly the same". Edita a imagem parada (não é
+    movimento). Retorna (prompt_en, usou_claude); fallback = scaffold com o texto cru."""
+    edit_text = (edit_text or "").strip()
+    realism = (render_style or "").lower() != "anime"
+    look = "photorealistic, cinematic dramatic lighting, highly detailed" if realism \
+        else "anime style, cel shaded, cinematic, highly detailed"
+    keep = (f"Keep {ref_name}'s face, identity, hairstyle, outfit, pose and the background "
+            "exactly the same" if ref_name else
+            "Keep the face, identity, pose, outfit and the background exactly the same")
+    instruction = f"""You write ONE English image-EDIT instruction for Flux Kontext (an additive
+image editor). The edit must ADD ONLY what is asked and leave everything else identical — do NOT
+redraw the character. Start with the change to add, then the "keep ... the same" clause.
+
+Output ONLY one single line, 20-45 words, no quotes, no markdown, no preamble.
+
+=== THE EDIT THE GM WANTS (translate to English, keep it additive) ===
+{edit_text or '(make the eyes glow and add a subtle magical aura to the hands)'}
+
+Now output only the final single-line English edit instruction, ending with: {keep}, {look}."""
+    out, ok = _run_claude_text(instruction, claude_bin, model, timeout)
+    if not ok or not out:
+        mech = f"Add: {edit_text}. {keep}, {look}."
+        return mech.strip()[:500], False
+    prompt = " ".join(ln.strip() for ln in out.splitlines() if ln.strip()).strip('`"\' ').strip()
+    if len(prompt) < 10:
+        mech = f"Add: {edit_text}. {keep}, {look}."
+        return mech.strip()[:500], False
+    return prompt[:500], True

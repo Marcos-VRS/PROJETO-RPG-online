@@ -224,7 +224,7 @@
             return JSON.stringify([p.status, p.has_result, p.progress,
                 (p.comfy && p.comfy.online) || false,
                 (p.beats || []).map(function (b) {
-                    return [b.id, b.status, b.progress, b.progress_pct, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.svd_motion, b.transition, b.transition_ms, b.error];
+                    return [b.id, b.status, b.progress, b.progress_pct, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.svd_motion, b.transition, b.transition_ms, b.error, b.edit_status, b.edit_progress_pct, b.edit_approved, b.has_edit_result];
                 })]);
         }
 
@@ -456,6 +456,31 @@
                         + '<span class="st-mini">← mais fiel (quase parado) · mais movimento →</span>'
                         + '<span class="st-mini" style="display:block;opacity:.8;">Pra o personagem FAZER uma ação (levantar a mão, carregar um poder), puxe pro lado do movimento — 100% fiel = a imagem não se mexe.</span></label>';
                 }
+                if (b.ref_asset_id || b.edit_approved) {
+                    var es = b.edit_status || '';
+                    var eopen = ((es && es !== 'approved') || b.edit_approved) ? ' open' : '';
+                    h += '<details class="st-edit" style="margin:4px 0;border:1px solid #383840;border-radius:6px;padding:6px;"' + eopen + '>'
+                        + '<summary style="cursor:pointer;font-weight:700;">✨ Edição aditiva da imagem — mantém o personagem, só soma o que pedir</summary>';
+                    if (b.edit_approved) h += '<div class="st-mini" style="color:#7fd67f;margin:4px 0;">✓ este beat está usando a imagem EDITADA como referência.</div>';
+                    h += '<label class="st-field" style="margin:4px 0;">O que acrescentar:'
+                        + '<textarea rows="2" id="be-' + b.id + '" placeholder="ex.: acenda os olhos de vermelho-sangue e ponha magia vermelha na mão, sem cobrir o rosto">' + esc(b.edit_instruction) + '</textarea></label>';
+                    if (es === 'queued' || es === 'processing') {
+                        var epc = (b.edit_progress_pct == null ? -1 : b.edit_progress_pct);
+                        var elbl = esc(b.edit_progress || 'editando…');
+                        if (epc >= 0) h += '<div class="st-prog">🖌️ ' + elbl + '</div><div class="st-bar"><div class="st-bar-fill" style="width:' + Math.max(2, epc) + '%"></div></div>';
+                        else h += '<div class="st-prog">🖌️ ' + elbl + '</div><div class="st-bar indet"><div class="st-bar-fill"></div></div>';
+                    }
+                    if (b.edit_error) h += '<div class="st-err">' + esc(b.edit_error) + '</div>';
+                    if (es === 'ready' && b.has_edit_result) {
+                        h += '<img src="/videogen/beat/' + b.id + '/edit/image/?t=' + encodeURIComponent((b.edit_progress || '') + b.edit_progress_pct) + '" style="width:100%;border-radius:6px;margin-top:6px;background:#000;">'
+                            + '<div class="st-actions"><button class="st-approve" onclick="vgEditApprove(' + b.id + ')">✅ aprovar (vira a referência)</button>'
+                            + '<button class="st-danger" onclick="vgEditDiscard(' + b.id + ')">✖ descartar</button></div>';
+                    }
+                    var ebusy = (es === 'queued' || es === 'processing');
+                    h += '<div class="st-actions"><button ' + (ebusy ? 'disabled' : '') + ' onclick="vgEditRun(' + b.id + ')">' + (b.has_edit_result ? '✨ editar de novo' : '✨ editar imagem') + '</button>';
+                    if (b.edit_approved) h += '<button onclick="vgEditRevert(' + b.id + ')">↩ voltar ao original</button>';
+                    h += '</div><span class="st-mini" style="display:block;opacity:.8;">Lento (~min no seu 6GB). Depois de APROVAR, anime com 📌/🎬.</span></details>';
+                }
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
                     + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
@@ -503,8 +528,23 @@
                 user_prompt: (document.getElementById('bp-' + id) || {}).value || '',
                 correction: (document.getElementById('bc-' + id) || {}).value || ''
             };
+            var be = document.getElementById('be-' + id);
+            if (be) body.edit_instruction = be.value || '';
             post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
         }
+        // ---------- edição aditiva da imagem (Flux Kontext) ----------
+        function vgEditRun(id) {
+            var be = document.getElementById('be-' + id);
+            var txt = be ? (be.value || '') : '';
+            if (!txt.trim()) { document.getElementById('ed-status').textContent = 'Descreva o que acrescentar à imagem.'; return; }
+            post('/videogen/beat/' + id + '/edit/', { edit_instruction: txt }).then(function (d) {
+                if (d && d.error) document.getElementById('ed-status').textContent = d.error;
+                vgRefresh(); vgSchedulePoll();
+            }).catch(function () {});
+        }
+        function vgEditApprove(id) { post('/videogen/beat/' + id + '/edit/approve/').then(function () { vgRefresh(); }).catch(function () {}); }
+        function vgEditDiscard(id) { post('/videogen/beat/' + id + '/edit/discard/').then(function () { vgRefresh(); }).catch(function () {}); }
+        function vgEditRevert(id) { if (!confirm('Voltar a usar a imagem original?')) return; post('/videogen/beat/' + id + '/edit/revert/').then(function () { vgRefresh(); }).catch(function () {}); }
         function vgBeatPatch(id, body) { post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {}); }
         function vgBeatDelete(id) { if (!confirm('Apagar este beat?')) return; post('/videogen/beat/' + id + '/delete/').then(function () { vgRefresh(); }).catch(function () {}); }
         function vgBeatGen(id) {
@@ -546,7 +586,10 @@
         function vgSchedulePoll() {
             if (_poll) clearTimeout(_poll);
             if (!_proj) return;
-            var active = (_proj.beats || []).some(function (b) { return b.status === 'pending' || b.status === 'processing'; })
+            var active = (_proj.beats || []).some(function (b) {
+                    return b.status === 'pending' || b.status === 'processing'
+                        || b.edit_status === 'queued' || b.edit_status === 'processing';
+                })
                 || _proj.status === 'pending' || _proj.status === 'processing';
             // Enquanto gera: 4s. Parado: um heartbeat lento de 20s pra nunca ficar preso num estado velho.
             _poll = setTimeout(vgRefresh, active ? 4000 : 20000);

@@ -47,6 +47,18 @@ class Command(BaseCommand):
             f"modelos_video={has_models}). Ctrl+C pra parar."))
         try:
             while True:
+                # EDIÇÃO ADITIVA de imagem (Flux Kontext) tem prioridade máxima: é o
+                # passo que o GM faz ANTES de animar (precisa aprovar a imagem antes).
+                edit = (VideoBeat.objects.filter(edit_status="queued")
+                        .select_related("project").order_by("updated_at").first())
+                if edit is not None:
+                    try:
+                        self._process_beat_edit(edit)
+                    except Exception as e:  # noqa: BLE001
+                        self._safe_fail_edit(edit, e)
+                    if once:
+                        break
+                    continue
                 # Beats pendentes (modo editor) têm prioridade — são tarefas curtas.
                 beat = (VideoBeat.objects.filter(status="pending")
                         .select_related("project").order_by("created_at").first())
@@ -300,8 +312,36 @@ class Command(BaseCommand):
         except Exception:  # noqa: BLE001
             pass
 
+    def _fail_edit(self, beat, msg):
+        VideoBeat.objects.filter(id=beat.id).update(
+            edit_status="failed", edit_error=str(msg)[:500], edit_progress="falhou")
+        self.stdout.write(self.style.ERROR(f"beat #{beat.id} EDIÇÃO FALHOU: {str(msg)[:200]}"))
+
+    def _safe_fail_edit(self, beat, exc):
+        """Edição que explode NÃO derruba o worker (grava o erro no próprio beat)."""
+        tb = traceback.format_exc()
+        self.stdout.write(self.style.ERROR(f"beat #{beat.id} EDIÇÃO exceção:\n{tb}"))
+        try:
+            VideoBeat.objects.filter(id=beat.id).update(
+                edit_status="failed", edit_error=f"{type(exc).__name__}: {exc}"[:500])
+        except Exception:  # noqa: BLE001
+            pass
+
     def _resolve_beat_ref(self, beat):
-        """(bytes, nome) da imagem de referência do journal, ou (None, '')."""
+        """(bytes, nome) da imagem de referência do beat, ou (None, '').
+
+        Se o beat tem uma edição aditiva APROVADA (Flux Kontext), ela é a
+        referência — tanto pra animar quanto pra uma próxima edição empilhar em
+        cima. O asset original nunca é apagado; é só preferência de arquivo."""
+        if beat.edit_approved and beat.edit_result_file:
+            full = os.path.join(settings.MEDIA_ROOT, beat.edit_result_file.replace("/", os.sep))
+            if os.path.exists(full):
+                try:
+                    with open(full, "rb") as fh:
+                        nm = (beat.ref_asset.name if beat.ref_asset_id else "editada")
+                        return fh.read(), nm
+                except Exception:  # noqa: BLE001
+                    pass
         a = beat.ref_asset
         if not a or not getattr(a, "image", None):
             return None, ""
@@ -542,6 +582,69 @@ class Command(BaseCommand):
                        progress="pronto (ação/Wan" + (", com som" if has_audio else "") + ")")
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK (Wan {w}x{h}, som={has_audio})."))
+
+    def _process_beat_edit(self, beat):
+        """EDIÇÃO ADITIVA (Flux Kontext): mantém a imagem e SOMA o que o GM pediu no
+        campo de edição (acender olhos, pôr magia na mão) sem redesenhar. Gera a
+        imagem editada e deixa em "ready" pra o GM APROVAR (não aplica sozinho).
+        Não-destrutivo: o asset original fica intacto; a aprovação é feita na view."""
+        import os as _os  # noqa: WPS433
+        import time as _time  # noqa: WPS433
+        project = beat.project
+        self._set_beat(beat, edit_status="processing", edit_progress="lendo a imagem...",
+                       edit_error="", edit_progress_pct=0)
+        self.stdout.write(f"beat #{beat.id} (proj {project.id}): edição aditiva (Kontext)")
+
+        if not comfyui_client.kontext_available(self.base_url):
+            self._fail_edit(beat, "Modelo de edição (Flux Kontext GGUF + VAE do Flux) "
+                                  "não está instalado no ComfyUI.")
+            return
+        ref_bytes, ref_name = self._resolve_beat_ref(beat)
+        if ref_bytes is None:
+            self._fail_edit(beat, "O beat não tem imagem de referência pra editar.")
+            return
+        instruction = (beat.edit_instruction or "").strip()
+        if not instruction:
+            self._fail_edit(beat, "Descreva o que acrescentar à imagem.")
+            return
+
+        edit_en, used = ai_context.write_kontext_edit_prompt(
+            instruction, ref_name=ref_name, render_style=project.render_style,
+            claude_bin=self.claude_bin, model=self.claude_model)
+        self.stdout.write(f"  edit ({'claude' if used else 'mecanico'}): {edit_en[:80]!r}")
+
+        prog_state = {"pct": -1}
+
+        def _cb(frac):
+            pct = int(max(0.0, min(1.0, frac)) * 100)
+            if pct <= prog_state["pct"]:
+                return
+            prog_state["pct"] = pct
+            try:
+                VideoBeat.objects.filter(id=beat.id).update(
+                    edit_progress=f"editando {pct}%", edit_progress_pct=pct)
+            except Exception:  # noqa: BLE001
+                pass
+
+        comfyui_client.free_memory(self.base_url)
+        self._set_beat(beat, edit_progress="editando (Kontext, pode levar minutos)...")
+        try:
+            png = comfyui_client.generate_kontext_edit(
+                ref_bytes, edit_en, ref_image_filename=(ref_name or "ref") + ".png",
+                base_url=self.base_url, on_progress=_cb, timeout=max(self.clip_timeout, 1800))
+        except Exception as e:  # noqa: BLE001
+            self._fail_edit(beat, f"Edição falhou: {e}")
+            return
+
+        bdir = _os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id), f"beat_{beat.id}")
+        _os.makedirs(bdir, exist_ok=True)
+        rel = f"videobeats/{project.id}/beat_{beat.id}/edit_{int(_time.time())}.png"
+        full = _os.path.join(settings.MEDIA_ROOT, rel.replace("/", _os.sep))
+        with open(full, "wb") as f:
+            f.write(png)
+        self._set_beat(beat, edit_result_file=rel, edit_status="ready", edit_progress_pct=100,
+                       edit_progress="pronta — aprove ou descarte", edit_error="")
+        self.stdout.write(self.style.SUCCESS(f"beat #{beat.id} edição OK -> {rel}"))
 
     def _process_beat(self, beat):
         project = beat.project
