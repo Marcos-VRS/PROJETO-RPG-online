@@ -463,3 +463,87 @@ def burn_caption(src_path, text, out_path, position="bottom", ffmpeg=None,
         shutil.copyfile(src_path, out_path)
         return False
     return True
+
+
+# ----------------------------------------------------------------------------
+# IMAGEM ESTÁTICA + EFEITOS (sem IA)
+#
+# Pra artes que o GM já fez (inclusive com texto embutido): a imagem fica
+# PIXEL-EXATA, parada, e os efeitos rodam POR CIMA via ffmpeg. Como a imagem
+# nunca é redesenhada, o texto/arte dela fica perfeito. Tudo é procedural (sem
+# ComfyUI/GPU): roda em segundos mesmo com o ComfyUI desligado.
+#   shake    = tremor/terremoto (a imagem inteira vibra)
+#   flash    = clarões tipo relâmpago (picos de brilho periódicos)
+#   zoom     = aproximação lenta (Ken Burns)
+#   vignette = bordas escuras pulsando (tensão)
+# Intensidades 0..1 (0 = desligado). Sai 512x512 h264/yuv420p (igual aos outros
+# clipes do beat), na duração do beat.
+# ----------------------------------------------------------------------------
+
+def render_static_fx(image_path, dur_ms, out_path, fps=24, shake=0.0, flash=0.0,
+                     zoom=0.0, vignette=0.0, ffmpeg=None) -> bool:
+    """Gera um vídeo a partir da imagem ESTÁTICA + efeitos (sem IA). Retorna True
+    em sucesso. Se a cadeia de efeitos falhar, cai num fallback simples (imagem
+    parada sem efeito) pra nunca derrubar o beat."""
+    ff = ffmpeg or get_ffmpeg()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    dur_s = max(0.3, int(dur_ms or 2000) / 1000.0)
+    fps = max(8, int(fps or 24))
+
+    def clamp(v):
+        try:
+            return max(0.0, min(1.0, float(v)))
+        except (TypeError, ValueError):
+            return 0.0
+    shake, flash, zoom, vig = clamp(shake), clamp(flash), clamp(zoom), clamp(vignette)
+
+    M = 18 if shake > 0 else 0          # overscan p/ o tremor não revelar borda preta
+    S = 512 + 2 * M                      # canvas de trabalho (512 + margem)
+    tf = max(1, int(round(fps * dur_s)))
+    Z = zoom * 0.18                      # aproximação total (até ~18%)
+
+    # cadeia comum sobre a imagem (escala + zoom + flash + vinheta) → canvas SxS.
+    # NÃO uso crop com eval (esta build do ffmpeg não tem essa opção no crop); o
+    # tremor é feito por OVERLAY da imagem sobredimensionada sobre um fundo preto.
+    chain = "scale=1024:1024:force_original_aspect_ratio=increase,crop=1024:1024,setsar=1,"
+    if zoom > 0:
+        chain += (f"zoompan=z='min(1+{Z:.4f}*on/{tf}\\,{1 + Z:.4f})'"
+                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={S}x{S}:fps={fps},")
+    else:
+        chain += f"scale={S}:{S},"
+    if flash > 0:
+        amp = flash * 0.9
+        # pico de brilho decaindo a cada ~1.3s (relâmpago/magia)
+        chain += f"eq=eval=frame:brightness='{amp:.3f}*exp(-pow(mod(t\\,1.3)*4\\,2))',"
+    if vig > 0:
+        chain += (f"vignette=angle='PI/5+{vig * 0.7:.3f}*"
+                  f"(0.5+0.5*sin(t*2*PI*0.7))':eval=frame,")
+
+    if shake > 0:
+        A = shake * 16.0
+        xexpr = f"(W-w)/2+{A:.2f}*(0.6*sin(t*2*PI*11)+0.4*sin(t*2*PI*7.3))"
+        yexpr = f"(H-h)/2+{A:.2f}*(0.6*cos(t*2*PI*9.5)+0.4*sin(t*2*PI*13.1))"
+        fcomplex = (f"[0:v]{chain}setpts=PTS-STARTPTS[fg];"
+                    f"[1:v][fg]overlay=x='{xexpr}':y='{yexpr}':eval=frame:shortest=1,"
+                    f"fps={fps},format=yuv420p[v]")
+        cmd = [ff, "-y", "-loop", "1", "-i", image_path,
+               "-f", "lavfi", "-i", f"color=c=black:s=512x512:r={fps}",
+               "-filter_complex", fcomplex, "-map", "[v]", "-an",
+               "-t", f"{dur_s:.3f}", "-r", str(fps),
+               "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path]
+    else:
+        vf = chain + f"fps={fps},format=yuv420p"
+        cmd = [ff, "-y", "-loop", "1", "-i", image_path, "-t", f"{dur_s:.3f}",
+               "-vf", vf, "-an", "-r", str(fps),
+               "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path]
+
+    ok, _err = _run(cmd)
+    if ok:
+        return True
+    # fallback: imagem parada 512x512 sem efeito (nunca quebra o beat)
+    ok, _err = _run([ff, "-y", "-loop", "1", "-i", image_path, "-t", f"{dur_s:.3f}",
+                     "-vf", ("scale=512:512:force_original_aspect_ratio=increase,"
+                             "crop=512:512,setsar=1,format=yuv420p"),
+                     "-an", "-r", str(fps), "-c:v", "libx264",
+                     "-pix_fmt", "yuv420p", out_path])
+    return ok

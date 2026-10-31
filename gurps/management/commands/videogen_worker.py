@@ -598,6 +598,37 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"beat #{beat.id} OK (Wan {w}x{h}, som={has_audio})."))
 
+    def _process_beat_fx(self, beat, ref_bytes, ref_name):
+        """Modo IMAGEM ESTÁTICA + EFEITOS (sem IA): segura a imagem PARADA e aplica
+        efeitos por cima (tremor/flash/zoom/vinheta) via ffmpeg. Rápido, não usa a
+        GPU/ComfyUI. Preserva a imagem pixel-exata (arte/texto que o GM fez intactos)."""
+        import os as _os  # noqa: WPS433
+        project = beat.project
+        self._set_beat(beat, status="processing", progress="aplicando efeitos...",
+                       error="", progress_pct=20)
+        bdir = _os.path.join(settings.MEDIA_ROOT, "videobeats", str(project.id),
+                             f"beat_{beat.id}")
+        _os.makedirs(bdir, exist_ok=True)
+        ext = ".png" if (ref_bytes[:8].startswith(b"\x89PNG")) else ".jpg"
+        src_img = _os.path.join(bdir, "fx_src" + ext)
+        with open(src_img, "wb") as f:
+            f.write(ref_bytes)
+        # efeitos pedem fps alto pra ficar suave (os clipes de IA são baixos; aqui é barato).
+        fps = max(24, int(project.fps or 8))
+        silent = _os.path.join(bdir, "silent.mp4")
+        ok = video_assembly.render_static_fx(
+            src_img, beat.duration_ms or 2000, silent, fps=fps,
+            shake=beat.fx_shake, flash=beat.fx_flash,
+            zoom=beat.fx_zoom, vignette=beat.fx_vignette)
+        if not ok:
+            self._fail_beat(beat, "ffmpeg falhou ao aplicar os efeitos.")
+            return
+        self._set_beat(beat, progress="montando...", progress_pct=85)
+        rel = f"videobeats/{project.id}/beat_{beat.id}.mp4"
+        out = _os.path.join(settings.MEDIA_ROOT, rel.replace("/", _os.sep))
+        self._finalize_clip(beat, silent, rel, out, "estática+efeitos")
+        self.stdout.write(self.style.SUCCESS(f"beat #{beat.id} OK (FX, sem IA)."))
+
     def _process_beat_edit(self, beat):
         """EDIÇÃO ADITIVA (Flux Kontext): mantém a imagem e SOMA o que o GM pediu no
         campo de edição (acender olhos, pôr magia na mão) sem redesenhar. Gera a
@@ -680,6 +711,12 @@ class Command(BaseCommand):
         # texto da cena (faz a ação) mantendo o personagem. Lento. Precisa da imagem.
         if (beat.ref_mode or "") == "wan" and ref_bytes is not None:
             self._process_beat_wan(beat, ref_bytes, ref_name)
+            return
+        # Modo "Imagem estática + efeitos" = FX: a imagem fica PARADA (sem IA) e só
+        # rodam efeitos por cima (tremor/flash/zoom/vinheta) via ffmpeg. Preserva a
+        # arte/texto da imagem. Não usa ComfyUI/GPU. Precisa da imagem.
+        if (beat.ref_mode or "") == "fx" and ref_bytes is not None:
+            self._process_beat_fx(beat, ref_bytes, ref_name)
             return
 
         ctx = ""

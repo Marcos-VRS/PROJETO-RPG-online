@@ -432,7 +432,8 @@
                         + '<option value="svd"' + (b.ref_mode === 'svd' ? ' selected' : '') + '>📌 Dar vida (fiel) — a imagem já está certa</option>'
                         + '<option value="wan"' + (b.ref_mode === 'wan' ? ' selected' : '') + '>🎬 Ação dirigida — o personagem FAZ a ação (lento)</option>'
                         + '<option value="animate"' + (b.ref_mode === 'animate' ? ' selected' : '') + '>🔀 Animar com ajustes — mexer na cena/ação</option>'
-                        + '<option value="style"' + (b.ref_mode !== 'svd' && b.ref_mode !== 'wan' && b.ref_mode !== 'animate' ? ' selected' : '') + '>🎨 Recriar — imagem só como estilo</option></select></label>';
+                        + '<option value="fx"' + (b.ref_mode === 'fx' ? ' selected' : '') + '>🖼️ Imagem estática + efeitos — sua arte PARADA, sem IA</option>'
+                        + '<option value="style"' + (b.ref_mode !== 'svd' && b.ref_mode !== 'wan' && b.ref_mode !== 'animate' && b.ref_mode !== 'fx' ? ' selected' : '') + '>🎨 Recriar — imagem só como estilo</option></select></label>';
                 }
                 h += '</div>';
                 if (b.ref_asset_id && b.ref_mode === 'wan') {
@@ -455,6 +456,18 @@
                         + ' onchange="vgBeatPatch(' + b.id + ',{fidelity:(this.value/100)})">'
                         + '<span class="st-mini">← mais fiel (quase parado) · mais movimento →</span>'
                         + '<span class="st-mini" style="display:block;opacity:.8;">Pra o personagem FAZER uma ação (levantar a mão, carregar um poder), puxe pro lado do movimento — 100% fiel = a imagem não se mexe.</span></label>';
+                }
+                if (b.ref_asset_id && b.ref_mode === 'fx') {
+                    h += '<div class="st-field" style="margin:4px 0;"><span class="st-mini" style="display:block;opacity:.85;">🖼️ A sua imagem fica <b>parada e idêntica</b> (arte e texto preservados, a IA não redesenha nada) e os efeitos rodam por cima. Rápido, sem GPU. Puxe os efeitos que quiser — 0% = desligado:</span></div>';
+                    var fxdefs = [['fx_shake', 'Tremor / terremoto'], ['fx_flash', 'Relâmpago / flash'], ['fx_zoom', 'Zoom lento (aproximar)'], ['fx_vignette', 'Vinheta / pulso escuro']];
+                    for (var fi = 0; fi < fxdefs.length; fi++) {
+                        var fk = fxdefs[fi][0], flabel = fxdefs[fi][1];
+                        var fval = Math.round((b[fk] == null ? 0 : b[fk]) * 100);
+                        h += '<label class="st-field" style="margin:4px 0;">' + flabel + ': <b id="' + fk + '-' + b.id + '">' + fval + '%</b>'
+                            + '<input type="range" min="0" max="100" value="' + fval + '" style="width:100%"'
+                            + ' oninput="var e=document.getElementById(\'' + fk + '-' + b.id + '\');if(e)e.textContent=this.value+\'%\'"'
+                            + ' onchange="vgFxSet(' + b.id + ',\'' + fk + '\',this.value/100)"></label>';
+                    }
                 }
                 if (b.ref_asset_id || b.edit_approved) {
                     var es = b.edit_status || '';
@@ -577,6 +590,7 @@
         function vgEditDiscard(id) { post('/videogen/beat/' + id + '/edit/discard/').then(function () { vgRefresh(); }).catch(function () {}); }
         function vgEditRevert(id) { if (!confirm('Voltar a usar a imagem original?')) return; post('/videogen/beat/' + id + '/edit/revert/').then(function () { vgRefresh(); }).catch(function () {}); }
         function vgBeatPatch(id, body) { post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {}); }
+        function vgFxSet(id, key, v) { var o = {}; o[key] = v; vgBeatPatch(id, o); }
         function vgBeatDelete(id) { if (!confirm('Apagar este beat?')) return; post('/videogen/beat/' + id + '/delete/').then(function () { vgRefresh(); }).catch(function () {}); }
         function vgBeatGen(id) {
             // salva o texto atual antes de gerar

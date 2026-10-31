@@ -610,13 +610,22 @@ class VideoBeat(models.Model):
     #  "wan"     = AÇÃO DIRIGIDA (Wan 2.2 i2v): a imagem é o quadro 1 E o modelo
     #              OBEDECE o texto da cena (ex. "leva a mão ao rosto com magia"),
     #              mantendo o personagem. Lento (~min/clipe). O texto da Cena é a ação.
+    #  "fx"      = IMAGEM ESTÁTICA + EFEITOS (sem IA): a imagem fica PARADA, pixel-
+    #              exata (preserva arte/texto que o GM já fez), e só rodam efeitos
+    #              por cima via ffmpeg (tremor/flash/zoom/vinheta). Rápido, sem GPU.
     REF_MODE_CHOICES = [
         ("svd", "Dar vida (fiel — SVD)"),
         ("wan", "Ação dirigida (Wan)"),
         ("animate", "Animar com ajustes (img2vid)"),
         ("style", "Recriar (só estilo)"),
+        ("fx", "Imagem estática + efeitos (sem IA)"),
     ]
     ref_mode = models.CharField(max_length=10, choices=REF_MODE_CHOICES, default="style")
+    # Intensidades dos efeitos do modo "fx" (0 = desligado .. 1 = forte).
+    fx_shake = models.FloatField(default=0.0)       # tremor / terremoto
+    fx_flash = models.FloatField(default=0.0)       # relâmpago / clarão
+    fx_zoom = models.FloatField(default=0.0)        # aproximação lenta (Ken Burns)
+    fx_vignette = models.FloatField(default=0.0)    # vinheta / pulso escuro
     # Fidelidade no modo "animate": 1.0 = mais fiel (movimento sutil) → 0.0 = mais
     # movimento (afasta mais da imagem). A view mapeia pra denoise do KSampler.
     fidelity = models.FloatField(default=0.6)

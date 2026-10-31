@@ -90,6 +90,10 @@ def _serialize_beat(b):
         "ref_mode": b.ref_mode,
         "fidelity": b.fidelity,
         "svd_motion": b.svd_motion,
+        "fx_shake": b.fx_shake,
+        "fx_flash": b.fx_flash,
+        "fx_zoom": b.fx_zoom,
+        "fx_vignette": b.fx_vignette,
         "status": b.status,
         "progress": b.progress or "",
         "progress_pct": b.progress_pct,
@@ -338,7 +342,14 @@ def videogen_beat_update(request, beat_id):
         beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
     if "ref_mode" in body:
         rm = body.get("ref_mode")
-        beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style") else "style"; changed = True
+        beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style", "fx") else "style"; changed = True
+    for _fx in ("fx_shake", "fx_flash", "fx_zoom", "fx_vignette"):
+        if _fx in body:
+            try:
+                setattr(beat, _fx, min(1.0, max(0.0, float(body.get(_fx)))))
+                changed = True
+            except (TypeError, ValueError):
+                pass
     if "fidelity" in body:
         try:
             beat.fidelity = min(1.0, max(0.0, float(body.get("fidelity"))))
