@@ -223,6 +223,7 @@
         var _poll = null, _vgPoll = null;
         var _proj = null;         // projeto aberto (detalhe)
         var _journal = [];        // imagens do journal [{id,name,url}]
+        var _chars = [];          // retratos das fichas [{token,name,url}]
         var _refBeatId = null;    // beat em edição no modal de referência
         var _lastSig = null;      // assinatura do estado (re-renderiza só quando muda)
         function vgSig(p) {
@@ -647,22 +648,42 @@
         function vgScheduleEditorPoll() { vgSchedulePoll(); }  // compat
 
         // ---------- modal de referência ----------
+        function vgSecHead(txt) {
+            return '<div class="st-mini" style="grid-column:1/-1;font-weight:bold;color:#cdb4e0;margin:6px 0 0;">' + txt + '</div>';
+        }
         function vgRefRender() {
             var grid = document.getElementById('ref-grid');
             if (!grid) return;
-            grid.innerHTML = _journal.length ? _journal.map(function (it) {
+            var h = '';
+            if (_chars.length) {
+                h += vgSecHead('🧑 Retratos das fichas (' + _chars.length + ')');
+                h += _chars.map(function (it) {
+                    return '<figure onclick="vgRefPickSheet(\'' + it.token + '\')"><img src="' + it.url + '" alt="" loading="lazy"><figcaption>' + esc(it.name) + '</figcaption></figure>';
+                }).join('');
+            }
+            h += vgSecHead('🖼️ Imagens da campanha (' + _journal.length + ')');
+            h += _journal.length ? _journal.map(function (it) {
                 return '<figure onclick="vgRefPick(' + it.id + ')"><img src="' + it.url + '" alt="" loading="lazy"><figcaption>' + esc(it.name) + '</figcaption></figure>';
-            }).join('') : '<p class="st-mini">nenhuma imagem raster no journal ainda.</p>';
+            }).join('') : '<p class="st-mini" style="grid-column:1/-1;">nenhuma imagem raster no journal ainda.</p>';
+            grid.innerHTML = h;
             var cnt = document.getElementById('ref-count');
-            if (cnt) cnt.textContent = _journal.length ? (_journal.length + ' imagens') : '';
+            if (cnt) cnt.textContent = (_journal.length + _chars.length) + ' imagens';
         }
         function vgRefOpen(beatId) {
             _refBeatId = beatId;
             document.getElementById('ref-modal').classList.add('on');
             vgRefRender();   // mostra o que já tem em cache
-            // e recarrega o journal INTEIRO do servidor (pega novas + todas, sem corte)
+            // recarrega o journal INTEIRO + os retratos das fichas (sem corte)
             fetch('/imagegen/' + CAMP + '/journal/').then(function (r) { return r.json(); })
                 .then(function (d) { _journal = (d && d.items) || []; vgRefRender(); }).catch(function () {});
+            fetch('/videogen/' + CAMP + '/characters/').then(function (r) { return r.json(); })
+                .then(function (d) { _chars = (d && d.items) || []; vgRefRender(); }).catch(function () {});
+        }
+        function vgRefPickSheet(token) {
+            if (_refBeatId == null) return;
+            post('/videogen/beat/' + _refBeatId + '/ref/sheet/', { token: token })
+                .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+            vgRefClose();
         }
         function vgRefUpload(input) {
             if (_refBeatId == null || !input.files || !input.files.length) return;

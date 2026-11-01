@@ -208,6 +208,8 @@ urlpatterns = [
     path("videogen/beat/<int:beat_id>/edit/image/", views.videogen_beat_edit_image, name="videogen_beat_edit_image"),
     path("videogen/beat/<int:beat_id>/caption/", views.videogen_beat_caption, name="videogen_beat_caption"),
     path("videogen/beat/<int:beat_id>/ref/upload/", views.videogen_beat_ref_upload, name="videogen_beat_ref_upload"),
+    path("videogen/beat/<int:beat_id>/ref/sheet/", views.videogen_beat_ref_from_sheet, name="videogen_beat_ref_from_sheet"),
+    path("videogen/<int:campanha_id>/characters/", views.videogen_characters, name="videogen_characters"),
     # GM Tool Box (biblioteca pessoal do user)
     path("toolbox/", views.toolbox_list, name="toolbox_list"),
     path("toolbox/create/", views.toolbox_create, name="toolbox_create"),

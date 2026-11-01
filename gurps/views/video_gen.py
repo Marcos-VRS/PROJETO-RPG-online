@@ -21,7 +21,10 @@ from django.shortcuts import get_object_or_404
 from django.utils.text import get_valid_filename
 
 from gurps import ai_context, comfyui_client, video_assembly
-from gurps.models import Campanha, CampanhaAssets, VideoBeat, VideoGenRequest
+from gurps.models import (
+    Campanha, CampanhaAssets, CharacterSheet, CharacterSheetV2,
+    VideoBeat, VideoGenRequest,
+)
 
 PROMPT_MAX = 2000
 STYLE_CHOICES = {"anime", "cinematic_dark", "photoreal", "oil", "gritty", "none"}
@@ -425,6 +428,105 @@ def videogen_beat_ref_upload(request, beat_id):
     )
     asset.image.name = rel
     asset.save()
+    beat.ref_asset = asset
+    if beat.status in ("done", "failed"):
+        beat.status = "empty"
+    beat.save(update_fields=["ref_asset", "status", "updated_at"])
+    beat.refresh_from_db()
+    return JsonResponse({"ok": True, "asset_id": asset.id, "beat": _serialize_beat(beat)})
+
+
+def _sheet_photo(campanha, token):
+    """Resolve o retrato de uma ficha a partir de um token "v2:<id>" / "v1:<id>".
+    Devolve (sheet, nome) ou (None, "")."""
+    try:
+        kind, sid = (token or "").split(":")
+        sid = int(sid)
+    except (ValueError, AttributeError):
+        return None, ""
+    if kind == "v2":
+        s = CharacterSheetV2.objects.filter(id=sid, campanha=campanha).first()
+    elif kind == "v1":
+        s = CharacterSheet.objects.filter(
+            id=sid, info_campanha__nome_campanha=campanha.nome).first()
+    else:
+        return None, ""
+    if not s or not getattr(s, "photo", None) or not s.photo.name:
+        return None, ""
+    return s, (s.nome_personagem or "personagem")
+
+
+@login_required(login_url="gurps:login")
+def videogen_characters(request, campanha_id):
+    """Lista os retratos das fichas (V1 + V2) desta campanha, pro seletor de
+    referência. De-duplica por nome (prefere V2). GM only."""
+    campanha, err = _gm_or_403(campanha_id, request)
+    if err:
+        return err
+    items, seen = [], set()
+
+    def _add(s, kind):
+        ph = getattr(s, "photo", None)
+        if not ph or not ph.name or ph.name.lower().endswith(".svg"):
+            return
+        try:
+            if not os.path.exists(ph.path):
+                return
+            url = ph.url
+        except Exception:  # noqa: BLE001
+            return
+        nm = (s.nome_personagem or "").strip()
+        key = nm.lower()
+        if key and key in seen:
+            return
+        if key:
+            seen.add(key)
+        items.append({"token": f"{kind}:{s.id}", "name": nm or f"ficha {s.id}", "url": url})
+
+    for s in CharacterSheetV2.objects.filter(campanha=campanha).order_by("nome_personagem"):
+        _add(s, "v2")
+    for s in CharacterSheet.objects.filter(
+            info_campanha__nome_campanha=campanha.nome).order_by("nome_personagem"):
+        _add(s, "v1")
+    return JsonResponse({"ok": True, "items": items})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_ref_from_sheet(request, beat_id):
+    """Usa o retrato de uma ficha como referência do beat. Copia a foto pra um
+    asset da campanha (slot=2, show=False → não aparece pro jogador) e vincula.
+    Reaproveita o asset se já tiver copiado antes (não duplica)."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    campanha = beat.project.campanha
+    if campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    body = _json_body(request) or request.POST
+    token = (body.get("token") or "").strip()
+    s, cname = _sheet_photo(campanha, token)
+    if s is None:
+        return JsonResponse({"error": "ficha/foto não encontrada"}, status=404)
+    src = s.photo.path
+    ext = os.path.splitext(s.photo.name)[1].lower() or ".png"
+    rel = f"campanhas_assets/sheet_{campanha.id}_{token.replace(':', '_')}{ext}"
+    dest = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    if not os.path.exists(dest):
+        try:
+            with open(src, "rb") as fsrc, open(dest, "wb") as fdst:
+                fdst.write(fsrc.read())
+        except OSError:
+            return JsonResponse({"error": "não consegui ler a foto da ficha"}, status=400)
+    asset = CampanhaAssets.objects.filter(campanha=campanha, image=rel).first()
+    if asset is None:
+        asset = CampanhaAssets(
+            campanha=campanha, name=(cname or "personagem")[:40],
+            description="Retrato de ficha (referência do Estúdio de Vídeo)",
+            slot=2, show=False,
+        )
+        asset.image.name = rel
+        asset.save()
     beat.ref_asset = asset
     if beat.status in ("done", "failed"):
         beat.status = "empty"
