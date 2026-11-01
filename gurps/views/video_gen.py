@@ -12,6 +12,7 @@ Endpoints:
 """
 import json
 import os
+import time
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -374,6 +375,62 @@ def videogen_beat_update(request, beat_id):
     _reactivate_if_terminal(beat.project)
     beat.refresh_from_db()
     return JsonResponse({"ok": True, "beat": _serialize_beat(beat)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_beat_ref_upload(request, beat_id):
+    """Sobe uma imagem DE FORA (do PC do GM) como referência deste beat.
+
+    Cria um asset na campanha (slot=2, show=False → entra na galeria de
+    referências do Estúdio, mas NÃO aparece no journal dos jogadores) e já
+    vincula ao beat. Aceita JPG/PNG/WEBP até 25 MB.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    beat = get_object_or_404(VideoBeat, id=beat_id)
+    if beat.project.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    up = request.FILES.get("image") if request.FILES else None
+    if up is None:
+        return JsonResponse({"error": "nenhuma imagem enviada"}, status=400)
+    ext = os.path.splitext(up.name or "")[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+        return JsonResponse({"error": "formato não suportado (use JPG, PNG ou WEBP)"}, status=400)
+    if up.size and up.size > 25 * 1024 * 1024:
+        return JsonResponse({"error": "imagem muito grande (máx. 25 MB)"}, status=400)
+    campanha = beat.project.campanha
+    base = get_valid_filename(os.path.splitext(up.name or "ref")[0])[:40] or "ref"
+    rel = f"campanhas_assets/upload_{campanha.id}_{beat.id}_{int(time.time())}{ext}"
+    dest = os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep))
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "wb") as f:
+        for chunk in up.chunks():
+            f.write(chunk)
+    # valida que abre como imagem (rejeita arquivo corrompido ou renomeado)
+    try:
+        from PIL import Image  # noqa: WPS433
+        with Image.open(dest) as im:
+            im.verify()
+    except Exception:  # noqa: BLE001
+        try:
+            os.remove(dest)
+        except OSError:
+            pass
+        return JsonResponse({"error": "arquivo não é uma imagem válida"}, status=400)
+    name = (request.POST.get("name") or base or "referência").strip()[:40]
+    asset = CampanhaAssets(
+        campanha=campanha, name=name,
+        description="Referência enviada pelo GM (Estúdio de Vídeo)",
+        slot=2, show=False,
+    )
+    asset.image.name = rel
+    asset.save()
+    beat.ref_asset = asset
+    if beat.status in ("done", "failed"):
+        beat.status = "empty"
+    beat.save(update_fields=["ref_asset", "status", "updated_at"])
+    beat.refresh_from_db()
+    return JsonResponse({"ok": True, "asset_id": asset.id, "beat": _serialize_beat(beat)})
 
 
 @login_required(login_url="gurps:login")

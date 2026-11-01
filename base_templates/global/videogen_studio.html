@@ -206,8 +206,13 @@
         <div class="st-modal-box">
             <div class="st-row"><b>Imagem de referência do journal</b>
                 <button class="st-actions" style="flex:0;min-width:60px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:6px 10px;cursor:pointer;" onclick="vgRefClose()">fechar</button></div>
-            <p class="st-mini">Clique numa imagem pra travar a aparência do personagem neste beat (IP-Adapter), ou remova.</p>
-            <div class="st-actions"><button onclick="vgRefPick(null)">✕ Sem referência</button></div>
+            <p class="st-mini">Clique numa imagem pra usar como referência deste beat, ou envie uma do seu PC.</p>
+            <div class="st-actions" style="gap:8px;align-items:center;flex-wrap:wrap;">
+                <button onclick="vgRefPick(null)">✕ Sem referência</button>
+                <label style="background:#2d6cdf;color:#fff;border-radius:5px;padding:7px 12px;cursor:pointer;font-size:13px;">⬆️ Enviar imagem do PC
+                    <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="vgRefUpload(this)"></label>
+                <span class="st-mini" id="ref-count"></span>
+            </div>
             <div class="st-refgrid" id="ref-grid"></div>
         </div>
     </div>
@@ -642,13 +647,36 @@
         function vgScheduleEditorPoll() { vgSchedulePoll(); }  // compat
 
         // ---------- modal de referência ----------
+        function vgRefRender() {
+            var grid = document.getElementById('ref-grid');
+            if (!grid) return;
+            grid.innerHTML = _journal.length ? _journal.map(function (it) {
+                return '<figure onclick="vgRefPick(' + it.id + ')"><img src="' + it.url + '" alt="" loading="lazy"><figcaption>' + esc(it.name) + '</figcaption></figure>';
+            }).join('') : '<p class="st-mini">nenhuma imagem raster no journal ainda.</p>';
+            var cnt = document.getElementById('ref-count');
+            if (cnt) cnt.textContent = _journal.length ? (_journal.length + ' imagens') : '';
+        }
         function vgRefOpen(beatId) {
             _refBeatId = beatId;
-            var grid = document.getElementById('ref-grid');
-            grid.innerHTML = _journal.length ? _journal.map(function (it) {
-                return '<figure onclick="vgRefPick(' + it.id + ')"><img src="' + it.url + '" alt=""><figcaption>' + esc(it.name) + '</figcaption></figure>';
-            }).join('') : '<p class="st-mini">nenhuma imagem raster no journal ainda.</p>';
             document.getElementById('ref-modal').classList.add('on');
+            vgRefRender();   // mostra o que já tem em cache
+            // e recarrega o journal INTEIRO do servidor (pega novas + todas, sem corte)
+            fetch('/imagegen/' + CAMP + '/journal/').then(function (r) { return r.json(); })
+                .then(function (d) { _journal = (d && d.items) || []; vgRefRender(); }).catch(function () {});
+        }
+        function vgRefUpload(input) {
+            if (_refBeatId == null || !input.files || !input.files.length) return;
+            var cnt = document.getElementById('ref-count');
+            if (cnt) cnt.textContent = 'enviando…';
+            var fd = new FormData();
+            fd.append('image', input.files[0]);
+            fetch('/videogen/beat/' + _refBeatId + '/ref/upload/', { method: 'POST', headers: { 'X-CSRFToken': csrf() }, body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    input.value = '';
+                    if (d && d.ok) { loadJournal(); vgRefresh(); vgRefClose(); }
+                    else if (cnt) { cnt.textContent = (d && d.error) || 'falhou'; }
+                }).catch(function () { if (cnt) cnt.textContent = 'falhou'; });
         }
         function vgRefClose() { document.getElementById('ref-modal').classList.remove('on'); _refBeatId = null; }
         function vgRefPick(assetId) {

@@ -138,8 +138,10 @@ def imagegen_journal(request, campanha_id):
     if campanha.dono_id != request.user.id:
         return JsonResponse({"error": "sem permissão"}, status=403)
     items = []
+    # TODO o journal (sem corte): o GM precisa escolher qualquer referência.
+    # As miniaturas carregam com loading="lazy" no cliente (baixo consumo).
     qs = (CampanhaAssets.objects.filter(campanha=campanha, slot__in=[1, 2])
-          .order_by("-id")[:60])
+          .order_by("-id"))
     for a in qs:
         if not a.image:
             continue
