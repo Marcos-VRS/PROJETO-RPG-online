@@ -30,12 +30,25 @@ PROMPT_MAX = 1500
 
 # Tamanhos default por tipo (SDXL-Turbo vai bem em 768-1024).
 SIZE_BY_KIND = {
-    "personagem": (768, 1024),
+    "personagem": (832, 1152),
     "mapa": (1024, 1024),
     "cena": (1024, 768),
     "capa": (768, 1024),   # pôster/capa (retrato)
     "item": (768, 768),
 }
+
+# Passos/cfg por tipo. cfg mais alto = o modelo OBEDECE mais o prompt (cicatriz,
+# olho cego, objetos pedidos "ganham"); mais passos = mais nitidez/detalhe.
+# Personagens precisam de aderência alta pra detalhes finos de rosto saírem.
+# Valores validados na GPU do host (RealVisXL Lightning, ~20s por imagem).
+QUALITY_BY_KIND = {
+    "personagem": (9, 2.2),
+    "mapa": (8, 2.0),
+    "cena": (8, 2.0),
+    "capa": (9, 2.2),
+    "item": (8, 2.0),
+}
+DEFAULT_QUALITY = (8, 2.0)
 
 
 def _serialize(req):
@@ -130,10 +143,12 @@ def imagegen_request(request, campanha_id):
         ref_asset = CampanhaAssets.objects.filter(
             id=ref_asset_id, campanha=campanha).first()
 
+    q_steps, q_cfg = QUALITY_BY_KIND.get(kind, DEFAULT_QUALITY)
     comfy = comfyui_client.status()
     req = ImageGenRequest.objects.create(
         campanha=campanha, requested_by=request.user, kind=kind,
         prompt=prompt, width=width, height=height, status="pending",
+        steps=q_steps, cfg=q_cfg,
         ref_weight=ref_weight, style=style, use_context=use_context,
         ref_asset=ref_asset, title=title,
         allow_all=allow_all, verbatim_prompt=verbatim, negative=custom_negative,

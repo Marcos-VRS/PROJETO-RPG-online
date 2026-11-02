@@ -91,10 +91,10 @@
         <label class="st-field" style="font-size:12px;">…ou enviar uma referência:
             <input type="file" id="ig-ref" accept="image/*">
         </label>
-        <label class="st-field" style="font-size:12px;" title="Quanto a foto de referência trava o rosto. ALTO = fiel à foto (mas não deixa adicionar cicatriz/olho cego). BAIXO = mantém só a vibe e libera mudanças.">
-            Força da referência: <b><span id="ig-rwv">70</span>%</b>
-            <input type="range" id="ig-rw" min="0" max="120" value="70" step="5" oninput="document.getElementById('ig-rwv').textContent=this.value" style="width:100%;">
-            <span style="font-size:10px;color:#999;">Pra cicatriz/olho cego entrar numa foto existente, baixe pra ~30-40%.</span>
+        <label class="st-field" style="font-size:12px;" title="Quanto a foto de referência trava o rosto. ALTO = fiel à foto (mas NÃO deixa adicionar cicatriz/olho cego/mudar o rosto). BAIXO/zero = libera o prompt a mudar o rosto.">
+            Força da referência: <b><span id="ig-rwv">35</span>%</b>
+            <input type="range" id="ig-rw" min="0" max="120" value="35" step="5" oninput="document.getElementById('ig-rwv').textContent=this.value" style="width:100%;">
+            <span style="font-size:10px;color:#e0a0a0;">⚠ A referência TRAVA o rosto. Pra pôr cicatriz, olho cego ou mudar o rosto, <b>tire a referência</b> (nem selecione, nem envie foto) — qualquer força acima de ~20% já impede a cicatriz.</span>
         </label>
         <button type="button" class="st-gen" onclick="rd6IgSubmit()">Gerar imagem</button>
         <p class="st-status" id="ig-status"></p>
