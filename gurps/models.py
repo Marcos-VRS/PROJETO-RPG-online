@@ -492,6 +492,15 @@ class ImageGenRequest(models.Model):
     # "Prompt verbatim": usa o prompt EXATAMENTE como escrito (modo editar+regerar),
     # sem passar pelo claude nem pelo prompt mecânico.
     verbatim_prompt = models.BooleanField(default=False)
+    # Enquadramento da câmera: "" = IA decide; portrait = rosto/busto;
+    # fullbody = corpo inteiro; action = personagem fazendo algo (cena).
+    FRAMING_CHOICES = [
+        ("", "IA decide"),
+        ("portrait", "Retrato (rosto/busto)"),
+        ("fullbody", "Corpo inteiro"),
+        ("action", "Em ação / fazendo algo"),
+    ]
+    framing = models.CharField(max_length=12, blank=True, default="", choices=FRAMING_CHOICES)
     # Título a escrever POR CIMA da imagem (modo capa). O modelo de IA não escreve
     # texto legível, então o nome do episódio é sobreposto via Pillow.
     title = models.CharField(max_length=200, blank=True, default="")

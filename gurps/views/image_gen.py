@@ -52,6 +52,7 @@ def _serialize(req):
         "used_context": req.use_context,
         "allow_all": req.allow_all,
         "verbatim_prompt": req.verbatim_prompt,
+        "framing": req.framing or "",
         "negative": req.negative or "",
         "result_asset_id": req.result_asset_id,
         "created_at": req.created_at.isoformat() if req.created_at else None,
@@ -111,8 +112,14 @@ def imagegen_request(request, campanha_id):
 
     def _truthy(v):
         return str(v).lower() in ("1", "true", "yes", "on")
-    # "Permitir tudo": negativo mínimo + claude não suaviza gore/cicatriz/olho cego.
+    # "Permitir tudo": negativo mínimo + claude não suaviza gore/cicatriz/olho cego/nudez.
     allow_all = _truthy(body.get("allow_all"))
+    # "Prompt exato": usa o texto como escrito, sem o claude reescrever (escape total).
+    verbatim = _truthy(body.get("verbatim"))
+    # Enquadramento: "" (IA decide) / portrait / fullbody / action.
+    framing = body.get("framing") or ""
+    if framing not in ("", "portrait", "fullbody", "action"):
+        framing = ""
     # Negativo custom opcional (avançado). Vazio = usa o padrão/mínimo conforme allow_all.
     custom_negative = (body.get("negative") or "").strip()[:1000]
 
@@ -129,7 +136,8 @@ def imagegen_request(request, campanha_id):
         prompt=prompt, width=width, height=height, status="pending",
         ref_weight=ref_weight, style=style, use_context=use_context,
         ref_asset=ref_asset, title=title,
-        allow_all=allow_all, negative=custom_negative,
+        allow_all=allow_all, verbatim_prompt=verbatim, negative=custom_negative,
+        framing=framing,
     )
     if ref_file is not None:
         req.ref_image = ref_file
@@ -285,6 +293,10 @@ def imagegen_regenerate(request, req_id):
         ref_weight = max(0.0, min(float(body.get("ref_weight")), 1.5))
     except (TypeError, ValueError):
         ref_weight = src.ref_weight
+    # enquadramento: override do corpo, senão mantém o do original.
+    framing = body.get("framing")
+    if framing not in ("", "portrait", "fullbody", "action"):
+        framing = src.framing
 
     new = ImageGenRequest.objects.create(
         campanha=src.campanha, requested_by=request.user, kind=src.kind,
@@ -294,6 +306,7 @@ def imagegen_regenerate(request, req_id):
         use_context=False, verbatim_prompt=True, allow_all=allow_all,
         negative=custom_negative, title=src.title,
         ref_asset=(None if drop_ref else src.ref_asset),
+        framing=framing,
     )
     # carrega a MESMA referência enviada (aponta pro mesmo arquivo, não recopia),
     # a menos que o GM tenha pedido pra ignorar a referência.

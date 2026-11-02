@@ -68,11 +68,20 @@
                 <option value="none">Sem estilo</option>
             </select>
         </label>
+        <label class="st-field">Enquadramento:
+            <select id="ig-framing">
+                <option value="">IA decide (pelo que você escrever)</option>
+                <option value="portrait">Retrato (rosto / busto)</option>
+                <option value="fullbody">Corpo inteiro (cabeça aos pés)</option>
+                <option value="action">Em ação / fazendo algo</option>
+            </select>
+        </label>
         <label class="st-field">Descreva (curto — a IA completa lendo o journal):
             <textarea id="ig-prompt" rows="3" placeholder="Ex.: 'o grupo diante do portão da cidade ao anoitecer'"></textarea>
         </label>
         <label class="st-field st-check"><input type="checkbox" id="ig-context" checked> Ler o journal (coerência com o mundo)</label>
-        <label class="st-field st-check" title="Negativo mínimo: libera cicatrizes, olho cego, ferimentos, gore. Sem travas de aparência."><input type="checkbox" id="ig-allowall"> 🔓 Permitir tudo (gore, cicatrizes, sem travas de aparência)</label>
+        <label class="st-field st-check" title="Negativo mínimo + o Claude não suaviza: libera cicatrizes, olho cego, ferimentos, gore e nudez (personagens adultos). Sem travas de aparência."><input type="checkbox" id="ig-allowall"> 🔓 Permitir tudo (gore, cicatrizes, nudez — sem travas)</label>
+        <label class="st-field st-check" title="Manda o seu texto EXATO pro gerador, sem o Claude reescrever/traduzir. Use pra ter controle total (ex.: enquadramento de corpo inteiro, nudez). Dica: escreva em inglês pra sair melhor."><input type="checkbox" id="ig-verbatim"> ✍️ Usar meu texto exato (sem o Claude reescrever)</label>
         <div class="st-field">
             <button type="button" class="menu-button" onclick="rd6IgToggleJournalRef()" style="font-size:12px;">📖 Referência do journal</button>
             <span id="ig-jref-label" style="font-size:11px;color:#999;margin-left:6px;"></span>
@@ -134,6 +143,8 @@
             fd.append('style', document.getElementById('ig-style').value);
             fd.append('use_context', document.getElementById('ig-context').checked ? '1' : '0');
             fd.append('allow_all', document.getElementById('ig-allowall').checked ? '1' : '0');
+            fd.append('verbatim', document.getElementById('ig-verbatim').checked ? '1' : '0');
+            fd.append('framing', document.getElementById('ig-framing').value || '');
             fd.append('ref_weight', (parseInt(document.getElementById('ig-rw').value, 10) / 100).toString());
             fd.append('title', document.getElementById('ig-title').value || '');
             if (_igJournalRef) fd.append('ref_asset_id', _igJournalRef.id);
@@ -171,7 +182,8 @@
                     allow: g('ig-ea-') ? g('ig-ea-').checked : null,
                     ns: g('ig-ns-') ? g('ig-ns-').checked : null,
                     rw: g('ig-erw-') ? g('ig-erw-').value : null,
-                    noref: g('ig-nr-') ? g('ig-nr-').checked : null
+                    noref: g('ig-nr-') ? g('ig-nr-').checked : null,
+                    fr: g('ig-ef-') ? g('ig-ef-').value : null
                 };
             });
             var head = (comfy && !comfy.online) ? '<div class="st-err">ComfyUI offline no host.</div>' : '';
@@ -188,6 +200,13 @@
                     var rwpct = Math.round((r.ref_weight != null ? r.ref_weight : 0.7) * 100);
                     h += '<div class="st-edit" id="ig-edit-' + r.id + '" hidden style="margin-top:8px;">'
                       + '<textarea id="ig-ept-' + r.id + '" rows="4" style="width:100%;box-sizing:border-box;">' + rd6Esc(pretext) + '</textarea>'
+                      + '<label style="font-size:12px;display:block;margin:4px 0;">Enquadramento: '
+                      + '<select id="ig-ef-' + r.id + '">'
+                      + ['', 'portrait', 'fullbody', 'action'].map(function (v) {
+                            var lbl = { '': 'IA decide', 'portrait': 'Retrato', 'fullbody': 'Corpo inteiro', 'action': 'Em ação' }[v];
+                            return '<option value="' + v + '"' + ((r.framing || '') === v ? ' selected' : '') + '>' + lbl + '</option>';
+                        }).join('')
+                      + '</select></label>'
                       + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ea-' + r.id + '"' + (r.allow_all ? ' checked' : '') + '> 🔓 Permitir tudo (gore, cicatrizes)</label>';
                     if (r.has_ref) {
                         h += '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-nr-' + r.id + '"> 🚫 Ignorar a foto de referência (gera só pelo texto)</label>'
@@ -216,6 +235,7 @@
                 if (s.ns != null && g('ig-ns-')) g('ig-ns-').checked = s.ns;
                 if (s.rw != null && g('ig-erw-')) { g('ig-erw-').value = s.rw; var v = g('ig-erwv-'); if (v) v.textContent = s.rw; }
                 if (s.noref != null && g('ig-nr-')) g('ig-nr-').checked = s.noref;
+                if (s.fr != null && g('ig-ef-')) g('ig-ef-').value = s.fr;
             });
         }
         function rd6IgApprove(id) {
@@ -240,7 +260,9 @@
             var ns = document.getElementById('ig-ns-' + id);
             var rw = document.getElementById('ig-erw-' + id);
             var nr = document.getElementById('ig-nr-' + id);
+            var fr = document.getElementById('ig-ef-' + id);
             var payload = { prompt: prompt, allow_all: allow && allow.checked ? 1 : 0, new_seed: ns && ns.checked ? 1 : 0 };
+            if (fr) payload.framing = fr.value || '';
             if (rw) payload.ref_weight = (parseInt(rw.value, 10) / 100);
             if (nr && nr.checked) payload.drop_ref = 1;
             document.getElementById('ig-status').textContent = 'Regerando…';

@@ -105,9 +105,11 @@ class Command(BaseCommand):
         # coerente com o mundo. Sem contexto (ou se o claude falhar), cai no modo
         # mecânico (palavras-chave do estilo + enquadramento).
         used_claude = False
+        fpref = ai_context.framing_prefix(req.framing)  # palavras-chave de enquadramento
         if req.verbatim_prompt:
-            # Modo editar+regerar: usa o prompt EXATAMENTE como o GM escreveu.
-            full_prompt = req.prompt
+            # Modo editar+regerar: usa o prompt EXATAMENTE como o GM escreveu
+            # (só prefixa o enquadramento escolhido, se houver).
+            full_prompt = (fpref + ", " + req.prompt) if fpref else req.prompt
         elif req.use_context:
             try:
                 ctx = ai_context.build_campaign_context(req.campanha)
@@ -117,10 +119,15 @@ class Command(BaseCommand):
             full_prompt, used_claude = ai_context.write_image_prompt_via_claude(
                 ctx, req.prompt, req.style, req.kind,
                 claude_bin=self.claude_bin, model=self.claude_model,
-                allow_all=req.allow_all,
+                allow_all=req.allow_all, framing=req.framing,
             )
+            # garante o enquadramento mesmo se o claude não enfatizar
+            if fpref and req.framing in ("fullbody", "action"):
+                full_prompt = fpref + ", " + full_prompt
         else:
             full_prompt = ai_context._mechanical_prompt(req.prompt, req.style, req.kind)
+            if fpref:
+                full_prompt = fpref + ", " + full_prompt
 
         # Guarda o prompt final pro GM ver o que foi realmente gerado.
         req.expanded_prompt = full_prompt

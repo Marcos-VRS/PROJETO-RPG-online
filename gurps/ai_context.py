@@ -116,7 +116,10 @@ def append_approved_context(campanha, line: str) -> None:
 
 
 _KIND_HINT = {
-    "personagem": "a character portrait",
+    "personagem": ("a character illustration — use EXACTLY the camera framing the GM asks "
+                   "for (full body head-to-toe, full figure, waist-up, or face portrait). "
+                   "If the GM asks for full body / corpo inteiro, show the ENTIRE body from "
+                   "head to feet. Do NOT default to a face-only headshot"),
     "mapa": "a top-down tabletop battle map",
     "cena": "an environment / scene illustration",
     "capa": ("a dramatic cinematic POSTER / title-card background (wide establishing shot, "
@@ -124,6 +127,27 @@ _KIND_HINT = {
              "top or bottom for a title to be added later — do NOT draw any text or letters)"),
     "item": "a single object / item on a simple backdrop, product-shot style",
 }
+
+
+# Enquadramento da câmera (palavras-chave reforçadas que o modelo obedece bem).
+FRAMING_KEYWORDS = {
+    "portrait": "(tight portrait, head and shoulders, face in sharp focus:1.3)",
+    "fullbody": "(full body shot, head to toe, entire body visible, full figure standing:1.4)",
+    "action": "(dynamic action shot, the character actively doing the action, full body "
+              "in motion, medium-wide cinematic shot showing the whole scene:1.3)",
+}
+# Descrição em inglês do enquadramento pra instruir o claude.
+FRAMING_HINT = {
+    "portrait": "a tight PORTRAIT — head and shoulders, face in focus.",
+    "fullbody": "a FULL BODY shot — show the ENTIRE body from head to feet, full figure.",
+    "action": "an ACTION shot — the character actively DOING what the GM describes, "
+              "full body in motion, medium-to-wide cinematic framing of the whole scene.",
+}
+
+
+def framing_prefix(framing):
+    """Palavras-chave de enquadramento pra colar no início de um prompt verbatim/mecânico."""
+    return FRAMING_KEYWORDS.get(framing or "", "")
 
 
 def _mechanical_prompt(user_request, style_key, kind):
@@ -139,7 +163,7 @@ def _mechanical_prompt(user_request, style_key, kind):
 
 def write_image_prompt_via_claude(context, user_request, style_key, kind,
                                   claude_bin="claude", model="sonnet",
-                                  timeout=90, allow_all=False) -> tuple[str, bool]:
+                                  timeout=90, allow_all=False, framing="") -> tuple[str, bool]:
     """Pede ao `claude -p` um prompt de imagem coerente com o journal.
 
     Retorna (prompt, usou_claude). Cai no fallback mecânico em qualquer erro.
@@ -150,18 +174,24 @@ def write_image_prompt_via_claude(context, user_request, style_key, kind,
     allow_line = ""
     if allow_all:
         allow_line = (
-            "\nThis is dark horror/mature tabletop fiction. Keep EVERY graphic, violent, "
-            "gory, injury, scar, blind-eye, wound and disfigurement detail from the GM "
-            "request EXACTLY as asked — do NOT soften, sanitize, tone down, censor or omit "
-            "any of it. Preserve those exact words, and emphasize the key ones with weight "
-            "like (milky blind eye:1.4), (huge scar across the face:1.5).")
+            "\nThis is mature/adult tabletop fiction for ADULT characters. Keep EVERY detail "
+            "from the GM request EXACTLY as asked — graphic, violent, gory, injury, scar, "
+            "blind-eye, wound, disfigurement AND nudity/nakedness. Do NOT soften, sanitize, "
+            "tone down, censor, clothe, or omit anything. If the GM asks for a nude/naked "
+            "figure, describe the character fully nude (do NOT add clothing). Translate the "
+            "request faithfully and keep its exact framing (full body head-to-toe, etc.). "
+            "Emphasize key terms with weight like (milky blind eye:1.4), (full body nude:1.3), "
+            "(huge scar across the face:1.5).")
+    framing_line = ""
+    if framing and FRAMING_HINT.get(framing):
+        framing_line = f"\nCAMERA FRAMING (MANDATORY): frame the shot as {FRAMING_HINT[framing]}"
     instruction = f"""You write prompts for an SDXL image generator used in a tabletop RPG.
 Turn the GM's short request into ONE single-line English image prompt: comma-separated visual descriptors, 40-70 words. Output ONLY the prompt — no preamble, no quotes, no markdown, no explanation.
 
 Depict EXACTLY what the GM asks for. Do NOT default to a human/character unless the request is clearly about a person. If the request is an object, place, scene, symbol, map or title card, depict that — not a person.
 This image is {_KIND_HINT.get(kind, 'an illustration')}.
 Make it visually CONSISTENT with the established world below (same era, tone, palette, materials, lighting).
-Desired visual style to bake in: {style or 'realistic, cinematic'}.{allow_line}
+Desired visual style to bake in: {style or 'realistic, cinematic'}.{framing_line}{allow_line}
 
 === CAMPAIGN JOURNAL (context) ===
 {context or '(no extra context yet)'}
