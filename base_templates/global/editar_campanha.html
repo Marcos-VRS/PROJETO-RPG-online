@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'global/partials/_design_head.html' %}
+    <link rel="stylesheet" href="{% static 'global/css/criar_campanha_style.css' %}?d={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'global/css/fontes.css' %}?d={% now 'U' %}">
+    <title>EDITAR CAMPANHA</title>
+    <style>
+        .ec-wrap { max-width: 820px; margin: 0 auto; padding: 16px; }
+        .ec-note { background: #2a2a33; border-left: 3px solid #7a2ea0; color: #ddd;
+                   padding: 10px 14px; border-radius: 6px; font-size: 14px; margin: 12px 0; }
+        .ec-msgs { list-style: none; padding: 0; }
+        .ec-msgs li { background: #223b22; color: #cfe; padding: 8px 12px; border-radius: 6px; margin: 6px 0; }
+        .ec-ctx { background: #1c1c22; color: #bbb; border: 1px solid #444; border-radius: 6px;
+                  padding: 10px; font-size: 12px; white-space: pre-wrap; max-height: 180px; overflow: auto; }
+        .ec-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .ec-actions button { background: #3a3a44; color: #eee; border: none; border-radius: 6px;
+                             padding: 10px 16px; cursor: pointer; font-size: 14px; }
+        .ec-actions .primary { background: #2d6cdf; }
+        .ec-back { color: #9ab; font-size: 13px; }
+    </style>
+</head>
+
+<body>
+    <div class="ec-wrap">
+        <div style="font-size: 2.4rem;" class="titulo medievalsharp-regular">Configurações da campanha</div>
+        <p><a class="ec-back" href="{% url 'gurps:game_interface' campanha.id 1 %}">← voltar pro jogo</a></p>
+
+        {% if messages %}
+        <ul class="ec-msgs">
+            {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="ec-note">
+            O texto de <b>Descrição</b> e <b>Regras / tom</b> é lido pelo gerador de imagem como
+            contexto do mundo (inclusive pra julgar a idade dos personagens). Se o seu mundo
+            avançou no tempo, atualize aqui — por exemplo, deixando claro que os personagens
+            agora são adultos.
+        </div>
+
+        <form class="medievalsharp-regular" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="ec-actions">
+                <button class="primary" type="submit">💾 Salvar configurações</button>
+            </div>
+        </form>
+
+        <hr style="border-color:#444;margin:20px 0;">
+        <h3 style="color:#cdb4e0;">Contexto de IA acumulado</h3>
+        <p style="font-size:13px;color:#999;">
+            O gerador acumula aqui um resumo do que você aprovou (alimenta gerações futuras).
+            Se tiver menções antigas que atrapalham (ex.: idades de antes do salto no tempo),
+            você pode limpar.
+        </p>
+        <div class="ec-ctx">{{ ai_context|default:"(vazio)" }}</div>
+        <form method="post" onsubmit="return confirm('Limpar todo o contexto de IA acumulado desta campanha?');">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="limpar_contexto">
+            <div class="ec-actions">
+                <button type="submit">🧹 Limpar contexto acumulado</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -63,6 +63,45 @@ def criar_campanha(request):
 
 
 @login_required(login_url="gurps:login")
+def editar_campanha(request, campanha_id):
+    """Edita as configurações de uma campanha JÁ EXISTENTE (nome, descrição,
+    REGRAS/tom, pontos, TL, imagem). Só o GM dono. É aqui que o GM atualiza o
+    cânone — por ex. um salto no tempo que envelhece os personagens — texto que
+    o gerador de imagem lê como contexto."""
+    campanha = get_object_or_404(Campanha, id=campanha_id)
+    if campanha.dono_id != request.user.id:
+        messages.error(request, "Só o GM dono pode editar a campanha.")
+        return redirect(reverse("gurps:game_interface", args=[campanha.id, 1]))
+
+    if request.method == "POST":
+        # Ação à parte: limpar o contexto de IA acumulado (remove menções antigas,
+        # ex. idades de gerações passadas, que ainda alimentam o gerador).
+        if request.POST.get("acao") == "limpar_contexto":
+            campanha.ai_context = ""
+            try:
+                campanha.save(update_fields=["ai_context"])
+            except Exception:  # noqa: BLE001
+                campanha.save()
+            messages.success(request, "Contexto de IA acumulado foi limpo.")
+            return redirect(reverse("gurps:editar_campanha", args=[campanha.id]))
+
+        form = CampanhaForm(request.POST, request.FILES, instance=campanha)
+        form.fields["imagem"].required = False  # editar texto sem reenviar a imagem
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Configurações da campanha atualizadas!")
+            return redirect(reverse("gurps:editar_campanha", args=[campanha.id]))
+    else:
+        form = CampanhaForm(instance=campanha)
+        form.fields["imagem"].required = False
+
+    return render(request, "global/editar_campanha.html", {
+        "form": form, "campanha": campanha,
+        "ai_context": (getattr(campanha, "ai_context", "") or ""),
+    })
+
+
+@login_required(login_url="gurps:login")
 def lista_campanhas(request):
     username = request.user
 

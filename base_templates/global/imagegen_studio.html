@@ -46,6 +46,7 @@
     <div class="st-wrap">
         <a class="voltar" href="{% url 'gurps:carregar_campanha_gm' %}">← voltar</a>
         <h1 class="titulo-pagina medievalsharp-regular" style="font-size:2rem;">🎨 Estúdio de Imagem — {{ campanha.nome }}</h1>
+        <p style="margin:-6px 0 10px;"><a href="{% url 'gurps:editar_campanha' campanha.id %}" style="color:#9ab;font-size:13px;">⚙️ Configurações da campanha (descrição / regras / contexto)</a></p>
 
         <label class="st-field">Tipo:
             <select id="ig-kind" onchange="rd6IgKindChange()">
@@ -171,6 +172,13 @@
         }
         function rd6IgRender(reqs, comfy) {
             var box = document.getElementById('ig-list');
+            // Se o GM está digitando/mexendo num campo da lista, NÃO reconstrói agora
+            // (senão o cursor perde o foco, "como se desse TAB pra fora"). Re-renderiza
+            // no próximo poll, quando ele sair do campo.
+            var ae = document.activeElement;
+            if (ae && box.contains(ae) && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT' || ae.tagName === 'SELECT')) {
+                return;
+            }
             // preserva os editores abertos (e o que o GM já digitou) entre os polls
             var saved = {};
             box.querySelectorAll('.st-edit').forEach(function (el) {
