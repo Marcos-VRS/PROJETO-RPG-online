@@ -72,6 +72,7 @@
             <textarea id="ig-prompt" rows="3" placeholder="Ex.: 'o grupo diante do portão da cidade ao anoitecer'"></textarea>
         </label>
         <label class="st-field st-check"><input type="checkbox" id="ig-context" checked> Ler o journal (coerência com o mundo)</label>
+        <label class="st-field st-check" title="Negativo mínimo: libera cicatrizes, olho cego, ferimentos, gore. Sem travas de aparência."><input type="checkbox" id="ig-allowall"> 🔓 Permitir tudo (gore, cicatrizes, sem travas de aparência)</label>
         <div class="st-field">
             <button type="button" class="menu-button" onclick="rd6IgToggleJournalRef()" style="font-size:12px;">📖 Referência do journal</button>
             <span id="ig-jref-label" style="font-size:11px;color:#999;margin-left:6px;"></span>
@@ -127,6 +128,7 @@
             fd.append('kind', document.getElementById('ig-kind').value);
             fd.append('style', document.getElementById('ig-style').value);
             fd.append('use_context', document.getElementById('ig-context').checked ? '1' : '0');
+            fd.append('allow_all', document.getElementById('ig-allowall').checked ? '1' : '0');
             fd.append('title', document.getElementById('ig-title').value || '');
             if (_igJournalRef) fd.append('ref_asset_id', _igJournalRef.id);
             if (refFile) fd.append('ref_image', refFile);
@@ -160,7 +162,16 @@
                 if (r.expanded_prompt && r.expanded_prompt !== r.prompt) h += '<details class="st-xprompt"><summary>prompt da IA</summary><div>' + rd6Esc(r.expanded_prompt) + '</div></details>';
                 if (r.status === 'done' && r.has_result) {
                     h += '<img class="st-preview" src="/imagegen/png/' + r.id + '/" onclick="window.open(this.src)">';
-                    h += '<div class="st-actions"><button class="st-approve" onclick="rd6IgApprove(' + r.id + ')">✓ Aprovar (vira asset)</button><button onclick="rd6IgDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                    h += '<div class="st-actions"><button class="st-approve" onclick="rd6IgApprove(' + r.id + ')">✓ Aprovar (vira asset)</button><button onclick="rd6IgEdit(' + r.id + ')">✏️ Editar prompt e regerar</button><button onclick="rd6IgDiscard(' + r.id + ')">✕ Descartar</button></div>';
+                    // editor inline (começa oculto): prompt exato + permitir tudo + regerar
+                    var pretext = (r.expanded_prompt && r.expanded_prompt.length) ? r.expanded_prompt : r.prompt;
+                    h += '<div class="st-edit" id="ig-edit-' + r.id + '" hidden style="margin-top:8px;">'
+                      + '<textarea id="ig-ept-' + r.id + '" rows="4" style="width:100%;box-sizing:border-box;">' + rd6Esc(pretext) + '</textarea>'
+                      + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ea-' + r.id + '"' + (r.allow_all ? ' checked' : '') + '> 🔓 Permitir tudo (gore, cicatrizes)</label>'
+                      + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ns-' + r.id + '"> 🎲 Nova seed (senão repete a mesma pra comparar)</label>'
+                      + '<button onclick="rd6IgRegen(' + r.id + ')">🔁 Regerar com este prompt</button>'
+                      + '<p style="font-size:11px;color:#999;margin:4px 0 0;">Regera usando o texto EXATO acima (sem o Claude reescrever).</p>'
+                      + '</div>';
                 } else if (r.status === 'failed') {
                     h += '<div class="st-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="st-actions"><button onclick="rd6IgDiscard(' + r.id + ')">Remover</button></div>';
                 }
@@ -176,6 +187,28 @@
         }
         function rd6IgDiscard(id) {
             fetch('/imagegen/' + id + '/discard/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } }).then(function () { rd6IgPollStart(); }).catch(function () {});
+        }
+        function rd6IgEdit(id) {
+            var el = document.getElementById('ig-edit-' + id);
+            if (el) el.hidden = !el.hidden;
+        }
+        function rd6IgRegen(id) {
+            var ta = document.getElementById('ig-ept-' + id);
+            var prompt = ta ? ta.value.trim() : '';
+            if (!prompt) { document.getElementById('ig-status').textContent = 'Prompt vazio.'; return; }
+            var allow = document.getElementById('ig-ea-' + id);
+            var ns = document.getElementById('ig-ns-' + id);
+            document.getElementById('ig-status').textContent = 'Regerando…';
+            fetch('/imagegen/' + id + '/regenerate/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': rd6Csrf(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt, allow_all: allow && allow.checked ? 1 : 0, new_seed: ns && ns.checked ? 1 : 0 })
+            }).then(function (r) { return r.json(); }).then(function (d) {
+                document.getElementById('ig-status').textContent = (d && d.ok)
+                    ? (d.comfy_online ? 'Regerando na GPU…' : '⚠ ComfyUI offline — pedido na fila.')
+                    : ((d && d.error) || 'Erro.');
+                if (d && d.ok) rd6IgPollStart();
+            }).catch(function () { document.getElementById('ig-status').textContent = 'Falha de rede.'; });
         }
         rd6IgPollStart();
     </script>

@@ -16,6 +16,7 @@ from .map_gen import (
 from .image_gen import (
     imagegen_status, imagegen_request, imagegen_req_status, imagegen_list,
     imagegen_png, imagegen_approve, imagegen_discard, imagegen_journal,
+    imagegen_regenerate,
 )
 from .video_gen import (
     videogen_request, videogen_list, videogen_mp4,

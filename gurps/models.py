@@ -485,6 +485,13 @@ class ImageGenRequest(models.Model):
     # Estilo escolhido na UI (chave do seletor) + se deve ler o journal (contexto).
     style = models.CharField(max_length=32, blank=True, default="cinematic_dark")
     use_context = models.BooleanField(default=True)
+    # "Permitir tudo": usa negativo mínimo (só qualidade), sem deformed/disfigured/
+    # bad anatomy — libera cicatrizes, olho cego, gore. Também instrui o claude a
+    # NÃO suavizar os termos gráficos do pedido.
+    allow_all = models.BooleanField(default=False)
+    # "Prompt verbatim": usa o prompt EXATAMENTE como escrito (modo editar+regerar),
+    # sem passar pelo claude nem pelo prompt mecânico.
+    verbatim_prompt = models.BooleanField(default=False)
     # Título a escrever POR CIMA da imagem (modo capa). O modelo de IA não escreve
     # texto legível, então o nome do episódio é sobreposto via Pillow.
     title = models.CharField(max_length=200, blank=True, default="")

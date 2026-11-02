@@ -49,6 +49,9 @@ def _serialize(req):
         "has_ref": bool(req.ref_image or req.ref_asset_id),
         "expanded_prompt": req.expanded_prompt or "",
         "used_context": req.use_context,
+        "allow_all": req.allow_all,
+        "verbatim_prompt": req.verbatim_prompt,
+        "negative": req.negative or "",
         "result_asset_id": req.result_asset_id,
         "created_at": req.created_at.isoformat() if req.created_at else None,
     }
@@ -105,6 +108,13 @@ def imagegen_request(request, campanha_id):
     uc_raw = body.get("use_context")
     use_context = True if uc_raw is None else str(uc_raw).lower() not in ("0", "false", "no", "")
 
+    def _truthy(v):
+        return str(v).lower() in ("1", "true", "yes", "on")
+    # "Permitir tudo": negativo mínimo + claude não suaviza gore/cicatriz/olho cego.
+    allow_all = _truthy(body.get("allow_all"))
+    # Negativo custom opcional (avançado). Vazio = usa o padrão/mínimo conforme allow_all.
+    custom_negative = (body.get("negative") or "").strip()[:1000]
+
     # Referência escolhida do próprio journal (asset da campanha).
     ref_asset = None
     ref_asset_id = body.get("ref_asset_id")
@@ -118,6 +128,7 @@ def imagegen_request(request, campanha_id):
         prompt=prompt, width=width, height=height, status="pending",
         ref_weight=ref_weight, style=style, use_context=use_context,
         ref_asset=ref_asset, title=title,
+        allow_all=allow_all, negative=custom_negative,
     )
     if ref_file is not None:
         req.ref_image = ref_file
@@ -238,6 +249,53 @@ def imagegen_approve(request, req_id):
     ai_context.append_approved_context(req.campanha, f"[{req.kind}] {name}: {desc}")
 
     return JsonResponse({"ok": True, "asset_id": asset.id, "asset_name": asset.name})
+
+
+@login_required(login_url="gurps:login")
+def imagegen_regenerate(request, req_id):
+    """Edita o prompt e regera: cria um NOVO pedido a partir de um existente,
+    usando o prompt editado EXATAMENTE como escrito (verbatim, sem claude).
+    Mantém tipo/tamanho/estilo/referência do original. Aceita allow_all e um
+    negativo custom. Não mexe no pedido original (fica no histórico)."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    src = get_object_or_404(ImageGenRequest, id=req_id)
+    if src.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    try:
+        body = json.loads(request.body) if request.body else {}
+    except json.JSONDecodeError:
+        body = {}
+
+    def _truthy(v):
+        return str(v).lower() in ("1", "true", "yes", "on")
+    new_prompt = (body.get("prompt") or "").strip()[:PROMPT_MAX]
+    if not new_prompt:
+        return JsonResponse({"error": "prompt vazio"}, status=400)
+    allow_all = _truthy(body.get("allow_all")) if "allow_all" in body else src.allow_all
+    custom_negative = (body.get("negative") or "").strip()[:1000]
+    # seed: repete a do original (se houver) pra comparar só a mudança do prompt,
+    # a menos que o GM peça nova (new_seed=1).
+    seed = None if _truthy(body.get("new_seed")) else src.seed
+
+    new = ImageGenRequest.objects.create(
+        campanha=src.campanha, requested_by=request.user, kind=src.kind,
+        prompt=new_prompt, width=src.width, height=src.height, status="pending",
+        steps=src.steps, cfg=src.cfg, seed=seed,
+        ref_weight=src.ref_weight, style=src.style,
+        use_context=False, verbatim_prompt=True, allow_all=allow_all,
+        negative=custom_negative, title=src.title,
+        ref_asset=src.ref_asset,
+    )
+    # carrega a MESMA referência enviada (aponta pro mesmo arquivo, não recopia)
+    if src.ref_image:
+        new.ref_image.name = src.ref_image.name
+        new.save(update_fields=["ref_image"])
+    comfy = comfyui_client.status()
+    return JsonResponse({
+        "ok": True, "id": new.id, "status": new.status,
+        "comfy_online": comfy.get("online", False),
+    })
 
 
 @login_required(login_url="gurps:login")

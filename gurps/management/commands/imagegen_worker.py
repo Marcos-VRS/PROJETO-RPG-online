@@ -105,7 +105,10 @@ class Command(BaseCommand):
         # coerente com o mundo. Sem contexto (ou se o claude falhar), cai no modo
         # mecânico (palavras-chave do estilo + enquadramento).
         used_claude = False
-        if req.use_context:
+        if req.verbatim_prompt:
+            # Modo editar+regerar: usa o prompt EXATAMENTE como o GM escreveu.
+            full_prompt = req.prompt
+        elif req.use_context:
             try:
                 ctx = ai_context.build_campaign_context(req.campanha)
             except Exception as e:  # noqa: BLE001
@@ -114,6 +117,7 @@ class Command(BaseCommand):
             full_prompt, used_claude = ai_context.write_image_prompt_via_claude(
                 ctx, req.prompt, req.style, req.kind,
                 claude_bin=self.claude_bin, model=self.claude_model,
+                allow_all=req.allow_all,
             )
         else:
             full_prompt = ai_context._mechanical_prompt(req.prompt, req.style, req.kind)
@@ -121,16 +125,27 @@ class Command(BaseCommand):
         # Guarda o prompt final pro GM ver o que foi realmente gerado.
         req.expanded_prompt = full_prompt
         req.save(update_fields=["expanded_prompt", "updated_at"])
-        self.stdout.write(
-            f"  -> prompt {'(claude/journal)' if used_claude else '(mecânico)'}: {full_prompt[:90]!r}")
+        _plabel = "(verbatim)" if req.verbatim_prompt else ("(claude/journal)" if used_claude else "(mecânico)")
+        self.stdout.write(f"  -> prompt {_plabel}: {full_prompt[:90]!r}")
 
         # Imagem de referência (IP-Adapter): preferência pro asset do journal
         # escolhido pelo GM; senão o upload manual.
         ref_bytes, ref_name = self._resolve_ref(req)
 
+        # Negativo: custom do pedido > mínimo (permitir tudo) > padrão.
+        if req.negative and req.negative.strip():
+            negative = req.negative.strip()
+        elif req.allow_all:
+            negative = comfyui_client.MINIMAL_NEGATIVE
+        else:
+            negative = None  # usa o DEFAULT_NEGATIVE do comfyui_client
+        self.stdout.write(
+            f"  -> negativo: {'custom' if (req.negative or '').strip() else ('MINIMO (permitir tudo)' if req.allow_all else 'padrao')}")
+
         try:
             png = comfyui_client.generate_png(
-                prompt=full_prompt, width=req.width, height=req.height,
+                prompt=full_prompt, negative=negative,
+                width=req.width, height=req.height,
                 steps=req.steps, cfg=req.cfg, seed=req.seed, ckpt=ckpt,
                 base_url=base_url, timeout=gen_timeout,
                 ref_image_bytes=ref_bytes, ref_image_filename=ref_name,

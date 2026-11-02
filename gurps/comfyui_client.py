@@ -31,6 +31,12 @@ DEFAULT_NEGATIVE = (
     "lowres, blurry, deformed, disfigured, bad anatomy, extra limbs, extra fingers, "
     "watermark, text, signature, jpeg artifacts, ugly, worst quality, low quality"
 )
+# Negativo MÍNIMO (modo "permitir tudo"): SÓ qualidade técnica. Não contém
+# deformed/disfigured/bad anatomy — logo NÃO suprime cicatrizes, olho cego, gore,
+# ferimentos ou assimetria. É o que destrava o visual de terror/dano.
+MINIMAL_NEGATIVE = (
+    "lowres, blurry, jpeg artifacts, watermark, text, signature, worst quality, low quality"
+)
 
 
 def status(base_url: str = DEFAULT_URL, timeout: float = 3.0) -> dict:

@@ -139,19 +139,29 @@ def _mechanical_prompt(user_request, style_key, kind):
 
 def write_image_prompt_via_claude(context, user_request, style_key, kind,
                                   claude_bin="claude", model="sonnet",
-                                  timeout=90) -> tuple[str, bool]:
+                                  timeout=90, allow_all=False) -> tuple[str, bool]:
     """Pede ao `claude -p` um prompt de imagem coerente com o journal.
 
     Retorna (prompt, usou_claude). Cai no fallback mecânico em qualquer erro.
+    Com allow_all, instrui o claude a preservar os termos gráficos (gore,
+    cicatrizes, ferimentos, olho cego) sem suavizar.
     """
     style = style_keywords(style_key)
+    allow_line = ""
+    if allow_all:
+        allow_line = (
+            "\nThis is dark horror/mature tabletop fiction. Keep EVERY graphic, violent, "
+            "gory, injury, scar, blind-eye, wound and disfigurement detail from the GM "
+            "request EXACTLY as asked — do NOT soften, sanitize, tone down, censor or omit "
+            "any of it. Preserve those exact words, and emphasize the key ones with weight "
+            "like (milky blind eye:1.4), (huge scar across the face:1.5).")
     instruction = f"""You write prompts for an SDXL image generator used in a tabletop RPG.
 Turn the GM's short request into ONE single-line English image prompt: comma-separated visual descriptors, 40-70 words. Output ONLY the prompt — no preamble, no quotes, no markdown, no explanation.
 
 Depict EXACTLY what the GM asks for. Do NOT default to a human/character unless the request is clearly about a person. If the request is an object, place, scene, symbol, map or title card, depict that — not a person.
 This image is {_KIND_HINT.get(kind, 'an illustration')}.
 Make it visually CONSISTENT with the established world below (same era, tone, palette, materials, lighting).
-Desired visual style to bake in: {style or 'realistic, cinematic'}.
+Desired visual style to bake in: {style or 'realistic, cinematic'}.{allow_line}
 
 === CAMPAIGN JOURNAL (context) ===
 {context or '(no extra context yet)'}
