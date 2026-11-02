@@ -488,10 +488,13 @@ class ImageGenRequest(models.Model):
     # "Permitir tudo": usa negativo mínimo (só qualidade), sem deformed/disfigured/
     # bad anatomy — libera cicatrizes, olho cego, gore. Também instrui o claude a
     # NÃO suavizar os termos gráficos do pedido.
-    allow_all = models.BooleanField(default=False)
+    # db_default: a build ANTIGA (que ainda não conhece estes campos) continua
+    # conseguindo inserir — o SQLite preenche o default. Evita quebrar o app rodando
+    # entre a migração do banco e a reinstalação.
+    allow_all = models.BooleanField(default=False, db_default=False)
     # "Prompt verbatim": usa o prompt EXATAMENTE como escrito (modo editar+regerar),
     # sem passar pelo claude nem pelo prompt mecânico.
-    verbatim_prompt = models.BooleanField(default=False)
+    verbatim_prompt = models.BooleanField(default=False, db_default=False)
     # Enquadramento da câmera: "" = IA decide; portrait = rosto/busto;
     # fullbody = corpo inteiro; action = personagem fazendo algo (cena).
     FRAMING_CHOICES = [
@@ -500,7 +503,8 @@ class ImageGenRequest(models.Model):
         ("fullbody", "Corpo inteiro"),
         ("action", "Em ação / fazendo algo"),
     ]
-    framing = models.CharField(max_length=12, blank=True, default="", choices=FRAMING_CHOICES)
+    framing = models.CharField(max_length=12, blank=True, default="", db_default="",
+                               choices=FRAMING_CHOICES)
     # Título a escrever POR CIMA da imagem (modo capa). O modelo de IA não escreve
     # texto legível, então o nome do episódio é sobreposto via Pillow.
     title = models.CharField(max_length=200, blank=True, default="")
