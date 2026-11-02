@@ -81,6 +81,11 @@
         <label class="st-field" style="font-size:12px;">…ou enviar uma referência:
             <input type="file" id="ig-ref" accept="image/*">
         </label>
+        <label class="st-field" style="font-size:12px;" title="Quanto a foto de referência trava o rosto. ALTO = fiel à foto (mas não deixa adicionar cicatriz/olho cego). BAIXO = mantém só a vibe e libera mudanças.">
+            Força da referência: <b><span id="ig-rwv">70</span>%</b>
+            <input type="range" id="ig-rw" min="0" max="120" value="70" step="5" oninput="document.getElementById('ig-rwv').textContent=this.value" style="width:100%;">
+            <span style="font-size:10px;color:#999;">Pra cicatriz/olho cego entrar numa foto existente, baixe pra ~30-40%.</span>
+        </label>
         <button type="button" class="st-gen" onclick="rd6IgSubmit()">Gerar imagem</button>
         <p class="st-status" id="ig-status"></p>
         <div id="ig-list"></div>
@@ -129,6 +134,7 @@
             fd.append('style', document.getElementById('ig-style').value);
             fd.append('use_context', document.getElementById('ig-context').checked ? '1' : '0');
             fd.append('allow_all', document.getElementById('ig-allowall').checked ? '1' : '0');
+            fd.append('ref_weight', (parseInt(document.getElementById('ig-rw').value, 10) / 100).toString());
             fd.append('title', document.getElementById('ig-title').value || '');
             if (_igJournalRef) fd.append('ref_asset_id', _igJournalRef.id);
             if (refFile) fd.append('ref_image', refFile);
@@ -154,6 +160,20 @@
         }
         function rd6IgRender(reqs, comfy) {
             var box = document.getElementById('ig-list');
+            // preserva os editores abertos (e o que o GM já digitou) entre os polls
+            var saved = {};
+            box.querySelectorAll('.st-edit').forEach(function (el) {
+                if (el.hidden) return;
+                var id = el.id.replace('ig-edit-', '');
+                var g = function (x) { return document.getElementById(x + id); };
+                saved[id] = {
+                    text: g('ig-ept-') ? g('ig-ept-').value : null,
+                    allow: g('ig-ea-') ? g('ig-ea-').checked : null,
+                    ns: g('ig-ns-') ? g('ig-ns-').checked : null,
+                    rw: g('ig-erw-') ? g('ig-erw-').value : null,
+                    noref: g('ig-nr-') ? g('ig-nr-').checked : null
+                };
+            });
             var head = (comfy && !comfy.online) ? '<div class="st-err">ComfyUI offline no host.</div>' : '';
             var S = { pending: 'na fila', processing: 'gerando', done: 'pronto', failed: 'falhou' };
             box.innerHTML = head + (reqs || []).map(function (r) {
@@ -165,10 +185,17 @@
                     h += '<div class="st-actions"><button class="st-approve" onclick="rd6IgApprove(' + r.id + ')">✓ Aprovar (vira asset)</button><button onclick="rd6IgEdit(' + r.id + ')">✏️ Editar prompt e regerar</button><button onclick="rd6IgDiscard(' + r.id + ')">✕ Descartar</button></div>';
                     // editor inline (começa oculto): prompt exato + permitir tudo + regerar
                     var pretext = (r.expanded_prompt && r.expanded_prompt.length) ? r.expanded_prompt : r.prompt;
+                    var rwpct = Math.round((r.ref_weight != null ? r.ref_weight : 0.7) * 100);
                     h += '<div class="st-edit" id="ig-edit-' + r.id + '" hidden style="margin-top:8px;">'
                       + '<textarea id="ig-ept-' + r.id + '" rows="4" style="width:100%;box-sizing:border-box;">' + rd6Esc(pretext) + '</textarea>'
-                      + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ea-' + r.id + '"' + (r.allow_all ? ' checked' : '') + '> 🔓 Permitir tudo (gore, cicatrizes)</label>'
-                      + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ns-' + r.id + '"> 🎲 Nova seed (senão repete a mesma pra comparar)</label>'
+                      + '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ea-' + r.id + '"' + (r.allow_all ? ' checked' : '') + '> 🔓 Permitir tudo (gore, cicatrizes)</label>';
+                    if (r.has_ref) {
+                        h += '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-nr-' + r.id + '"> 🚫 Ignorar a foto de referência (gera só pelo texto)</label>'
+                          + '<label style="font-size:12px;display:block;margin:4px 0;">Força da referência: <b><span id="ig-erwv-' + r.id + '">' + rwpct + '</span>%</b>'
+                          + '<input type="range" id="ig-erw-' + r.id + '" min="0" max="120" value="' + rwpct + '" step="5" oninput="var e=document.getElementById(\'ig-erwv-' + r.id + '\');if(e)e.textContent=this.value;" style="width:100%;">'
+                          + '<span style="font-size:10px;color:#999;">Baixe pra ~30-40% pra a cicatriz/olho cego entrar.</span></label>';
+                    }
+                    h += '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ns-' + r.id + '"> 🎲 Nova seed (senão repete a mesma pra comparar)</label>'
                       + '<button onclick="rd6IgRegen(' + r.id + ')">🔁 Regerar com este prompt</button>'
                       + '<p style="font-size:11px;color:#999;margin:4px 0 0;">Regera usando o texto EXATO acima (sem o Claude reescrever).</p>'
                       + '</div>';
@@ -177,6 +204,19 @@
                 }
                 return h + '</div>';
             }).join('');
+            // restaura os editores que estavam abertos
+            Object.keys(saved).forEach(function (id) {
+                var el = document.getElementById('ig-edit-' + id);
+                if (!el) return;
+                el.hidden = false;
+                var s = saved[id];
+                var g = function (x) { return document.getElementById(x + id); };
+                if (s.text != null && g('ig-ept-')) g('ig-ept-').value = s.text;
+                if (s.allow != null && g('ig-ea-')) g('ig-ea-').checked = s.allow;
+                if (s.ns != null && g('ig-ns-')) g('ig-ns-').checked = s.ns;
+                if (s.rw != null && g('ig-erw-')) { g('ig-erw-').value = s.rw; var v = g('ig-erwv-'); if (v) v.textContent = s.rw; }
+                if (s.noref != null && g('ig-nr-')) g('ig-nr-').checked = s.noref;
+            });
         }
         function rd6IgApprove(id) {
             fetch('/imagegen/' + id + '/approve/', { method: 'POST', headers: { 'X-CSRFToken': rd6Csrf() } })
@@ -198,11 +238,16 @@
             if (!prompt) { document.getElementById('ig-status').textContent = 'Prompt vazio.'; return; }
             var allow = document.getElementById('ig-ea-' + id);
             var ns = document.getElementById('ig-ns-' + id);
+            var rw = document.getElementById('ig-erw-' + id);
+            var nr = document.getElementById('ig-nr-' + id);
+            var payload = { prompt: prompt, allow_all: allow && allow.checked ? 1 : 0, new_seed: ns && ns.checked ? 1 : 0 };
+            if (rw) payload.ref_weight = (parseInt(rw.value, 10) / 100);
+            if (nr && nr.checked) payload.drop_ref = 1;
             document.getElementById('ig-status').textContent = 'Regerando…';
             fetch('/imagegen/' + id + '/regenerate/', {
                 method: 'POST',
                 headers: { 'X-CSRFToken': rd6Csrf(), 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt, allow_all: allow && allow.checked ? 1 : 0, new_seed: ns && ns.checked ? 1 : 0 })
+                body: JSON.stringify(payload)
             }).then(function (r) { return r.json(); }).then(function (d) {
                 document.getElementById('ig-status').textContent = (d && d.ok)
                     ? (d.comfy_online ? 'Regerando na GPU…' : '⚠ ComfyUI offline — pedido na fila.')

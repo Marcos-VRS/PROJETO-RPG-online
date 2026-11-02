@@ -47,6 +47,7 @@ def _serialize(req):
         "error": req.error,
         "has_result": bool(req.result_file),
         "has_ref": bool(req.ref_image or req.ref_asset_id),
+        "ref_weight": req.ref_weight,
         "expanded_prompt": req.expanded_prompt or "",
         "used_context": req.use_context,
         "allow_all": req.allow_all,
@@ -277,18 +278,26 @@ def imagegen_regenerate(request, req_id):
     # seed: repete a do original (se houver) pra comparar só a mudança do prompt,
     # a menos que o GM peça nova (new_seed=1).
     seed = None if _truthy(body.get("new_seed")) else src.seed
+    # drop_ref: ignora a foto de referência (gera só pelo texto — libera a cicatriz).
+    drop_ref = _truthy(body.get("drop_ref"))
+    # ref_weight: override opcional (0..1.5). Baixar deixa a cicatriz/olho cego entrar.
+    try:
+        ref_weight = max(0.0, min(float(body.get("ref_weight")), 1.5))
+    except (TypeError, ValueError):
+        ref_weight = src.ref_weight
 
     new = ImageGenRequest.objects.create(
         campanha=src.campanha, requested_by=request.user, kind=src.kind,
         prompt=new_prompt, width=src.width, height=src.height, status="pending",
         steps=src.steps, cfg=src.cfg, seed=seed,
-        ref_weight=src.ref_weight, style=src.style,
+        ref_weight=ref_weight, style=src.style,
         use_context=False, verbatim_prompt=True, allow_all=allow_all,
         negative=custom_negative, title=src.title,
-        ref_asset=src.ref_asset,
+        ref_asset=(None if drop_ref else src.ref_asset),
     )
-    # carrega a MESMA referência enviada (aponta pro mesmo arquivo, não recopia)
-    if src.ref_image:
+    # carrega a MESMA referência enviada (aponta pro mesmo arquivo, não recopia),
+    # a menos que o GM tenha pedido pra ignorar a referência.
+    if src.ref_image and not drop_ref:
         new.ref_image.name = src.ref_image.name
         new.save(update_fields=["ref_image"])
     comfy = comfyui_client.status()
