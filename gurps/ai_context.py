@@ -150,8 +150,38 @@ def framing_prefix(framing):
     return FRAMING_KEYWORDS.get(framing or "", "")
 
 
+def _echo_phrases():
+    """Frases de estilo/enquadramento/sufixos que podem ter sido coladas de um
+    prompt anterior e que NÃO devem acumular."""
+    phrases = [v for v in STYLE_KEYWORDS.values() if v]
+    phrases += list(FRAMING_KEYWORDS.values())
+    phrases += [
+        "highly detailed, sharp focus, professional photography, masterpiece",
+        "highly detailed, sharp focus, high dynamic range, 50mm photo",
+        "natural realistic lighting, detailed realistic skin texture, sharp focus, "
+        "high dynamic range, 50mm photo",
+    ]
+    return phrases
+
+
+def strip_prompt_echo(text):
+    """Remove blocos de estilo/enquadramento que o GM possa ter colado de um prompt
+    anterior — evita o estilo repetir (×2, ×3...) ao colar/regerar. Mantém o resto
+    do texto do GM intacto."""
+    if not text:
+        return text
+    s = text
+    for ph in _echo_phrases():
+        s = re.sub(re.escape(ph), " ", s, flags=re.IGNORECASE)
+    # colapsa vírgulas/espaços redundantes deixados pela remoção
+    s = re.sub(r"(\s*,\s*){2,}", ", ", s)
+    s = re.sub(r"\s{2,}", " ", s)
+    return s.strip(" ,\n\t")
+
+
 def _mechanical_prompt(user_request, style_key, kind):
     """Fallback sem claude: cola as palavras-chave do estilo + enquadramento."""
+    user_request = strip_prompt_echo(user_request)
     style = style_keywords(style_key)
     base = (style + ", " + user_request) if style else user_request
     if kind == "personagem":
@@ -170,6 +200,7 @@ def write_image_prompt_via_claude(context, user_request, style_key, kind,
     Com allow_all, instrui o claude a preservar os termos gráficos (gore,
     cicatrizes, ferimentos, olho cego) sem suavizar.
     """
+    user_request = strip_prompt_echo(user_request)
     style = style_keywords(style_key)
     allow_line = ""
     if allow_all:
@@ -186,12 +217,18 @@ def write_image_prompt_via_claude(context, user_request, style_key, kind,
     if framing and FRAMING_HINT.get(framing):
         framing_line = f"\nCAMERA FRAMING (MANDATORY): frame the shot as {FRAMING_HINT[framing]}"
     instruction = f"""You write prompts for an SDXL image generator used in a tabletop RPG.
-Turn the GM's short request into ONE single-line English image prompt: comma-separated visual descriptors, 40-70 words. Output ONLY the prompt — no preamble, no quotes, no markdown, no explanation.
+Turn the GM's short request into a single-line English image prompt: comma-separated visual descriptors, 40-70 words.
 
 Depict EXACTLY what the GM asks for. Do NOT default to a human/character unless the request is clearly about a person. If the request is an object, place, scene, symbol, map or title card, depict that — not a person.
 This image is {_KIND_HINT.get(kind, 'an illustration')}.
 Make it visually CONSISTENT with the established world below (same era, tone, palette, materials, lighting).
 Desired visual style to bake in: {style or 'realistic, cinematic'}.{framing_line}{allow_line}
+
+OBEY THE DETAILS LITERALLY. The model tends to drift — fight it:
+- Clothing: render EXACTLY the garments asked, weighted, e.g. (white tank top:1.3). Never leave the character shirtless/nude unless the GM explicitly asked for that.
+- Weapons/objects: render the EXACT object asked, weighted and described by shape so it is not confused for a similar one, e.g. a cleaver = (a straight rectangular kitchen cleaver, flat broad blade:1.4) — NOT a sword. Keep each object as a SEPARATE item properly held in a hand (never fused to the hand/arm).
+- Keep the GM's count: if one weapon in one hand, do not add extra weapons.
+- Weight any injury/scar/eye the GM asks for, concretely, e.g. (left eye blind, milky white clouded dead eye with no pupil:1.6), (deep raised scar cutting vertically through the eye:1.6).
 
 === CAMPAIGN JOURNAL (context) ===
 {context or '(no extra context yet)'}
@@ -199,7 +236,9 @@ Desired visual style to bake in: {style or 'realistic, cinematic'}.{framing_line
 === GM REQUEST ===
 {user_request}
 
-Now output only the final single-line image prompt."""
+Output EXACTLY two lines and nothing else (no preamble, no quotes, no markdown):
+PROMPT: <the single-line image prompt>
+NEGATIVE: <comma-separated things to AVOID that would contradict the request — above all the WRONG versions of the clothing, weapons and body the GM specified (tank top requested -> add: shirtless, bare chest, topless; cleaver requested -> add: sword, scimitar, curved blade, katana, machete; one weapon -> add: extra weapons, duplicate weapon; weapon fused to hand -> add: weapon merged with hand, extra fingers). Do NOT put scars, blindness, gore, nudity or the requested clothing/weapon in NEGATIVE. Keep it under 20 words.>"""
 
     resolved = shutil.which(claude_bin) or claude_bin
     cmd = [resolved, "-p", "--allowedTools", ""]
@@ -212,7 +251,7 @@ Now output only the final single-line image prompt."""
             cwd=tempfile.gettempdir(),  # neutro: não carrega CLAUDE.md do projeto
         )
     except FileNotFoundError:
-        return _mechanical_prompt(user_request, style_key, kind), False
+        return _mechanical_prompt(user_request, style_key, kind), False, ""
 
     box = {}
 
@@ -229,21 +268,49 @@ Now output only the final single-line image prompt."""
         if time.monotonic() - start > timeout:
             proc.kill()
             th.join(timeout=5)
-            return _mechanical_prompt(user_request, style_key, kind), False
+            return _mechanical_prompt(user_request, style_key, kind), False, ""
         time.sleep(1)
     th.join()
 
     if box.get("exc"):
-        return _mechanical_prompt(user_request, style_key, kind), False
+        return _mechanical_prompt(user_request, style_key, kind), False, ""
     out = (box.get("out") or "").strip()
-    # Pega a última linha não-vazia significativa (o claude -p às vezes ecoa nada mais).
-    lines = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    prompt = " ".join(lines).strip() if lines else ""
-    # Remove aspas/markdown residuais.
-    prompt = prompt.strip('`"\' ').strip()
+    prompt, auto_neg = _parse_prompt_and_negative(out)
     if len(prompt) < 10:
-        return _mechanical_prompt(user_request, style_key, kind), False
-    return prompt[:1200], True
+        return _mechanical_prompt(user_request, style_key, kind), False, ""
+    return prompt[:1200], True, auto_neg[:500]
+
+
+def _parse_prompt_and_negative(out):
+    """Extrai (prompt, negative) da saída do claude no formato de duas linhas
+    'PROMPT: ...' / 'NEGATIVE: ...'. Tolerante: se não houver marcadores, usa tudo
+    como prompt (compatível com saídas antigas de uma linha só)."""
+    lines = [ln.strip() for ln in (out or "").splitlines() if ln.strip()]
+    prompt_parts, neg = [], ""
+    seen_marker = False
+    cur = "prompt"
+    for ln in lines:
+        low = ln.lower()
+        if low.startswith("prompt:"):
+            seen_marker = True
+            cur = "prompt"
+            ln = ln.split(":", 1)[1].strip()
+        elif low.startswith("negative:"):
+            seen_marker = True
+            cur = "neg"
+            ln = ln.split(":", 1)[1].strip()
+        if cur == "neg":
+            neg = (neg + " " + ln).strip()
+        else:
+            if ln:
+                prompt_parts.append(ln)
+    prompt = " ".join(prompt_parts).strip().strip('`"\' ').strip()
+    neg = neg.strip().strip('`"\' ').strip()
+    # Sem marcadores: a saída inteira é o prompt (nada de negativo).
+    if not seen_marker:
+        prompt = " ".join(lines).strip().strip('`"\' ').strip()
+        neg = ""
+    return prompt, neg
 
 
 def _run_claude_text(instruction, claude_bin="claude", model="sonnet", timeout=120):

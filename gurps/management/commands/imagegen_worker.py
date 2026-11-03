@@ -105,6 +105,7 @@ class Command(BaseCommand):
         # coerente com o mundo. Sem contexto (ou se o claude falhar), cai no modo
         # mecânico (palavras-chave do estilo + enquadramento).
         used_claude = False
+        auto_neg = ""  # negativo direcionado que o claude escreve (versões erradas a evitar)
         fpref = ai_context.framing_prefix(req.framing)  # palavras-chave de enquadramento
         if req.verbatim_prompt:
             # Modo editar+regerar: usa o prompt EXATAMENTE como o GM escreveu
@@ -116,7 +117,7 @@ class Command(BaseCommand):
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(f"  -> contexto falhou: {e}"))
                 ctx = ""
-            full_prompt, used_claude = ai_context.write_image_prompt_via_claude(
+            full_prompt, used_claude, auto_neg = ai_context.write_image_prompt_via_claude(
                 ctx, req.prompt, req.style, req.kind,
                 claude_bin=self.claude_bin, model=self.claude_model,
                 allow_all=req.allow_all, framing=req.framing,
@@ -139,15 +140,25 @@ class Command(BaseCommand):
         # escolhido pelo GM; senão o upload manual.
         ref_bytes, ref_name = self._resolve_ref(req)
 
-        # Negativo: custom do pedido > mínimo (permitir tudo) > padrão.
+        # Negativo: custom do pedido > (negativo direcionado do claude + base) >
+        # mínimo (permitir tudo) > padrão. O negativo direcionado lista as VERSÕES
+        # ERRADAS do que o GM pediu (ex.: espada quando pediu cutelo) — é a alavanca
+        # mais forte pra o modelo obedecer.
         if req.negative and req.negative.strip():
             negative = req.negative.strip()
-        elif req.allow_all:
-            negative = comfyui_client.MINIMAL_NEGATIVE
+            _neglabel = "custom"
         else:
-            negative = None  # usa o DEFAULT_NEGATIVE do comfyui_client
-        self.stdout.write(
-            f"  -> negativo: {'custom' if (req.negative or '').strip() else ('MINIMO (permitir tudo)' if req.allow_all else 'padrao')}")
+            base = comfyui_client.MINIMAL_NEGATIVE if req.allow_all else comfyui_client.DEFAULT_NEGATIVE
+            if auto_neg:
+                negative = auto_neg + ", " + base
+                _neglabel = f"auto+{'minimo' if req.allow_all else 'padrao'}"
+            elif req.allow_all:
+                negative = comfyui_client.MINIMAL_NEGATIVE
+                _neglabel = "MINIMO (permitir tudo)"
+            else:
+                negative = None  # usa o DEFAULT_NEGATIVE do comfyui_client
+                _neglabel = "padrao"
+        self.stdout.write(f"  -> negativo: {_neglabel}")
 
         try:
             png = comfyui_client.generate_png(
