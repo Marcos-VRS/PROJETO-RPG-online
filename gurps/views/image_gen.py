@@ -336,6 +336,58 @@ def imagegen_regenerate(request, req_id):
 
 
 @login_required(login_url="gurps:login")
+def imagegen_deepen(request, req_id):
+    """APROFUNDAR (img2img): cria um pedido que PARTE da imagem pronta de `src` e
+    refina por cima (denoise<1.0), mantendo a composição e aprofundando detalhe.
+    Usa o prompt editado (bullets) EXATAMENTE como veio (verbatim). `strength`
+    (0..1) controla o quanto muda: suave (~0.3) só detalhe; forte (~0.6) muda mais."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    src = get_object_or_404(ImageGenRequest, id=req_id)
+    if src.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    if not src.result_file:
+        return JsonResponse({"error": "a imagem de origem ainda não está pronta"}, status=400)
+    try:
+        body = json.loads(request.body) if request.body else {}
+    except json.JSONDecodeError:
+        body = {}
+
+    def _truthy(v):
+        return str(v).lower() in ("1", "true", "yes", "on")
+    # prompt editado (bullets juntados); se vazio, usa o que gerou a imagem.
+    new_prompt = (body.get("prompt") or "").strip()[:PROMPT_MAX]
+    if not new_prompt:
+        new_prompt = (src.expanded_prompt or src.prompt or "").strip()[:PROMPT_MAX]
+    if not new_prompt:
+        return JsonResponse({"error": "prompt vazio"}, status=400)
+    # intensidade -> denoise. Clamp pra faixa útil (abaixo de ~0.2 quase não muda;
+    # acima de ~0.75 perde a imagem original).
+    try:
+        strength = float(body.get("strength"))
+    except (TypeError, ValueError):
+        strength = 0.35
+    denoise = max(0.2, min(strength, 0.75))
+    allow_all = _truthy(body.get("allow_all")) if "allow_all" in body else src.allow_all
+    # img2img precisa de passos suficientes pra o denoise ter efeito no Lightning.
+    steps = max(src.steps or 8, 14)
+
+    new = ImageGenRequest.objects.create(
+        campanha=src.campanha, requested_by=request.user, kind=src.kind,
+        prompt=new_prompt, width=src.width, height=src.height, status="pending",
+        steps=steps, cfg=src.cfg, seed=None,  # seed nova: cada "aprofundar" evolui
+        style=src.style, use_context=False, verbatim_prompt=True,
+        allow_all=allow_all, title=src.title, framing=src.framing,
+        init_from=src, denoise=denoise,
+    )
+    comfy = comfyui_client.status()
+    return JsonResponse({
+        "ok": True, "id": new.id, "status": new.status, "denoise": denoise,
+        "comfy_online": comfy.get("online", False),
+    })
+
+
+@login_required(login_url="gurps:login")
 def imagegen_discard(request, req_id):
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)

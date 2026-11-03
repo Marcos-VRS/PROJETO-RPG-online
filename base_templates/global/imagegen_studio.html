@@ -39,6 +39,18 @@
         .st-jref-item { padding: 0; border: 2px solid transparent; border-radius: 5px; background: none; cursor: pointer; aspect-ratio: 1; overflow: hidden; }
         .st-jref-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .st-jref-item.is-sel { border-color: #c9a55c; }
+        .ig-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; }
+        .ig-chip { display: inline-flex; align-items: center; gap: 6px; background: #30303a;
+            border: 1px solid #4a4a55; border-radius: 14px; padding: 4px 6px 4px 10px; font-size: 12px; color: #e0e0e8; }
+        .ig-chip b { cursor: pointer; color: #ff9a9a; font-weight: 700; padding: 0 4px; border-radius: 10px; line-height: 1; }
+        .ig-chip b:hover { background: #5a2a2a; color: #fff; }
+        .ig-addrow { display: flex; gap: 6px; margin: 6px 0; }
+        .ig-addrow input { flex: 1; }
+        .ig-addrow button { background: #3a5a8a; color: #fff; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer; }
+        .ig-deeprow { display: flex; gap: 6px; margin-top: 6px; }
+        .ig-deeprow .st-regen { background: #7a2ea0; }
+        .ig-deeprow .st-deepen { background: #2e6d7d; }
+        .ig-deeprow button { flex: 1; color: #fff; border: none; border-radius: 6px; padding: 10px; cursor: pointer; font-weight: 700; }
     </style>
 </head>
 
@@ -104,8 +116,47 @@
     {% csrf_token %}
     <script>
         var RD6_IG_CAMP = {{ campanha.id }};
-        var _igPoll = null, _igJournalRef = null;
+        var _igPoll = null, _igJournalRef = null, _igBullets = {};
         function rd6Csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
+        // Divide um prompt SDXL em "partes" nas vírgulas de TOPO (ignora vírgulas
+        // dentro de parênteses, ex.: "(a, b:1.3)" continua uma parte só).
+        function rd6SplitClauses(s) {
+            var out = [], depth = 0, cur = '';
+            s = (s || '').toString();
+            for (var i = 0; i < s.length; i++) {
+                var c = s[i];
+                if (c === '(') depth++;
+                else if (c === ')') depth = Math.max(0, depth - 1);
+                if (c === ',' && depth === 0) { if (cur.trim()) out.push(cur.trim()); cur = ''; }
+                else cur += c;
+            }
+            if (cur.trim()) out.push(cur.trim());
+            return out;
+        }
+        function rd6IgRenderChips(id) {
+            var box = document.getElementById('ig-chips-' + id);
+            if (!box) return;
+            var arr = _igBullets[id] || [];
+            box.innerHTML = arr.map(function (t, i) {
+                return '<span class="ig-chip">' + rd6Esc(t) + '<b title="remover" onclick="rd6IgDelChip(' + id + ',' + i + ')">✕</b></span>';
+            }).join('') || '<span style="font-size:11px;color:#777;">(sem partes — adicione abaixo)</span>';
+        }
+        function rd6IgAddChip(id) {
+            var inp = document.getElementById('ig-addc-' + id);
+            if (!inp) return;
+            var v = (inp.value || '').trim();
+            if (!v) return;
+            if (_igBullets[id] === undefined) _igBullets[id] = [];
+            // aceita vários de uma vez separados por vírgula
+            rd6SplitClauses(v).forEach(function (p) { _igBullets[id].push(p); });
+            inp.value = '';
+            rd6IgRenderChips(id);
+        }
+        function rd6IgDelChip(id, i) {
+            if (!_igBullets[id]) return;
+            _igBullets[id].splice(i, 1);
+            rd6IgRenderChips(id);
+        }
         function rd6Esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
         function rd6IgKindChange() {
             document.getElementById('ig-title-wrap').style.display =
@@ -186,12 +237,12 @@
                 var id = el.id.replace('ig-edit-', '');
                 var g = function (x) { return document.getElementById(x + id); };
                 saved[id] = {
-                    text: g('ig-ept-') ? g('ig-ept-').value : null,
                     allow: g('ig-ea-') ? g('ig-ea-').checked : null,
                     ns: g('ig-ns-') ? g('ig-ns-').checked : null,
                     rw: g('ig-erw-') ? g('ig-erw-').value : null,
                     noref: g('ig-nr-') ? g('ig-nr-').checked : null,
-                    fr: g('ig-ef-') ? g('ig-ef-').value : null
+                    fr: g('ig-ef-') ? g('ig-ef-').value : null,
+                    ds: g('ig-ds-') ? g('ig-ds-').value : null
                 };
             });
             var head = (comfy && !comfy.online) ? '<div class="st-err">ComfyUI offline no host.</div>' : '';
@@ -203,11 +254,14 @@
                 if (r.status === 'done' && r.has_result) {
                     h += '<img class="st-preview" src="/imagegen/png/' + r.id + '/" onclick="window.open(this.src)">';
                     h += '<div class="st-actions"><button class="st-approve" onclick="rd6IgApprove(' + r.id + ')">✓ Aprovar (vira asset)</button><button onclick="rd6IgEdit(' + r.id + ')">✏️ Editar prompt e regerar</button><button onclick="rd6IgDiscard(' + r.id + ')">✕ Descartar</button></div>';
-                    // editor inline (começa oculto): prompt exato + permitir tudo + regerar
+                    // editor inline (começa oculto): bullets editáveis + regerar/aprofundar
                     var pretext = (r.expanded_prompt && r.expanded_prompt.length) ? r.expanded_prompt : r.prompt;
+                    if (_igBullets[r.id] === undefined) _igBullets[r.id] = rd6SplitClauses(pretext);
                     var rwpct = Math.round((r.ref_weight != null ? r.ref_weight : 0.7) * 100);
                     h += '<div class="st-edit" id="ig-edit-' + r.id + '" hidden style="margin-top:8px;">'
-                      + '<textarea id="ig-ept-' + r.id + '" rows="4" style="width:100%;box-sizing:border-box;">' + rd6Esc(pretext) + '</textarea>'
+                      + '<div style="font-size:11px;color:#999;margin-bottom:2px;">Partes do pedido — remova (✕) o que não quer, ou adicione novas:</div>'
+                      + '<div class="ig-chips" id="ig-chips-' + r.id + '"></div>'
+                      + '<div class="ig-addrow"><input type="text" id="ig-addc-' + r.id + '" placeholder="adicionar parte: ex. chuva, sangue escorrendo..." onkeydown="if(event.key===\'Enter\'){rd6IgAddChip(' + r.id + ');event.preventDefault();}"><button type="button" onclick="rd6IgAddChip(' + r.id + ')">➕ Adicionar</button></div>'
                       + '<label style="font-size:12px;display:block;margin:4px 0;">Enquadramento: '
                       + '<select id="ig-ef-' + r.id + '">'
                       + ['', 'portrait', 'fullbody', 'action'].map(function (v) {
@@ -223,14 +277,23 @@
                           + '<span style="font-size:10px;color:#999;">Baixe pra ~30-40% pra a cicatriz/olho cego entrar.</span></label>';
                     }
                     h += '<label class="st-check" style="font-size:12px;display:block;margin:4px 0;"><input type="checkbox" id="ig-ns-' + r.id + '"> 🎲 Nova seed (senão repete a mesma pra comparar)</label>'
-                      + '<button onclick="rd6IgRegen(' + r.id + ')">🔁 Regerar com este prompt</button>'
-                      + '<p style="font-size:11px;color:#999;margin:4px 0 0;">Regera usando o texto EXATO acima (sem o Claude reescrever).</p>'
+                      + '<label style="font-size:12px;display:block;margin:6px 0 2px;">Intensidade do Aprofundar: <b><span id="ig-dsv-' + r.id + '">35</span>%</b> <span style="color:#999;font-size:10px;">(suave = só detalhe · forte = muda mais)</span></label>'
+                      + '<input type="range" id="ig-ds-' + r.id + '" min="20" max="75" value="35" step="5" oninput="var e=document.getElementById(\'ig-dsv-' + r.id + '\');if(e)e.textContent=this.value;" style="width:100%;">'
+                      + '<div class="ig-deeprow">'
+                      + '<button type="button" class="st-regen" onclick="rd6IgRegen(' + r.id + ')">🔁 Regerar do zero</button>'
+                      + '<button type="button" class="st-deepen" onclick="rd6IgDeepen(' + r.id + ')">⏫ Aprofundar esta</button>'
+                      + '</div>'
+                      + '<p style="font-size:11px;color:#999;margin:4px 0 0;">🔁 recria a imagem do zero com estas partes. ⏫ parte DESTA imagem e aprofunda o detalhe (mantém a composição).</p>'
                       + '</div>';
                 } else if (r.status === 'failed') {
                     h += '<div class="st-err">' + rd6Esc(r.error || 'falhou') + '</div><div class="st-actions"><button onclick="rd6IgDiscard(' + r.id + ')">Remover</button></div>';
                 }
                 return h + '</div>';
             }).join('');
+            // desenha os chips (partes) de cada card pronto
+            (reqs || []).forEach(function (r) {
+                if (r.status === 'done' && r.has_result) rd6IgRenderChips(r.id);
+            });
             // restaura os editores que estavam abertos
             Object.keys(saved).forEach(function (id) {
                 var el = document.getElementById('ig-edit-' + id);
@@ -238,12 +301,12 @@
                 el.hidden = false;
                 var s = saved[id];
                 var g = function (x) { return document.getElementById(x + id); };
-                if (s.text != null && g('ig-ept-')) g('ig-ept-').value = s.text;
                 if (s.allow != null && g('ig-ea-')) g('ig-ea-').checked = s.allow;
                 if (s.ns != null && g('ig-ns-')) g('ig-ns-').checked = s.ns;
                 if (s.rw != null && g('ig-erw-')) { g('ig-erw-').value = s.rw; var v = g('ig-erwv-'); if (v) v.textContent = s.rw; }
                 if (s.noref != null && g('ig-nr-')) g('ig-nr-').checked = s.noref;
                 if (s.fr != null && g('ig-ef-')) g('ig-ef-').value = s.fr;
+                if (s.ds != null && g('ig-ds-')) { g('ig-ds-').value = s.ds; var dv = g('ig-dsv-'); if (dv) dv.textContent = s.ds; }
             });
         }
         function rd6IgApprove(id) {
@@ -260,10 +323,16 @@
             var el = document.getElementById('ig-edit-' + id);
             if (el) el.hidden = !el.hidden;
         }
+        function rd6IgPromptFromBullets(id) {
+            var arr = _igBullets[id] || [];
+            // inclui o que estiver digitado no campo de adicionar, mesmo sem clicar ➕
+            var inp = document.getElementById('ig-addc-' + id);
+            var pending = inp && inp.value.trim() ? rd6SplitClauses(inp.value) : [];
+            return arr.concat(pending).join(', ').trim();
+        }
         function rd6IgRegen(id) {
-            var ta = document.getElementById('ig-ept-' + id);
-            var prompt = ta ? ta.value.trim() : '';
-            if (!prompt) { document.getElementById('ig-status').textContent = 'Prompt vazio.'; return; }
+            var prompt = rd6IgPromptFromBullets(id);
+            if (!prompt) { document.getElementById('ig-status').textContent = 'Sem partes no pedido — adicione pelo menos uma.'; return; }
             var allow = document.getElementById('ig-ea-' + id);
             var ns = document.getElementById('ig-ns-' + id);
             var rw = document.getElementById('ig-erw-' + id);
@@ -281,6 +350,25 @@
             }).then(function (r) { return r.json(); }).then(function (d) {
                 document.getElementById('ig-status').textContent = (d && d.ok)
                     ? (d.comfy_online ? 'Regerando na GPU…' : '⚠ ComfyUI offline — pedido na fila.')
+                    : ((d && d.error) || 'Erro.');
+                if (d && d.ok) rd6IgPollStart();
+            }).catch(function () { document.getElementById('ig-status').textContent = 'Falha de rede.'; });
+        }
+        function rd6IgDeepen(id) {
+            var prompt = rd6IgPromptFromBullets(id);
+            if (!prompt) { document.getElementById('ig-status').textContent = 'Sem partes no pedido — adicione pelo menos uma.'; return; }
+            var allow = document.getElementById('ig-ea-' + id);
+            var ds = document.getElementById('ig-ds-' + id);
+            var strength = ds ? (parseInt(ds.value, 10) / 100) : 0.35;
+            var payload = { prompt: prompt, allow_all: allow && allow.checked ? 1 : 0, strength: strength };
+            document.getElementById('ig-status').textContent = 'Aprofundando (img2img, pode levar ~1 min)…';
+            fetch('/imagegen/' + id + '/deepen/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': rd6Csrf(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function (r) { return r.json(); }).then(function (d) {
+                document.getElementById('ig-status').textContent = (d && d.ok)
+                    ? (d.comfy_online ? 'Aprofundando na GPU…' : '⚠ ComfyUI offline — pedido na fila.')
                     : ((d && d.error) || 'Erro.');
                 if (d && d.ok) rd6IgPollStart();
             }).catch(function () { document.getElementById('ig-status').textContent = 'Falha de rede.'; });

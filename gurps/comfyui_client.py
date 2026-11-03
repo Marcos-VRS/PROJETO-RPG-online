@@ -142,6 +142,37 @@ def _build_sdxl_graph(prompt, negative, width, height, steps, cfg, seed, ckpt,
     }
 
 
+def _build_sdxl_img2img_graph(prompt, negative, steps, cfg, seed, ckpt,
+                              init_image_name, denoise,
+                              sampler_name=DEFAULT_SAMPLER, scheduler=DEFAULT_SCHEDULER):
+    """Grafo SDXL img2img: PARTE de uma imagem existente (VAEEncode -> latente) e
+    o KSampler roda com denoise < 1.0, APROFUNDANDO o detalhe/estilo sem recomeçar
+    do zero. denoise baixo (~0.3) = quase igual, só mais detalhe; alto (~0.6) = muda
+    mais. O tamanho sai da própria imagem (sem EmptyLatentImage)."""
+    return {
+        "4": {"class_type": "CheckpointLoaderSimple",
+              "inputs": {"ckpt_name": ckpt}},
+        "10": {"class_type": "LoadImage",
+               "inputs": {"image": init_image_name}},
+        "11": {"class_type": "VAEEncode",
+               "inputs": {"pixels": ["10", 0], "vae": ["4", 2]}},
+        "6": {"class_type": "CLIPTextEncode",
+              "inputs": {"text": prompt, "clip": ["4", 1]}},
+        "7": {"class_type": "CLIPTextEncode",
+              "inputs": {"text": negative, "clip": ["4", 1]}},
+        "3": {"class_type": "KSampler",
+              "inputs": {"seed": int(seed), "steps": int(steps), "cfg": float(cfg),
+                         "sampler_name": sampler_name, "scheduler": scheduler,
+                         "denoise": float(denoise),
+                         "model": ["4", 0], "positive": ["6", 0],
+                         "negative": ["7", 0], "latent_image": ["11", 0]}},
+        "8": {"class_type": "VAEDecode",
+              "inputs": {"samples": ["3", 0], "vae": ["4", 2]}},
+        "9": {"class_type": "SaveImage",
+              "inputs": {"images": ["8", 0], "filename_prefix": "rpg_gen"}},
+    }
+
+
 # Modelos do IP-Adapter (transferência de estilo a partir de imagem de referência).
 IPADAPTER_MODEL = "ip-adapter-plus_sdxl_vit-h.safetensors"
 CLIP_VISION_MODEL = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
@@ -224,11 +255,15 @@ def generate_png(prompt, negative=None, width=768, height=1024, steps=6, cfg=1.5
                  seed=None, ckpt=DEFAULT_CKPT, base_url=DEFAULT_URL,
                  sampler_name=DEFAULT_SAMPLER, scheduler=DEFAULT_SCHEDULER,
                  ref_image_bytes=None, ref_image_filename="ref.png", ref_weight=0.7,
+                 init_image_bytes=None, init_image_filename="init.png", denoise=1.0,
                  timeout=240, poll_interval=1.5, on_beat=None) -> bytes:
     """Gera uma imagem e retorna os bytes do PNG. Lança RuntimeError em falha.
 
     Se ``ref_image_bytes`` for dado, usa IP-Adapter pra transferir o estilo/clima
     da imagem de referência pra geração.
+
+    Se ``init_image_bytes`` for dado (modo APROFUNDAR/img2img), PARTE dessa imagem
+    e refina com ``denoise`` < 1.0 — mantém a composição e aprofunda o detalhe.
 
     on_beat: callback opcional chamado a cada poll (pra manter heartbeat/log).
     """
@@ -238,7 +273,12 @@ def generate_png(prompt, negative=None, width=768, height=1024, steps=6, cfg=1.5
     if seed is None:
         seed = uuid.uuid4().int % (2 ** 31)
     client_id = uuid.uuid4().hex
-    if ref_image_bytes:
+    if init_image_bytes:
+        init_name = upload_image(init_image_bytes, init_image_filename, base_url=base)
+        graph = _build_sdxl_img2img_graph(
+            prompt, negative, steps, cfg, seed, ckpt, init_name, denoise,
+            sampler_name=sampler_name, scheduler=scheduler)
+    elif ref_image_bytes:
         ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)
         graph = _build_sdxl_ipadapter_graph(
             prompt, negative, width, height, steps, cfg, seed, ckpt,

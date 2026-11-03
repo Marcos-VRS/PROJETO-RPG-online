@@ -136,9 +136,27 @@ class Command(BaseCommand):
         _plabel = "(verbatim)" if req.verbatim_prompt else ("(claude/journal)" if used_claude else "(mecânico)")
         self.stdout.write(f"  -> prompt {_plabel}: {full_prompt[:90]!r}")
 
+        # APROFUNDAR (img2img): se o pedido parte de outra imagem (init_from) e
+        # denoise<1.0, carrega os bytes dela pra refinar por cima. Tem prioridade
+        # sobre a referência (IP-Adapter).
+        init_bytes = None
+        denoise = 1.0
+        if req.init_from_id and req.denoise and req.denoise < 1.0:
+            src = req.init_from
+            src_path = os.path.join(settings.MEDIA_ROOT,
+                                    (src.result_file or "").replace("/", os.sep))
+            if src.result_file and os.path.exists(src_path):
+                with open(src_path, "rb") as f:
+                    init_bytes = f.read()
+                denoise = float(req.denoise)
+                self.stdout.write(f"  -> APROFUNDAR img2img de #{src.id} (denoise {denoise})")
+            else:
+                self.stdout.write(self.style.WARNING(
+                    f"  -> init_from #{req.init_from_id} sem arquivo; gerando do zero"))
+
         # Imagem de referência (IP-Adapter): preferência pro asset do journal
-        # escolhido pelo GM; senão o upload manual.
-        ref_bytes, ref_name = self._resolve_ref(req)
+        # escolhido pelo GM; senão o upload manual. (ignorada no modo aprofundar)
+        ref_bytes, ref_name = (None, "ref.png") if init_bytes else self._resolve_ref(req)
 
         # Negativo: custom do pedido > (negativo direcionado do claude + base) >
         # mínimo (permitir tudo) > padrão. O negativo direcionado lista as VERSÕES
@@ -168,6 +186,7 @@ class Command(BaseCommand):
                 base_url=base_url, timeout=gen_timeout,
                 ref_image_bytes=ref_bytes, ref_image_filename=ref_name,
                 ref_weight=req.ref_weight,
+                init_image_bytes=init_bytes, denoise=denoise,
             )
         except Exception as e:  # noqa: BLE001
             req.status = "failed"

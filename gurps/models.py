@@ -510,6 +510,13 @@ class ImageGenRequest(models.Model):
     title = models.CharField(max_length=200, blank=True, default="")
     # Prompt final que o claude escreveu a partir do journal (pra o GM ver/depurar).
     expanded_prompt = models.TextField(blank=True, default="")
+    # APROFUNDAR (img2img): parte da imagem de outro pedido e refina com denoise<1.0.
+    # init_from aponta pro pedido-fonte (usa o result_file dele como imagem inicial);
+    # denoise=1.0 significa geração normal do zero (sem img2img).
+    init_from = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    denoise = models.FloatField(default=1.0, db_default=1.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

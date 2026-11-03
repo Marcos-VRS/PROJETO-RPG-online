@@ -180,6 +180,7 @@ urlpatterns = [
     path("imagegen/<int:req_id>/approve/", views.imagegen_approve, name="imagegen_approve"),
     path("imagegen/<int:req_id>/discard/", views.imagegen_discard, name="imagegen_discard"),
     path("imagegen/<int:req_id>/regenerate/", views.imagegen_regenerate, name="imagegen_regenerate"),
+    path("imagegen/<int:req_id>/deepen/", views.imagegen_deepen, name="imagegen_deepen"),
     path("Campanha/<int:campanha_id>/estudio-imagem/", views.imagegen_studio, name="imagegen_studio"),
     path("Campanha/<int:campanha_id>/gerador-mapa/", views.mapgen_studio, name="mapgen_studio"),
     path("Campanha/<int:campanha_id>/estudio-video/", views.videogen_studio, name="videogen_studio"),
