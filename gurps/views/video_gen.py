@@ -321,11 +321,12 @@ def videogen_beat_update(request, beat_id):
     if beat.project.campanha.dono_id != request.user.id:
         return JsonResponse({"error": "sem permissão"}, status=403)
     body = _json_body(request) or request.POST
-    changed = False
+    changed = False   # mexeu em algo → salva e reindexa
+    regen = False     # mexeu no CONTEÚDO do clipe → beat gerado precisa regerar
     if "user_prompt" in body:
-        beat.user_prompt = (body.get("user_prompt") or "").strip()[:PROMPT_MAX]; changed = True
+        beat.user_prompt = (body.get("user_prompt") or "").strip()[:PROMPT_MAX]; changed = True; regen = True
     if "correction" in body:
-        beat.correction = (body.get("correction") or "").strip()[:PROMPT_MAX]; changed = True
+        beat.correction = (body.get("correction") or "").strip()[:PROMPT_MAX]; changed = True; regen = True
     if "edit_instruction" in body:
         # Só o texto da edição; não marca o beat pra regerar o vídeo (edição é à parte).
         beat.edit_instruction = (body.get("edit_instruction") or "").strip()[:PROMPT_MAX]
@@ -340,38 +341,44 @@ def videogen_beat_update(request, beat_id):
         beat.save(update_fields=["caption_position", "updated_at"])
     if "start_ms" in body or "end_ms" in body:
         start, end = _beat_times(body, beat.start_ms, beat.end_ms, beat.project.audio_duration_ms)
+        old_dur = beat.duration_ms
         beat.start_ms, beat.end_ms, beat.duration_ms = start, end, end - start
         changed = True
+        # Só REMOVER/MUDAR a duração invalida o clipe (ele tem tamanho fixo).
+        # Mover o beat na linha do tempo mantendo o mesmo tamanho preserva o clipe
+        # — essencial pra reordenar/arrastar sem perder o que já foi gerado.
+        if (end - start) != old_dur:
+            regen = True
     if "ref_asset_id" in body:
-        beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True
+        beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True; regen = True
     if "ref_mode" in body:
         rm = body.get("ref_mode")
-        beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style", "fx") else "style"; changed = True
+        beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style", "fx") else "style"; changed = True; regen = True
     for _fx in ("fx_shake", "fx_flash", "fx_zoom", "fx_vignette"):
         if _fx in body:
             try:
                 setattr(beat, _fx, min(1.0, max(0.0, float(body.get(_fx)))))
-                changed = True
+                changed = True; regen = True
             except (TypeError, ValueError):
                 pass
     if "fidelity" in body:
         try:
             beat.fidelity = min(1.0, max(0.0, float(body.get("fidelity"))))
-            changed = True
+            changed = True; regen = True
         except (TypeError, ValueError):
             pass
     if "svd_motion" in body:
         try:
             beat.svd_motion = min(1.0, max(0.0, float(body.get("svd_motion"))))
-            changed = True
+            changed = True; regen = True
         except (TypeError, ValueError):
             pass
     if "transition" in body:
         beat.transition = "crossfade" if body.get("transition") == "crossfade" else "cut"
     if "transition_ms" in body:
         beat.transition_ms = _clamp_transition(body.get("transition_ms"))
-    # Mudou o conteúdo da cena? marca pra regerar (mantém o clipe antigo p/ preview).
-    if changed and beat.status in ("done", "failed"):
+    # Mudou o CONTEÚDO da cena? marca pra regerar (mantém o clipe antigo p/ preview).
+    if regen and beat.status in ("done", "failed"):
         beat.status = "empty"
     beat.save()
     _resequence(beat.project)

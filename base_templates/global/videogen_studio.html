@@ -42,8 +42,17 @@
         .st-tabs { display: flex; gap: 8px; margin: 14px 0 4px; }
         .st-tab { flex: 1; text-align: center; padding: 10px; border-radius: 6px; cursor: pointer; background: #26262e; border: 1px solid #383840; color: #cfcfd6; font-weight: 700; }
         .st-tab.on { background: #3a2650; border-color: #7a2ea0; color: #fff; }
-        .st-timeline { position: relative; height: 26px; border-radius: 6px; background: #1c1c22; border: 1px solid #383840; overflow: hidden; margin: 6px 0; }
-        .st-tl-seg { height: 100%; box-sizing: border-box; border: 1px solid #0008; font-size: 10px; color: #fff; display: flex; align-items: center; justify-content: center; min-width: 2px; }
+        .st-timeline { position: relative; height: 42px; border-radius: 6px; background: #1c1c22; border: 1px solid #383840; overflow: visible; margin: 14px 0 6px; }
+        .st-tl-seg { position: absolute; top: 0; height: 100%; box-sizing: border-box; border: 1px solid #0008; border-radius: 4px; font-size: 10px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 2px; cursor: grab; user-select: none; touch-action: none; overflow: hidden; }
+        .st-tl-seg:active { cursor: grabbing; }
+        .st-tl-seg .st-tl-dur { font-size: 9px; opacity: .85; }
+        .st-tl-h { position: absolute; top: 0; bottom: 0; width: 9px; cursor: ew-resize; background: #ffffff1f; touch-action: none; }
+        .st-tl-h.l { left: 0; border-radius: 4px 0 0 4px; } .st-tl-h.r { right: 0; border-radius: 0 4px 4px 0; }
+        .st-tl-seg:hover .st-tl-h { background: #ffffff3d; }
+        .st-tl-tip { position: absolute; top: -20px; transform: translateX(-50%); background: #000d; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 4px; pointer-events: none; white-space: nowrap; z-index: 3; }
+        .st-tl-hint { font-size: 11px; color: #8a8a95; margin: 0 0 2px; }
+        .st-bst { font-size: 11px; margin-left: 8px; font-weight: 600; }
+        .st-bst.dirty { color: #e0b24a; } .st-bst.ok { color: #7fd67f; } .st-bst.busy { color: #7fb0ff; } .st-bst.err { color: #ff8a8a; }
         .st-beat { border-left: 4px solid #7a2ea0; }
         .st-beat.empty { border-left-color: #666; } .st-beat.done { border-left-color: #2e7d46; } .st-beat.failed { border-left-color: #8a2e2e; }
         .st-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -124,6 +133,7 @@
                         <div><b id="ed-title">Projeto</b><div class="st-mini" id="ed-audio"></div></div>
                         <div style="text-align:right;"><span class="st-mini" id="ed-fill"></span></div>
                     </div>
+                    <p class="st-tl-hint">🕒 Arraste os blocos para <b>mover</b> (reordena) e as bordas para <b>mudar a duração</b>. Mover sem mudar o tamanho preserva o clipe já gerado.</p>
                     <div class="st-timeline" id="ed-timeline"></div>
                 </div>
                 <details class="st-card" id="ed-theme">
@@ -226,6 +236,9 @@
         var _chars = [];          // retratos das fichas [{token,name,url}]
         var _refBeatId = null;    // beat em edição no modal de referência
         var _lastSig = null;      // assinatura do estado (re-renderiza só quando muda)
+        var _beatNote = {};       // id -> {text, cls, until} aviso transitório (salvo/enfileirado)
+        var _tlDragging = false;  // arrastando na timeline? (trava re-render)
+        var _tlTotal = 1;         // duração total da timeline (ms) p/ conversão px→ms
         function vgSig(p) {
             return JSON.stringify([p.status, p.has_result, p.progress,
                 (p.comfy && p.comfy.online) || false,
@@ -391,24 +404,110 @@
             if (s == null || e == null) { vgRefresh(); return; }  // inválido: volta ao salvo
             vgBeatPatch(id, { start_ms: s, end_ms: e });
         }
+
+        // ---------- indicadores: salvo / não salvo / enfileirado ----------
+        function vgBeat(id) { return ((_proj && _proj.beats) || []).filter(function (b) { return b.id === id; })[0]; }
+        function _fieldVal(pfx, id) { var el = document.getElementById(pfx + '-' + id); return el ? (el.value || '') : null; }
+        function vgIsDirty(id) {
+            var b = vgBeat(id); if (!b) return false;
+            var v;
+            v = _fieldVal('bp', id); if (v !== null && v !== (b.user_prompt || '')) return true;
+            v = _fieldVal('bc', id); if (v !== null && v !== (b.correction || '')) return true;
+            v = _fieldVal('bei', id); if (v !== null && v !== (b.edit_instruction || '')) return true;
+            v = _fieldVal('bcap', id); if (v !== null && v !== (b.caption_text || '')) return true;
+            v = _fieldVal('bcappos', id); if (v !== null && v !== (b.caption_position || 'bottom')) return true;
+            return false;
+        }
+        function vgSetNote(id, text, cls, ms) {
+            _beatNote[id] = { text: text, cls: cls, until: ms ? Date.now() + ms : 0 };
+            vgPaintNote(id);
+            if (ms) setTimeout(function () { if (_beatNote[id] && _beatNote[id].until && Date.now() >= _beatNote[id].until) { _beatNote[id] = null; vgPaintNote(id); } }, ms + 50);
+        }
+        function vgPaintNote(id) {
+            var el = document.getElementById('bst-' + id); if (!el) return;
+            var t = _beatNote[id];
+            if (t && (!t.until || Date.now() < t.until)) { el.textContent = t.text; el.className = 'st-bst ' + (t.cls || ''); return; }
+            if (vgIsDirty(id)) { el.textContent = '● alterações não salvas'; el.className = 'st-bst dirty'; }
+            else { el.textContent = ''; el.className = 'st-bst'; }
+        }
+        function vgOnBeatInput(id) { _beatNote[id] = null; vgPaintNote(id); }
+        function vgRepaintAllNotes() { ((_proj && _proj.beats) || []).forEach(function (b) { vgPaintNote(b.id); }); }
+        // está digitando num campo de um beat? então adia o re-render (não apaga o texto)
+        function vgEditingBeat() {
+            var ae = document.activeElement; if (!ae) return false;
+            var box = document.getElementById('ed-beats'); if (!box || !box.contains(ae)) return false;
+            var tag = ae.tagName;
+            return tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT');
+        }
+
+        // ---------- timeline arrastável (mover = start; bordas = duração) ----------
+        function vgTlDrag(ev, b, mode) {
+            ev.preventDefault();
+            var tl = document.getElementById('ed-timeline'); if (!tl) return;
+            var rect = tl.getBoundingClientRect();
+            var total = _tlTotal || 1;
+            var startX = ev.clientX, os = b.start_ms, oe = b.end_ms, dur = oe - os;
+            var seg = tl.querySelector('.st-tl-seg[data-id="' + b.id + '"]'); if (!seg) return;
+            var MIN = 1000, MAX = 30000; // casa com BEAT_MIN_MS / BEAT_MAX_MS do backend
+            var tip = document.createElement('div'); tip.className = 'st-tl-tip'; tl.appendChild(tip);
+            _tlDragging = true;
+            var pend = null;
+            function paint(ns, ne) {
+                seg.style.left = (100 * ns / total) + '%';
+                seg.style.width = Math.max(1.2, 100 * (ne - ns) / total) + '%';
+                tip.textContent = stamp(ns) + ' → ' + stamp(ne) + '  (' + ((ne - ns) / 1000).toFixed(1) + 's)';
+                tip.style.left = (100 * (ns + (ne - ns) / 2) / total) + '%';
+            }
+            function move(e2) {
+                var dms = Math.round((e2.clientX - startX) / rect.width * total);
+                var ns = os, ne = oe;
+                if (mode === 'move') { ns = os + dms; ne = ns + dur; if (ns < 0) { ns = 0; ne = dur; } if (ne > total) { ne = total; ns = total - dur; } }
+                else if (mode === 'l') { ns = os + dms; if (ns < 0) ns = 0; if (ns > oe - MIN) ns = oe - MIN; if (oe - ns > MAX) ns = oe - MAX; ne = oe; }
+                else { ne = oe + dms; if (ne < os + MIN) ne = os + MIN; if (ne > total) ne = total; if (ne - os > MAX) ne = os + MAX; ns = os; }
+                pend = { start_ms: ns, end_ms: ne };
+                paint(ns, ne);
+            }
+            function up() {
+                document.removeEventListener('pointermove', move);
+                document.removeEventListener('pointerup', up);
+                if (tip.parentNode) tip.parentNode.removeChild(tip);
+                _tlDragging = false;
+                if (pend && (pend.start_ms !== os || pend.end_ms !== oe)) {
+                    vgBeatPatch(b.id, { start_ms: pend.start_ms, end_ms: pend.end_ms });
+                }
+            }
+            document.addEventListener('pointermove', move);
+            document.addEventListener('pointerup', up);
+        }
+
         function vgRenderEditor() {
             var p = _proj; if (!p) return;
             document.getElementById('ed-title').textContent = p.prompt || 'Projeto de vídeo';
             document.getElementById('ed-audio').textContent = '🎵 ' + (p.music_file || '—') + ' · duração do áudio ' + mmss(p.audio_duration_ms) + ' · ' + ((p.render_style === 'realism') ? '📷 realista' : '🎨 anime');
             var fill = document.getElementById('ed-fill');
             fill.textContent = 'coberto até ' + mmss(p.used_ms) + ' / ' + mmss(p.audio_duration_ms);
-            // timeline ABSOLUTA: cada beat ocupa [start,end] da música
+            // timeline ABSOLUTA e ARRASTÁVEL: cada beat ocupa [start,end] da música.
             var tl = document.getElementById('ed-timeline'); tl.innerHTML = '';
             var total = Math.max(p.audio_duration_ms || 0, p.used_ms || 1);
+            _tlTotal = total;
             (p.beats || []).forEach(function (b, i) {
                 var seg = document.createElement('div');
                 seg.className = 'st-tl-seg';
-                seg.style.position = 'absolute';
+                seg.dataset.id = b.id;
                 seg.style.left = (100 * b.start_ms / total) + '%';
                 seg.style.width = Math.max(1.2, 100 * (b.end_ms - b.start_ms) / total) + '%';
-                seg.style.background = b.status === 'done' ? '#2e7d46' : (b.status === 'failed' ? '#8a2e2e' : '#7a2ea0');
+                seg.style.background = b.status === 'done' ? '#2e7d46' : (b.status === 'failed' ? '#8a2e2e' : (b.status === 'empty' ? '#5a5a66' : '#7a2ea0'));
                 seg.title = 'beat ' + (i + 1) + ': ' + stamp(b.start_ms) + '→' + stamp(b.end_ms);
-                seg.textContent = (i + 1);
+                seg.innerHTML = '<div class="st-tl-h l"></div><div>' + (i + 1) + '</div>'
+                    + '<div class="st-tl-dur">' + ((b.end_ms - b.start_ms) / 1000).toFixed(1) + 's</div>'
+                    + '<div class="st-tl-h r"></div>';
+                // mover (corpo) e redimensionar (alças)
+                seg.addEventListener('pointerdown', function (ev) {
+                    if (ev.target.classList.contains('st-tl-h')) return; // alça tem handler próprio
+                    vgTlDrag(ev, b, 'move');
+                });
+                seg.querySelector('.st-tl-h.l').addEventListener('pointerdown', function (ev) { ev.stopPropagation(); vgTlDrag(ev, b, 'l'); });
+                seg.querySelector('.st-tl-h.r').addEventListener('pointerdown', function (ev) { ev.stopPropagation(); vgTlDrag(ev, b, 'r'); });
                 tl.appendChild(seg);
             });
             // cards dos beats
@@ -417,7 +516,8 @@
             box.innerHTML = (p.beats || []).map(function (b, i) {
                 var h = '<div class="st-card st-beat ' + b.status + '">';
                 h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span>'
-                    + ' <span class="st-mini">(' + (((b.end_ms - b.start_ms) / 1000).toFixed(1)) + 's)</span></div></div>';
+                    + ' <span class="st-mini">(' + (((b.end_ms - b.start_ms) / 1000).toFixed(1)) + 's)</span>'
+                    + '<span class="st-bst" id="bst-' + b.id + '"></span></div></div>';
                 // trecho da música: de X:XX até Y:YY
                 h += '<div class="st-row"><label class="st-field" style="margin:4px 0;">Da música — de (m:ss):'
                     + '<input type="text" id="bs-' + b.id + '" value="' + stamp(b.start_ms) + '" onchange="vgBeatTime(' + b.id + ')"></label>'
@@ -482,7 +582,7 @@
                         + '<summary style="cursor:pointer;font-weight:700;">✨ Edição aditiva da imagem — mantém o personagem, só soma o que pedir</summary>';
                     if (b.edit_approved) h += '<div class="st-mini" style="color:#7fd67f;margin:4px 0;">✓ este beat está usando a imagem EDITADA como referência.</div>';
                     h += '<label class="st-field" style="margin:4px 0;">O que acrescentar:'
-                        + '<textarea rows="2" id="bei-' + b.id + '" placeholder="ex.: acenda os olhos de vermelho-sangue e ponha magia vermelha na mão, sem cobrir o rosto">' + esc(b.edit_instruction) + '</textarea></label>';
+                        + '<textarea rows="2" id="bei-' + b.id + '" oninput="vgOnBeatInput(' + b.id + ')" placeholder="ex.: acenda os olhos de vermelho-sangue e ponha magia vermelha na mão, sem cobrir o rosto">' + esc(b.edit_instruction) + '</textarea></label>';
                     if (es === 'queued' || es === 'processing') {
                         var epc = (b.edit_progress_pct == null ? -1 : b.edit_progress_pct);
                         var elbl = esc(b.edit_progress || 'editando…');
@@ -507,18 +607,18 @@
                     + '<summary style="cursor:pointer;font-weight:700;">📝 Texto na tela (legenda fixa)</summary>'
                     + '<div class="st-mini" style="opacity:.85;margin:4px 0;">A IA não escreve texto estável no vídeo (as letras tremem/somem). Este texto é sobreposto DEPOIS — fixo e legível. A cena pode tremer à vontade embaixo que o texto não mexe.</div>'
                     + '<label class="st-field" style="margin:4px 0;">Texto:'
-                    + '<textarea rows="2" id="bcap-' + b.id + '" placeholder="ex.: Capítulo II — A Queda">' + esc(b.caption_text || '') + '</textarea></label>'
+                    + '<textarea rows="2" id="bcap-' + b.id + '" oninput="vgOnBeatInput(' + b.id + ')" placeholder="ex.: Capítulo II — A Queda">' + esc(b.caption_text || '') + '</textarea></label>'
                     + '<label class="st-field" style="margin:4px 0;">Posição: '
-                    + '<select id="bcappos-' + b.id + '">'
+                    + '<select id="bcappos-' + b.id + '" onchange="vgOnBeatInput(' + b.id + ')">'
                     + '<option value="top"' + (cpos === 'top' ? ' selected' : '') + '>topo</option>'
                     + '<option value="center"' + (cpos === 'center' ? ' selected' : '') + '>centro</option>'
                     + '<option value="bottom"' + (cpos === 'bottom' ? ' selected' : '') + '>base</option></select></label>'
                     + '<div class="st-actions"><button onclick="vgCaptionApply(' + b.id + ')">📝 aplicar legenda' + (b.has_clip ? '' : ' (ao gerar)') + '</button></div>'
                     + '<span class="st-mini" style="display:block;opacity:.8;">Aplica por cima do clipe que já existe, na hora — sem re-rodar o modelo. Apagar o texto remove a legenda.</span></details>';
                 h += '<label class="st-field" style="margin:4px 0;">Cena (o que acontece neste beat):'
-                    + '<textarea rows="2" id="bp-' + b.id + '">' + esc(b.user_prompt) + '</textarea></label>';
+                    + '<textarea rows="2" id="bp-' + b.id + '" oninput="vgOnBeatInput(' + b.id + ')">' + esc(b.user_prompt) + '</textarea></label>';
                 h += '<label class="st-field" style="margin:4px 0;">Correção (regerar consertando algo — opcional):'
-                    + '<input type="text" id="bc-' + b.id + '" placeholder="ex.: menos escuro, câmera mais aberta" value="' + esc(b.correction) + '"></label>';
+                    + '<input type="text" id="bc-' + b.id + '" placeholder="ex.: menos escuro, câmera mais aberta" value="' + esc(b.correction) + '" oninput="vgOnBeatInput(' + b.id + ')"></label>';
                 if (b.status === 'pending' || b.status === 'processing') {
                     var pc = (b.progress_pct == null ? -1 : b.progress_pct);
                     var lbl = esc(b.progress || (b.status === 'pending' ? 'preparando…' : 'gerando…'));
@@ -549,6 +649,7 @@
                     + '<div class="st-actions"><button class="st-approve" onclick="vgApprove()">✓ Aprovar</button>'
                     + '<button onclick="vgAssemble()">♻️ Remontar</button></div></div>';
             } else { fin.innerHTML = ''; }
+            vgRepaintAllNotes();
         }
 
         // ---------- ações de beat ----------
@@ -568,7 +669,11 @@
             if (cap) body.caption_text = cap.value || '';
             var cpos = document.getElementById('bcappos-' + id);
             if (cpos) body.caption_position = cpos.value || 'bottom';
-            post('/videogen/beat/' + id + '/update/', body).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+            vgSetNote(id, '💾 salvando…', 'busy', 0);
+            post('/videogen/beat/' + id + '/update/', body).then(function (d) {
+                if (d && d.ok) { vgSetNote(id, '✓ salvo', 'ok', 3500); vgRefresh(); }
+                else { vgSetNote(id, '✖ falha ao salvar', 'err', 4000); }
+            }).catch(function () { vgSetNote(id, '✖ falha de rede', 'err', 4000); });
         }
         // ---------- legenda fixa (texto queimado por cima do clipe) ----------
         function vgCaptionApply(id) {
@@ -604,12 +709,14 @@
                 user_prompt: (document.getElementById('bp-' + id) || {}).value || '',
                 correction: (document.getElementById('bc-' + id) || {}).value || ''
             };
+            vgSetNote(id, '⏳ enfileirando…', 'busy', 0);
             post('/videogen/beat/' + id + '/update/', body).then(function () {
                 return post('/videogen/beat/' + id + '/generate/');
             }).then(function (d) {
-                if (d && d.error) { document.getElementById('ed-status').textContent = d.error; }
+                if (d && d.error) { document.getElementById('ed-status').textContent = d.error; vgSetNote(id, '✖ ' + d.error, 'err', 5000); }
+                else { vgSetNote(id, '⏳ geração enfileirada', 'busy', 4000); }
                 vgRefresh(); vgScheduleEditorPoll();
-            }).catch(function () {});
+            }).catch(function () { vgSetNote(id, '✖ falha de rede', 'err', 4000); });
         }
         function vgAssemble() {
             document.getElementById('ed-status').textContent = 'Montando…';
@@ -629,7 +736,7 @@
                     vgComfyBadge(d.project.comfy, d.project.video_models);
                     // re-renderiza só se o estado mudou (não apaga o que você está digitando)
                     var sig = vgSig(d.project);
-                    if (sig !== _lastSig) { _lastSig = sig; vgRenderEditor(); }
+                    if (sig !== _lastSig && !_tlDragging && !vgEditingBeat()) { _lastSig = sig; vgRenderEditor(); }
                 }
                 vgSchedulePoll();  // reagenda SEMPRE com o dado NOVO (consertou a tela travada)
             }).catch(function () { vgSchedulePoll(); });  // erro de rede transitório: segue tentando
