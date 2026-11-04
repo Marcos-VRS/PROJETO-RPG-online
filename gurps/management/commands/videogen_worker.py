@@ -327,12 +327,68 @@ class Command(BaseCommand):
         except Exception:  # noqa: BLE001
             pass
 
+    @staticmethod
+    def _with_direction(project, prompt):
+        """Anexa a DIREÇÃO GERAL do projeto (estilo/direção global) ao prompt do
+        beat, se houver. É o 'redefinir o estilo pra todos os beats'."""
+        d = (getattr(project, "direction_prompt", "") or "").strip()
+        if d:
+            return prompt + ", " + d if prompt else d
+        return prompt
+
+    def _compose_multi_still(self, beat):
+        """Compõe UM still com 2+ referências (IP-Adapter regional, mesmo pipeline
+        do Estúdio de Imagem) a partir de beat.ref_multi, pra depois animar. Devolve
+        bytes do PNG ou None (sem multi, sem assets válidos, ou se a geração falhar)."""
+        from gurps.models import CampanhaAssets  # noqa: WPS433
+        entries = beat.ref_multi or []
+        if not isinstance(entries, list) or not entries:
+            return None
+        project = beat.project
+        multi = []
+        for e in entries:
+            try:
+                aid = int(e.get("asset_id"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            a = CampanhaAssets.objects.filter(id=aid, campanha=project.campanha).first()
+            if not (a and a.image) or a.image.name.lower().endswith(".svg"):
+                continue
+            try:
+                a.image.open("rb"); data = a.image.read(); a.image.close()
+            except Exception:  # noqa: BLE001
+                continue
+            region = e.get("region") if e.get("region") in ("left", "right", "full") else "full"
+            try:
+                weight = max(0.0, min(float(e.get("weight")), 1.5))
+            except (TypeError, ValueError):
+                weight = 0.9
+            multi.append({"bytes": data, "filename": f"mref_{aid}.png",
+                          "region": region, "weight": weight})
+        if not multi:
+            return None
+        scene = (beat.correction or beat.user_prompt or project.prompt or "characters in a scene").strip()
+        w, h = project.width or 512, project.height or 512
+        self.stdout.write(f"  -> compondo still regional ({len(multi)} refs, {w}x{h})")
+        try:
+            return comfyui_client.generate_png(
+                prompt=scene, negative=comfyui_client.VIDEO_NEGATIVE,
+                width=w, height=h, steps=9, cfg=2.2, seed=beat.seed,
+                multi_refs=multi, base_url=self.base_url, timeout=self.clip_timeout)
+        except Exception as e:  # noqa: BLE001
+            self.stdout.write(self.style.WARNING(f"  -> composição multi falhou (seguindo sem ela): {e}"))
+            return None
+
     def _resolve_beat_ref(self, beat):
         """(bytes, nome) da imagem de referência do beat, ou (None, '').
 
-        Se o beat tem uma edição aditiva APROVADA (Flux Kontext), ela é a
-        referência — tanto pra animar quanto pra uma próxima edição empilhar em
-        cima. O asset original nunca é apagado; é só preferência de arquivo."""
+        Se o beat tem ref_multi (2+ personagens), COMPÕE um still regional e usa ele.
+        Senão, se tem uma edição aditiva APROVADA (Flux Kontext), ela é a referência
+        — tanto pra animar quanto pra uma próxima edição empilhar em cima. O asset
+        original nunca é apagado; é só preferência de arquivo."""
+        composed = self._compose_multi_still(beat)
+        if composed is not None:
+            return composed, "composição"
         if beat.edit_approved and beat.edit_result_file:
             full = os.path.join(settings.MEDIA_ROOT, beat.edit_result_file.replace("/", os.sep))
             if os.path.exists(full):
@@ -528,6 +584,7 @@ class Command(BaseCommand):
         wan_prompt, used = ai_context.write_wan_motion_prompt(
             ctx, action, ref_name=ref_name, render_style=project.render_style,
             claude_bin=self.claude_bin, model=self.claude_model)
+        wan_prompt = self._with_direction(project, wan_prompt)  # direção geral
         self._set_beat(beat, expanded_prompt=wan_prompt)
         self.stdout.write(f"  prompt Wan ({'claude' if used else 'mecanico'}): {wan_prompt[:80]!r}")
 
@@ -745,6 +802,8 @@ class Command(BaseCommand):
             gen_prompt = comfyui_client.VIDEO_REALISM_POSITIVE + ", " + expanded
             gen_negative = comfyui_client.VIDEO_NEGATIVE + ", " + comfyui_client.VIDEO_REALISM_NEGATIVE
             self.stdout.write(f"  preset REALISMO (ckpt={ckpt}, vae={vae})")
+        # DIREÇÃO GERAL: estilo/direção global anexado ao prompt de todos os beats.
+        gen_prompt = self._with_direction(project, gen_prompt)
 
         # 2) beat CONTÍNUO: uma geração (janela deslizante do AnimateDiff) com a
         # MESMA seed em todos os pedaços — trava a aparência/roupa ao longo do
@@ -882,7 +941,17 @@ class Command(BaseCommand):
         except Exception as e:  # noqa: BLE001
             self._fail(req, f"montagem falhou: {e}")
             return
+        # DIREÇÃO GERAL: filtro de look (gradação de cor) por cima do vídeo final.
+        looked = False
+        if (req.look_filter or "").strip():
+            try:
+                looked = video_assembly.apply_look(out, req.look_filter)
+                if looked:
+                    self.stdout.write(f"  -> filtro de look aplicado: {req.look_filter}")
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(f"  -> filtro de look falhou (ignorado): {e}"))
         self._set(req, result_file=rel, status="done", error="",
-                  progress=f"pronto ({len(clips)} beats, musica={bool(music)})")
+                  progress=f"pronto ({len(clips)} beats, musica={bool(music)}"
+                           + (f", look={req.look_filter}" if looked else "") + ")")
         self.stdout.write(self.style.SUCCESS(
             f"#{req.id} PROJETO montado ({len(clips)} beats, musica={bool(music)})."))

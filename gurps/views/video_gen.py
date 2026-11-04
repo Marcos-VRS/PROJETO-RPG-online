@@ -91,6 +91,7 @@ def _serialize_beat(b):
         "expanded_prompt": b.expanded_prompt or "",
         "ref_asset_id": b.ref_asset_id,
         "ref_asset_name": (b.ref_asset.name if b.ref_asset_id else ""),
+        "ref_multi": b.ref_multi or [],
         "ref_mode": b.ref_mode,
         "fidelity": b.fidelity,
         "svd_motion": b.svd_motion,
@@ -130,6 +131,8 @@ def _serialize_project(req, with_beats=True):
         "style": req.style,
         "render_style": req.render_style,
         "use_context": req.use_context,
+        "direction_prompt": req.direction_prompt or "",
+        "look_filter": req.look_filter or "",
         "music_file": os.path.basename(req.music_file) if req.music_file else "",
         "music_rel": req.music_file or "",
         "audio_duration_ms": req.audio_duration_ms,
@@ -227,6 +230,13 @@ def videogen_project_update(request, req_id):
     if "use_context" in body:
         req.use_context = str(body.get("use_context")).lower() not in ("0", "false", "no", "")
         fields.append("use_context")
+    if "direction_prompt" in body:
+        req.direction_prompt = (body.get("direction_prompt") or "").strip()[:PROMPT_MAX]
+        fields.append("direction_prompt")
+    if "look_filter" in body:
+        lf = (body.get("look_filter") or "").strip()
+        req.look_filter = lf if lf in video_assembly.LOOK_FILTERS else ""
+        fields.append("look_filter")
     newmusic = _save_music_choice(request, body)
     if newmusic:
         req.music_file = newmusic
@@ -253,6 +263,40 @@ def _resolve_ref_asset(campanha, body):
         return CampanhaAssets.objects.filter(campanha=campanha, id=int(rid)).first()
     except (TypeError, ValueError):
         return None
+
+
+def _parse_ref_multi(raw, campanha):
+    """Normaliza a lista de referências múltiplas do beat (compor 2+ personagens).
+    Aceita lista ou string JSON. Mantém só assets raster da campanha (máx. 4).
+    Devolve lista de {asset_id, region, weight} ou []."""
+    import json as _json  # noqa: WPS433
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = _json.loads(raw)
+        except (ValueError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for e in raw[:4]:
+        if not isinstance(e, dict):
+            continue
+        try:
+            aid = int(e.get("asset_id"))
+        except (TypeError, ValueError):
+            continue
+        a = CampanhaAssets.objects.filter(id=aid, campanha=campanha).first()
+        if not a or not a.image or a.image.name.lower().endswith(".svg"):
+            continue
+        region = e.get("region") if e.get("region") in ("left", "right", "full") else "full"
+        try:
+            weight = max(0.0, min(float(e.get("weight")), 1.5))
+        except (TypeError, ValueError):
+            weight = 0.9
+        out.append({"asset_id": aid, "region": region, "weight": weight})
+    return out
 
 
 def _beat_times(body, cur_start, cur_end, audio_ms):
@@ -351,6 +395,9 @@ def videogen_beat_update(request, beat_id):
             regen = True
     if "ref_asset_id" in body:
         beat.ref_asset = _resolve_ref_asset(beat.project.campanha, body); changed = True; regen = True
+    if "ref_multi" in body:
+        beat.ref_multi = _parse_ref_multi(body.get("ref_multi"), beat.project.campanha) or None
+        changed = True; regen = True
     if "ref_mode" in body:
         rm = body.get("ref_mode")
         beat.ref_mode = rm if rm in ("svd", "wan", "animate", "style", "fx") else "style"; changed = True; regen = True
@@ -585,6 +632,24 @@ def videogen_beat_reorder(request, req_id):
             b.save(update_fields=["order"])
     _reactivate_if_terminal(req)
     return JsonResponse({"ok": True, "project": _serialize_project(req)})
+
+
+@login_required(login_url="gurps:login")
+def videogen_project_regen_all(request, req_id):
+    """DIREÇÃO GERAL: marca TODOS os beats prontos/falhos pra regerar (status→empty)
+    no novo estilo. NÃO enfileira — o GM confirma/gera cada um (controle no 6GB)."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    req = get_object_or_404(VideoGenRequest, id=req_id)
+    if req.campanha.dono_id != request.user.id:
+        return JsonResponse({"error": "sem permissão"}, status=403)
+    n = 0
+    for b in req.beats.filter(status__in=["done", "failed"]):
+        b.status = "empty"
+        b.save(update_fields=["status", "updated_at"])
+        n += 1
+    _reactivate_if_terminal(req)
+    return JsonResponse({"ok": True, "marked": n, "project": _serialize_project(req)})
 
 
 @login_required(login_url="gurps:login")

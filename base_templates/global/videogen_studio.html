@@ -51,6 +51,12 @@
         .st-tl-seg:hover .st-tl-h { background: #ffffff3d; }
         .st-tl-tip { position: absolute; top: -20px; transform: translateX(-50%); background: #000d; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 4px; pointer-events: none; white-space: nowrap; z-index: 3; }
         .st-tl-hint { font-size: 11px; color: #8a8a95; margin: 0 0 2px; }
+        .st-mref-beat { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .st-mref-chip { display: flex; align-items: center; gap: 4px; background: #1c1c22; border: 1px solid #383840; border-radius: 6px; padding: 3px 5px; font-size: 11px; color: #cfcfd6; }
+        .st-mref-chip select { font-size: 11px; background: #26262e; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 2px; }
+        .st-mref-chip .st-mref-x { background: #5a2e2e; color: #fff; border: none; border-radius: 4px; width: 20px; height: 20px; cursor: pointer; }
+        .st-refgrid figure.is-sel { outline: 3px solid #c9a55c; outline-offset: -3px; position: relative; }
+        .st-refgrid figure .st-sel-badge { position: absolute; top: 2px; left: 2px; font-size: 10px; font-weight: 700; color: #fff; background: #000b; border-radius: 3px; padding: 0 4px; }
         .st-bst { font-size: 11px; margin-left: 8px; font-weight: 600; }
         .st-bst.dirty { color: #e0b24a; } .st-bst.ok { color: #7fd67f; } .st-bst.busy { color: #7fb0ff; } .st-bst.err { color: #ff8a8a; }
         .st-beat { border-left: 4px solid #7a2ea0; }
@@ -169,6 +175,31 @@
                 </details>
                 <div id="ed-beats"></div>
                 <button type="button" class="st-gen" style="background:#2a5a7a;margin-top:10px;" onclick="vgBeatAdd()">➕ Adicionar beat</button>
+
+                <details class="st-card" id="ed-direction" style="border-color:#5a4a2a;">
+                    <summary style="cursor:pointer;font-weight:700;">🎬 Direção geral (estilo + filtro de todos os beats)</summary>
+                    <p class="st-mini" style="margin:6px 0;">Uma direção que vale pra <b>todos</b> os beats. O <b>filtro de look</b> é aplicado na montagem (rápido, reversível — é só remontar). O <b>estilo/direção</b> é somado ao prompt de cada beat quando você (re)gera.</p>
+                    <label class="st-field">Filtro de look (gradação de cor no vídeo final):
+                        <select id="ed-dir-look">
+                            <option value="">— nenhum —</option>
+                            <option value="warm">🔥 Quente (dourado)</option>
+                            <option value="cold">❄️ Frio (azulado)</option>
+                            <option value="noir">🎞️ Noir (preto e branco)</option>
+                            <option value="vintage">📽️ Vintage</option>
+                            <option value="high_contrast">⚡ Alto contraste</option>
+                            <option value="grain">🌫️ Granulado (film grain)</option>
+                            <option value="vignette">⭕ Vinheta</option>
+                        </select>
+                    </label>
+                    <label class="st-field">Estilo / direção aplicada a todos os beats (opcional):
+                        <textarea id="ed-dir-prompt" rows="2" placeholder="ex.: 'clima sombrio, névoa, luz de tocha, paleta esverdeada'"></textarea>
+                    </label>
+                    <button type="button" class="st-gen" style="background:#2a5a7a;" onclick="vgDirSave()">💾 Salvar direção</button>
+                    <button type="button" class="st-gen" style="margin-top:8px;" onclick="vgDirMarkRegen()">⟳ Marcar todos pra regerar no novo estilo</button>
+                    <p class="st-mini" style="margin-top:6px;">Depois de salvar o filtro, clique em <b>Montar vídeo</b> pra aplicá-lo. Marcar pra regerar <b>não</b> enche a fila — cada beat volta pro botão ▶️ gerar, você dispara quando quiser.</p>
+                    <p class="st-status" id="ed-dir-status"></p>
+                </details>
+
                 <button type="button" class="st-gen" style="margin-top:8px;" onclick="vgAssemble()">🎬 Montar vídeo (com as transições)</button>
                 <p class="st-status" id="ed-status"></p>
                 <div id="ed-final"></div>
@@ -235,6 +266,8 @@
         var _journal = [];        // imagens do journal [{id,name,url}]
         var _chars = [];          // retratos das fichas [{token,name,url}]
         var _refBeatId = null;    // beat em edição no modal de referência
+        var _refMulti = false;    // modal em modo "vários personagens" (multi-ref)
+        var _refMultiSel = [];    // seleção atual [{asset_id, region}] no modo multi
         var _lastSig = null;      // assinatura do estado (re-renderiza só quando muda)
         var _beatNote = {};       // id -> {text, cls, until} aviso transitório (salvo/enfileirado)
         var _tlDragging = false;  // arrastando na timeline? (trava re-render)
@@ -243,7 +276,7 @@
             return JSON.stringify([p.status, p.has_result, p.progress,
                 (p.comfy && p.comfy.online) || false,
                 (p.beats || []).map(function (b) {
-                    return [b.id, b.status, b.progress, b.progress_pct, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, b.ref_mode, b.fidelity, b.svd_motion, b.transition, b.transition_ms, b.error, b.edit_status, b.edit_progress_pct, b.edit_approved, b.has_edit_result];
+                    return [b.id, b.status, b.progress, b.progress_pct, b.has_clip, b.start_ms, b.end_ms, b.ref_asset_id, JSON.stringify(b.ref_multi || []), b.ref_mode, b.fidelity, b.svd_motion, b.transition, b.transition_ms, b.error, b.edit_status, b.edit_progress_pct, b.edit_approved, b.has_edit_result];
                 })]);
         }
 
@@ -361,6 +394,7 @@
                 document.getElementById('vg-proj-home').classList.add('st-hide');
                 document.getElementById('vg-editor').classList.remove('st-hide');
                 vgFillTheme();
+                vgFillDirection();
                 vgRenderEditor();
                 _lastSig = vgSig(d.project);
                 vgSchedulePoll();
@@ -381,6 +415,35 @@
             document.getElementById('te-prompt').value = (p.prompt === '(vídeo por beats)') ? '' : (p.prompt || '');
             var m = document.getElementById('te-music'); if (m) m.value = '';
             document.getElementById('te-status').textContent = 'música atual: ' + (p.music_file || '—');
+        }
+        function vgFillDirection() {
+            var p = _proj; if (!p) return;
+            var l = document.getElementById('ed-dir-look'); if (l) l.value = p.look_filter || '';
+            var d = document.getElementById('ed-dir-prompt'); if (d) d.value = p.direction_prompt || '';
+        }
+        function vgDirSave() {
+            var st = document.getElementById('ed-dir-status'); st.textContent = 'Salvando…';
+            post('/videogen/project/' + _proj.id + '/update/', {
+                look_filter: document.getElementById('ed-dir-look').value || '',
+                direction_prompt: document.getElementById('ed-dir-prompt').value || ''
+            }).then(function (d) {
+                if (d && d.ok) { _proj = d.project; st.textContent = 'Direção salva. Para o filtro valer, clique em Montar vídeo.'; }
+                else { st.textContent = (d && d.error) || 'erro ao salvar.'; }
+            }).catch(function () { st.textContent = 'falha de rede.'; });
+        }
+        function vgDirMarkRegen() {
+            if (!confirm('Marcar TODOS os beats prontos pra regerar no novo estilo? Eles voltam pro botão ▶️ gerar (a fila não enche sozinha).')) return;
+            var st = document.getElementById('ed-dir-status'); st.textContent = 'Marcando…';
+            // salva a direção antes, pra os beats regerarem já com ela
+            post('/videogen/project/' + _proj.id + '/update/', {
+                look_filter: document.getElementById('ed-dir-look').value || '',
+                direction_prompt: document.getElementById('ed-dir-prompt').value || ''
+            }).then(function () {
+                return post('/videogen/project/' + _proj.id + '/regen-all/');
+            }).then(function (d) {
+                if (d && d.ok) { st.textContent = d.marked + ' beat(s) marcados pra regerar — clique ▶️ gerar em cada um.'; vgRefresh(); }
+                else { st.textContent = (d && d.error) || 'erro.'; }
+            }).catch(function () { st.textContent = 'falha de rede.'; });
         }
         function vgProjSave() {
             var st = document.getElementById('te-status'); st.textContent = 'Salvando…';
@@ -514,6 +577,8 @@
             var box = document.getElementById('ed-beats');
             var S = { empty: 'sem clipe', pending: 'preparando', processing: 'gerando', done: 'pronto', failed: 'falhou' };
             box.innerHTML = (p.beats || []).map(function (b, i) {
+                var mrefs = b.ref_multi || [];
+                var hasRef = !!(b.ref_asset_id || mrefs.length);
                 var h = '<div class="st-card st-beat ' + b.status + '">';
                 h += '<div class="st-row"><div><b>Beat ' + (i + 1) + '</b> <span class="st-badge ' + b.status + '">' + (S[b.status] || b.status) + '</span>'
                     + ' <span class="st-mini">(' + (((b.end_ms - b.start_ms) / 1000).toFixed(1)) + 's)</span>'
@@ -532,7 +597,22 @@
                         + '<label class="st-field" style="margin:4px 0;">Crossfade (ms): <input type="number" min="100" max="3000" step="100" value="' + b.transition_ms + '" onchange="vgBeatPatch(' + b.id + ',{transition_ms:this.value})"></label></div>';
                 }
                 h += '<div class="st-row"><div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ')">🖼️ referência' + (b.ref_asset_id ? ': ' + esc(b.ref_asset_name) : '') + '</button></div>';
-                if (b.ref_asset_id) {
+                h += '<div style="align-self:end;"><button class="st-actions" style="flex:0;min-width:150px;background:#3a3a44;color:#eee;border:none;border-radius:5px;padding:8px;cursor:pointer;" onclick="vgRefOpen(' + b.id + ',true)">🎭 Vários personagens' + (mrefs.length ? ' (' + mrefs.length + ')' : '') + '</button></div>';
+                // chips das referências múltiplas (compor vários personagens): região + remover
+                if (mrefs.length) {
+                    h += '<div style="flex:1 0 100%;" class="st-mref-beat">';
+                    for (var mi = 0; mi < mrefs.length; mi++) {
+                        var mr = mrefs[mi];
+                        h += '<div class="st-mref-chip"><span>' + (mi + 1) + '. #' + mr.asset_id + '</span>'
+                            + '<select onchange="vgBeatSetRefRegion(' + b.id + ',' + mr.asset_id + ',this.value)">'
+                            + '<option value="left"' + (mr.region === 'left' ? ' selected' : '') + '>◧ esq</option>'
+                            + '<option value="right"' + (mr.region === 'right' ? ' selected' : '') + '>◨ dir</option>'
+                            + '<option value="full"' + (mr.region === 'full' ? ' selected' : '') + '>◼ toda</option></select>'
+                            + '<button type="button" class="st-mref-x" onclick="vgBeatRemoveRef(' + b.id + ',' + mr.asset_id + ')">×</button></div>';
+                    }
+                    h += '<span class="st-mini" style="display:block;opacity:.8;">Compõe um quadro com esses personagens (regional) e anima pelo modo escolhido abaixo.</span></div>';
+                }
+                if (hasRef) {
                     h += '<label class="st-field" style="margin:4px 0;">O que fazer com a imagem:'
                         + '<select onchange="vgBeatPatch(' + b.id + ',{ref_mode:this.value})">'
                         + '<option value="svd"' + (b.ref_mode === 'svd' ? ' selected' : '') + '>📌 Dar vida (fiel) — a imagem já está certa</option>'
@@ -542,10 +622,10 @@
                         + '<option value="style"' + (b.ref_mode !== 'svd' && b.ref_mode !== 'wan' && b.ref_mode !== 'animate' && b.ref_mode !== 'fx' ? ' selected' : '') + '>🎨 Recriar — imagem só como estilo</option></select></label>';
                 }
                 h += '</div>';
-                if (b.ref_asset_id && b.ref_mode === 'wan') {
+                if (hasRef && b.ref_mode === 'wan') {
                     h += '<div class="st-field" style="margin:4px 0;"><span class="st-mini" style="display:block;opacity:.85;">🎬 A imagem é o quadro 1 e o personagem <b>executa a ação que você escrever na “Cena”</b> abaixo (ex.: “ele leva a mão ao rosto acendendo magia vermelho-sangue na mão e nos olhos”), mantendo a aparência. É o modo mais <b>lento</b> (alguns minutos por beat). Quanto mais concreta a ação (o que se move, como), melhor.</span></div>';
                 }
-                if (b.ref_asset_id && b.ref_mode === 'svd') {
+                if (hasRef && b.ref_mode === 'svd') {
                     var mpct = Math.round((b.svd_motion == null ? 0.4 : b.svd_motion) * 100);
                     h += '<label class="st-field" style="margin:4px 0;">Quantidade de movimento: <b id="bmv-' + b.id + '">' + mpct + '%</b>'
                         + '<input type="range" min="0" max="100" value="' + mpct + '" style="width:100%"'
@@ -554,7 +634,7 @@
                         + '<span class="st-mini">← sutil (câmera leve) · mais movimento →</span>'
                         + '<span class="st-mini" style="display:block;opacity:.8;">Mantém a imagem FIEL (mesma cara/cena). Não obedece texto — a “Cena” abaixo é ignorada neste modo.</span></label>';
                 }
-                if (b.ref_asset_id && b.ref_mode === 'animate') {
+                if (hasRef && b.ref_mode === 'animate') {
                     var pct = Math.round((b.fidelity == null ? 0.6 : b.fidelity) * 100);
                     h += '<label class="st-field" style="margin:4px 0;">Fidelidade à imagem: <b id="bfv-' + b.id + '">' + pct + '%</b>'
                         + '<input type="range" min="0" max="100" value="' + pct + '" style="width:100%"'
@@ -563,7 +643,7 @@
                         + '<span class="st-mini">← mais fiel (quase parado) · mais movimento →</span>'
                         + '<span class="st-mini" style="display:block;opacity:.8;">Pra o personagem FAZER uma ação (levantar a mão, carregar um poder), puxe pro lado do movimento — 100% fiel = a imagem não se mexe.</span></label>';
                 }
-                if (b.ref_asset_id && b.ref_mode === 'fx') {
+                if (hasRef && b.ref_mode === 'fx') {
                     h += '<div class="st-field" style="margin:4px 0;"><span class="st-mini" style="display:block;opacity:.85;">🖼️ A sua imagem fica <b>parada e idêntica</b> (arte e texto preservados, a IA não redesenha nada) e os efeitos rodam por cima. Rápido, sem GPU. Puxe os efeitos que quiser — 0% = desligado:</span></div>';
                     var fxdefs = [['fx_shake', 'Tremor / terremoto'], ['fx_flash', 'Relâmpago / flash'], ['fx_zoom', 'Zoom lento (aproximar)'], ['fx_vignette', 'Vinheta / pulso escuro']];
                     for (var fi = 0; fi < fxdefs.length; fi++) {
@@ -758,10 +838,24 @@
         function vgSecHead(txt) {
             return '<div class="st-mini" style="grid-column:1/-1;font-weight:bold;color:#cdb4e0;margin:6px 0 0;">' + txt + '</div>';
         }
+        function _refMultiIdx(id) { for (var i = 0; i < _refMultiSel.length; i++) { if (_refMultiSel[i].asset_id === id) return i; } return -1; }
         function vgRefRender() {
             var grid = document.getElementById('ref-grid');
             if (!grid) return;
             var h = '';
+            if (_refMulti) {
+                h += '<div class="st-mini" style="grid-column:1/-1;color:#cdb4e0;">🎭 Clique pra <b>adicionar/remover</b> personagens (só imagens do journal). A região (esquerda/direita) você ajusta nos chips do beat. Feche pra aplicar.</div>';
+                h += _journal.length ? _journal.map(function (it) {
+                    var k = _refMultiIdx(it.id);
+                    var selcls = k >= 0 ? ' is-sel' : '';
+                    var badge = k >= 0 ? '<span class="st-sel-badge">' + (k + 1) + '</span>' : '';
+                    return '<figure class="' + selcls + '" onclick="vgRefMultiToggle(' + it.id + ')">' + badge + '<img src="' + it.url + '" alt="" loading="lazy"><figcaption>' + esc(it.name) + '</figcaption></figure>';
+                }).join('') : '<p class="st-mini" style="grid-column:1/-1;">nenhuma imagem raster no journal ainda.</p>';
+                grid.innerHTML = h;
+                var cnt0 = document.getElementById('ref-count');
+                if (cnt0) cnt0.textContent = _refMultiSel.length + ' selecionada(s)';
+                return;
+            }
             if (_chars.length) {
                 h += vgSecHead('🧑 Retratos das fichas (' + _chars.length + ')');
                 h += _chars.map(function (it) {
@@ -776,15 +870,46 @@
             var cnt = document.getElementById('ref-count');
             if (cnt) cnt.textContent = (_journal.length + _chars.length) + ' imagens';
         }
-        function vgRefOpen(beatId) {
+        function vgRefMultiToggle(id) {
+            var k = _refMultiIdx(id);
+            if (k >= 0) { _refMultiSel.splice(k, 1); }
+            else {
+                if (_refMultiSel.length >= 4) return;
+                _refMultiSel.push({ asset_id: id, region: 'full' });
+            }
+            if (_refMultiSel.length === 2 && _refMultiSel[0].region === 'full' && _refMultiSel[1].region === 'full') {
+                _refMultiSel[0].region = 'left'; _refMultiSel[1].region = 'right';
+            }
+            vgRefRender();
+        }
+        function vgRefOpen(beatId, multi) {
             _refBeatId = beatId;
+            _refMulti = !!multi;
+            _refMultiSel = [];
+            if (_refMulti) {
+                var b = (((_proj && _proj.beats) || []).filter(function (x) { return x.id === beatId; })[0]) || {};
+                _refMultiSel = (b.ref_multi || []).map(function (r) { return { asset_id: r.asset_id, region: r.region || 'full' }; });
+            }
             document.getElementById('ref-modal').classList.add('on');
             vgRefRender();   // mostra o que já tem em cache
             // recarrega o journal INTEIRO + os retratos das fichas (sem corte)
             fetch('/imagegen/' + CAMP + '/journal/').then(function (r) { return r.json(); })
                 .then(function (d) { _journal = (d && d.items) || []; vgRefRender(); }).catch(function () {});
-            fetch('/videogen/' + CAMP + '/characters/').then(function (r) { return r.json(); })
-                .then(function (d) { _chars = (d && d.items) || []; vgRefRender(); }).catch(function () {});
+            if (!_refMulti) {
+                fetch('/videogen/' + CAMP + '/characters/').then(function (r) { return r.json(); })
+                    .then(function (d) { _chars = (d && d.items) || []; vgRefRender(); }).catch(function () {});
+            }
+        }
+        // chips de multi-ref no card do beat: trocar região / remover
+        function vgBeatSetRefRegion(beatId, assetId, region) {
+            var b = (((_proj && _proj.beats) || []).filter(function (x) { return x.id === beatId; })[0]); if (!b) return;
+            var list = (b.ref_multi || []).map(function (r) { return { asset_id: r.asset_id, region: (r.asset_id === assetId ? region : r.region), weight: r.weight }; });
+            post('/videogen/beat/' + beatId + '/update/', { ref_multi: list }).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+        }
+        function vgBeatRemoveRef(beatId, assetId) {
+            var b = (((_proj && _proj.beats) || []).filter(function (x) { return x.id === beatId; })[0]); if (!b) return;
+            var list = (b.ref_multi || []).filter(function (r) { return r.asset_id !== assetId; });
+            post('/videogen/beat/' + beatId + '/update/', { ref_multi: list }).then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
         }
         function vgRefPickSheet(token) {
             if (_refBeatId == null) return;
@@ -806,9 +931,19 @@
                     else if (cnt) { cnt.textContent = (d && d.error) || 'falhou'; }
                 }).catch(function () { if (cnt) cnt.textContent = 'falhou'; });
         }
-        function vgRefClose() { document.getElementById('ref-modal').classList.remove('on'); _refBeatId = null; }
+        function vgRefClose() {
+            var wasMulti = _refMulti, beatId = _refBeatId, sel = _refMultiSel.slice();
+            document.getElementById('ref-modal').classList.remove('on');
+            _refBeatId = null; _refMulti = false; _refMultiSel = [];
+            if (wasMulti && beatId != null) {
+                // aplica a seleção: grava ref_multi no beat
+                post('/videogen/beat/' + beatId + '/update/', { ref_multi: sel })
+                    .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
+            }
+        }
         function vgRefPick(assetId) {
             if (_refBeatId == null) return;
+            if (_refMulti) { _refMultiSel = []; vgRefRender(); return; }  // "✕ Sem referência" = limpa seleção
             post('/videogen/beat/' + _refBeatId + '/update/', { ref_asset_id: assetId })
                 .then(function (d) { if (d && d.ok) vgRefresh(); }).catch(function () {});
             vgRefClose();

@@ -367,6 +367,47 @@ def _cleanup(*paths):
 
 
 # ----------------------------------------------------------------------------
+# FILTRO DE LOOK (direção geral): uma gradação de cor aplicada SÓ no vídeo final,
+# por ffmpeg. Rápido, reversível (é só re-montar com outro/nenhum filtro) e não
+# re-gera nenhum beat. Mapeia o nome escolhido na UI pra uma cadeia -vf estável
+# (filtros padrão do ffmpeg, sem depender de versão específica).
+# ----------------------------------------------------------------------------
+LOOK_FILTERS = {
+    "warm": "colorbalance=rs=.08:gs=.02:bs=-.09,eq=saturation=1.08",
+    "cold": "colorbalance=rs=-.08:gs=0:bs=.10,eq=saturation=1.05",
+    "noir": "hue=s=0,eq=contrast=1.18:brightness=0.02",
+    "vintage": "curves=preset=vintage,eq=saturation=0.92",
+    "high_contrast": "eq=contrast=1.25:saturation=1.12",
+    "grain": "noise=alls=12:allf=t+u",
+    "vignette": "vignette=PI/4",
+}
+
+
+def apply_look(video_path, look, ffmpeg=None) -> bool:
+    """Re-encoda o vídeo final aplicando o filtro de look (gradação de cor) no
+    lugar, mantendo o áudio. Retorna True se aplicou; False (sem alterar o arquivo)
+    se o look é vazio/desconhecido ou o ffmpeg falhou."""
+    vf = LOOK_FILTERS.get((look or "").strip())
+    if not vf:
+        return False
+    ff = ffmpeg or get_ffmpeg()
+    tmp = video_path + ".look.mp4"
+    ok, err = _run([ff, "-y", "-i", video_path, "-vf", vf,
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "-c:a", "copy", tmp])
+    if not ok:
+        _cleanup(tmp)
+        return False
+    try:
+        import shutil  # noqa: WPS433
+        shutil.move(tmp, video_path)
+        return True
+    except Exception:  # noqa: BLE001
+        _cleanup(tmp)
+        return False
+
+
+# ----------------------------------------------------------------------------
 # LEGENDA FIXA (texto "queimado" por cima do clipe via ffmpeg drawtext)
 #
 # Modelos de vídeo por IA não mantêm texto estável (as letras morfam/piscam a

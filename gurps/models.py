@@ -571,6 +571,14 @@ class VideoGenRequest(models.Model):
     render_style = models.CharField(max_length=16, choices=RENDER_STYLE_CHOICES,
                                     default="anime")
     use_context = models.BooleanField(default=True)
+    # DIREÇÃO GERAL (aplicada a todos os beats):
+    #  - direction_prompt: estilo/direção global ANEXADO ao prompt de cada beat na
+    #    (re)geração ("redefinir o estilo pra todos"). db_default p/ a build antiga.
+    #  - look_filter: "filtro" de cor aplicado por ffmpeg SÓ na montagem final
+    #    (rápido, reversível, não re-gera nada): "" | warm | cold | noir | vintage |
+    #    high_contrast | grain | vignette.
+    direction_prompt = models.TextField(blank=True, default="", db_default="")
+    look_filter = models.CharField(max_length=20, blank=True, default="", db_default="")
     target_seconds = models.IntegerField(default=90)  # duração alvo do vídeo final
     width = models.IntegerField(default=512)
     height = models.IntegerField(default=512)
@@ -654,6 +662,12 @@ class VideoBeat(models.Model):
         ("fx", "Imagem estática + efeitos (sem IA)"),
     ]
     ref_mode = models.CharField(max_length=10, choices=REF_MODE_CHOICES, default="style")
+    # Múltiplas referências (compor 2+ personagens no beat). Lista de dicts
+    # [{"asset_id", "region": left|right|full, "weight"}]. Quando preenchida, o
+    # worker COMPÕE um still (IP-Adapter regional, mesmo pipeline do Estúdio de
+    # Imagem) e usa esse still como referência do beat (anima via ref_mode).
+    # Nullable: a build antiga insere sem conhecer o campo.
+    ref_multi = models.JSONField(null=True, blank=True)
     # Intensidades dos efeitos do modo "fx" (0 = desligado .. 1 = forte).
     fx_shake = models.FloatField(default=0.0)       # tremor / terremoto
     fx_flash = models.FloatField(default=0.0)       # relâmpago / clarão
