@@ -579,6 +579,11 @@ class VideoGenRequest(models.Model):
     #    high_contrast | grain | vignette.
     direction_prompt = models.TextField(blank=True, default="", db_default="")
     look_filter = models.CharField(max_length=20, blank=True, default="", db_default="")
+    # Personagens (LoRA SD1.5) ATIVOS neste vídeo: [{"lora_id": int, "strength": float}].
+    # Os LoRAs são carregados no modelo; cada personagem APARECE quando sua
+    # palavra-gatilho entra no texto do beat (fidelidade real, resolve o problema do
+    # IP-Adapter que só copia o clima). Nullable p/ a build antiga inserir sem o campo.
+    char_loras = models.JSONField(null=True, blank=True)
     target_seconds = models.IntegerField(default=90)  # duração alvo do vídeo final
     width = models.IntegerField(default=512)
     height = models.IntegerField(default=512)
@@ -727,3 +732,69 @@ class VideoBeat(models.Model):
 
     def __str__(self):
         return f"Beat #{self.id} (proj {self.project_id}) ord={self.order} [{self.status}]"
+
+
+class CharacterLora(models.Model):
+    """Gerador de Personagem (LoRA SD1.5): ensina o modelo a desenhar UM personagem
+    de forma consistente, pra usar no vídeo (AnimateDiff) sem redesenhar do zero.
+
+    Fluxo: cria -> gera uma FOLHA DE POSES (dataset, via IP-Adapter a partir de uma
+    imagem-semente) -> o GM cura as poses boas -> treina um LoRA SD1.5 (diffusers+
+    peft no python do ComfyUI) -> o LoRA vira acionável por uma PALAVRA-GATILHO na
+    geração de vídeo. SD1.5 porque é o que cabe nos 6GB e é o modelo do vídeo.
+    """
+    STATUS_CHOICES = [
+        ("draft", "Rascunho"),
+        ("dataset_pending", "Gerando poses"),
+        ("dataset_ready", "Dataset pronto"),
+        ("train_pending", "Treino na fila"),
+        ("training", "Treinando"),
+        ("trained", "Treinado"),
+        ("failed", "Falhou"),
+    ]
+    campanha = models.ForeignKey(Campanha, on_delete=models.CASCADE,
+                                 related_name="character_loras")
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                     on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=120)
+    # palavra-gatilho única que o LoRA aprende (ex.: "ch_liesel"). Entra no prompt.
+    trigger_word = models.CharField(max_length=40, blank=True, default="")
+    # aparência base pro prompt das poses (o IP-Adapter trava a cara; o texto dá a pose)
+    description = models.TextField(blank=True, default="")
+    # imagem-semente (IP-Adapter) do journal; ou upload manual.
+    seed_asset = models.ForeignKey(CampanhaAssets, on_delete=models.SET_NULL,
+                                   null=True, blank=True, related_name="+")
+    seed_image = models.ImageField(upload_to="charlora_seeds/", null=True, blank=True)
+    n_poses = models.IntegerField(default=16)         # quantas poses gerar no dataset
+    rank = models.IntegerField(default=16)            # dim do LoRA
+    train_steps = models.IntegerField(default=1200)   # passos de treino
+    base_ckpt = models.CharField(max_length=200, blank=True, default="")  # "" = auto (SD1.5)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    progress = models.CharField(max_length=160, blank=True, default="")
+    progress_pct = models.IntegerField(default=-1)
+    error = models.TextField(blank=True, default="")
+    # arquivo do LoRA treinado, relativo ao models/loras do ComfyUI (ex.: "char_5.safetensors")
+    lora_file = models.CharField(max_length=200, blank=True, default="")
+    dataset_dir = models.CharField(max_length=300, blank=True, default="")  # rel. ao MEDIA_ROOT
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"CharLora #{self.id} {self.name!r} [{self.status}]"
+
+
+class CharacterLoraImage(models.Model):
+    """Uma imagem do dataset (folha de poses) de um CharacterLora. keep=False tira
+    ela do treino (curadoria do GM)."""
+    lora = models.ForeignKey(CharacterLora, on_delete=models.CASCADE, related_name="images")
+    file = models.CharField(max_length=300)            # rel. ao MEDIA_ROOT
+    caption = models.TextField(blank=True, default="")  # "<gatilho>, <pose>"
+    pose = models.CharField(max_length=160, blank=True, default="")
+    keep = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]

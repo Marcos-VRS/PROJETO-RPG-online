@@ -15,6 +15,31 @@ import urllib.request
 import uuid
 
 DEFAULT_URL = "http://127.0.0.1:8188"
+
+
+def find_portable_comfyui():
+    """Acha a instalação portable do ComfyUI (python_embeded + ComfyUI/main.py).
+    Checa ROLL3D6_COMFYUI_HOME e os locais comuns. Retorna o Path da raiz ou None.
+    Usado pelo treinador de LoRA (precisa do python embutido com torch+cuda)."""
+    import os  # noqa: WPS433
+    from pathlib import Path  # noqa: WPS433
+    cands = []
+    env = os.environ.get("ROLL3D6_COMFYUI_HOME")
+    if env:
+        cands.append(Path(env))
+    userprofile = os.environ.get("USERPROFILE") or str(Path.home())
+    cands += [
+        Path(userprofile) / "ComfyUI_windows_portable",
+        Path(userprofile) / "Desktop" / "ComfyUI_windows_portable",
+        Path("C:/ComfyUI_windows_portable"),
+    ]
+    for c in cands:
+        try:
+            if (c / "python_embeded" / "python.exe").exists() and (c / "ComfyUI" / "main.py").exists():
+                return c
+        except Exception:  # noqa: BLE001
+            continue
+    return None
 # Modelo fotorrealista (RealVisXL V5.0 Lightning). Substitui o sd_xl_turbo, que
 # gerava um acabamento "liso de videogame". Lightning = rápido (4-6 passos) mas
 # com realismo cinematográfico. Cai pro turbo se o arquivo não existir (ver worker).
@@ -800,12 +825,41 @@ def _start_progress_ws(base, client_id, on_progress):
     return stop, t
 
 
+def _insert_char_loras(graph, char_loras, after_id="10"):
+    """Encadeia LoRAs de PERSONAGEM (SD1.5) no modelo, logo após o LoRA do
+    AnimateLCM (node `after_id`), e re-aponta quem consumia [after_id,0] pro
+    último LoRA da cadeia. Permite empilhar vários (cena coletiva: cada personagem
+    fiel pelo seu LoRA). char_loras = [(lora_name, strength), ...]. No-op se vazio
+    ou se o node base não existir."""
+    if not char_loras or after_id not in graph:
+        return graph
+    new_ids = []
+    prev = [after_id, 0]
+    nid = 900
+    for name, strength in char_loras:
+        gid = str(nid); nid += 1
+        graph[gid] = {"class_type": "LoraLoaderModelOnly",
+                      "inputs": {"model": prev, "lora_name": name,
+                                 "strength_model": float(strength)}}
+        prev = [gid, 0]; new_ids.append(gid)
+    last = new_ids[-1]
+    for k, node in graph.items():
+        if k in new_ids:
+            continue
+        ins = node.get("inputs", {})
+        for key, val in list(ins.items()):
+            if isinstance(val, list) and len(val) == 2 and val[0] == after_id and val[1] == 0:
+                ins[key] = [last, 0]
+    return graph
+
+
 def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height=512,
                       steps=VIDEO_MIN_STEPS, cfg=1.8, seed=None, base_url=DEFAULT_URL,
                       ckpt=VIDEO_CKPT, ref_image_bytes=None, ref_image_filename="ref.png",
                       ref_weight=VIDEO_REF_WEIGHT, freeinit=True, timeout=600, poll_interval=2.0,
                       on_beat=None, max_frames=VIDEO_CONTEXT_LENGTH,
-                      animate=False, denoise=0.6, vae=None, on_progress=None) -> bytes:
+                      animate=False, denoise=0.6, vae=None, on_progress=None,
+                      char_loras=None) -> bytes:
     """Gera UM clipe de vídeo (AnimateDiff) e retorna os bytes do mp4.
 
     Se ``ref_image_bytes`` vier, usa IP-Adapter: a cena sai com a aparência do
@@ -841,6 +895,8 @@ def generate_clip_mp4(prompt, negative=None, seconds=4, fps=8, width=512, height
     else:
         graph = _build_animatediff_graph(prompt, negative, width, height, frames, fps,
                                          steps, cfg, seed, ckpt=ckpt, freeinit=fi, vae=vae)
+    # LoRAs de personagem (fidelidade): empilha após o LoRA do AnimateLCM (node 10).
+    _insert_char_loras(graph, char_loras)
     try:
         resp = _http_json(base + "/prompt", {"prompt": graph, "client_id": client_id})
     except urllib.error.HTTPError as e:

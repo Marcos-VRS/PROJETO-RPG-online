@@ -111,6 +111,23 @@ def _run_as_videogen_worker() -> int:
     return 0
 
 
+def _run_as_charlora_worker() -> int:
+    """Modo subprocess: roda o worker do Gerador de Personagem (LoRA SD1.5).
+    Chamado via `roll3d6.exe --charlora-worker`. Gera o dataset de poses e treina."""
+    runtime_config.bootstrap_env()
+    import django  # noqa: WPS433
+
+    django.setup()
+    from gurps.management.commands.charlora_worker import Command  # noqa: WPS433
+    from gurps import comfyui_client  # noqa: WPS433
+
+    try:
+        Command().handle(interval=4.0, url=comfyui_client.DEFAULT_URL, once=False)
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
 def _spawn_worker(project_root: Path, home: Path, flag: str, log_name: str | None = None):
     """Sobe um worker como subprocess (ao lado do daphne). Genérico pro flag dado.
 
@@ -271,6 +288,9 @@ def main() -> int:
     # Modo worker de vídeo: subprocess que gera vídeos via AnimateDiff + ffmpeg.
     if len(sys.argv) >= 2 and sys.argv[1] == "--videogen-worker":
         return _run_as_videogen_worker()
+    # Modo worker do Gerador de Personagem (LoRA SD1.5): dataset + treino.
+    if len(sys.argv) >= 2 and sys.argv[1] == "--charlora-worker":
+        return _run_as_charlora_worker()
 
     # 1. Bootstrap de paths e SECRET_KEY antes de importar Django.
     home = runtime_config.bootstrap_env()
@@ -331,12 +351,15 @@ def main() -> int:
     # não estiver de pé. O de vídeo loga em logs/videogen.log (crash não some).
     imagegen_proc = _spawn_imagegen_worker(project_root, home)
     videogen_proc = _spawn_worker(project_root, home, "--videogen-worker", log_name="videogen.log")
+    charlora_proc = _spawn_worker(project_root, home, "--charlora-worker", log_name="charlora.log")
     # Watchdog: se um worker cair, reinicia sozinho (jobs pendentes não ficam órfãos).
     _start_worker_watchdog([
         {"proc": imagegen_proc, "name": "imagegen",
          "spawn": lambda: _spawn_imagegen_worker(project_root, home)},
         {"proc": videogen_proc, "name": "videogen",
          "spawn": lambda: _spawn_worker(project_root, home, "--videogen-worker", log_name="videogen.log")},
+        {"proc": charlora_proc, "name": "charlora",
+         "spawn": lambda: _spawn_worker(project_root, home, "--charlora-worker", log_name="charlora.log")},
     ])
 
     def _boot_async():

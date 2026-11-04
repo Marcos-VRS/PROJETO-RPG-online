@@ -18,6 +18,12 @@ from .image_gen import (
     imagegen_png, imagegen_approve, imagegen_discard, imagegen_journal,
     imagegen_regenerate, imagegen_deepen,
 )
+from .char_gen import (
+    charlora_studio, charlora_list, charlora_detail, charlora_create,
+    charlora_update, charlora_seed_upload, charlora_gen_dataset,
+    charlora_image_toggle, charlora_image, charlora_train, charlora_delete,
+    charlora_trained,
+)
 from .video_gen import (
     videogen_request, videogen_list, videogen_mp4,
     videogen_approve, videogen_discard, videogen_music, videogen_resume,

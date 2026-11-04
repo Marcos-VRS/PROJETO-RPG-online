@@ -200,6 +200,13 @@
                     <p class="st-status" id="ed-dir-status"></p>
                 </details>
 
+                <details class="st-card" id="ed-chars" style="border-color:#4a2a5a;">
+                    <summary style="cursor:pointer;font-weight:700;">🧬 Personagens treinados (LoRA) neste vídeo</summary>
+                    <p class="st-mini" style="margin:6px 0;">Ative os personagens treinados no <b>Gerador de Personagem</b>. Carregá-los deixa a IA desenhá-los <b>fiéis</b>. Cada um <b>aparece</b> quando você escreve a <b>palavra-gatilho</b> dele na “Cena” do beat (ex.: numa cena coletiva, escreva os gatilhos de todos).</p>
+                    <div id="ed-chars-list"><span class="st-mini">carregando…</span></div>
+                    <p class="st-status" id="ed-chars-status"></p>
+                </details>
+
                 <button type="button" class="st-gen" style="margin-top:8px;" onclick="vgAssemble()">🎬 Montar vídeo (com as transições)</button>
                 <p class="st-status" id="ed-status"></p>
                 <div id="ed-final"></div>
@@ -395,6 +402,7 @@
                 document.getElementById('vg-editor').classList.remove('st-hide');
                 vgFillTheme();
                 vgFillDirection();
+                vgFillChars();
                 vgRenderEditor();
                 _lastSig = vgSig(d.project);
                 vgSchedulePoll();
@@ -420,6 +428,35 @@
             var p = _proj; if (!p) return;
             var l = document.getElementById('ed-dir-look'); if (l) l.value = p.look_filter || '';
             var d = document.getElementById('ed-dir-prompt'); if (d) d.value = p.direction_prompt || '';
+        }
+        var _vgTrainedChars = [];
+        function vgFillChars() {
+            fetch('/charlora/' + CAMP + '/trained/').then(function (r) { return r.json(); }).then(function (d) {
+                _vgTrainedChars = (d && d.loras) || [];
+                vgRenderChars();
+            }).catch(function () {});
+        }
+        function vgCharActive(id) {
+            var list = (_proj && _proj.char_loras) || [];
+            for (var i = 0; i < list.length; i++) { if (list[i].lora_id === id) return true; }
+            return false;
+        }
+        function vgRenderChars() {
+            var box = document.getElementById('ed-chars-list'); if (!box) return;
+            if (!_vgTrainedChars.length) { box.innerHTML = '<span class="st-mini">Nenhum personagem treinado ainda. Treine um no 🧬 Gerador de Personagem.</span>'; return; }
+            box.innerHTML = _vgTrainedChars.map(function (c) {
+                return '<label class="st-field st-check" style="margin:4px 0;"><input type="checkbox" ' + (vgCharActive(c.id) ? 'checked' : '') + ' onchange="vgCharToggle(' + c.id + ',this.checked)"> '
+                    + esc(c.name) + ' <span class="st-mini">gatilho: <b>' + esc(c.trigger_word) + '</b></span></label>';
+            }).join('');
+        }
+        function vgCharToggle(id, on) {
+            var list = ((_proj && _proj.char_loras) || []).filter(function (x) { return x.lora_id !== id; });
+            if (on) list.push({ lora_id: id, strength: 0.8 });
+            var st = document.getElementById('ed-chars-status'); if (st) st.textContent = 'salvando…';
+            post('/videogen/project/' + _proj.id + '/update/', { char_loras: list }).then(function (d) {
+                if (d && d.ok) { _proj = d.project; if (st) st.textContent = on ? 'personagem ativado.' : 'personagem desativado.'; vgRenderChars(); }
+                else { if (st) st.textContent = (d && d.error) || 'erro.'; }
+            }).catch(function () { if (st) st.textContent = 'falha de rede.'; });
         }
         function vgDirSave() {
             var st = document.getElementById('ed-dir-status'); st.textContent = 'Salvando…';

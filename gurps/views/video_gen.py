@@ -133,6 +133,7 @@ def _serialize_project(req, with_beats=True):
         "use_context": req.use_context,
         "direction_prompt": req.direction_prompt or "",
         "look_filter": req.look_filter or "",
+        "char_loras": req.char_loras or [],
         "music_file": os.path.basename(req.music_file) if req.music_file else "",
         "music_rel": req.music_file or "",
         "audio_duration_ms": req.audio_duration_ms,
@@ -237,6 +238,9 @@ def videogen_project_update(request, req_id):
         lf = (body.get("look_filter") or "").strip()
         req.look_filter = lf if lf in video_assembly.LOOK_FILTERS else ""
         fields.append("look_filter")
+    if "char_loras" in body:
+        req.char_loras = _parse_char_loras(body.get("char_loras"), req.campanha) or None
+        fields.append("char_loras")
     newmusic = _save_music_choice(request, body)
     if newmusic:
         req.music_file = newmusic
@@ -263,6 +267,38 @@ def _resolve_ref_asset(campanha, body):
         return CampanhaAssets.objects.filter(campanha=campanha, id=int(rid)).first()
     except (TypeError, ValueError):
         return None
+
+
+def _parse_char_loras(raw, campanha):
+    """Normaliza a lista de personagens (LoRA) ativos no projeto: [{lora_id, strength}].
+    Mantém só CharacterLora TREINADOS da campanha (máx. 4). Aceita lista ou JSON str."""
+    import json as _json  # noqa: WPS433
+    from gurps.models import CharacterLora  # noqa: WPS433
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = _json.loads(raw)
+        except (ValueError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for e in raw[:4]:
+        if not isinstance(e, dict):
+            continue
+        try:
+            lid = int(e.get("lora_id"))
+        except (TypeError, ValueError):
+            continue
+        if not CharacterLora.objects.filter(id=lid, campanha=campanha, status="trained").exists():
+            continue
+        try:
+            strength = max(0.0, min(float(e.get("strength", 0.8)), 1.5))
+        except (TypeError, ValueError):
+            strength = 0.8
+        out.append({"lora_id": lid, "strength": strength})
+    return out
 
 
 def _parse_ref_multi(raw, campanha):

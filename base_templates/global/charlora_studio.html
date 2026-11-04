@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Personagem — {{ campanha.nome }}</title>
+    <link rel="stylesheet" href="{% static 'global/css/lista_campanhas_style.css' %}?d={% now 'U' %}">
+    <style>
+        .cl-wrap { max-width: 920px; margin: 0 auto; padding: 16px; color: #e8e8ee; }
+        .voltar { color: #bfa3e0; text-decoration: none; font-size: 14px; }
+        .cl-field { display: block; margin: 10px 0; font-size: 14px; color: #c0c0cc; }
+        .cl-field input[type=text], .cl-field input[type=number], .cl-field textarea {
+            width: 100%; box-sizing: border-box; background: #1c1c22; color: #eee;
+            border: 1px solid #3a3a44; border-radius: 6px; padding: 8px; margin-top: 4px; }
+        .cl-card { background: #24242c; border: 1px solid #383840; border-radius: 8px; padding: 12px; margin-top: 12px; }
+        .cl-btn { background: #7a2ea0; color: #fff; border: none; border-radius: 6px; padding: 10px 14px; cursor: pointer; font-size: 14px; }
+        .cl-btn.sec { background: #2a5a7a; } .cl-btn.ok { background: #2e7d46; } .cl-btn.danger { background: #6a2e2e; }
+        .cl-btn[disabled] { opacity: .5; cursor: default; }
+        .cl-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #444; margin-left: 6px; }
+        .cl-badge.trained { background: #2e7d46; } .cl-badge.training, .cl-badge.dataset_pending, .cl-badge.train_pending { background: #3a5a8a; }
+        .cl-badge.failed { background: #8a2e2e; } .cl-badge.dataset_ready { background: #6a4ea0; } .cl-badge.draft { background: #555; }
+        .cl-mini { font-size: 12px; color: #9a9aa5; }
+        .cl-trigger { font-family: monospace; background: #15151a; border: 1px solid #3a3a44; border-radius: 5px; padding: 2px 6px; color: #cdb4e0; }
+        .cl-bar { height: 8px; border-radius: 5px; background: #2a2a33; overflow: hidden; margin: 6px 0; }
+        .cl-bar-fill { height: 100%; background: linear-gradient(90deg,#3a7bd5,#4fd1c5); transition: width .4s ease; }
+        .cl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); gap: 8px; margin-top: 8px; }
+        .cl-seed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px,1fr)); gap: 6px; margin-top: 6px; max-height: 220px; overflow: auto; }
+        .cl-seed-grid button { padding: 0; border: 2px solid transparent; border-radius: 5px; background: none; cursor: pointer; aspect-ratio: 1; overflow: hidden; }
+        .cl-seed-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cl-seed-grid button.sel { border-color: #c9a55c; }
+        .cl-pose { position: relative; border-radius: 6px; overflow: hidden; border: 2px solid transparent; }
+        .cl-pose img { width: 100%; display: block; }
+        .cl-pose.drop { opacity: .35; filter: grayscale(1); }
+        .cl-pose .cl-keep { position: absolute; top: 3px; right: 3px; font-size: 11px; background: #000a; color: #fff; border: none; border-radius: 4px; padding: 2px 5px; cursor: pointer; }
+        .cl-status { color: #c9a55c; font-size: 13px; min-height: 18px; }
+    </style>
+</head>
+<body>
+    <div class="cl-wrap">
+        <a class="voltar" href="{% url 'gurps:carregar_campanha_gm' %}">← voltar</a>
+        <h1 class="titulo-pagina medievalsharp-regular" style="font-size:2rem;">🧬 Gerador de Personagem — {{ campanha.nome }}</h1>
+        <p class="cl-mini" id="cl-comfy"></p>
+        <p class="cl-mini">Ensina a IA a desenhar <b>um personagem</b> de forma consistente (LoRA SD1.5). Fluxo:
+            escolha uma imagem-semente → gere uma <b>folha de poses</b> → remova as ruins → <b>treine</b> →
+            o personagem fica disponível no <b>Estúdio de Vídeo</b> pela palavra-gatilho.
+            <b>Treino roda no vídeo (SD1.5)</b>; a primeira vez baixa o treinador (uma vez).</p>
+
+        <div class="cl-card">
+            <h3 style="margin:0 0 6px;">➕ Novo personagem</h3>
+            <label class="cl-field">Nome:<input type="text" id="cl-name" placeholder="ex.: Liesel"></label>
+            <label class="cl-field">Aparência base (ajuda as poses):<textarea id="cl-desc" rows="2" placeholder="ex.: mulher jovem, cabelo preto, cicatriz no olho esquerdo, armadura de couro"></textarea></label>
+            <div class="cl-field">
+                <button type="button" class="cl-btn sec" onclick="clToggleSeed()">📖 Escolher imagem-semente (journal)</button>
+                <span id="cl-seed-label" class="cl-mini" style="margin-left:6px;"></span>
+                <div id="cl-seed-grid" class="cl-seed-grid" hidden></div>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <label class="cl-field" style="flex:1;min-width:120px;">Nº de poses:<input type="number" id="cl-nposes" value="16" min="4" max="16"></label>
+                <label class="cl-field" style="flex:1;min-width:120px;">Passos de treino:<input type="number" id="cl-steps" value="1200" min="400" max="4000" step="100"></label>
+            </div>
+            <button type="button" class="cl-btn" onclick="clCreate()">Criar personagem</button>
+            <p class="cl-status" id="cl-create-status"></p>
+        </div>
+
+        <h3 style="margin-top:18px;">Personagens</h3>
+        <div id="cl-list"><p class="cl-mini">carregando…</p></div>
+    </div>
+
+    {% csrf_token %}
+    <script>
+        var CAMP = {{ campanha.id }};
+        var _clPoll = null, _clSeedId = null, _clOpen = {};
+        function csrf() { var e = document.querySelector('[name=csrfmiddlewaretoken]'); return e ? e.value : ''; }
+        function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+        function post(url, body, isForm) {
+            var opt = { method: 'POST', headers: { 'X-CSRFToken': csrf() } };
+            if (isForm) { opt.body = body; }
+            else if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+            return fetch(url, opt).then(function (r) { return r.json(); });
+        }
+
+        function clToggleSeed() {
+            var g = document.getElementById('cl-seed-grid');
+            if (!g.hidden) { g.hidden = true; return; }
+            g.hidden = false; g.innerHTML = '<span class="cl-mini">carregando…</span>';
+            fetch('/imagegen/' + CAMP + '/journal/').then(function (r) { return r.json(); }).then(function (d) {
+                var items = (d && d.items) || [];
+                if (!items.length) { g.innerHTML = '<span class="cl-mini">nenhuma imagem no journal.</span>'; return; }
+                g.innerHTML = items.map(function (it) {
+                    var sel = (_clSeedId === it.id) ? ' sel' : '';
+                    return '<button type="button" class="' + sel + '" data-id="' + it.id + '" data-name="' + esc(it.name) + '" onclick="clPickSeed(this)"><img src="' + it.url + '"></button>';
+                }).join('');
+            }).catch(function () { g.innerHTML = '<span class="cl-mini">erro</span>'; });
+        }
+        function clPickSeed(btn) {
+            _clSeedId = parseInt(btn.getAttribute('data-id'), 10);
+            document.querySelectorAll('#cl-seed-grid button').forEach(function (b) { b.classList.remove('sel'); });
+            btn.classList.add('sel');
+            document.getElementById('cl-seed-label').textContent = 'semente: ' + btn.getAttribute('data-name');
+        }
+        function clCreate() {
+            var name = (document.getElementById('cl-name').value || '').trim();
+            var st = document.getElementById('cl-create-status');
+            if (!name) { st.textContent = 'dê um nome.'; return; }
+            if (!_clSeedId) { st.textContent = 'escolha uma imagem-semente.'; return; }
+            st.textContent = 'criando…';
+            post('/charlora/' + CAMP + '/create/', {
+                name: name, description: document.getElementById('cl-desc').value || '',
+                seed_asset_id: _clSeedId, n_poses: document.getElementById('cl-nposes').value,
+                train_steps: document.getElementById('cl-steps').value
+            }).then(function (d) {
+                if (d && d.ok) {
+                    document.getElementById('cl-name').value = ''; document.getElementById('cl-desc').value = '';
+                    _clSeedId = null; document.getElementById('cl-seed-label').textContent = '';
+                    document.getElementById('cl-seed-grid').hidden = true;
+                    st.textContent = 'criado — gere as poses abaixo.';
+                    _clOpen[d.lora.id] = true; clLoad();
+                } else { st.textContent = (d && d.error) || 'erro.'; }
+            }).catch(function () { st.textContent = 'falha de rede.'; });
+        }
+
+        function clLoad() {
+            fetch('/charlora/' + CAMP + '/list/').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d || !d.ok) return;
+                var c = d.comfy || {};
+                document.getElementById('cl-comfy').innerHTML = c.online
+                    ? '🟢 ComfyUI pronto.' : '🟠 ComfyUI offline — gere/treine com ele de pé (sobe junto do app).';
+                clRenderList(d.loras);
+                // detalhes dos abertos
+                d.loras.forEach(function (l) { if (_clOpen[l.id]) clLoadDetail(l.id); });
+                clSchedulePoll(d.loras);
+            }).catch(function () {});
+        }
+        function clRenderList(loras) {
+            var box = document.getElementById('cl-list');
+            if (!loras.length) { box.innerHTML = '<p class="cl-mini">nenhum personagem ainda.</p>'; return; }
+            box.innerHTML = loras.map(function (l) {
+                var h = '<div class="cl-card" id="cl-card-' + l.id + '">';
+                h += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<div><b>' + esc(l.name) + '</b><span class="cl-badge ' + l.status + '">' + esc(l.status) + '</span>'
+                    + ' <span class="cl-mini">gatilho:</span> <span class="cl-trigger">' + esc(l.trigger_word) + '</span></div>'
+                    + '<button class="cl-btn" style="padding:4px 10px;" onclick="clToggleOpen(' + l.id + ')">' + (_clOpen[l.id] ? 'fechar' : 'abrir') + '</button></div>';
+                if (l.progress_pct >= 0 && (l.status === 'dataset_pending' || l.status === 'training')) {
+                    h += '<div class="cl-mini">' + esc(l.progress || '') + '</div><div class="cl-bar"><div class="cl-bar-fill" style="width:' + Math.max(2, l.progress_pct) + '%"></div></div>';
+                } else if (l.progress) { h += '<div class="cl-mini">' + esc(l.progress) + '</div>'; }
+                if (l.error) h += '<div class="cl-status" style="color:#ff8a8a;">' + esc(l.error) + '</div>';
+                if (l.status === 'trained') h += '<div class="cl-status" style="color:#7fd67f;">✅ Treinado — no Estúdio de Vídeo, ative este personagem e escreva <span class="cl-trigger">' + esc(l.trigger_word) + '</span> na cena.</div>';
+                h += '<div id="cl-detail-' + l.id + '"' + (_clOpen[l.id] ? '' : ' hidden') + '></div>';
+                return h + '</div>';
+            }).join('');
+        }
+        function clToggleOpen(id) { _clOpen[id] = !_clOpen[id]; if (_clOpen[id]) clLoadDetail(id); clLoad(); }
+        function clLoadDetail(id) {
+            fetch('/charlora/lora/' + id + '/').then(function (r) { return r.json(); }).then(function (d) {
+                if (!d || !d.ok) return;
+                var el = document.getElementById('cl-detail-' + id); if (!el) return;
+                var l = d.lora, h = '';
+                var busy = (l.status === 'dataset_pending' || l.status === 'training' || l.status === 'train_pending');
+                // ações conforme o estado
+                h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">';
+                h += '<button class="cl-btn sec" ' + (busy ? 'disabled' : '') + ' onclick="clDataset(' + id + ')">🎞️ ' + (l.n_images ? 'Regerar poses' : 'Gerar poses') + '</button>';
+                if (l.n_keep >= 4) h += '<button class="cl-btn ok" ' + (busy ? 'disabled' : '') + ' onclick="clTrain(' + id + ')">🎓 Treinar LoRA (' + l.n_keep + ' poses)</button>';
+                h += '<button class="cl-btn danger" onclick="clDelete(' + id + ')">🗑️</button>';
+                h += '</div>';
+                if (l.images && l.images.length) {
+                    h += '<div class="cl-mini">Clique numa pose pra manter/remover do treino (' + l.n_keep + ' mantidas):</div>';
+                    h += '<div class="cl-grid">' + l.images.map(function (im) {
+                        return '<div class="cl-pose ' + (im.keep ? '' : 'drop') + '" id="cl-pose-' + im.id + '"><img src="' + im.url + '" onclick="clToggleImg(' + im.id + ')">'
+                            + '<button class="cl-keep" onclick="clToggleImg(' + im.id + ')">' + (im.keep ? '✓' : '✕') + '</button></div>';
+                    }).join('') + '</div>';
+                }
+                el.innerHTML = h;
+            }).catch(function () {});
+        }
+        function clDataset(id) { post('/charlora/lora/' + id + '/dataset/').then(function (d) { if (d && !d.ok) alert(d.error || 'erro'); _clOpen[id] = true; clLoad(); }).catch(function () {}); }
+        function clTrain(id) { if (!confirm('Treinar o LoRA agora? Leva ~15-40min e usa a GPU. A 1ª vez baixa o treinador.')) return; post('/charlora/lora/' + id + '/train/').then(function (d) { if (d && !d.ok) alert(d.error || 'erro'); clLoad(); }).catch(function () {}); }
+        function clToggleImg(imgId) {
+            post('/charlora/image/' + imgId + '/toggle/').then(function (d) {
+                if (d && d.ok) { var el = document.getElementById('cl-pose-' + imgId); if (el) el.classList.toggle('drop', !d.keep); }
+            }).catch(function () {});
+        }
+        function clDelete(id) { if (!confirm('Apagar este personagem e suas poses?')) return; post('/charlora/lora/' + id + '/delete/').then(function () { _clOpen[id] = false; clLoad(); }).catch(function () {}); }
+
+        function clSchedulePoll(loras) {
+            if (_clPoll) clearTimeout(_clPoll);
+            var active = (loras || []).some(function (l) { return l.status === 'dataset_pending' || l.status === 'training' || l.status === 'train_pending'; });
+            _clPoll = setTimeout(clLoad, active ? 4000 : 20000);
+        }
+        clLoad();
+    </script>
+</body>
+</html>

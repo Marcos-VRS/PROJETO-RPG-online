@@ -327,6 +327,34 @@ class Command(BaseCommand):
         except Exception:  # noqa: BLE001
             pass
 
+    def _resolve_char_loras(self, project):
+        """[(lora_file, strength)] dos personagens (LoRA) ativos no projeto cujo
+        arquivo .safetensors existe em models/loras do ComfyUI. Vazio se nenhum."""
+        from gurps.models import CharacterLora  # noqa: WPS433
+        entries = getattr(project, "char_loras", None) or []
+        if not isinstance(entries, list) or not entries:
+            return []
+        home = comfyui_client.find_portable_comfyui()
+        loras_dir = (home / "ComfyUI" / "models" / "loras") if home else None
+        out = []
+        for e in entries:
+            try:
+                lid = int(e.get("lora_id"))
+                strength = float(e.get("strength", 0.8))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            cl = CharacterLora.objects.filter(id=lid, campanha=project.campanha,
+                                              status="trained").first()
+            if not cl or not cl.lora_file:
+                continue
+            if loras_dir is not None and not (loras_dir / cl.lora_file).exists():
+                continue
+            out.append((cl.lora_file, max(0.0, min(strength, 1.5))))
+        if out:
+            self.stdout.write(f"  -> {len(out)} LoRA(s) de personagem: "
+                              + ", ".join(n for n, _ in out))
+        return out
+
     @staticmethod
     def _with_direction(project, prompt):
         """Anexa a DIREÇÃO GERAL do projeto (estilo/direção global) ao prompt do
@@ -438,7 +466,7 @@ class Command(BaseCommand):
                     base_url=self.base_url, timeout=self.clip_timeout, ckpt=ckpt, vae=vae,
                     ref_image_bytes=ref_bytes, max_frames=max_frames,
                     animate=animate, denoise=denoise, freeinit=not animate,
-                    on_progress=on_progress)
+                    on_progress=on_progress, char_loras=self._resolve_char_loras(project))
             except Exception as e:  # noqa: BLE001
                 self.stdout.write(self.style.WARNING(
                     f"  sub-clipe tentativa {attempt} falhou: {str(e)[:120]}"))
