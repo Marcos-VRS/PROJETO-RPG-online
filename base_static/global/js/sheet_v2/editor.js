@@ -912,6 +912,11 @@
             levelDisplay.className = 'v2-skill-level-display';
             const lvl = computeSkillLevel(entry, primary, secondary);
             levelDisplay.textContent = lvl !== null ? lvl : '—';
+            // WYSIWYG: grava o nível exibido de volta na entry. Sem isso, mudar um
+            // atributo/modificador re-renderizava o DISPLAY mas deixava o
+            // computed_level salvo defasado — e a tela de jogo (que rola pelo
+            // computed_level) continuava com o valor antigo.
+            entry.computed_level = lvl;
             row.appendChild(levelDisplay);
 
             // 6: Specialty
@@ -1111,6 +1116,11 @@
                 recalc();
             });
         });
+
+        // Grava de volta os computed_level ressincronizados no campo escondido,
+        // pra que o SAVE persista o que a ficha mostra (e o jogo role o valor
+        // atual), mesmo que o jogador só tenha mexido num atributo/modificador.
+        input.value = JSON.stringify(list);
     }
 
     function addSkillEntry() {
