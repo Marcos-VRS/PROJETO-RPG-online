@@ -92,6 +92,37 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"  -> ref ignorada (erro ao ler): {e}"))
         return None, "ref.png"
 
+    def _resolve_multi(self, req):
+        """Lista de referências múltiplas (compor 2+ personagens) a partir de
+        req.ref_multi: [{asset_id, region, weight}, ...]. Lê os bytes de cada asset
+        da campanha (só raster). Retorna [] se não houver nada válido."""
+        from gurps.models import CampanhaAssets  # noqa: WPS433
+        entries = req.ref_multi or []
+        if not isinstance(entries, list) or not entries:
+            return []
+        out = []
+        for e in entries:
+            try:
+                aid = int(e.get("asset_id"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            asset = CampanhaAssets.objects.filter(id=aid, campanha=req.campanha).first()
+            if not (asset and asset.image) or asset.image.name.lower().endswith(".svg"):
+                continue
+            try:
+                asset.image.open("rb"); data = asset.image.read(); asset.image.close()
+            except Exception as ex:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(f"  -> ref múltipla {aid} ignorada: {ex}"))
+                continue
+            region = e.get("region") if e.get("region") in ("left", "right", "full") else "full"
+            try:
+                weight = max(0.0, min(float(e.get("weight")), 1.5))
+            except (TypeError, ValueError):
+                weight = req.ref_weight or 0.8
+            out.append({"bytes": data, "filename": f"mref_{aid}.png",
+                        "region": region, "weight": weight})
+        return out
+
     def _process(self, req, base_url, ckpt, gen_timeout):
         req.status = "processing"
         req.save(update_fields=["status", "updated_at"])
@@ -154,9 +185,16 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(
                     f"  -> init_from #{req.init_from_id} sem arquivo; gerando do zero"))
 
+        # Múltiplas referências (compor 2+ personagens): têm prioridade sobre a
+        # referência única, mas não sobre o modo aprofundar (img2img).
+        multi_refs = [] if init_bytes else self._resolve_multi(req)
+        if multi_refs:
+            self.stdout.write(f"  -> {len(multi_refs)} referências (regional): "
+                              + ", ".join(f"{m['region']}@{m['weight']:.2f}" for m in multi_refs))
+
         # Imagem de referência (IP-Adapter): preferência pro asset do journal
-        # escolhido pelo GM; senão o upload manual. (ignorada no modo aprofundar)
-        ref_bytes, ref_name = (None, "ref.png") if init_bytes else self._resolve_ref(req)
+        # escolhido pelo GM; senão o upload manual. (ignorada no modo aprofundar/multi)
+        ref_bytes, ref_name = (None, "ref.png") if (init_bytes or multi_refs) else self._resolve_ref(req)
 
         # Negativo: custom do pedido > (negativo direcionado do claude + base) >
         # mínimo (permitir tudo) > padrão. O negativo direcionado lista as VERSÕES
@@ -187,6 +225,7 @@ class Command(BaseCommand):
                 ref_image_bytes=ref_bytes, ref_image_filename=ref_name,
                 ref_weight=req.ref_weight,
                 init_image_bytes=init_bytes, denoise=denoise,
+                multi_refs=multi_refs or None,
             )
         except Exception as e:  # noqa: BLE001
             req.status = "failed"

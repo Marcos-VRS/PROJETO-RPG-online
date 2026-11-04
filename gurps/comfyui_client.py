@@ -219,6 +219,69 @@ def _build_sdxl_ipadapter_graph(prompt, negative, width, height, steps, cfg, see
     }
 
 
+def _region_mask_png(width, height, region) -> bytes:
+    """PNG de máscara (branco = aplica o IP-Adapter ali). 'left'/'right' = metade;
+    'full' = tudo. Usado como attn_mask pra localizar cada referência numa região."""
+    from PIL import Image  # noqa: WPS433
+    import io  # noqa: WPS433
+    w, h = int(width), int(height)
+    img = Image.new("L", (w, h), 0)
+    if region == "left":
+        img.paste(255, (0, 0, w // 2, h))
+    elif region == "right":
+        img.paste(255, (w // 2, 0, w, h))
+    else:  # full
+        img.paste(255, (0, 0, w, h))
+    buf = io.BytesIO(); img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def _build_sdxl_multi_ipadapter_graph(prompt, negative, width, height, steps, cfg, seed,
+                                      ckpt, refs, sampler_name=DEFAULT_SAMPLER,
+                                      scheduler=DEFAULT_SCHEDULER,
+                                      ipadapter_model=IPADAPTER_MODEL,
+                                      clip_vision_model=CLIP_VISION_MODEL):
+    """Compõe VÁRIAS referências numa imagem só: encadeia um IPAdapterAdvanced por
+    referência sobre o modelo. Cada ref pode ter uma máscara de atenção (region)
+    pra ficar numa área (ex.: personagem A à esquerda, B à direita). ``refs`` é uma
+    lista de dicts {name, weight, mask_name?}."""
+    g = {
+        "4": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ckpt}},
+        "5": {"class_type": "EmptyLatentImage",
+              "inputs": {"width": int(width), "height": int(height), "batch_size": 1}},
+        "6": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["4", 1]}},
+        "7": {"class_type": "CLIPTextEncode", "inputs": {"text": negative, "clip": ["4", 1]}},
+        "11": {"class_type": "IPAdapterModelLoader", "inputs": {"ipadapter_file": ipadapter_model}},
+        "12": {"class_type": "CLIPVisionLoader", "inputs": {"clip_name": clip_vision_model}},
+    }
+    model_ref = ["4", 0]
+    nid = 100
+    for r in refs:
+        img_id = str(nid); nid += 1
+        g[img_id] = {"class_type": "LoadImage", "inputs": {"image": r["name"]}}
+        ipa_inputs = {"model": model_ref, "ipadapter": ["11", 0], "image": [img_id, 0],
+                      "clip_vision": ["12", 0], "weight": float(r.get("weight", 0.8)),
+                      "weight_type": "style transfer", "combine_embeds": "concat",
+                      "start_at": 0.0, "end_at": 1.0, "embeds_scaling": "V only"}
+        if r.get("mask_name"):
+            mimg_id = str(nid); nid += 1
+            g[mimg_id] = {"class_type": "LoadImage", "inputs": {"image": r["mask_name"]}}
+            mask_id = str(nid); nid += 1
+            g[mask_id] = {"class_type": "ImageToMask", "inputs": {"image": [mimg_id, 0], "channel": "red"}}
+            ipa_inputs["attn_mask"] = [mask_id, 0]
+        ipa_id = str(nid); nid += 1
+        g[ipa_id] = {"class_type": "IPAdapterAdvanced", "inputs": ipa_inputs}
+        model_ref = [ipa_id, 0]
+    g["3"] = {"class_type": "KSampler",
+              "inputs": {"seed": int(seed), "steps": int(steps), "cfg": float(cfg),
+                         "sampler_name": sampler_name, "scheduler": scheduler, "denoise": 1.0,
+                         "model": model_ref, "positive": ["6", 0],
+                         "negative": ["7", 0], "latent_image": ["5", 0]}}
+    g["8"] = {"class_type": "VAEDecode", "inputs": {"samples": ["3", 0], "vae": ["4", 2]}}
+    g["9"] = {"class_type": "SaveImage", "inputs": {"images": ["8", 0], "filename_prefix": "rpg_gen"}}
+    return g
+
+
 def upload_image(image_bytes: bytes, filename: str, base_url: str = DEFAULT_URL,
                  timeout: float = 30.0) -> str:
     """Envia uma imagem pro ComfyUI (/upload/image) e devolve o nome com que ele
@@ -256,6 +319,7 @@ def generate_png(prompt, negative=None, width=768, height=1024, steps=6, cfg=1.5
                  sampler_name=DEFAULT_SAMPLER, scheduler=DEFAULT_SCHEDULER,
                  ref_image_bytes=None, ref_image_filename="ref.png", ref_weight=0.7,
                  init_image_bytes=None, init_image_filename="init.png", denoise=1.0,
+                 multi_refs=None,
                  timeout=240, poll_interval=1.5, on_beat=None) -> bytes:
     """Gera uma imagem e retorna os bytes do PNG. Lança RuntimeError em falha.
 
@@ -277,6 +341,20 @@ def generate_png(prompt, negative=None, width=768, height=1024, steps=6, cfg=1.5
         init_name = upload_image(init_image_bytes, init_image_filename, base_url=base)
         graph = _build_sdxl_img2img_graph(
             prompt, negative, steps, cfg, seed, ckpt, init_name, denoise,
+            sampler_name=sampler_name, scheduler=scheduler)
+    elif multi_refs:
+        # Compor 2+ referências (regional). Sobe cada imagem (+ máscara da região).
+        refs = []
+        for i, mr in enumerate(multi_refs):
+            name = upload_image(mr["bytes"], mr.get("filename") or f"mref{i}.png", base_url=base)
+            region = mr.get("region") or "full"
+            mask_name = None
+            if region != "full":
+                mask_png = _region_mask_png(width, height, region)
+                mask_name = upload_image(mask_png, f"mref{i}_mask.png", base_url=base)
+            refs.append({"name": name, "weight": mr.get("weight", ref_weight), "mask_name": mask_name})
+        graph = _build_sdxl_multi_ipadapter_graph(
+            prompt, negative, width, height, steps, cfg, seed, ckpt, refs,
             sampler_name=sampler_name, scheduler=scheduler)
     elif ref_image_bytes:
         ref_name = upload_image(ref_image_bytes, ref_image_filename, base_url=base)

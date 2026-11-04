@@ -482,6 +482,12 @@ class ImageGenRequest(models.Model):
         CampanhaAssets, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="+",
     )
+    # Múltiplas referências (compor 2+ personagens numa cena só). Lista de dicts:
+    # [{"asset_id": int, "region": "left"|"right"|"full", "weight": float}, ...].
+    # Quando preenchida (>=1), o worker usa IP-Adapter REGIONAL — uma máscara de
+    # atenção por região — em vez da referência única acima ("full" = sem máscara,
+    # fusão na cena toda). Nullable: a build ANTIGA insere sem conhecer o campo.
+    ref_multi = models.JSONField(null=True, blank=True)
     # Estilo escolhido na UI (chave do seletor) + se deve ler o journal (contexto).
     style = models.CharField(max_length=32, blank=True, default="cinematic_dark")
     use_context = models.BooleanField(default=True)

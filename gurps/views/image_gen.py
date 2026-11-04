@@ -51,6 +51,39 @@ QUALITY_BY_KIND = {
 DEFAULT_QUALITY = (8, 2.0)
 
 
+def _parse_ref_multi(raw, campanha):
+    """Normaliza a lista de referências múltiplas. Aceita lista (JSON body) ou
+    string JSON (multipart). Mantém só assets raster da campanha. Devolve lista de
+    {asset_id, region, weight} (máx. 4) ou []."""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for e in raw[:4]:
+        if not isinstance(e, dict):
+            continue
+        try:
+            aid = int(e.get("asset_id"))
+        except (TypeError, ValueError):
+            continue
+        asset = CampanhaAssets.objects.filter(id=aid, campanha=campanha).first()
+        if not asset or not asset.image or asset.image.name.lower().endswith(".svg"):
+            continue
+        region = e.get("region") if e.get("region") in ("left", "right", "full") else "full"
+        try:
+            weight = max(0.0, min(float(e.get("weight")), 1.5))
+        except (TypeError, ValueError):
+            weight = 0.8
+        out.append({"asset_id": aid, "region": region, "weight": weight})
+    return out
+
+
 def _serialize(req):
     return {
         "id": req.id,
@@ -61,6 +94,7 @@ def _serialize(req):
         "has_result": bool(req.result_file),
         "has_ref": bool(req.ref_image or req.ref_asset_id),
         "ref_weight": req.ref_weight,
+        "ref_multi": req.ref_multi or [],
         "expanded_prompt": req.expanded_prompt or "",
         "used_context": req.use_context,
         "allow_all": req.allow_all,
@@ -143,6 +177,10 @@ def imagegen_request(request, campanha_id):
         ref_asset = CampanhaAssets.objects.filter(
             id=ref_asset_id, campanha=campanha).first()
 
+    # Múltiplas referências (compor 2+ personagens). Vem como JSON (lista) ou, no
+    # multipart, como string JSON. Sanitiza aqui; o worker revalida a posse do asset.
+    ref_multi = _parse_ref_multi(body.get("ref_multi"), campanha)
+
     q_steps, q_cfg = QUALITY_BY_KIND.get(kind, DEFAULT_QUALITY)
     comfy = comfyui_client.status()
     req = ImageGenRequest.objects.create(
@@ -152,7 +190,7 @@ def imagegen_request(request, campanha_id):
         ref_weight=ref_weight, style=style, use_context=use_context,
         ref_asset=ref_asset, title=title,
         allow_all=allow_all, verbatim_prompt=verbatim, negative=custom_negative,
-        framing=framing,
+        framing=framing, ref_multi=(ref_multi or None),
     )
     if ref_file is not None:
         req.ref_image = ref_file
@@ -322,6 +360,7 @@ def imagegen_regenerate(request, req_id):
         negative=custom_negative, title=src.title,
         ref_asset=(None if drop_ref else src.ref_asset),
         framing=framing,
+        ref_multi=(None if drop_ref else src.ref_multi),
     )
     # carrega a MESMA referência enviada (aponta pro mesmo arquivo, não recopia),
     # a menos que o GM tenha pedido pra ignorar a referência.
