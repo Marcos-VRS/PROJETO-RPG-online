@@ -42,9 +42,10 @@
         <h1 class="titulo-pagina medievalsharp-regular" style="font-size:2rem;">🧬 Gerador de Personagem — {{ campanha.nome }}</h1>
         <p class="cl-mini" id="cl-comfy"></p>
         <p class="cl-mini">Ensina a IA a desenhar <b>um personagem</b> de forma consistente (LoRA SD1.5). Fluxo:
-            escolha uma imagem-semente → gere uma <b>folha de poses</b> → remova as ruins → <b>treine</b> →
-            o personagem fica disponível no <b>Estúdio de Vídeo</b> pela palavra-gatilho.
-            <b>Treino roda no vídeo (SD1.5)</b>; a primeira vez baixa o treinador (uma vez).</p>
+            escolha uma imagem-semente → gere <b>variações consistentes</b> (mesmo personagem, mesma roupa) →
+            remova as ruins → <b>treine</b> → o personagem fica disponível no <b>Estúdio de Vídeo</b> pela palavra-gatilho.
+            A <b>variedade de poses</b> (sentado, correndo…) vem <b>depois</b>, gerada pelo próprio LoRA — você não precisa
+            criá-las aqui. <b>Treino roda no vídeo (SD1.5)</b>; a primeira vez baixa o treinador (uma vez).</p>
 
         <div class="cl-card">
             <h3 style="margin:0 0 6px;">➕ Novo personagem</h3>
@@ -56,7 +57,7 @@
                 <div id="cl-seed-grid" class="cl-seed-grid" hidden></div>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                <label class="cl-field" style="flex:1;min-width:120px;">Nº de poses:<input type="number" id="cl-nposes" value="16" min="4" max="16"></label>
+                <label class="cl-field" style="flex:1;min-width:120px;">Nº de variações:<input type="number" id="cl-nposes" value="16" min="4" max="16"></label>
                 <label class="cl-field" style="flex:1;min-width:120px;">Passos de treino:<input type="number" id="cl-steps" value="1200" min="400" max="4000" step="100"></label>
             </div>
             <button type="button" class="cl-btn" onclick="clCreate()">Criar personagem</button>
@@ -159,12 +160,12 @@
                 var busy = (l.status === 'dataset_pending' || l.status === 'training' || l.status === 'train_pending');
                 // ações conforme o estado
                 h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">';
-                h += '<button class="cl-btn sec" ' + (busy ? 'disabled' : '') + ' onclick="clDataset(' + id + ')">🎞️ ' + (l.n_images ? 'Regerar poses' : 'Gerar poses') + '</button>';
-                if (l.n_keep >= 4) h += '<button class="cl-btn ok" ' + (busy ? 'disabled' : '') + ' onclick="clTrain(' + id + ')">🎓 Treinar LoRA (' + l.n_keep + ' poses)</button>';
+                h += '<button class="cl-btn sec" ' + (busy ? 'disabled' : '') + ' onclick="clDataset(' + id + ')">🎞️ ' + (l.n_images ? 'Regerar variações' : 'Gerar variações') + '</button>';
+                if (l.n_keep >= 4) h += '<button class="cl-btn ok" ' + (busy ? 'disabled' : '') + ' onclick="clTrain(' + id + ')">🎓 Treinar LoRA (' + l.n_keep + ' imgs)</button>';
                 h += '<button class="cl-btn danger" onclick="clDelete(' + id + ')">🗑️</button>';
                 h += '</div>';
                 if (l.images && l.images.length) {
-                    h += '<div class="cl-mini">Clique numa pose pra manter/remover do treino (' + l.n_keep + ' mantidas):</div>';
+                    h += '<div class="cl-mini">Clique numa imagem pra manter/remover do treino (' + l.n_keep + ' mantidas). Tire as que ficaram diferentes do personagem:</div>';
                     h += '<div class="cl-grid">' + l.images.map(function (im) {
                         return '<div class="cl-pose ' + (im.keep ? '' : 'drop') + '" id="cl-pose-' + im.id + '"><img src="' + im.url + '" onclick="clToggleImg(' + im.id + ')">'
                             + '<button class="cl-keep" onclick="clToggleImg(' + im.id + ')">' + (im.keep ? '✓' : '✕') + '</button></div>';

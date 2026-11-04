@@ -24,25 +24,28 @@ from gurps import comfyui_client
 from gurps.charlora_trainer import TRAIN_DEPS, TRAINER_SOURCE
 from gurps.models import CharacterLora, CharacterLoraImage
 
-# Poses do dataset: (tag curta, trecho em inglês que varia a pose/ângulo/expressão).
-# A imagem-semente (IP-Adapter) trava a aparência; o texto muda a pose.
-POSES = [
-    ("front", "front view, standing, neutral expression, full body"),
-    ("three_quarter", "three-quarter view, standing, full body"),
-    ("profile", "side profile view, standing, full body"),
-    ("back", "back view, standing, full body"),
-    ("closeup", "close-up portrait of the face, neutral"),
-    ("smile", "close-up portrait, smiling"),
-    ("angry", "close-up portrait, angry expression"),
-    ("sad", "close-up portrait, sad expression"),
-    ("look_up", "looking up, three-quarter view"),
-    ("look_down", "looking down, three-quarter view"),
-    ("running", "running, dynamic action pose, full body"),
-    ("fighting", "fighting stance, full body, dynamic"),
-    ("sitting", "sitting down, full body"),
-    ("arms_crossed", "arms crossed, standing, full body"),
-    ("casting", "casting a spell, dramatic pose, full body"),
-    ("walking", "walking, full body, side view"),
+# Variações do dataset (img2img): mantêm o MESMO personagem e a MESMA roupa
+# (parte da imagem-semente, pouco denoise) e só variam expressão/luz/ângulo leve.
+# A VARIEDADE DE POSES não vem daqui — vem do LoRA na hora de usar (o modelo base
+# sabe desenhar "sentado/correndo"; o LoRA injeta o personagem). Tentar inventar
+# poses aqui (como antes) quebrava a identidade. (tag, trecho EN, denoise).
+VARIATIONS = [
+    ("neutral", "neutral expression", 0.42),
+    ("smile", "smiling warmly", 0.50),
+    ("serious", "serious expression", 0.48),
+    ("angry", "angry expression", 0.55),
+    ("look_left", "looking slightly to the left", 0.50),
+    ("look_right", "looking slightly to the right", 0.50),
+    ("soft_light", "soft diffused lighting", 0.45),
+    ("dramatic_light", "dramatic rim lighting", 0.52),
+    ("closeup", "close-up of the face, sharp focus", 0.50),
+    ("three_quarter", "slight three-quarter angle", 0.55),
+    ("determined", "determined expression", 0.50),
+    ("calm", "calm expression, looking forward", 0.45),
+    ("side_glance", "glancing to the side", 0.52),
+    ("low_angle", "slightly low camera angle", 0.55),
+    ("natural", "natural daylight", 0.45),
+    ("detailed", "highly detailed, crisp", 0.40),
 ]
 
 
@@ -109,52 +112,81 @@ class Command(BaseCommand):
         return None
 
     # ---------- dataset ----------
+    @staticmethod
+    def _resize_seed(seed_bytes, max_side=768):
+        """Normaliza a semente: RGB, lado maior = max_side (o img2img segue o tamanho
+        da imagem de entrada). Retorna PNG bytes (ou os bytes originais se falhar)."""
+        try:
+            from PIL import Image  # noqa: WPS433
+            import io  # noqa: WPS433
+            im = Image.open(io.BytesIO(seed_bytes)).convert("RGB")
+            w, h = im.size
+            if max(w, h) > max_side:
+                if w >= h:
+                    im = im.resize((max_side, max(1, round(h * max_side / w))))
+                else:
+                    im = im.resize((max(1, round(w * max_side / h)), max_side))
+            buf = io.BytesIO(); im.save(buf, format="PNG")
+            return buf.getvalue()
+        except Exception:  # noqa: BLE001
+            return seed_bytes
+
     def _build_dataset(self, lora):
-        self._set(lora, status="dataset_pending", progress="preparando as poses...", error="")
+        self._set(lora, status="dataset_pending", progress="preparando as variações...", error="")
         seed = self._seed_bytes(lora)
         if seed is None:
             self._fail(lora, "sem imagem-semente (escolha uma do journal ou envie uma).")
             return
         st = comfyui_client.status(self.base_url)
         if not st.get("online"):
-            self._fail(lora, "ComfyUI offline — não dá pra gerar as poses agora.")
+            self._fail(lora, "ComfyUI offline — não dá pra gerar as variações agora.")
             return
         ckpt = comfyui_client.pick_checkpoint(comfyui_client.DEFAULT_CKPT, self.base_url)
+        seed = self._resize_seed(seed, 768)
         rel_dir = f"charloras/{lora.id}"
         abs_dir = os.path.join(settings.MEDIA_ROOT, rel_dir.replace("/", os.sep))
         os.makedirs(abs_dir, exist_ok=True)
-        # limpa registros antigos (regerar dataset)
-        lora.images.all().delete()
+        lora.images.all().delete()  # regerar: limpa o anterior
         trigger = (lora.trigger_word or f"ch_{lora.id}").strip()
         desc = (lora.description or "").strip()
-        n = max(4, min(int(lora.n_poses or 16), len(POSES)))
-        made = 0
-        for i in range(n):
-            tag, pose = POSES[i % len(POSES)]
-            self._set(lora, progress=f"gerando pose {i+1}/{n} ({tag})...",
-                      progress_pct=int(i * 100 / n))
-            prompt = (desc + ", " if desc else "") + pose + ", high quality, detailed, solo"
-            try:
-                png = comfyui_client.generate_png(
-                    prompt=prompt, negative=comfyui_client.DEFAULT_NEGATIVE,
-                    width=768, height=768, steps=9, cfg=2.2, seed=None, ckpt=ckpt,
-                    base_url=self.base_url, timeout=240,
-                    ref_image_bytes=seed, ref_image_filename="seed.png", ref_weight=0.85)
-            except Exception as e:  # noqa: BLE001
-                self.stdout.write(self.style.WARNING(f"  pose {tag} falhou: {str(e)[:100]}"))
-                continue
-            rel = f"{rel_dir}/img_{i:03d}.png"
+        # a legenda é CONSTANTE (gatilho + aparência) pra o gatilho absorver a
+        # identidade/roupa; a variação (expressão/luz) fica livre, não é legendada.
+        caption = f"{trigger}, " + (desc if desc else "a character") + ", solo"
+        base_prompt = (desc + ", " if desc else "") + "same character, same outfit, consistent, high quality, detailed, solo"
+
+        def _save(idx, png, tag):
+            rel = f"{rel_dir}/img_{idx:03d}.png"
             with open(os.path.join(settings.MEDIA_ROOT, rel.replace("/", os.sep)), "wb") as fh:
                 fh.write(png)
-            caption = f"{trigger}, {pose}" + (", " + desc if desc else "")
             CharacterLoraImage.objects.create(lora=lora, file=rel, caption=caption, pose=tag, keep=True)
-            made += 1
-        if made == 0:
-            self._fail(lora, "nenhuma pose foi gerada (ComfyUI falhou em todas).")
+
+        made = 0
+        # 0) a própria semente entra como imagem de maior fidelidade.
+        _save(0, seed, "semente"); made += 1
+        n = max(4, min(int(lora.n_poses or 16), len(VARIATIONS)))
+        for i in range(n):
+            tag, suffix, dn = VARIATIONS[i % len(VARIATIONS)]
+            self._set(lora, progress=f"gerando variação {i+1}/{n} ({tag})...",
+                      progress_pct=int(i * 100 / n))
+            prompt = base_prompt + ", " + suffix
+            try:
+                # img2img: PARTE da semente (mantém a roupa), só nudge pela variação.
+                png = comfyui_client.generate_png(
+                    prompt=prompt, negative=comfyui_client.DEFAULT_NEGATIVE,
+                    width=768, height=768, steps=10, cfg=2.2, seed=None, ckpt=ckpt,
+                    base_url=self.base_url, timeout=240,
+                    init_image_bytes=seed, init_image_filename="seed.png", denoise=dn)
+            except Exception as e:  # noqa: BLE001
+                self.stdout.write(self.style.WARNING(f"  variação {tag} falhou: {str(e)[:100]}"))
+                continue
+            _save(i + 1, png, tag); made += 1
+        if made <= 1:
+            self._fail(lora, "nenhuma variação foi gerada (ComfyUI falhou em todas).")
             return
-        self._set(lora, status="dataset_ready", progress=f"{made} poses geradas — revise e treine.",
+        self._set(lora, status="dataset_ready",
+                  progress=f"{made} imagens (mesmo personagem) — revise e treine.",
                   progress_pct=100, error="")
-        self.stdout.write(self.style.SUCCESS(f"#{lora.id} dataset pronto: {made} poses."))
+        self.stdout.write(self.style.SUCCESS(f"#{lora.id} dataset pronto: {made} imagens."))
 
     # ---------- treino ----------
     def _comfy_paths(self):
